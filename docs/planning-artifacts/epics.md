@@ -615,7 +615,7 @@ para que el Juego lea el Pack de forma síncrona en el navegador.
 
 **Given** `port/web/io_worker.js` con el handle de OPFS abierto antes de arrancar el Juego, y un Pack copiado a OPFS por el fixture de test (clase B)
 **When** se corre la Escena `title` en el build `web`
-**Then** la captura es idéntica a la de `native-headless` y a la de referencia (SM-1, parte web)
+**Then** la captura es idéntica a la de `native-headless` (SM-1, parte web; la comparación contra la referencia llega con la Historia 3.2, que corre en ambos builds)
 **And** el hilo del juego nunca llama a APIs de OPFS (verificado por un test que reemplaza `navigator.storage` en el hilo del juego por un objeto que falla)
 
 **Given** un Pack sintético (clase A)
@@ -1042,4 +1042,6 @@ para no proponer a upstream código sin objdiff (reglas 2 y 4).
   anteriores. Dependencias externas al trabajo del agente: la Historia 8.2 y el registry de la
   Historia 7.2 esperan que el dueño conecte el repo a su GitLab; la Historia 5.6 necesita que el
   dueño corra L4 en el hardware de referencia; la 7.3 es un punto de control humano.
+- Orden de ejecución (kickoff, Fase 5): Épica 2 completa, luego 4.1 y 4.2 (título en el
+  navegador), luego la Épica 3 y el resto de la 4. La Épica 8 se intercala cuando se desbloquea.
 - 57 historias: Épica 2 (15), 3 (11), 4 (10), 5 (6), 6 (8), 7 (3), 8 (4).
