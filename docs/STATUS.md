@@ -36,9 +36,15 @@
   Épica 7 = M7, Épica 8 continua de decomp/upstream/CI).
 - Fase 4.5: sprint planning (`docs/implementation-artifacts/sprint-status.yaml`, todo en `backlog`).
 
+- Fase 5, Historia 2.1 (esqueleto del build): `CMakeLists.txt` + preset `native-headless`; 119 TUs del
+  Juego compilan a objetos i686 (`_psstart.c` reemplazado por el crt del port); lista de TUs
+  generada (`tools/port/units/tu_list.py`); `char` con signo verificado en el asm original
+  (AD-17 enmendado, `docs/port/char-signedness.md`). Evidencia:
+  `docs/implementation-artifacts/evidence/story-2-1.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.1 (esqueleto del build del port y lista generada de TUs).
+- Fase 5: próxima historia 2.2 (checks L0a y los inventarios de literales y spins).
 
 ## Bloqueos
 
@@ -56,6 +62,7 @@
 | % descompilado del juego (bytes) | 100 % (931.800 B); PsyQ en asm: 612 funciones, 144.348 B (se reemplaza) |
 | Funciones PsyQ usadas / cubiertas por DW2-PC | 202 / 81 |
 | Archivos C del juego que compilan a wasm32 sin cambios | 97 / 120 |
+| Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Escenas que funcionan (nativo) | 0 |
 | Escenas que funcionan (web) | 0 |
 

@@ -81,7 +81,7 @@ decomp. M0 y M1 ya están completos (`docs/STATUS.md`).
 - AD-14: niveles de test L0a, L0b, L1, L2, L3a, L3b, L4; Escenas en `tools/port/scenes/<id>.toml`; referencias fuera del repo.
 - AD-15: frame 0 = retorno del primer `VSync` desde `main`; captura tras los eventos del VBlank según GP1; video exacto; MDEC ≤ 4/255 máx. y ≤ 0,5/255 media; traza SPU idéntica y PCM SNR ≥ 40 dB; variables de estado tipadas con punteros traducidos; log subpíxel del GTE para FR-13.
 - AD-16: GitLab CI propio; clase A sin datos en cualquier runner; clase B en runner protegido `dw1-data` con disco montado de solo lectura, solo pipelines de ramas propias; imagen `dw-port` del registry fijada por digest; hasta tener el forge conectado, las clases corren a mano en el contenedor y el log es la evidencia.
-- AD-17: presets `native`, `native-headless`, `native-asan`, `web`; flags del juego `-funsigned-char -fwrapv -fno-strict-aliasing -fno-common -DDW1_PORT -DLANGUAGE_C -DVERSION_US` (verificar `char` sin signo con diff de objetos); `-ffile-prefix-map` y `SOURCE_DATE_EPOCH`.
+- AD-17: presets `native`, `native-headless`, `native-asan`, `web`; flags del juego `-fsigned-char -fwrapv -fno-strict-aliasing -fno-common -DDW1_PORT -DLANGUAGE_C -DVERSION_US` (`char` con signo, verificado en la Historia 2.1); `-ffile-prefix-map` y `SOURCE_DATE_EPOCH`.
 - AD-18: los bytes del disco que reproduce el C de `src/`/`include/` se compilan tal cual; `tools/port/ci/data_leak_check` en clase B.
 - Deferred de la arquitectura a verificar en historias: punteros absolutos en `CHDAT/*.MMD` (M2), uso de `SHOP_REL.BIN` en USA (M3), viabilidad de 16:9 por Escena (M5).
 - Operativa (`CLAUDE.md`): una rama por historia; merge solo en verde con evidencia; `docs/STATUS.md` actualizado y push a `origin` al final de cada sesión.
@@ -176,18 +176,18 @@ para que cada historia siguiente agregue código sobre una base que ya compila.
 **Criterios de aceptación:**
 
 **Given** el árbol del Structural Seed (`port/psyq`, `port/backend`, `port/host`, `CMakePresets.json`)
-**When** se corre `tools/port/build/tu_list.py us`
+**When** se corre `tools/port/units/tu_list.py us`
 **Then** produce la lista de TUs del Juego y su overlay a partir de `mk/version/us.mk` y `config/us/*.yaml`
 **And** un test de la herramienta verifica que `vs_intro`, `vs_combat`, `vs_select` y `shop/script_menu` caen en `main` y que ningún `*_bss_{eu,jp*}.c` aparece
 
 **Given** el preset `native-headless`
 **When** se corre `cmake --preset native-headless && cmake --build --preset native-headless --target dw1_game_objs` en la imagen `dw-port`
-**Then** los 120 TUs del Juego compilan a objetos i686 sin errores con `-funsigned-char -fwrapv -fno-strict-aliasing -fno-common -DDW1_PORT -DLANGUAGE_C -DVERSION_US`
+**Then** los 119 TUs del Juego con estado `build` compilan a objetos i686 sin errores (`src/main/_psstart.c`, el crt de CodeWarrior, queda `replaced` por `port/psyq/crt.c`) con `-fsigned-char -fwrapv -fno-strict-aliasing -fno-common -DDW1_PORT -DLANGUAGE_C -DVERSION_US`
 **And** los headers de `port/psyq/include/` van antes que los de upstream, las macros GTE inline están redefinidas como llamadas declaradas en `port/backend/gte.h`, y `_Static_assert(sizeof(void *) == 4)` está en `port/psyq/ps1mem.h`
 
 **Given** los objetos compilados con `char` con y sin signo
-**When** se corre `tools/port/metrics/char_sign_diff.sh`
-**Then** el informe lista los TUs cuyo objeto cambia y queda en `docs/port/char-signedness.md` (verifica el supuesto de AD-17)
+**When** se corre `tools/port/metrics/char_sign_diff.py`
+**Then** el informe lista los TUs cuyo objeto cambia y queda en `docs/port/char-signedness.md` (verifica el supuesto de AD-17; resultado: `char` con signo, ver `docs/port/char-signedness.md`)
 
 ### Story 2.2: Checks L0a y los inventarios de literales y spins
 

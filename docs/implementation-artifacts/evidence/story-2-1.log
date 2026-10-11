@@ -1,0 +1,6 @@
+[144/144] Building C object CMakeFiles/dw1_game_objs.dir/src/vs/vs_effect.c.o
+objects=120
+100% tests passed, 0 tests failed out of 1
+tus_checked=119 tus_differ=14
+tus_checked=119 tus_differ=14
+signed_char_guard_fires=3
