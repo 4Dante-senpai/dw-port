@@ -43,8 +43,8 @@ src/main/sound.c	while@concatStrings3	(*src1 != 0)	1	508	no aplica: el loop modi
 src/main/sound.c	while@concatStrings3	(*src2 != 0)	1	511	no aplica: el loop modifica su propia condición
 src/main/sound_async.c	while@concatStrings2	(*s1)	1	88	no aplica: el loop modifica su propia condición
 src/main/sound_async.c	while@concatStrings2	(*s2)	1	92	no aplica: el loop modifica su propia condición
-src/main/utils2.c	while@startTournament	((i = *p++) < 0xfe)	1	611	no aplica: el loop modifica su propia condición
-src/main/utils2.c	while@startTournament	(id != 0)	1	648	no aplica: el loop modifica su propia condición
+src/main/utils2.c	while@startTournament	((i = *p++) < 0xfe)	1	620	no aplica: el loop modifica su propia condición
+src/main/utils2.c	while@startTournament	(id != 0)	1	657	no aplica: el loop modifica su propia condición
 src/main/vecmath.c	while@calculatePosition	(coord->super != NULL)	1	267	no aplica: el loop modifica su propia condición
 src/main/world_object.c	while@addObject	(1)	1	30	no aplica: avanza su propio índice y sale con break/return
 src/main/world_object.c	while@removeObject	(1)	1	61	no aplica: avanza su propio índice y sale con break/return

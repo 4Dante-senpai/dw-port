@@ -17,7 +17,11 @@
 
 #include "common.h"
 
+#ifdef DW1_PORT
+#define VS_TMD_BUFFER	((uint8_t *)PS1_RAM_ADDR(0x80038000))
+#else
 #define VS_TMD_BUFFER	((uint8_t *)0x80038000)
+#endif
 
 extern int16_t BTL_FINISHER_CHARGEUP_POS[2];
 extern int8_t GAME_STATE;

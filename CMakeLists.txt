@@ -73,6 +73,15 @@ foreach(y IN LISTS DW1_TEXT_YAML)
   list(APPEND DW1_TEXT_H ${out})
 endforeach()
 
+# Overlay load addresses (<ovl>_START) for the DW1_PORT block of src/main/utils2.c (AD-4).
+set(DW1_OVERLAY_STARTS_H ${CMAKE_BINARY_DIR}/generated/dw1_overlay_starts.h)
+add_custom_command(OUTPUT ${DW1_OVERLAY_STARTS_H}
+  COMMAND python3 -I -B tools/port/units/ovl_starts.py config/${DW1_VERSION}/overlay.ld
+    ${DW1_OVERLAY_STARTS_H}
+  DEPENDS ${CMAKE_SOURCE_DIR}/config/${DW1_VERSION}/overlay.ld
+    ${CMAKE_SOURCE_DIR}/tools/port/units/ovl_starts.py
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
 add_compile_options(-std=gnu99 -ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 
 # Native: fixed image address so globals, arena and game stack fall in the OT window (AD-5).
@@ -83,7 +92,7 @@ endif()
 find_package(Threads REQUIRED)
 
 # Game code: same semantics in every preset (AD-17). Port headers come first (AD-2).
-add_library(dw1_game_objs OBJECT ${DW1_GAME_SRC} ${DW1_TEXT_H})
+add_library(dw1_game_objs OBJECT ${DW1_GAME_SRC} ${DW1_TEXT_H} ${DW1_OVERLAY_STARTS_H})
 target_include_directories(dw1_game_objs PRIVATE
   port/psyq/include external/psyq_headers/mw_lib41/include include ${CMAKE_BINARY_DIR}/generated)
 target_compile_definitions(dw1_game_objs PRIVATE
@@ -96,6 +105,8 @@ add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c)
 target_compile_options(dw1_psyq PRIVATE -Wall -Wextra -Werror)
 
 enable_testing()
+add_test(NAME ovl_starts COMMAND python3 -I -B tools/port/units/test_ovl_starts.py
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME tu_list COMMAND python3 -I -B tools/port/units/test_tu_list.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME inventory COMMAND python3 -I -B tools/port/metrics/test_inventory.py
@@ -104,6 +115,11 @@ add_test(NAME preproc_check COMMAND sh tools/port/ci/preproc_check.sh
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME test_preproc_check COMMAND sh tools/port/ci/test_preproc_check.sh
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+# PS1_RAM_ADDR must refuse an address outside KSEG0 RAM at compile time.
+add_test(NAME ps1_ram_addr_range COMMAND ${CMAKE_C_COMPILER} -m32 -fsyntax-only
+  -I${CMAKE_SOURCE_DIR}/port/psyq/include ${CMAKE_SOURCE_DIR}/port/psyq/tests/bad_ps1_ram_addr.c)
+set_tests_properties(ps1_ram_addr_range PROPERTIES WILL_FAIL TRUE)
 
 # L1 tests of the PS1 memory model and the overlay reset.
 add_executable(test_ps1mem port/psyq/tests/test_ps1mem.c)
@@ -129,6 +145,7 @@ if(NOT CMAKE_C_FLAGS MATCHES "sanitize")
 add_executable(overlay_probe port/psyq/tests/overlay_probe.c $<TARGET_OBJECTS:dw1_game_objs>)
 target_link_libraries(overlay_probe dw1_psyq)
 target_compile_definitions(overlay_probe PRIVATE DW1_OVERLAY_UNITS=${DW1_OVERLAY_UNIT_COUNT})
+target_include_directories(overlay_probe PRIVATE port/psyq/include ${CMAKE_BINARY_DIR}/generated)
 target_link_options(overlay_probe PRIVATE
   -Wl,--unresolved-symbols=ignore-all -Wl,--wrap=main)
 add_test(NAME overlay_sections COMMAND overlay_probe)

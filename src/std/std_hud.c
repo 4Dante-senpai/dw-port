@@ -26,7 +26,11 @@
 
 #include "common.h"
 
+#ifdef DW1_PORT
+#define STD_TMD_BUFFER	((uint8_t *)PS1_RAM_ADDR(0x80038000))
+#else
 #define STD_TMD_BUFFER	((uint8_t *)0x80038000)
+#endif
 
 typedef struct {
 	uint32_t *vertTop;

@@ -35,6 +35,10 @@ class Inventory(unittest.TestCase):
         _, lost = inventory.merge(inventory.number([("f.c", "k", "other", 4, inventory.PENDING)]),
                                   inventory.load(tsv))
         self.assertEqual(lost, [(("f.c", "k", "t", "2"), "port_yield")])
+        # An old pending row takes the freshly computed default.
+        fresh = inventory.number([("f.c", "k", "t", 3, "traducido: rama PS1")])
+        old = {("f.c", "k", "t", "1"): inventory.PENDING}
+        self.assertEqual(inventory.merge(fresh, old)[0][0][5], "traducido: rama PS1")
 
     def test_strip_escapes_and_unterminated(self):
         src = "a = '\\''; b = \"\\\\\"; f(x);\n#if 0\ndon't\n#endif\ng(y);\n"
@@ -50,11 +54,54 @@ class Inventory(unittest.TestCase):
         self.assertEqual(inventory.enclosing_function(knr, knr.index("y;")), "f")
 
     def test_literal_defaults(self):
-        rows = {(f, lit): status for f, lit, _, _, status in ps1_literals.findings()}
-        self.assertEqual(rows[("src/evl/evl.c", "0x80020000")], inventory.PENDING)
-        self.assertEqual(rows[("src/main/vecmath.c", "0x80000000")], "no aplica: constante")
-        bss = [s for (f, _), s in rows.items() if "_bss_" in f]
-        self.assertTrue(bss and all(s == "no aplica: residuo del REL" for s in bss))
+        root = pathlib.Path(tempfile.mkdtemp())
+        (root / "src").mkdir()
+        (root / "src/a.c").write_text(
+            "#define B ((char *)0x80010000)\n"
+            "int f(int x) { return x & 0x80000000; } /* 0x80020000 in a comment */\n"
+            "#ifdef DW1_PORT\n#define C ((char *)PS1_RAM_ADDR(0x80030000))\n"
+            "#else\n#define C ((char *)0x80030000)\n#endif\n")
+        (root / "src/a_bss_us.c").write_text("void *p = (void *)0x80040000;\n")
+        rows = [(f, lit, st) for f, lit, _, _, st in
+                ps1_literals.findings(["src/a.c", "src/a_bss_us.c"], root)]
+        self.assertEqual(rows, [
+            ("src/a.c", "0x80010000", inventory.PENDING),
+            ("src/a.c", "0x80000000", "no aplica: constante"),
+            ("src/a.c", "0x80030000", "traducido"),
+            ("src/a.c", "0x80030000", "traducido: rama PS1"),
+            ("src/a_bss_us.c", "0x80040000", "no aplica: residuo del REL")])
+        self.assertEqual(ps1_literals.findings([], root), [])
+
+    def test_block_pairing(self):
+        root = pathlib.Path(tempfile.mkdtemp())
+        (root / "src").mkdir()
+        (root / "src/b.c").write_text(
+            "#ifdef DW1_PORT\n#define A ((char *)PS1_RAM_ADDR(0x80054838))\n"
+            "#define B ((char *)PS1_RAM_ADDR(0x80054838))\n#else\n"
+            "#define A ((char *)0x80054838)\n#define B ((char *)0x80054d00)\n#endif\n")
+        (root / "src/c.c").write_text(
+            "#ifdef DW1_PORT\n#define A ((char *)PS1_RAM_ADDR(0x80010000) + 0x80020000)\n"
+            "#else\n#define A ((char *)0x80010000 + 0x80020000)\n#endif\n")
+        _, errors = ps1_literals.scan(["src/b.c"], root)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("src/b.c:2", errors[0])
+        rows, errors = ps1_literals.scan(["src/c.c"], root)
+        self.assertEqual(errors, [])
+        self.assertIn(("0x80020000", inventory.PENDING), [(r[1], r[4]) for r in rows])
+
+    def test_port_branches(self):
+        lines = ["a", "#ifdef DW1_PORT", "p", "#if X", "q", "#endif", "#else", "r", "#endif", "s"]
+        self.assertEqual(ps1_literals.port_branches(lines),
+                         ["", "", "port", "", "port", "", "", "ps1", "", ""])
+        self.assertEqual(ps1_literals.port_branches(
+            ["# ifndef DW1_PORT", "a", "#else", "b", "#endif"]), ["", "ps1", "", "port", ""])
+        self.assertEqual(ps1_literals.port_branches(
+            ["#ifdef DW1_PORT", "a", "#elif X", "b", "#else", "c", "#endif"]),
+            ["", "port", "", "", "", "", ""])
+        rows = {(f, lit, st) for f, lit, _, _, st in ps1_literals.findings()
+                if f == "include/dw/main.h" and lit == "0x80010000"}
+        self.assertEqual(rows, {("include/dw/main.h", "0x80010000", "traducido"),
+                                ("include/dw/main.h", "0x80010000", "traducido: rama PS1")})
 
     def test_literal_suffix(self):
         self.assertTrue(ps1_literals.LITERAL.search("x = 0x80010000U;"))

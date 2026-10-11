@@ -21,7 +21,11 @@
 #include <dw/version.h>
 #include <text/main/utils2.h>
 
+#ifdef DW1_PORT
+#define shop_START		((char *)PS1_RAM_ADDR(0x80080800))
+#else
 #define shop_START		((char *)0x80080800)
+#endif
 
 void reinitializeAfterTournament(void);
 void thunkReinitializeAfterTournament(void);
@@ -69,6 +73,10 @@ int32_t STD_tournamentMain(uint8_t *arg);
 extern uint8_t ITEM_CLUT_DATA[];
 extern uint8_t MAP_LAYER_ENABLED;
 extern RGB8 TEXT_COLORS[];
+#ifdef DW1_PORT
+/* Overlay load addresses in the arena, generated from config/<version>/overlay.ld. */
+#include <dw1_overlay_starts.h>
+#else
 extern char btl_START[];
 extern char dget_START[];
 extern char doo2_START[];
@@ -84,6 +92,7 @@ extern char std_START[];
 extern char trn_START[];
 extern char trn2_START[];
 extern char vs_START[];
+#endif
 
 // clang-format off
 void *REL_BIN_OFFSETS[16] = {

@@ -25,7 +25,11 @@
 
 #include "common.h"
 
+#ifdef DW1_PORT
+#define EVL_MMD_BUFFER	((unsigned int)PS1_RAM_ADDR(0x80020000))
+#else
 #define EVL_MMD_BUFFER	0x80020000
+#endif
 
 typedef struct {
 	int16_t timer;

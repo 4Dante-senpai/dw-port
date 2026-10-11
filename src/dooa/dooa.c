@@ -30,11 +30,21 @@
 #include <dw/version.h>
 #include <dw/world_object.h>
 
+#ifdef DW1_PORT
+#define DOOA_MMD_BUFFER		((unsigned int)PS1_RAM_ADDR(0x80020000))
+#define DOOA_SHARD_BUFFER	((unsigned int)PS1_RAM_ADDR(0x80044800))
+#else
 #define DOOA_MMD_BUFFER		0x80020000
 #define DOOA_SHARD_BUFFER	0x80044800
+#endif
 #define DOOA_SHARD_BUFFER_SIZE	0x5dc0
+#ifdef DW1_PORT
+#define DOOA_ORDERING_TABLE_0	((GsOT_TAG *)PS1_RAM_ADDR(0x8008c000))
+#define DOOA_ORDERING_TABLE_1	((GsOT_TAG *)PS1_RAM_ADDR(0x8008e000))
+#else
 #define DOOA_ORDERING_TABLE_0	((GsOT_TAG *)0x8008c000)
 #define DOOA_ORDERING_TABLE_1	((GsOT_TAG *)0x8008e000)
+#endif
 
 typedef struct {
 	VECTOR offset;

@@ -53,6 +53,10 @@ del stack (`src/main/main.c:3534-3539`, `InitHeap3`).
 confirmar si en USA su contenido se usa o es un resto. Validar con un breakpoint de lectura en
 `0x80080800` en el emulador de referencia.
 
+Observación del linker script (Historia 2.4): en USA `dget_START` también vale `0x80080800`
+(`config/us/overlay.ld`), así que `SHOP` y `DGET` usan la misma región; `shop_START` no sale del
+linker script sino de la constante a mano de `utils2.c`, que el port traduce con `PS1_RAM_ADDR`.
+
 ## Regiones y exclusión mutua
 
 Agrupado por rangos que se pisan (si dos rangos se solapan, no pueden estar cargados a la vez):

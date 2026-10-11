@@ -116,7 +116,10 @@ def merge(rows, old):
     regeneration never drops a classification silently.
     """
     for r in rows:
-        r[5] = old.get(tuple(r[:4]), r[5])
+        # A pending row takes the freshly computed default (it may now be classified).
+        kept = old.get(tuple(r[:4]), PENDING)
+        if kept != PENDING:
+            r[5] = kept
     keys = {tuple(r[:4]) for r in rows}
     lost = [(k, s) for k, s in old.items() if k not in keys and s != PENDING]
     return rows, lost
