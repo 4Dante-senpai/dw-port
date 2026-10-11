@@ -160,14 +160,14 @@ El dueño ve en cada sesión el estado del decomp y de la Capa PsyQ, puede merge
 sin conflictos fuera de los puntos documentados y tiene las clases de CI corriendo.
 **FRs cubiertos:** NFR-6, NFR-10; AD-1 (métricas), AD-16.
 
-## Épica 2: El Juego arranca en nativo hasta la pantalla de título (M2)
+## Epic 2: El Juego arranca en nativo hasta la pantalla de título (M2)
 
 El desarrollador compila el Juego completo como binario i686 headless sobre la Capa PsyQ propia,
 lo alimenta con un Pack construido desde su disco y llega a la pantalla de título
 (`runLandingScreen`, después de `playMovie(0)` en `src/main/main.c`) con el Renderer software.
 La exactitud píxel a píxel contra el Emulador de referencia queda para la Épica 3.
 
-### Historia 2.1: Esqueleto del build del port y lista generada de TUs
+### Story 2.1: Esqueleto del build del port y lista generada de TUs
 
 Como desarrollador del port,
 quiero un build CMake que compile todos los TUs del Juego USA con los flags de AD-17,
@@ -189,7 +189,7 @@ para que cada historia siguiente agregue código sobre una base que ya compila.
 **When** se corre `tools/port/metrics/char_sign_diff.sh`
 **Then** el informe lista los TUs cuyo objeto cambia y queda en `docs/port/char-signedness.md` (verifica el supuesto de AD-17)
 
-### Historia 2.2: Checks L0a y los inventarios de literales y spins
+### Story 2.2: Checks L0a y los inventarios de literales y spins
 
 Como desarrollador del port,
 quiero un check automático de que `src/` sin `DW1_PORT` no cambió y los inventarios de AD-4 y AD-8,
@@ -211,7 +211,7 @@ para que ningún cambio rompa el build matching sin que nadie lo vea.
 **When** se corre sobre `src/`
 **Then** genera `tools/port/metrics/isr_spins.tsv` con los loops que esperan un flag sin llamar a PsyQ (incluye `MOV_waitForFlip` en `src/mov/mov.c`), cada uno con estado
 
-### Historia 2.3: Memoria PS1, enlaces de OT y reinicio de overlays
+### Story 2.3: Memoria PS1, enlaces de OT y reinicio de overlays
 
 Como desarrollador del port,
 quiero la arena PS1, el scratchpad, `PS1_LINK` y el snapshot/restore por overlay,
@@ -229,7 +229,7 @@ para que el Juego use direcciones PS1 y que cada recarga de overlay empiece con 
 **Then** al llamar `port_overlay_loaded(ovl)` todas las variables globales, `static` de archivo y `static` locales del overlay vuelven a su valor inicial, en `-O0` y `-O2`
 **And** las secciones de los 16 overlays existen en el binario con sus símbolos `__start_`/`__stop_`
 
-### Historia 2.4: Traducción de direcciones PS1 en `src/` e `include/`
+### Story 2.4: Traducción de direcciones PS1 en `src/` e `include/`
 
 Como desarrollador del port,
 quiero las macros y tablas con direcciones fijas traducidas con `PS1_RAM()` detrás de `DW1_PORT`,
@@ -247,7 +247,7 @@ para que los buffers del Juego (`GENERAL_BUFFER`, `TEXTURE_BUFFER`, `REL_BIN_OFF
 **Then** el resultado (offsets relativos o punteros absolutos) queda en `docs/research/hardware-access.md` con la evidencia (líneas de código)
 **And** si hay punteros absolutos, la historia agrega el caso al inventario y lo traduce antes de cerrar
 
-### Historia 2.5: Reloj virtual y semántica de `VSync`
+### Story 2.5: Reloj virtual y semántica de `VSync`
 
 Como desarrollador del port,
 quiero `port/psyq/clock.c` como dueño único del tiempo,
@@ -264,7 +264,7 @@ para que las esperas del Juego terminen siempre y en el mismo orden en cada corr
 **When** el test hace encuestas en loop (`VSync(-1)`, `TestEvent`)
 **Then** el loop termina porque cada entrada PsyQ avanza el reloj, los callbacks corren solo en el hilo que llama, y dos corridas producen la misma traza de eventos byte a byte
 
-### Historia 2.6: Linkeo completo y arranque hasta el frame 0
+### Story 2.6: Linkeo completo y arranque hasta el frame 0
 
 Como desarrollador del port,
 quiero un binario `native-headless` que linkea el Juego entero con stubs generados para toda función PsyQ faltante,
@@ -283,7 +283,7 @@ para que el Juego arranque y se vea qué función PsyQ necesita a continuación.
 **And** `port_trace.log` lista, en orden, los stubs llamados antes del frame 0
 **And** el contador `PsyQ implementadas/202` sale del comentario de fuente (`dw2-pc:` o `asm:`) de cada función en `port/psyq/` y se imprime en el log del build
 
-### Historia 2.7: Manifest y herramienta nativa del Pack
+### Story 2.7: Manifest y herramienta nativa del Pack
 
 Como desarrollador del port,
 quiero validar mi Imagen del disco y construir el Pack con una herramienta nativa,
@@ -301,7 +301,7 @@ para que el Juego nativo lea los archivos del disco y el Pack web tenga una refe
 **Then** `tools/port/manifest/us.tsv` tiene una fila por archivo (ruta, LBA, sectores, modo `F1`/`F2`, tamaño, SHA-256) más la de `SLUS_010.32`, sin contenido del disco, y el hook pre-commit lo acepta
 **And** el Pack pasa la validación y dos construcciones dan el mismo SHA-256
 
-### Historia 2.8: `libcd` y modelo del CD sobre el Pack
+### Story 2.8: `libcd` y modelo del CD sobre el Pack
 
 Como desarrollador del port,
 quiero `CdSearchFile`, `CdRead`, `CdReadSync`, `CdSync`, `CdControl` y el resto de `libcd` que usa el Juego sobre el Pack,
@@ -318,7 +318,7 @@ para que el Juego cargue archivos y overlays como en la consola.
 **When** el Juego corre hasta cargar su primer `*_REL.BIN`
 **Then** el archivo queda en `PS1_RAM(REL_BIN_OFFSETS[i])` con el SHA-256 del Manifest y `port_overlay_loaded` se llama una vez por pedido
 
-### Historia 2.9: `libc`, `libapi` y `libetc` deterministas
+### Story 2.9: `libc`, `libapi` y `libetc` deterministas
 
 Como desarrollador del port,
 quiero `rand`, `malloc3`/`free3`/`InitHeap3`, `setjmp`/`longjmp`, las funciones de cadenas, `ResetCallback`, `PadInit`/`PadRead` y `VSyncCallback` con la semántica de `mw_lib41`,
@@ -331,7 +331,7 @@ para que el Juego tome las mismas decisiones que en la consola.
 **Then** la secuencia de los primeros 10.000 valores de `rand` tras `srand` con semillas de prueba coincide con la del algoritmo traducido del asm, y el heap de `malloc3` devuelve las mismas direcciones PS1 para una secuencia de pedidos de prueba
 **And** cada función tiene el comentario `asm:` con su fuente y el contador de la Historia 2.6 sube en consecuencia
 
-### Historia 2.10: Modelo GTE y macros inline
+### Story 2.10: Modelo GTE y macros inline
 
 Como desarrollador del port,
 quiero el GTE del Backend (registros, `RTPS`, `RTPT`, `NCLIP`, `AVSZ3/4`, `MVMVA`, `NCDS`, etc.) detrás de las macros GTE del port,
@@ -344,7 +344,7 @@ para que la geometría 3D del Juego se calcule con la aritmética de la PS1.
 **Then** cada operación usada por las 11 macros inline (181 usos) da los resultados, flags y saturación esperados en vectores de prueba propios escritos a partir de la especificación del GTE
 **And** los 23 TUs que no compilaban a wasm32 por las macros GTE compilan también con el preset `web` (sin linkear)
 
-### Historia 2.11: `libgte` y tablas leídas del exe en el Pack
+### Story 2.11: `libgte` y tablas leídas del exe en el Pack
 
 Como desarrollador del port,
 quiero las 56 funciones de `libgte` que llama el Juego y las tablas `rcossin_tbl`/`ratan_tbl` cargadas desde `SLUS_010.32` en el Pack,
@@ -361,7 +361,7 @@ para que las matrices y los ángulos coincidan con la consola sin embeber datos 
 **When** corren los tests L1 con tablas sintéticas
 **Then** `RotMatrix`, `TransMatrix`, `MulMatrix0`, `ApplyMatrix`, `ratan2`, `rsin`/`rcos` y el resto dan los resultados del algoritmo traducido en vectores de prueba
 
-### Historia 2.12: Renderer software y `libgpu`
+### Story 2.12: Renderer software y `libgpu`
 
 Como desarrollador del port,
 quiero `port/backend/gpu.h` con el Renderer software (VRAM 1024×512×16) y las 28 funciones de `libgpu` que usa el Juego,
@@ -374,7 +374,7 @@ para que el Juego dibuje en una VRAM como la de la PS1.
 **Then** cada tipo de primitiva usada (polígonos F/G/FT/GT de 3 y 4 vértices, sprites, líneas, tiles, transferencias de VRAM) produce un SHA-256 de VRAM fijo en casos sintéticos, con dithering, semitransparencia y ventana de textura
 **And** `DrawOTag`, `LoadImage`, `StoreImage`, `MoveImage`, `ClearImage`, `PutDispEnv`, `PutDrawEnv`, `ClearOTagR` y `DrawSync` hablan con el Backend solo por `gpu.h`, y `DrawSync` termina por costo en el reloj virtual
 
-### Historia 2.13: `libgs` con el pipeline TMD
+### Story 2.13: `libgs` con el pipeline TMD
 
 Como desarrollador del port,
 quiero las 35 funciones de `libgs` (incluidos `GsSortObject4J` y las 27 `GsTMD*` tomadas por dirección),
@@ -387,7 +387,7 @@ para que los modelos 3D del Juego se ordenen y dibujen como en la consola.
 **Then** `GsSortObject4J` genera la misma lista de primitivas y el mismo OT (comparados por SHA-256) que la traza de referencia escrita a partir del algoritmo traducido
 **And** `GsInitGraph`, `GsDefDispBuff`, `GsSwapDispBuff`, `GsSortClear`, `GsDrawOt` y el doble buffer funcionan en un test que dibuja dos frames alternados
 
-### Historia 2.14: Stubs con comportamiento definido para audio, video y Memory card
+### Story 2.14: Stubs con comportamiento definido para audio, video y Memory card
 
 Como desarrollador del port,
 quiero `libsnd`, `libspu`, `libpress`, `libds` y `libmcrd` en versión mínima documentada (silencio, video que termina, tarjeta ausente),
@@ -400,7 +400,7 @@ para que el arranque llegue al título antes de tener el audio y el video reales
 **Then** cada una tiene el comentario `stub-m2:` con el comportamiento elegido, y `docs/port/stubs.md` las lista con la historia de la Épica 3 que las reemplaza
 **And** un test L1 verifica que el stream de `playMovie(0)` termina en un número fijo de frames y que `MemCardSync` informa "sin tarjeta" sin bloquear
 
-### Historia 2.15: Pantalla de título en nativo headless
+### Story 2.15: Pantalla de título en nativo headless
 
 Como desarrollador del port,
 quiero correr el Juego headless con el Pack real hasta la pantalla de título y volcar su captura,
@@ -418,12 +418,12 @@ para que M2 quede cerrado con evidencia (SM-1, parte nativa).
 **Then** ASan y UBSan no reportan errores, y no quedan filas `pendiente` en `isr_spins.tsv` para el camino hasta el título
 **And** `docs/STATUS.md` registra "Escenas que funcionan (nativo): 1 (título, sin referencia)"
 
-## Épica 3: Paridad nativa contra el Emulador de referencia (M3)
+## Epic 3: Paridad nativa contra el Emulador de referencia (M3)
 
 El Build nativo se ve, suena y guarda como la consola. Toda comparación usa los puntos de medición y
 las tolerancias de AD-15, contra PCSX-Redux fijado por SHA con OpenBIOS, en la clase B.
 
-### Historia 3.1: Emulador de referencia y captura automática
+### Story 3.1: Emulador de referencia y captura automática
 
 Como desarrollador del port,
 quiero PCSX-Redux en la imagen `dw-port` con un script que captura frames, audio y variables de estado en los mismos puntos que el port,
@@ -440,7 +440,7 @@ para tener Frames de referencia sin intervención manual.
 **When** el dueño la repite una vez con su BIOS real fuera del repo (pregunta abierta 3 del PRD)
 **Then** el resultado (iguales o con diferencias listadas) queda en `docs/port/reference.md`
 
-### Historia 3.2: Runner de Escenas y pantalla de título exacta
+### Story 3.2: Runner de Escenas y pantalla de título exacta
 
 Como desarrollador del port,
 quiero `tools/port/scenes/run.py` comparando el port contra la referencia,
@@ -457,7 +457,7 @@ para que FR-4 y NFR-8 se verifiquen solos.
 **When** la diferencia cae dentro de la región
 **Then** la Escena pasa y el informe lista la excepción usada
 
-### Historia 3.3: Inputs por VBlank y comparación de estado
+### Story 3.3: Inputs por VBlank y comparación de estado
 
 Como desarrollador del port,
 quiero reproducir una secuencia de inputs por VBlank y comparar las variables de `state_vars.txt` en ambos lados,
@@ -470,7 +470,7 @@ para detectar divergencias de lógica aunque los frames coincidan.
 **Then** los valores del port y de la referencia son idénticos, con punteros traducidos (arena → `0x80000000 | offset`, global nativo → símbolo + offset)
 **And** una divergencia nombra la primera variable distinta y el VBlank en que apareció, y `rand` en la referencia y en el port dan la misma secuencia en una Escena con decisiones aleatorias
 
-### Historia 3.4: SPU emulado y `libspu`
+### Story 3.4: SPU emulado y `libspu`
 
 Como desarrollador del port,
 quiero el SPU del Backend (24 voces ADPCM, ADSR, reverb, entrada de CD) y `libspu` traducida del asm de DW1,
@@ -483,7 +483,7 @@ para que el audio se genere con la lógica de la consola.
 **Then** decodificar bloques ADPCM sintéticos, envolventes ADSR y la reverb dan muestras con SHA-256 fijo, y el SPU corre hasta el tiempo virtual antes de cada escritura de registro
 **And** en 35.964 VBlanks el SPU genera exactamente 44.100 × 1001/60000 × 35.964 muestras, con acumulador exacto
 
-### Historia 3.5: `libsnd` de DW1 y traza de audio
+### Story 3.5: `libsnd` de DW1 y traza de audio
 
 Como desarrollador del port,
 quiero el secuenciador `libsnd` traducido de `mw_lib41` con su tick por root counter (`SS_TICK240`) y la comparación de audio de AD-15,
@@ -496,7 +496,7 @@ para que la música y los efectos suenen como en la consola (FR-7).
 **Then** la traza de escrituras a registros SPU con timestamp en muestras es idéntica
 **And** el PCM alineado por correlación cruzada da SNR ≥ 40 dB en ventanas de 5 s, y los stubs `stub-m2:` de `libsnd`/`libspu` ya no existen
 
-### Historia 3.6: XA y sectores Form 2
+### Story 3.6: XA y sectores Form 2
 
 Como desarrollador del port,
 quiero leer sectores F2 del Pack, decodificar XA y mezclarlo en la entrada de CD del SPU,
@@ -509,7 +509,7 @@ para que las voces y pistas XA suenen como en la consola.
 **Then** la traza SPU es idéntica y el PCM da SNR ≥ 40 dB
 **And** un test L1 decodifica sectores XA sintéticos (4 y 8 bits, mono y estéreo) a un SHA-256 fijo
 
-### Historia 3.7: MDEC, `libpress` y videos STR
+### Story 3.7: MDEC, `libpress` y videos STR
 
 Como jugador,
 quiero ver los videos del disco con su sonido y poder saltarlos con Start,
@@ -526,7 +526,7 @@ para tener la intro y las cinemáticas como en la consola (FR-6).
 **When** se corre `title.toml`
 **Then** sigue pasando exacta contra la referencia con el video real
 
-### Historia 3.8: Memory card nativa
+### Story 3.8: Memory card nativa
 
 Como jugador,
 quiero que lo que guardo en el Juego quede en un `.mcd` compatible con los emuladores,
@@ -543,7 +543,7 @@ para conservar mis partidas (FR-10, FR-11 en nativo).
 **When** se reabre la tarjeta
 **Then** contiene el estado anterior o el nuevo, nunca uno mezclado
 
-### Historia 3.9: Preset `native` con ventana SDL3
+### Story 3.9: Preset `native` con ventana SDL3
 
 Como desarrollador del port,
 quiero jugar el Build nativo en una ventana con teclado, gamepad y audio,
@@ -556,7 +556,7 @@ para depurar a mano con el mismo código que el web (FR-17).
 **Then** produce un ejecutable que abre una ventana y llega al título; en CI se verifica con `SDL_VIDEODRIVER=offscreen` y `SDL_AUDIODRIVER=dummy` comparando la captura con la de `native-headless`
 **And** el Host remuestrea el audio a la frecuencia del dispositivo con ratio ajustado por nivel del buffer (AD-10), y un test L1 con un dispositivo simulado al 101 % y al 99 % mantiene el buffer dentro de la banda sin underruns en 10 minutos simulados
 
-### Historia 3.10: Calibración de costos y ritmo nativo
+### Story 3.10: Calibración de costos y ritmo nativo
 
 Como desarrollador del port,
 quiero las constantes de costo de CD, GPU y MDEC calibradas contra la referencia,
@@ -569,7 +569,7 @@ para que las cargas y los videos tarden lo mismo que en la consola.
 **Then** la diferencia es 0 VBlanks en cada punto, y las constantes quedan en `port/psyq/clock_costs.h` con la Escena que las calibró
 **And** 10 minutos de `native` con reloj de pared dan un conteo de VBlanks que difiere del teórico en < 1 (NFR-1 nativo)
 
-### Historia 3.11: Hipótesis pendientes de los overlays
+### Story 3.11: Hipótesis pendientes de los overlays
 
 Como desarrollador del port,
 quiero verificar si `SHOP_REL.BIN` se usa en USA,
@@ -581,13 +581,13 @@ para cerrar la hipótesis de `docs/research/overlays.md` con evidencia.
 **When** corre en el port y en la referencia con un breakpoint en la carga de `SHOP_REL.BIN`
 **Then** `docs/research/overlays.md` registra si el archivo se carga y desde qué función, y la Escena pasa contra la referencia
 
-## Épica 4: Jugar en el navegador con el disco propio (M4)
+## Epic 4: Jugar en el navegador con el disco propio (M4)
 
 El mismo código corre con Emscripten en el hilo del juego (AD-7), lee el Pack desde OPFS por el
 worker de E/S (AD-13) y se presenta por WebGL2 en un `OffscreenCanvas` (AD-9). Los tests usan
 Playwright 1.64.0 en Chromium y Firefox (NFR-9).
 
-### Historia 4.1: El Juego en wasm con su propio hilo y presentación
+### Story 4.1: El Juego en wasm con su propio hilo y presentación
 
 Como desarrollador del port,
 quiero el preset `web` corriendo el Juego en un pthread con stack estático dentro de la ventana de 16 MB y presentando el Renderer software por WebGL2,
@@ -605,7 +605,7 @@ para validar el modelo de hilos y memoria de AD-5 y AD-7 en los dos navegadores.
 **Then** el contenido leído del canvas en el test coincide píxel a píxel con el frame de VRAM convertido
 **And** el test mide y registra el tiempo de presentación por frame en ambos navegadores (sin umbral; insumo de la Épica 5)
 
-### Historia 4.2: Worker de E/S y pantalla de título en el navegador
+### Story 4.2: Worker de E/S y pantalla de título en el navegador
 
 Como desarrollador del port,
 quiero un worker de E/S dueño de OPFS que sirve sectores al hilo del juego por un buzón en `SharedArrayBuffer`,
@@ -622,7 +622,7 @@ para que el Juego lea el Pack de forma síncrona en el navegador.
 **When** un test pide lecturas concurrentes desde el hilo del juego
 **Then** cada lectura devuelve los bytes esperados y el hilo del juego espera con `Atomics.wait` sin espera activa
 
-### Historia 4.3: Selección del disco, validación y Pack en el navegador
+### Story 4.3: Selección del disco, validación y Pack en el navegador
 
 Como jugadora,
 quiero elegir mi `.bin`/`.cue`, ver el progreso de la validación y quedar lista para jugar,
@@ -640,7 +640,7 @@ para no instalar nada (UJ-1, FR-1, FR-2, FR-3).
 **Then** su SHA-256 es igual al del Pack de la herramienta nativa (Historia 2.7), se mide el tiempo hasta "Listo para jugar" (SM-4) y, al recargar la página, la Shell ofrece "Jugar" sin pedir el disco
 **And** la Shell llama a `navigator.storage.persist()` e informa si se deniega, y "Borrar datos" elimina el Pack
 
-### Historia 4.4: Pantallas de la Shell web y capacidades
+### Story 4.4: Pantallas de la Shell web y capacidades
 
 Como jugador,
 quiero una Shell web que me explique qué necesito, me avise si mi navegador no sirve y me deje pausar,
@@ -658,7 +658,7 @@ para entender qué pasa en cada momento (FR-15).
 **Then** el reloj de pared se detiene, el conteo de VBlanks no avanza durante la pausa, y al volver el Juego sigue sin contar frames perdidos por la pausa (AD-8)
 **And** "Jugar" es el único gesto necesario para llegar al título con audio (FR-4)
 
-### Historia 4.5: Teclado y gamepad
+### Story 4.5: Teclado y gamepad
 
 Como jugador,
 quiero jugar con teclado o con cualquier gamepad estándar con un mapeo por defecto,
@@ -671,7 +671,7 @@ para empezar sin configurar nada (FR-8).
 **Then** los 14 botones digitales llegan a `PadRead` con el mapeo por defecto documentado en `docs/port/controls.md`, aplicados en el latch del VBlank en que se muestrearon
 **And** conectar y desconectar el gamepad simulado no detiene el Juego ni cambia el conteo de VBlanks, y con la opción activa el stick izquierdo actúa como D-pad
 
-### Historia 4.6: Remapeo y opciones persistentes
+### Story 4.6: Remapeo y opciones persistentes
 
 Como jugador,
 quiero reasignar cada botón y que el cambio se mantenga,
@@ -684,7 +684,7 @@ para jugar con los botones donde los quiero (FR-9).
 **Then** el Juego recibe el botón PS1 reasignado
 **And** "Restaurar valores por defecto" vuelve al mapeo de `docs/port/controls.md`, y una base con `schema_version` anterior se migra sin perder datos (test con una base sembrada)
 
-### Historia 4.7: Audio en el navegador
+### Story 4.7: Audio en el navegador
 
 Como jugador,
 quiero el audio del Juego por un AudioWorklet con volumen ajustable,
@@ -697,7 +697,7 @@ para escuchar el Juego sin cortes (FR-7).
 **Then** el PCM capturado del worklet antes del remuestreo es idéntico al de `native-headless`
 **And** el volumen general de la Shell escala la salida en el Host y persiste en `PortSettings`; en un test de 10 minutos con reloj de pared en Chromium y Firefox, el contador de underruns del worklet es 0 (umbral final en hardware de referencia: Épica 5)
 
-### Historia 4.8: Memory cards en el navegador
+### Story 4.8: Memory cards en el navegador
 
 Como jugador,
 quiero que mis saves persistan, y poder importar y exportar mis Memory cards,
@@ -715,7 +715,7 @@ para seguir mi partida y moverla entre el port y un emulador (UJ-2, UJ-3, FR-10,
 **Then** el Juego carga el save importado, PCSX-Redux carga el `.mcd` exportado y muestra el save, y un archivo de tamaño distinto de 131.072 bytes se rechaza con mensaje
 **And** si `navigator.storage.persist()` fue denegado, la Shell sugiere exportar la Memory card
 
-### Historia 4.9: Offline y actualizaciones
+### Story 4.9: Offline y actualizaciones
 
 Como jugador,
 quiero que el port funcione sin conexión después de la primera carga y que se actualice al recargar,
@@ -728,7 +728,7 @@ para jugar en cualquier lado sin perder nada (FR-16).
 **Then** la Shell abre y el Juego arranca con el Pack guardado
 **And** al publicar una versión nueva en el servidor de test y recargar, la versión nueva queda activa sin perder Pack ni Memory cards, y un Pack con `format_version` anterior se migra sin pedir el disco (test con un Pack sintético de la versión anterior)
 
-### Historia 4.10: Checks del build web: ritmo, tamaño, reproducibilidad, red y datos
+### Story 4.10: Checks del build web: ritmo, tamaño, reproducibilidad, red y datos
 
 Como dueño del proyecto,
 quiero los checks automáticos de NFR-1 web, NFR-3, NFR-4, NFR-5 y NFR-7,
@@ -745,12 +745,12 @@ para que ningún merge empeore estas garantías sin que el CI lo marque.
 **When** corre sobre los artefactos web y el árbol del repo
 **Then** toda ventana de 64 bytes del disco presente en un artefacto aparece también en los objetos compilados de `src/`, los objetos de `port/` no tienen ninguna, y un test con un archivo de `port/` contaminado con 64 bytes del disco hace fallar el check
 
-## Épica 5: Mejoras de video y 59,94 Hz estables (M5)
+## Epic 5: Mejoras de video y 59,94 Hz estables (M5)
 
 El Renderer WebGL2 implementa `gpu.h` (AD-9); las mejoras usan el canal lateral del GTE y por
 defecto están apagadas. Las mediciones de rendimiento son L4, en el hardware de referencia.
 
-### Historia 5.1: Renderer WebGL2 idéntico a 1×
+### Story 5.1: Renderer WebGL2 idéntico a 1×
 
 Como desarrollador del port,
 quiero un Renderer WebGL2 que a 1× sin mejoras dé los mismos frames que el Renderer software,
@@ -763,7 +763,7 @@ para tener una base acelerada sin perder fidelidad.
 **Then** cada captura es idéntica a la del Renderer software, salvo excepciones listadas en el `.toml` con su motivo
 **And** los casos sintéticos de primitivas de la Historia 2.12 dan el mismo SHA-256 de VRAM con los dos Renderers
 
-### Historia 5.2: Escala de resolución de 1× a 4×
+### Story 5.2: Escala de resolución de 1× a 4×
 
 Como jugador,
 quiero elegir la resolución interna del 3D,
@@ -776,7 +776,7 @@ para ver el Juego más nítido (FR-12).
 **Then** la imagen tiene N veces la resolución del área de display y, en un caso sintético, los bordes de un triángulo 3D caen en las posiciones subpíxel esperadas
 **And** en una Escena solo 2D, la captura a N× reducida por vecino más cercano es idéntica a la de 1× (texturas y 2D conservan sus píxeles)
 
-### Historia 5.3: Sin wobble
+### Story 5.3: Sin wobble
 
 Como jugador,
 quiero activar vértices precisos y texturas con corrección de perspectiva,
@@ -789,7 +789,7 @@ para que los polígonos no tiemblen (FR-13).
 **Then** el desplazamiento máximo de cada vértice entre dos frames consecutivos es < 1 píxel de salida
 **And** con la opción apagada la Escena sigue siendo idéntica a la del Renderer software
 
-### Historia 5.4: Relación de aspecto 16:9
+### Story 5.4: Relación de aspecto 16:9
 
 Como jugador,
 quiero 16:9 ampliando el campo de visión del 3D sin estirar la interfaz,
@@ -802,7 +802,7 @@ para usar toda la pantalla (FR-14).
 **Then** la interfaz 2D conserva su layout 4:3 (la región 2D centrada coincide con la captura 4:3) y las Escenas con fondos pre-renderizados donde no es viable se muestran en 4:3 con barras
 **And** `docs/port/widescreen.md` lista por Escena si 16:9 es viable, con la evidencia (responde la pregunta abierta 2 del PRD)
 
-### Historia 5.5: Opciones de video en la Shell
+### Story 5.5: Opciones de video en la Shell
 
 Como jugador,
 quiero elegir escala, sin wobble y aspecto desde las opciones de la Shell,
@@ -815,7 +815,7 @@ para cambiar la imagen sin recargar (FR-15).
 **Then** el Renderer aplica la opción en el próximo frame y la opción persiste en `PortSettings`
 **And** el valor por defecto es "original" (1×, opción sin wobble apagada, 4:3), y con él las capturas son idénticas a las del Renderer software
 
-### Historia 5.6: Rendimiento en el hardware de referencia
+### Story 5.6: Rendimiento en el hardware de referencia
 
 Como jugador,
 quiero que el Juego no pierda frames en una computadora común,
@@ -828,12 +828,12 @@ para jugar a 59,94 Hz (NFR-2, SM-3).
 **Then** el informe muestra ≥ 99 % de frames a tiempo según el contador de frames perdidos de AD-8, y 0 underruns de audio
 **And** el informe queda en `docs/port/perf/` con navegador, versión, equipo y commit; si no se llega al umbral, la historia sigue abierta con el perfil de los puntos calientes adjunto
 
-## Épica 6: Partida completa sin divergencias (M6)
+## Epic 6: Partida completa sin divergencias (M6)
 
 La suite de Escenas cubre los 16 overlays y corre en `native-headless` y en `web` contra la
 referencia (L2, L3b). Las Memory cards de entrada y las referencias viven fuera del repo.
 
-### Historia 6.1: Definición de la suite de Escenas
+### Story 6.1: Definición de la suite de Escenas
 
 Como desarrollador del port,
 quiero la lista de Escenas por overlay con su punto de entrada,
@@ -846,7 +846,7 @@ para que FR-5 tenga una definición verificable de "terminado".
 **Then** cada overlay tiene al menos una Escena con id estable, punto de entrada (inputs desde el frame 0 o Memory card externa), frames a capturar y puntos de control de estado
 **And** un check verifica que todo overlay de la lista de TUs de AD-1 aparece en la suite, las referencias de todas las Escenas se capturan con `capture.py` (clase B), y la viabilidad de 16:9 de cada Escena nueva se agrega a `docs/port/widescreen.md`
 
-### Historia 6.2: Mundo, combate y evolución
+### Story 6.2: Mundo, combate y evolución
 
 Como jugador,
 quiero explorar, combatir y ver evolucionar a mi Digimon como en la consola,
@@ -859,7 +859,7 @@ para jugar el núcleo de la partida.
 **Then** pasan frames, estado y audio contra la referencia (AD-15)
 **And** el detector de aliasing de AD-6 registra cero eventos en esas Escenas o una lista justificada en sus `.toml`
 
-### Historia 6.3: Entrenamiento, tiendas y objetos
+### Story 6.3: Entrenamiento, tiendas y objetos
 
 Como jugador,
 quiero entrenar, comprar y conseguir objetos,
@@ -872,7 +872,7 @@ para progresar en la partida.
 **Then** pasan frames, estado y audio contra la referencia
 **And** cero eventos de aliasing o lista justificada
 
-### Historia 6.4: Minijuegos y modo VS
+### Story 6.4: Minijuegos y modo VS
 
 Como jugador,
 quiero pescar, jugar al curling y usar el modo VS contra la CPU,
@@ -885,7 +885,7 @@ para tener todas las actividades del Juego.
 **Then** pasan frames, estado y audio contra la referencia
 **And** cero eventos de aliasing o lista justificada
 
-### Historia 6.5: Videos, eventos y mapas especiales
+### Story 6.5: Videos, eventos y mapas especiales
 
 Como jugador,
 quiero las cinemáticas y los eventos especiales de la historia,
@@ -898,7 +898,7 @@ para seguir la trama completa.
 **Then** pasan frames (videos con la tolerancia MDEC), estado y audio contra la referencia
 **And** cero eventos de aliasing o lista justificada
 
-### Historia 6.6: Final y créditos
+### Story 6.6: Final y créditos
 
 Como jugador,
 quiero llegar al final y ver los créditos,
@@ -911,7 +911,7 @@ para terminar la partida.
 **Then** pasan frames, estado y audio contra la referencia hasta los créditos
 **And** cero eventos de aliasing o lista justificada
 
-### Historia 6.7: Partida grabada sin divergencias
+### Story 6.7: Partida grabada sin divergencias
 
 Como dueño del proyecto,
 quiero reproducir una partida completa grabada en el port y en la referencia,
@@ -924,7 +924,7 @@ para probar que la lógica no diverge de principio a fin (FR-5).
 **Then** en cada punto de control las variables de `state_vars.txt` son idénticas a las de la referencia y la corrida llega a los créditos
 **And** si el supuesto de determinismo de FR-5 falla, la historia documenta la primera divergencia (VBlank, variable, causa) en `docs/port/determinism.md` y sigue abierta
 
-### Historia 6.8: Regresión completa en CI
+### Story 6.8: Regresión completa en CI
 
 Como dueño del proyecto,
 quiero la suite completa corriendo en la clase B,
@@ -937,9 +937,9 @@ para que ningún merge rompa una Escena que ya pasaba (SM-2).
 **Then** ejecuta todas las Escenas en `native-headless` y `web`, publica solo hashes y conteos, y falla si una Escena que pasaba deja de pasar
 **And** `docs/STATUS.md` se actualiza con el número de Escenas que pasan en nativo y en web
 
-## Épica 7: Deploy en el servidor propio (M7)
+## Epic 7: Deploy en el servidor propio (M7)
 
-### Historia 7.1: Contenedor nginx con COOP/COEP
+### Story 7.1: Contenedor nginx con COOP/COEP
 
 Como dueño del proyecto,
 quiero una imagen nginx que sirva solo los archivos del programa con los headers necesarios,
@@ -952,7 +952,7 @@ para alojar el port en mi servidor.
 **Then** la página queda `crossOriginIsolated` en Chromium y Firefox y todos los archivos responden con los headers esperados
 **And** la imagen contiene solo los artefactos del build `web`, y `data_leak_check` pasa sobre el sistema de archivos de la imagen
 
-### Historia 7.2: Publicación privada en el servidor propio
+### Story 7.2: Publicación privada en el servidor propio
 
 Como dueño del proyecto,
 quiero publicar la imagen en mi registry y desplegarla en un entorno no público,
@@ -965,7 +965,7 @@ para probar el deploy real antes de abrirlo.
 **Then** un smoke test L3b contra esa URL construye el Pack, llega al título y guarda en la Memory card
 **And** el registro de red del test confirma que no hay pedidos fuera del origen del deploy (NFR-5)
 
-### Historia 7.3: Publicación pública
+### Story 7.3: Publicación pública
 
 Como dueño del proyecto,
 quiero decidir cuándo el port queda accesible públicamente,
@@ -977,12 +977,12 @@ para mantener el control legal y operativo.
 **When** el dueño aprueba explícitamente la publicación (punto de control humano de `CLAUDE.md`)
 **Then** la aprobación queda registrada en `docs/STATUS.md` con fecha y digest de la imagen, y el smoke test de la Historia 7.2 pasa contra la URL pública
 
-## Épica 8: Decomp, upstream y CI (continua)
+## Epic 8: Decomp, upstream y CI (continua)
 
 Épica sin fin fijo: sus historias se repiten o se retoman cuando cambian `upstream/main`, la
 disponibilidad de `cc_mips.dll` o el forge.
 
-### Historia 8.1: Métricas automáticas en `STATUS.md`
+### Story 8.1: Métricas automáticas en `STATUS.md`
 
 Como dueño del proyecto,
 quiero que las métricas del proyecto se calculen solas,
@@ -995,7 +995,7 @@ para ver el avance real en cada sesión.
 **Then** imprime funciones del Juego en C / total, funciones PsyQ implementadas / 202 (por comentario `dw2-pc:`, `asm:` o `stub-m2:`), bloques `DW1_PORT` en `src/` e `include/`, filas de `docs/port/src-changes.md` y Escenas que pasan
 **And** falla si la cantidad de bloques `DW1_PORT` no coincide con las filas de `src-changes.md` (NFR-10)
 
-### Historia 8.2: Pipeline de GitLab CI con clases A y B
+### Story 8.2: Pipeline de GitLab CI con clases A y B
 
 Como dueño del proyecto,
 quiero el pipeline de AD-16 en mi GitLab,
@@ -1008,7 +1008,7 @@ para que cada merge tenga evidencia sin correr nada a mano.
 **Then** la clase A (L0a, L1, L3a, build web, NFR-3) corre en cualquier runner y la clase B (L0b, L2, L3b, NFR-4) solo en el runner protegido `dw1-data`, con `DW1_DISC_DIR` montado de solo lectura
 **And** un merge request desde un fork no dispara la clase B (verificado con las `rules` del pipeline y un MR de prueba), y los logs de la clase B no contienen bytes del disco
 
-### Historia 8.3: Merge periódico de `upstream/main`
+### Story 8.3: Merge periódico de `upstream/main`
 
 Como dueño del proyecto,
 quiero un procedimiento automático para traer `upstream/main`,
@@ -1021,7 +1021,7 @@ para seguir el decomp sin conflictos grandes (NFR-10).
 **Then** hace un merge de prueba de `upstream/main` en una rama temporal, lista los archivos en conflicto y falla si alguno no está en `docs/port/src-changes.md`
 **And** tras un merge real, L0a, L0b, L1 y las Escenas que pasaban siguen en verde, y la lista de TUs de AD-1 se regenera sin cambios inesperados
 
-### Historia 8.4: Registro de funciones no verificadas y `make compare`
+### Story 8.4: Registro de funciones no verificadas y `make compare`
 
 Como dueño del proyecto,
 quiero que toda función nueva en `src/` quede registrada para verificarla cuando haya compilador matching,

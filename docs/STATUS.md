@@ -32,9 +32,13 @@
   (`docs/planning-artifacts/architecture/architecture-dw-port-2026-10-11/ARCHITECTURE-SPINE.md`,
   AD-1..AD-18). AD-18 opción A: NFR-4 enmendado en el PRD. CI en el GitLab propio (AD-16).
 
+- Fase 4.4: épicas e historias (`docs/planning-artifacts/epics.md`, 57 historias; Épica 2 = M2 …
+  Épica 7 = M7, Épica 8 continua de decomp/upstream/CI).
+- Fase 4.5: sprint planning (`docs/implementation-artifacts/sprint-status.yaml`, todo en `backlog`).
+
 ## En curso
 
-- Fase 4.4: épicas e historias (M2–M7 + épica continua de decomp).
+- Fase 5: próxima historia 2.1 (esqueleto del build del port y lista generada de TUs).
 
 ## Bloqueos
 

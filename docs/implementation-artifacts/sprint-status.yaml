@@ -1,0 +1,114 @@
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created, ready for development
+#   - in-progress: Developer actively working on implementation
+#   - review: Implementation complete, ready for review
+#   - done: Story completed
+
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+
+# Action Item Status:
+#   - open: Committed during a retrospective, not yet addressed
+#   - in-progress: Actively being worked on
+#   - done: Completed
+
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when its first story starts (via build's sprint sync)
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates the next story after the previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+# - Retrospective appends its action items to action_items; the status view surfaces open ones
+generated: 10-11-2026 12:35
+last_updated: 10-11-2026 12:35
+project: dw-port
+project_key: NOKEY
+tracking_system: file-system
+story_location: docs/implementation-artifacts
+development_status:
+  epic-2: backlog
+  2-1-esqueleto-del-build-del-port-y-lista-generada-de-tus: backlog
+  2-2-checks-l0a-y-los-inventarios-de-literales-y-spins: backlog
+  2-3-memoria-ps1-enlaces-de-ot-y-reinicio-de-overlays: backlog
+  2-4-traducción-de-direcciones-ps1-en-src-e-include: backlog
+  2-5-reloj-virtual-y-semántica-de-vsync: backlog
+  2-6-linkeo-completo-y-arranque-hasta-el-frame-0: backlog
+  2-7-manifest-y-herramienta-nativa-del-pack: backlog
+  2-8-libcd-y-modelo-del-cd-sobre-el-pack: backlog
+  2-9-libc-libapi-y-libetc-deterministas: backlog
+  2-10-modelo-gte-y-macros-inline: backlog
+  2-11-libgte-y-tablas-leídas-del-exe-en-el-pack: backlog
+  2-12-renderer-software-y-libgpu: backlog
+  2-13-libgs-con-el-pipeline-tmd: backlog
+  2-14-stubs-con-comportamiento-definido-para-audio-video-y-memory: backlog
+  2-15-pantalla-de-título-en-nativo-headless: backlog
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-emulador-de-referencia-y-captura-automática: backlog
+  3-2-runner-de-escenas-y-pantalla-de-título-exacta: backlog
+  3-3-inputs-por-vblank-y-comparación-de-estado: backlog
+  3-4-spu-emulado-y-libspu: backlog
+  3-5-libsnd-de-dw1-y-traza-de-audio: backlog
+  3-6-xa-y-sectores-form-2: backlog
+  3-7-mdec-libpress-y-videos-str: backlog
+  3-8-memory-card-nativa: backlog
+  3-9-preset-native-con-ventana-sdl3: backlog
+  3-10-calibración-de-costos-y-ritmo-nativo: backlog
+  3-11-hipótesis-pendientes-de-los-overlays: backlog
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-el-juego-en-wasm-con-su-propio-hilo-y-presentación: backlog
+  4-2-worker-de-e-s-y-pantalla-de-título-en-el-navegador: backlog
+  4-3-selección-del-disco-validación-y-pack-en-el-navegador: backlog
+  4-4-pantallas-de-la-shell-web-y-capacidades: backlog
+  4-5-teclado-y-gamepad: backlog
+  4-6-remapeo-y-opciones-persistentes: backlog
+  4-7-audio-en-el-navegador: backlog
+  4-8-memory-cards-en-el-navegador: backlog
+  4-9-offline-y-actualizaciones: backlog
+  4-10-checks-del-build-web-ritmo-tamaño-reproducibilidad-red-y-dat: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-renderer-webgl2-idéntico-a-1: backlog
+  5-2-escala-de-resolución-de-1-a-4: backlog
+  5-3-sin-wobble: backlog
+  5-4-relación-de-aspecto-16-9: backlog
+  5-5-opciones-de-video-en-la-shell: backlog
+  5-6-rendimiento-en-el-hardware-de-referencia: backlog
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-definición-de-la-suite-de-escenas: backlog
+  6-2-mundo-combate-y-evolución: backlog
+  6-3-entrenamiento-tiendas-y-objetos: backlog
+  6-4-minijuegos-y-modo-vs: backlog
+  6-5-videos-eventos-y-mapas-especiales: backlog
+  6-6-final-y-créditos: backlog
+  6-7-partida-grabada-sin-divergencias: backlog
+  6-8-regresión-completa-en-ci: backlog
+  epic-6-retrospective: optional
+
+  epic-7: backlog
+  7-1-contenedor-nginx-con-coop-coep: backlog
+  7-2-publicación-privada-en-el-servidor-propio: backlog
+  7-3-publicación-pública: backlog
+  epic-7-retrospective: optional
+
+  epic-8: backlog
+  8-1-métricas-automáticas-en-status-md: backlog
+  8-2-pipeline-de-gitlab-ci-con-clases-a-y-b: backlog
+  8-3-merge-periódico-de-upstream-main: backlog
+  8-4-registro-de-funciones-no-verificadas-y-make-compare: backlog
+  epic-8-retrospective: optional
