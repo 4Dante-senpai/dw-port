@@ -37,3 +37,7 @@ out/
 __pycache__/
 node_modules/
 *.wasm
+# BMAD: keep skill assets (upstream ignores every assets/ dir), drop per-user config
+!/.claude/skills/*/assets/
+_bmad/config.user.toml
+_bmad/custom/config.user.toml
