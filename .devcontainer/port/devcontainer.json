@@ -1,0 +1,24 @@
+{
+  "name": "DW1 Web Port",
+  "initializeCommand": "docker build --tag dw-build:latest .",
+  "build": {
+    "dockerfile": "../../tools/port/Dockerfile",
+    "context": "../..",
+    "options": [
+      "--platform=linux/amd64"
+    ]
+  },
+  "runArgs": [
+    "--platform=linux/amd64"
+  ],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/dw,type=bind",
+  "workspaceFolder": "/dw",
+  "postCreateCommand": "./tools/dl_deps.sh && ./tools/port/hooks/install.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "llvm-vs-code-extensions.vscode-clangd"
+      ]
+    }
+  }
+}

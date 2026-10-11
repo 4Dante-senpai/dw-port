@@ -1,0 +1,3 @@
+# The images only COPY requirements.txt; keep the disc image, builds and references out of the context
+*
+!requirements.txt
