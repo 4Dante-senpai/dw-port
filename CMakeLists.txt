@@ -101,7 +101,9 @@ target_compile_options(dw1_game_objs PRIVATE
   -fsigned-char -fwrapv -fno-strict-aliasing -fno-common -w
   -include ${CMAKE_SOURCE_DIR}/port/psyq/include/port_game.h)
 
-add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c)
+add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c port/psyq/clock.c
+  port/psyq/libetc.c port/psyq/libapi.c)
+target_link_libraries(dw1_psyq PUBLIC Threads::Threads)
 target_compile_options(dw1_psyq PRIVATE -Wall -Wextra -Werror)
 
 enable_testing()
@@ -126,6 +128,16 @@ add_executable(test_ps1mem port/psyq/tests/test_ps1mem.c)
 target_compile_options(test_ps1mem PRIVATE -Wall -Wextra -Werror)
 target_link_libraries(test_ps1mem dw1_psyq Threads::Threads)
 add_test(NAME ps1mem COMMAND test_ps1mem)
+
+add_executable(test_clock port/psyq/tests/test_clock.c)
+target_compile_options(test_clock PRIVATE -Wall -Wextra -Werror)
+target_link_libraries(test_clock dw1_psyq Threads::Threads)
+add_test(NAME clock COMMAND test_clock)
+
+# The port's PsyQ prototypes must match the mw_lib41 headers the game compiles against.
+add_test(NAME psyq_prototypes COMMAND ${CMAKE_C_COMPILER} -m32 -fsyntax-only -w
+  -I${CMAKE_SOURCE_DIR}/external/psyq_headers/mw_lib41/include
+  ${CMAKE_SOURCE_DIR}/port/psyq/tests/psyq_prototypes.c)
 
 dw1_overlay_wrapper(${CMAKE_SOURCE_DIR}/port/psyq/tests/ovl_unit.c btl DW1_TEST_OVL_A)
 dw1_overlay_wrapper(${CMAKE_SOURCE_DIR}/port/psyq/tests/ovl_unit_btl2.c btl DW1_TEST_OVL_B)
