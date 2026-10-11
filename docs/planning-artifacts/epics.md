@@ -274,7 +274,7 @@ para que el Juego arranque y se vea qué función PsyQ necesita a continuación.
 
 **Given** `tools/port/psyq/gen_stubs.py`, que genera un stub por cada una de las 202 funciones de `docs/research/psyq-usage.md` sin implementar
 **When** se corre el build `native-headless`
-**Then** el binario linkea sin símbolos sin resolver, con `crt.c` llamando a `main` del Juego y el heap de `__rts_info_t__.h` dentro de la arena (AD-4)
+**Then** el binario linkea sin símbolos sin resolver, con `crt.c` llamando a `port_overlay_snapshot_all()` y después a `main` del Juego, y el heap de `__rts_info_t__.h` dentro de la arena (AD-4)
 **And** cada stub registra su primera llamada en `port_trace.log`
 
 **Given** el binario y una arena sin datos del disco

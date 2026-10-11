@@ -48,9 +48,14 @@
   filas clasificadas, 1 `port_yield`: `MOV_waitForFlip`). CTest 4/4. Evidencia:
   `docs/implementation-artifacts/evidence/story-2-2.log`.
 
+- Historia 2.3 (memoria y overlays): `port/psyq/ps1mem` (arena 2 MB, scratchpad 1 KB, `PS1_RAM`,
+  enlaces de OT de 24 bits en la ventana `[0x01000000, 0x02000000)`), `port/psyq/overlay` (copia
+  y restauración de `dw1ovl_<ovl>`), TUs envoltorio por overlay (15 secciones en USA), preset
+  `native-asan`. Evidencia: `docs/implementation-artifacts/evidence/story-2-3.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.3 (memoria PS1, enlaces de OT y reinicio de overlays).
+- Fase 5: próxima historia 2.4 (traducción de direcciones PS1 en `src/` e `include/`).
 
 ## Bloqueos
 
