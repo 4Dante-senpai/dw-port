@@ -284,7 +284,7 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
     | `native-asan` | `native-headless` con ASan/UBSan |
     | `web` | Emscripten |
 
-  - **Flags del juego.** Son idénticas en todos los presets: `-funsigned-char -fwrapv -fno-strict-aliasing -fno-common -DDW1_PORT -DLANGUAGE_C -DVERSION_US`, la misma macro de versión que arma el Makefile de upstream [ASSUMPTION: `char` sin signo; se verifica con un diff de objetos signed/unsigned por archivo].
+  - **Flags del juego.** Son idénticas en todos los presets: `-fsigned-char -fwrapv -fno-strict-aliasing -fno-common -DDW1_PORT -DLANGUAGE_C -DVERSION_US`, la misma macro de versión que arma el Makefile de upstream. `char` con signo, verificado contra el asm original (`docs/port/char-signedness.md`).
   - **Reproducibilidad.** `-ffile-prefix-map=$PWD=.`, `SOURCE_DATE_EPOCH` y el toolchain solo de la imagen `dw-port`.
   - **Build PS1.** El Makefile de upstream sigue siendo el único build PS1.
 

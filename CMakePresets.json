@@ -1,0 +1,23 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "native-headless",
+      "displayName": "Native i686, headless (no SDL)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/port/native-headless",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_C_FLAGS": "-m32",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "native-headless",
+      "configurePreset": "native-headless"
+    }
+  ]
+}
