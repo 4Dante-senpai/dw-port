@@ -24,9 +24,13 @@
   hardware-access, dw2pc-architecture, web-constraints, risks) y scripts de métricas en
   `tools/port/metrics/`.
 
+- Fase 3: BMAD 6.12.2 instalado (`docs/port/bmad.md`).
+- Fase 4.1: product brief (`docs/planning-artifacts/briefs/brief-dw-port-2026-10-11/brief.md`).
+
 ## En curso
 
-- Fase 3: instalación de BMAD.
+- Fase 4.2: PRD en borrador (`docs/planning-artifacts/prds/prd-dw-port-2026-10-11/prd.md`),
+  **esperando aprobación humana** antes de la arquitectura.
 
 ## Bloqueos
 
