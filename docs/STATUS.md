@@ -58,9 +58,14 @@
   pares rama port / rama PS1; `loadMMD` usa offsets relativos. Evidencia:
   `docs/implementation-artifacts/evidence/story-2-4.log`.
 
+- Historia 2.5 (reloj virtual): `port/psyq/clock.c` (ciclos a 33.868.800 Hz, VBlank sin deriva,
+  cola de eventos determinista, interrupciones enmascaradas en handlers), `VSync`/`VSyncCallback(s)`/
+  `InterruptCallback`/`ResetCallback` y `SetRCnt`/`GetRCnt`/`ResetRCnt` traducidos del asm de DW1.
+  Evidencia: `docs/implementation-artifacts/evidence/story-2-5.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.5 (reloj virtual y semántica de `VSync`).
+- Fase 5: próxima historia 2.6 (linkeo completo y arranque hasta el frame 0).
 
 ## Bloqueos
 
@@ -84,6 +89,9 @@
 | Escenas que funcionan (web) | 0 |
 
 ## Notas
+
+- Pregunta abierta (memlog de la arquitectura): el VBlank del reloj usa 59,94 Hz (NFR-1); psx-spx da
+  ~59,83 Hz para NTSC no entrelazado. Se mide en la Historia 3.10 contra el Emulador de referencia.
 
 - El contexto Docker por defecto de esta máquina (`docker-server`) apunta a un host remoto; los
   comandos del port usan `DOCKER_CONTEXT=default` (daemon local) para que los bind mounts vean el

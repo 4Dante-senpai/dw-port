@@ -1,0 +1,30 @@
+== preset native-headless @ 042370b + worktree
+ 1/13 Test  #1: ovl_starts .......................   Passed    0.05 sec
+ 2/13 Test  #2: tu_list ..........................   Passed    0.16 sec
+ 3/13 Test  #3: inventory ........................   Passed   10.63 sec
+ 4/13 Test  #4: preproc_check ....................   Passed   21.69 sec
+ 5/13 Test  #5: test_preproc_check ...............   Passed  104.56 sec
+ 6/13 Test  #6: ps1_ram_addr_range ...............   Passed    0.03 sec
+ 7/13 Test  #7: ps1mem ...........................   Passed    0.00 sec
+ 8/13 Test  #8: clock ............................   Passed    0.01 sec
+ 9/13 Test  #9: psyq_prototypes ..................   Passed    0.02 sec
+10/13 Test #10: overlay_O0 .......................   Passed    0.00 sec
+11/13 Test #11: overlay_O2 .......................   Passed    0.00 sec
+12/13 Test #12: overlay_sections .................   Passed    0.00 sec
+13/13 Test #13: overlay_objects ..................   Passed    1.15 sec
+100% tests passed, 0 tests failed out of 13
+== preset native-asan @ 042370b + worktree
+ 1/11 Test  #1: ovl_starts .......................   Passed    0.06 sec
+ 2/11 Test  #2: tu_list ..........................   Passed    0.17 sec
+ 3/11 Test  #3: inventory ........................   Passed   10.58 sec
+ 4/11 Test  #4: preproc_check ....................   Passed   21.86 sec
+ 5/11 Test  #5: test_preproc_check ...............   Passed  104.24 sec
+ 6/11 Test  #6: ps1_ram_addr_range ...............   Passed    0.02 sec
+ 7/11 Test  #7: ps1mem ...........................   Passed    0.05 sec
+ 8/11 Test  #8: clock ............................   Passed    0.04 sec
+ 9/11 Test  #9: psyq_prototypes ..................   Passed    0.03 sec
+10/11 Test #10: overlay_O0 .......................   Passed    0.01 sec
+11/11 Test #11: overlay_O2 .......................   Passed    0.01 sec
+100% tests passed, 0 tests failed out of 11
+== test_clock
+test_clock: OK

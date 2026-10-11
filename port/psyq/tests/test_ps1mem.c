@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/resource.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -27,6 +28,7 @@ static int aborts(void (*fn)(uint32_t), uint32_t arg)
 	}
 	if (pid == 0) {
 		freopen("/dev/null", "w", stderr);
+		setrlimit(RLIMIT_CORE, &(struct rlimit){ 0, 0 }); /* expected abort: no core dump */
 		fn(arg);
 		_exit(0);
 	}
