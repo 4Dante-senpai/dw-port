@@ -76,7 +76,7 @@ docs/        # artefactos BMAD + docs/port/ + docs/research/
 ```
 
 Targets de build (CMake + Ninja para el port, Makefile upstream para matching):
-`matching` (PS1), `native` (Linux x64, para depurar), `web` (Emscripten).
+`matching` (PS1), `native` (binario i686 sobre Linux x64, para depurar; ver AD-3), `web` (Emscripten).
 
 ## Hitos técnicos (orden de dependencias)
 

@@ -5,7 +5,7 @@ purpose: build-substrate
 altitude: initiative
 paradigm: 'capas de plataforma reemplazable (juego intacto sobre PsyQ propia, dispositivos con tiempo virtual y host intercambiable)'
 scope: 'Código C del juego de dw_decomp + port/ (psyq, backend, host, web) + tools/port + CI; builds native (binario i686 en Linux x64) y web (Emscripten)'
-status: draft
+status: final
 created: '2026-10-11'
 updated: '2026-10-11'
 binds: [FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, FR-10, FR-11, FR-12, FR-13, FR-14, FR-15, FR-16, FR-17, NFR-1, NFR-2, NFR-3, NFR-4, NFR-5, NFR-6, NFR-7, NFR-8, NFR-9, NFR-10]
@@ -118,7 +118,7 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
 - **Prevents:** estado viejo de un overlay que sobrevive a su recarga, o dos mecanismos o momentos de reinicio.
 - **Rule:**
   - **Pertenencia.** Qué TU pertenece a qué overlay sale de la lista generada de AD-1. Cada TU de un overlay se compila a través de una TU envoltorio generada por CMake: `#pragma clang attribute push(__attribute__((section("dw1ovl_<ovl>"))), apply_to = variable(is_global))`, luego `#include` del archivo y por último `pop`. Así quedan en la sección los globals, los statics de archivo y los statics locales.
-  - **Snapshot.** Al arrancar, después de AD-18, `port/psyq/overlay.c` guarda una copia de `[__start_dw1ovl_<ovl>, __stop_dw1ovl_<ovl>)`.
+  - **Snapshot.** Al arrancar, antes de entrar al `main` del juego, `port/psyq/overlay.c` guarda una copia de `[__start_dw1ovl_<ovl>, __stop_dw1ovl_<ovl>)`.
   - **Carga.** `loadDynamicLibrary` (en `src/`, con un hook `DW1_PORT`) sigue pidiendo el `*_REL.BIN` completo a `PS1_RAM(REL_BIN_OFFSETS[i])` por el camino del juego, síncrono o con la cola async de `file_queue.c`. Así los bloques TMD/TIM embebidos quedan en su dirección PS1 en la arena y se pisan las mismas regiones que en la consola. Las banderas de completado las escribe el código del juego; el port no las toca.
   - **Momento único del restore.** `port_overlay_loaded(lib)` restaura la copia en el momento del pedido, dentro de `loadDynamicLibrary`, tanto en carga síncrona como async. Es válido porque el código del overlay no corre hasta que el juego ve su bandera.
   - **Aliasing.** En debug, toda escritura por `PS1_RAM` dentro del rango PS1 de `.data`/`.bss` de un overlay residente (rango sacado de `config/us/<ovl>.yaml`) se registra como aliasing. L2 exige cero eventos por Escena, o una lista justificada en el `.toml`.
@@ -263,12 +263,12 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
 - **Binds:** NFR-4, NFR-6, NFR-7, AD-14, AD-18
 - **Prevents:** que datos del juego o CodeWarrior lleguen a un runner público o a un log, o que código de un fork corra en el servidor que tiene el disco.
 - **Rule:**
-  - CI con GitHub Actions [ASSUMPTION: el repo está en GitHub; con otro forge se conservan las mismas clases].
+  - **Forge.** GitLab CI en el GitLab autohospedado del dueño, con su runner Docker y su registry [ADOPTED: dueño, 2026-10-11]. Cómo llega el repo de `origin` (GitHub) a ese GitLab queda como pregunta abierta; hasta resolverla, las mismas clases corren a mano en el contenedor `dw-port` con los mismos scripts, y su log es la evidencia.
   - **Clase A, sin datos.** Corre en cualquier runner: L0a, L1, L3a, build web y check de tamaño NFR-3.
-  - **Clase B, con datos.** Corre solo en el runner autohospedado con etiqueta `dw1-data`, en el servidor del dueño. El disco y `cc_mips.dll`, cuando exista, están montados de solo lectura fuera del repo (`DW1_DISC_DIR`, `DW1_MWCC_DIR`). Incluye L0b, L2, L3b, la generación de la tabla de AD-18 y el check NFR-4 sobre los artefactos del deploy.
-  - **Disparo de la clase B.** Solo con `push` a ramas del repo y con `workflow_dispatch`, **nunca** con `pull_request` desde forks.
-  - **Qué publica la clase B.** No sube artefactos derivados del disco: solo hashes, métricas, diffs numéricos y la tabla de offsets de AD-18.
-  - **Imagen.** Todo job corre dentro de la imagen `dw-port` fijada por digest.
+  - **Clase B, con datos.** Corre solo en un runner protegido con etiqueta `dw1-data`, en el servidor del dueño. El disco y `cc_mips.dll`, cuando exista, están montados de solo lectura fuera del repo (`DW1_DISC_DIR`, `DW1_MWCC_DIR`). Incluye L0b, L2, L3b y el check NFR-4 de AD-18.
+  - **Disparo de la clase B.** Solo pipelines de ramas del propio proyecto (`CI_PIPELINE_SOURCE` en `push`, `web` o `schedule`), **nunca** merge requests desde forks.
+  - **Qué publica la clase B.** No sube artefactos derivados del disco: solo hashes, métricas y diffs numéricos.
+  - **Imagen.** Todo job corre dentro de la imagen `dw-port`, publicada en el registry del GitLab y fijada por digest.
 
 ### AD-17 — Builds, flags y reproducibilidad
 
@@ -288,17 +288,15 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
   - **Reproducibilidad.** `-ffile-prefix-map=$PWD=.`, `SOURCE_DATE_EPOCH` y el toolchain solo de la imagen `dw-port`.
   - **Build PS1.** El Makefile de upstream sigue siendo el único build PS1.
 
-### AD-18 — Bytes del juego en el deploy [PENDIENTE: decisión del dueño]
+### AD-18 — Bytes del juego en el deploy [ADOPTED: opción A, dueño, 2026-10-11]
 
-- **Binds:** NFR-4, AD-6, AD-12, AD-16, build web
-- **Prevents:** que el deploy distribuya datos del juego que el C de upstream reproduce, o que el check NFR-4 falle siempre.
-- **Contexto medido:** el C de upstream (MIT) reproduce datos del disco: tablas y textos de `main`, y los `*_bss_us.c` con el contenido residual de cada `*_REL.BIN`. Solo `src/mov/mov_bss_us.c` aporta unos 469 KB de `MOV_REL.BIN`. Compilado tal cual, el `.wasm` contiene ventanas de 64 bytes del disco y el check NFR-4 aprobado no puede pasar.
-- **Rule (opción B, recomendada):**
-  - Un paso post-link (`tools/port/strip_game_data`) pone en cero, en el `.wasm` de deploy, toda corrida de 64 bytes o más igual a bytes de un archivo del disco.
-  - Registra cada corrida en `tools/port/manifest/us_strip.tsv` (offset en el `.wasm`, largo, archivo del disco, offset en el archivo, SHA-256). Esa tabla no tiene contenido y la genera la clase B.
-  - Al arrancar, antes del snapshot de AD-6, el port copia esas corridas desde el Pack. Las palabras con punteros nativos cortan las corridas solas, porque no coinciden con el disco.
-  - El build de deploy falla si la tabla no corresponde al `.wasm` construido.
-- **Alternativa (opción A):** redefinir NFR-4 para que excluya los bytes que reproduce el C versionado de upstream; seguirían prohibidos `.incbin`, assets y cualquier otro byte del disco. Exige cambiar el PRD.
+- **Binds:** NFR-4, AD-11, AD-12, AD-16, build web
+- **Prevents:** que el deploy lleve bytes del disco que no vengan del C de `src/`, o un check NFR-4 que no pueda pasar.
+- **Contexto medido:** el C de upstream (MIT) reproduce datos del disco: tablas y textos de `main`, y los `*_bss_us.c` con el contenido residual de cada `*_REL.BIN`. Solo `src/mov/mov_bss_us.c` aporta unos 469 KB de `MOV_REL.BIN`.
+- **Rule:**
+  - Los bytes del disco que reproduce el C de `src/` e `include/` se compilan tal cual en el `.wasm`. No hay paso de borrado ni de restauración.
+  - Ningún otro byte del disco entra al repo ni al deploy: nada en `port/` ni `tools/port/`, ningún `.incbin`/`INCLUDE_BIN` de archivos del disco, ningún archivo web fuera del `.wasm`. Lo que el juego lee del disco en runtime sale del Pack (AD-11, AD-12).
+  - **Check NFR-4** (`tools/port/ci/data_leak_check`, clase B). Con V(x) = conjunto de ventanas de 64 bytes de x: V(artefacto del deploy) ∩ V(disco) ⊆ V(objetos compilados de `src/`). Los objetos de `port/` dan intersección vacía con V(disco). El mismo check corre sobre el árbol del repo, con V(`src/` + `include/`) como excepción.
 
 ## Consistency Conventions
 
@@ -338,11 +336,10 @@ port/
   host/        # plat.h; sdl/; headless/; web/ (C de Emscripten); pack/ (BIN/CUE, ISO9660, Pack)
   web/         # index.html, shell.js, io_worker.js, audio_worklet.js, sw.js
 tools/port/
-  manifest/    # us.tsv, us_strip.tsv (hashes, tamaños y offsets)
+  manifest/    # us.tsv (hashes, tamaños y LBAs)
   scenes/      # <id>.toml, state_vars.txt, runner y diff de frames/audio/estado
   metrics/     # decomp_status, psyq_usage, ps1_literals, isr_spins
   ci/          # preproc_check.sh, data_leak_check (NFR-4), size_check (NFR-3)
-  strip_game_data/  # AD-18
 CMakePresets.json  # native, native-headless, native-asan, web
 ```
 
@@ -367,7 +364,7 @@ graph LR
 ```mermaid
 graph LR
   DEV[Rama de historia] --> A[Clase A: L0a L1 L3a, build web, NFR-3]
-  DEV --> B[Clase B en runner dw1-data: L0b L2 L3b, tabla AD-18, NFR-4]
+  DEV --> B[Clase B en runner dw1-data: L0b L2 L3b, NFR-4]
   A --> MERGE[merge a main]
   B --> MERGE
   MERGE --> DEPLOY[Deploy M7: contenedor nginx, aprobación humana]
@@ -390,7 +387,7 @@ graph LR
 | FR-17 Build nativo | `CMakePresets.json`, `port/host/sdl`, `headless` | AD-3, AD-17 |
 | NFR-1 Ritmo, NFR-2 Rendimiento | `clock.c`, Host, L4 | AD-8, AD-14 |
 | NFR-3 Tamaño | build web, `size_check` | AD-16, AD-17 |
-| NFR-4, NFR-5 Legal y privacidad | `tools/port/ci`, `strip_game_data`, hook pre-commit | AD-11, AD-12, AD-16, AD-18 |
+| NFR-4, NFR-5 Legal y privacidad | `tools/port/ci`, hook pre-commit | AD-11, AD-12, AD-16, AD-18 |
 | NFR-6, NFR-10 Upstream | `src/` (`DW1_PORT`), L0a/L0b | AD-1, AD-4, AD-14 |
 | NFR-7 Reproducible | Docker, CMake | AD-17 |
 

@@ -106,7 +106,7 @@ lo pide.
   comparar.
 - **Memory card** — imagen cruda de 128 KB (131.072 bytes) de una tarjeta PS1, formato `.mcd` de
   DuckStation/PCSX-Redux (equivalente a `.mcr` de ePSXe).
-- **Build nativo** — el Juego compilado para Linux x64 con SDL3, para depurar.
+- **Build nativo** — el Juego compilado como binario i686 (32 bits) que corre en Linux x64, con SDL3, para depurar.
 - **Build web** — el Juego compilado con Emscripten a WebAssembly, dentro de la Shell web.
 - **Hardware de referencia** — el equipo contra el que se miden NFR-2 y SM-3 (definido en NFR-2).
 - **Build matching** — el build PS1 de upstream con CodeWarrior que debe dar el binario original
@@ -343,9 +343,13 @@ web, con y sin ventana.
 - **NFR-3 Tamaño de descarga:** el `.wasm` del Juego comprimido con Brotli pesa como máximo 4 MB
   y la descarga total de la primera carga (sin Pack) como máximo 6 MB [ASSUMPTION: presupuesto
   inicial; ajustar tras medir en M4].
-- **NFR-4 Legal:** ni el repositorio ni el deploy contienen datos del juego. Verificado por: hook
-  pre-commit, y un check de CI en un runner privado que confirma que ningún artefacto del deploy
-  contiene ventanas de 64 bytes presentes en los archivos de la Imagen del disco.
+- **NFR-4 Legal:** el repositorio y el deploy no contienen datos del juego, salvo los bytes que
+  ya reproduce el código C de `src/` e `include/` (upstream, MIT), compilado tal cual. Prohibido
+  todo lo demás: archivos extraídos, `.incbin` de archivos del disco y bytes del disco en
+  `port/`, `tools/port/` o en archivos web fuera del `.wasm`. Verificado por: hook pre-commit, y
+  un check de CI en un runner privado que confirma que toda ventana de 64 bytes de la Imagen del
+  disco presente en un artefacto del deploy aparece también en los objetos compilados desde
+  `src/` (enmienda del 2026-10-11, AD-18 opción A).
 - **NFR-5 Privacidad:** la Imagen del disco, el Pack y las Memory cards nunca salen del
   dispositivo. El deploy no hace pedidos de red salvo los de sus propios archivos.
 - **NFR-6 Build matching:** cuando `cc_mips.dll` está disponible, `make compare` da OK en cada
