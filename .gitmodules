@@ -7,3 +7,6 @@
 [submodule "external/psyq_headers"]
 	path = external/psyq_headers
 	url = https://github.com/jype0/psyq_headers.git
+[submodule "reference/dw2-pc"]
+	path = reference/dw2-pc
+	url = https://github.com/Wyrelade/DW2-PC.git

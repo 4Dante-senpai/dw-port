@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Rejects copyrighted game data, proprietary binaries and large binaries (CLAUDE.md rule 1).
+set -euo pipefail
+
+forbidden='^(game_rom|disks|dumps|assets|asm|expected|build|build-[^/]*|pack)/|^bin/cc_mips/|\.(bin|cue|iso|img|chd|ecm|pbp|7z|mcd|mcr|dll|exe)$|(^|/)(SLUS|SCUS)_[^/]*$'
+max_bytes=$((1024 * 1024))
+fail=0
+
+while IFS=$'\t' read -r added deleted path; do
+    # Skip submodule gitlinks (e.g. reference/dw2-pc)
+    [ "$(git ls-files -s -- "$path" | cut -d' ' -f1)" = "160000" ] && continue
+    if [[ "$path" =~ $forbidden ]]; then
+        echo "pre-commit: forbidden path (game data / proprietary / build output): $path" >&2
+        fail=1
+        continue
+    fi
+    if [ "$added" = "-" ] && [[ "$path" != reference/* ]]; then
+        size=$(git cat-file -s ":$path")
+        if [ "$size" -gt "$max_bytes" ]; then
+            echo "pre-commit: binary larger than 1 MB outside reference/: $path ($size bytes)" >&2
+            fail=1
+        fi
+    fi
+done < <(git diff --cached --numstat --diff-filter=ACMR --no-renames)
+
+[ "$fail" -eq 0 ] || { echo "pre-commit: commit rejected, see CLAUDE.md rule 1" >&2; exit 1; }

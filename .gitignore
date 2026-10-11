@@ -8,3 +8,32 @@ expected/
 permuter/
 local.mk
 objdiff.json
+
+# --- DW1 Web Port ---
+# Disk images and anything extracted/derived from the disc (never commit; see CLAUDE.md rule 1)
+game_rom/
+dumps/
+*.bin
+*.cue
+*.iso
+*.img
+*.chd
+*.ecm
+*.pbp
+*.7z
+*.mcd
+*.mcr
+SLUS_*
+SCUS_*
+pack/
+# CodeWarrior and other proprietary binaries
+bin/cc_mips/*.dll
+*.dll
+*.exe
+# Port builds and caches
+build-*/
+out/
+.cache/
+__pycache__/
+node_modules/
+*.wasm
