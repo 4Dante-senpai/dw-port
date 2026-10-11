@@ -58,3 +58,9 @@ target_compile_options(dw1_psyq PRIVATE -Wall -Wextra -Werror)
 enable_testing()
 add_test(NAME tu_list COMMAND python3 -I -B tools/port/units/test_tu_list.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME inventory COMMAND python3 -I -B tools/port/metrics/test_inventory.py
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME preproc_check COMMAND sh tools/port/ci/preproc_check.sh
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME test_preproc_check COMMAND sh tools/port/ci/test_preproc_check.sh
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

@@ -42,9 +42,15 @@
   (AD-17 enmendado, `docs/port/char-signedness.md`). Evidencia:
   `docs/implementation-artifacts/evidence/story-2-1.log`.
 
+- Historia 2.2 (L0a): `tools/port/ci/preproc_check.sh` compara el preprocesado de los 120 TUs USA
+  contra `upstream/main` en las configuraciones gcc y mwcc; inventarios versionados
+  `tools/port/metrics/ps1_literals.tsv` (58 filas, 27 a traducir en 2.4) e `isr_spins.tsv` (67
+  filas clasificadas, 1 `port_yield`: `MOV_waitForFlip`). CTest 4/4. Evidencia:
+  `docs/implementation-artifacts/evidence/story-2-2.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.2 (checks L0a y los inventarios de literales y spins).
+- Fase 5: próxima historia 2.3 (memoria PS1, enlaces de OT y reinicio de overlays).
 
 ## Bloqueos
 

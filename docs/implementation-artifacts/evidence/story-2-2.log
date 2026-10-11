@@ -1,0 +1,4 @@
+preproc_check: tus=120 configs=gcc,mwcc differ=0 base=09c174c012365cafd219dff54813dd1ccb9c87ce
+ps1_literals: rows=58 pending=27
+isr_spins: rows=67 pending=0
+100% tests passed, 0 tests failed out of 4
