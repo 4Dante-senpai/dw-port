@@ -1,6 +1,7 @@
 ---
 title: "PRD: DW1 Web Port"
-status: draft
+status: final
+approved: 2026-10-11 (dueño; supuestos aceptados tal como están)
 created: 2026-10-11
 updated: 2026-10-11
 ---
@@ -391,7 +392,7 @@ web, con y sin ventana.
 
 - Renderer WebGL2 con escala > 4× (v2, si el rendimiento lo permite).
 - Filtros de imagen (sharpening, CRT) — v2.
-- Speed-up / avance rápido — v2 [NOTE FOR PM: DW2-PC lo tiene y es muy pedido; decidir si entra].
+- Speed-up / avance rápido — v2 (decidido en la aprobación del 2026-10-11).
 - Soporte móvil (controles táctiles) — v2.
 
 ## 9. Métricas de éxito
@@ -418,7 +419,7 @@ web, con y sin ventana.
 
 ## 10. Preguntas abiertas
 
-1. ¿Entra el speed-up en v1? (§8.2)
+1. ~~¿Entra el speed-up en v1?~~ Resuelta: no, queda para v2 (§8.2).
 2. ¿Es viable 16:9 en todas las Escenas? Lo responde la arquitectura (FR-14).
 3. ¿Qué Emulador de referencia se usa para los Frames de referencia, y con qué BIOS (OpenBIOS de
    PCSX-Redux o BIOS del usuario fuera del repo)?
@@ -427,6 +428,9 @@ web, con y sin ventana.
 5. ¿El contenido de `SHOP_REL.BIN` se usa en USA? (hipótesis en `docs/research/overlays.md`).
 
 ## 11. Índice de supuestos
+
+Aprobados por el dueño el 2026-10-11 sin cambios. Siguen marcados porque se validan con
+mediciones (no son hechos verificados).
 
 - §2.2 — Móviles y tablets no son objetivo de v1.
 - §4.1 FR-1 — Límite de 512 MB de memoria durante la validación.

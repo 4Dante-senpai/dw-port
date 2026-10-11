@@ -18,7 +18,7 @@ Procedimiento verificado el 2026-10-11 (M0). Modo usado: **sin compilador matchi
 | Imagen | Dockerfile | Contenido |
 |---|---|---|
 | `dw-build:latest` | `Dockerfile` (upstream, sin cambios) | Ubuntu 24.04, binutils/gcc `mipsel-linux-gnu`, Python + splat/spimdisasm, clang |
-| `dw-port:latest` | `tools/port/Dockerfile` (`FROM dw-build`) | + CMake 3.28, Ninja 1.11, LLD, Clang 18, **emsdk 6.0.10**, **SDL3 3.4.16** nativo (`/opt/sdl3/native`) y Emscripten estático (`/opt/sdl3/web`), p7zip |
+| `dw-port:latest` | `tools/port/Dockerfile` (`FROM dw-build`) | + CMake 3.28, Ninja 1.11, LLD, Clang 18, `gcc-multilib` (build nativo i686, AD-3), **emsdk 6.0.10**, **SDL3 3.4.16** nativo (`/opt/sdl3/native`) y Emscripten estático (`/opt/sdl3/web`), p7zip |
 
 Versiones fijadas como `ARG` en `tools/port/Dockerfile` (`EMSDK_VERSION`, `SDL3_VERSION`). La base
 `ubuntu:noble` de upstream no está fijada por digest (pendiente para build reproducible).

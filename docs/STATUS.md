@@ -26,15 +26,21 @@
 
 - Fase 3: BMAD 6.12.2 instalado (`docs/port/bmad.md`).
 - Fase 4.1: product brief (`docs/planning-artifacts/briefs/brief-dw-port-2026-10-11/brief.md`).
+- Fase 4.2: PRD aprobado por el dueño el 2026-10-11 con sus supuestos (speed-up queda para v2).
 
 ## En curso
 
-- Fase 4.2: PRD en borrador (`docs/planning-artifacts/prds/prd-dw-port-2026-10-11/prd.md`),
-  **esperando aprobación humana** antes de la arquitectura.
+- Fase 4.3: arquitectura en borrador
+  (`docs/planning-artifacts/architecture/architecture-dw-port-2026-10-11/ARCHITECTURE-SPINE.md`,
+  AD-1..AD-18), revisada por tres revisores independientes (`reviews/`) y corregida.
+  **Esperando aprobación humana**, incluida la decisión de AD-18 (bytes del juego en el deploy).
 
 ## Bloqueos
 
 - `cc_mips.dll` no disponible: sin `make` / `make compare` del build PS1.
+- AD-18 / NFR-4: el C de upstream reproduce datos del disco (p. ej. `src/mov/mov_bss_us.c`,
+  ~469 KB de `MOV_REL.BIN`); el check NFR-4 tal como está escrito no puede pasar sin la decisión
+  del dueño (opción B recomendada: strip post-link + restauración desde el Pack).
 - Emulador de referencia (PCSX-Redux / DuckStation headless) no instalado: planificado como
   historia de M3.
 

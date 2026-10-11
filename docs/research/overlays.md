@@ -12,7 +12,7 @@ Medido el 2026-10-11 sobre `upstream/main` @ `09c174c`. Fuentes: `config/us/over
 dirección fija `REL_BIN_OFFSETS[lib - 1]`:
 
 - `isAsync == 0`: `readFile()` bloqueante.
-- `isAsync != 0`: `addFileReadRequestPath()` encola la lectura; `*isComplete` pasa a 1 al terminar.
+- `isAsync != 0`: `addFileReadRequestPath()` encola la lectura; la bandera (llamada `isComplete` en la firma) es en realidad "en curso": `file_queue.c` la pone en 1 al encolar y en 0 al terminar (`src/main/file_queue.c:174,241`). Corregido el 2026-10-11 tras la revisión de arquitectura.
 
 No hay relocación ni tabla de símbolos: cada overlay está linkeado a su dirección final y llama a
 `main` por dirección absoluta. Al recargarlo se pisan su código, `.data` y `.bss` (los `*_bss_us.c`

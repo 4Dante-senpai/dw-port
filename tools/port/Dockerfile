@@ -14,6 +14,7 @@ RUN apt-get update && \
     ca-certificates \
     cmake \
     curl \
+    gcc-multilib \
     lld \
     ninja-build \
     p7zip-full \
