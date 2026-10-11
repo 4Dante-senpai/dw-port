@@ -87,7 +87,7 @@ if [ "$tree" = "$repo" ]; then
 			bad=$((bad + 1))
 		fi
 	done
-	python3 -I -B "$repo/tools/port/metrics/ps1_literals.py" --check
+	python3 -I -B "$repo/tools/port/metrics/ps1_literals.py" --check --no-pending
 	python3 -I -B "$repo/tools/port/metrics/isr_spins.py" --check --no-pending
 fi
 [ "$bad" = 0 ]

@@ -53,9 +53,14 @@
   y restauración de `dw1ovl_<ovl>`), TUs envoltorio por overlay (15 secciones en USA), preset
   `native-asan`. Evidencia: `docs/implementation-artifacts/evidence/story-2-3.log`.
 
+- Historia 2.4 (traducción de direcciones): 12 bloques `DW1_PORT` (27 literales + los 15
+  `<ovl>_START`) con `PS1_RAM_ADDR()` constante; `ps1_literals.tsv` sin pendientes y con chequeo de
+  pares rama port / rama PS1; `loadMMD` usa offsets relativos. Evidencia:
+  `docs/implementation-artifacts/evidence/story-2-4.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.4 (traducción de direcciones PS1 en `src/` e `include/`).
+- Fase 5: próxima historia 2.5 (reloj virtual y semántica de `VSync`).
 
 ## Bloqueos
 
@@ -74,6 +79,7 @@
 | Funciones PsyQ usadas / cubiertas por DW2-PC | 202 / 81 |
 | Archivos C del juego que compilan a wasm32 sin cambios | 97 / 120 |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
+| Bloques `DW1_PORT` en `src/`/`include/` | 12 (`docs/port/src-changes.md`) |
 | Escenas que funcionan (nativo) | 0 |
 | Escenas que funcionan (web) | 0 |
 

@@ -116,6 +116,16 @@ por punteros. Validar leyendo el código que carga los MMD (`main/model.c`, bús
 tiene dos opciones: cargar el archivo en la misma dirección de la arena (los punteros siguen
 siendo válidos vía `PS1_RAM`) o reescribirlos al cargar.
 
+**Resultado del cargador (2026-10-11, Historia 2.4):** `loadMMD` (`src/main/model.c`) lee el
+archivo a un buffer de `malloc3` y resuelve todo por offsets relativos al inicio:
+`modelPtr = mmdPtr + ((long *)mmdPtr)[0]` y `animTablePtr = mmdPtr + ((long *)mmdPtr)[1]`. Después
+llama a `GsMapModelingData`, que en PsyQ convierte los offsets del TMD en punteros en memoria.
+**Hipótesis** hasta que exista el `libgs` del port (Historia 2.13): esa conversión escribe punteros
+nativos de 32 bits, que caben donde estaban los offsets. El cargador no usa punteros absolutos del
+archivo, así que no hace falta traducir nada al cargar. Sigue sin explicar la densidad de palabras en `0x80xxxxxx` (pueden
+ser datos del TMD o de animación). Se valida en M3 con Escenas de animación contra el Emulador de
+referencia; si el diff de frames muestra un puntero usado, se agrega la traducción.
+
 ## 6. Resumen para la arquitectura
 
 - Sin registros de hardware en el código del juego: la frontera es la API PsyQ.

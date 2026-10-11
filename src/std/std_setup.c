@@ -24,11 +24,19 @@
 
 #include "common.h"
 
+#ifdef DW1_PORT
+#define STD_FINISHER_TIM	((char *)PS1_RAM_ADDR(0x80052ae0))
+#define STD_FINISHER_MODEL	((char *)PS1_RAM_ADDR(0x80053800))
+#define STD_CONFUSION_MODEL	((char *)PS1_RAM_ADDR(0x80054838))
+#define STD_STUN_MODEL		((char *)PS1_RAM_ADDR(0x80054d00))
+#define STD_BUFF_MODEL		((TMDModel *)PS1_RAM_ADDR(0x80055328))
+#else
 #define STD_FINISHER_TIM	((char *)0x80052ae0)
 #define STD_FINISHER_MODEL	((char *)0x80053800)
 #define STD_CONFUSION_MODEL	((char *)0x80054838)
 #define STD_STUN_MODEL		((char *)0x80054d00)
 #define STD_BUFF_MODEL		((TMDModel *)0x80055328)
+#endif
 
 extern TMDModel *STD_ARENA_MODEL;
 extern int8_t GAME_STATE;

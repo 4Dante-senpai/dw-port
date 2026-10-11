@@ -19,7 +19,7 @@
 
 _Static_assert(sizeof(void *) == 4, "the port requires 32-bit pointers (native is built with -m32)");
 
-#define PS1_RAM_SIZE 0x200000u
+#define PS1_RAM_SIZE 0x200000u /* PS1_RAM_ADDR in include/port_game.h masks with 0x1FFFFF */
 #define PS1_SCRATCHPAD_SIZE 0x400u
 #define PS1_LINK_END 0xFFFFFFu /* PsyQ end-of-OT marker */
 

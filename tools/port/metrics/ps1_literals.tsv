@@ -6,23 +6,34 @@ src/doo2/doo2_bss_us.c	0x8000b600	0x8000b600, 0x24000000, 0x0d000000, 0x15001200
 src/doo2/doo2_bss_us.c	0x80001200	0x80001200, 0x38000042, 0x54706700, 0x426b6c61,	1	454	no aplica: residuo del REL
 src/doo2/doo2_bss_us.c	0x80010600	0x21000000, 0x00005001, 0x80010600, 0x24000042,	1	1629	no aplica: residuo del REL
 src/doo2/doo2_bss_us.c	0x80080000	0x01020000, 0x80080000, 0x01020000, 0x80290000,	1	2483	no aplica: residuo del REL
-src/dooa/dooa.c	0x80020000	#define DOOA_MMD_BUFFER 0x80020000	1	33	pendiente
-src/dooa/dooa.c	0x80044800	#define DOOA_SHARD_BUFFER 0x80044800	1	34	pendiente
-src/dooa/dooa.c	0x8008c000	#define DOOA_ORDERING_TABLE_0 ((GsOT_TAG *)0x8008c000)	1	36	pendiente
-src/dooa/dooa.c	0x8008e000	#define DOOA_ORDERING_TABLE_1 ((GsOT_TAG *)0x8008e000)	1	37	pendiente
+src/dooa/dooa.c	0x80020000	#define DOOA_MMD_BUFFER ((unsigned int)PS1_RAM_ADDR(0x80020000))	1	34	traducido
+src/dooa/dooa.c	0x80044800	#define DOOA_SHARD_BUFFER ((unsigned int)PS1_RAM_ADDR(0x80044800))	1	35	traducido
+src/dooa/dooa.c	0x80020000	#define DOOA_MMD_BUFFER 0x80020000	1	37	traducido: rama PS1
+src/dooa/dooa.c	0x80044800	#define DOOA_SHARD_BUFFER 0x80044800	1	38	traducido: rama PS1
+src/dooa/dooa.c	0x8008c000	#define DOOA_ORDERING_TABLE_0 ((GsOT_TAG *)PS1_RAM_ADDR(0x8008c000))	1	42	traducido
+src/dooa/dooa.c	0x8008e000	#define DOOA_ORDERING_TABLE_1 ((GsOT_TAG *)PS1_RAM_ADDR(0x8008e000))	1	43	traducido
+src/dooa/dooa.c	0x8008c000	#define DOOA_ORDERING_TABLE_0 ((GsOT_TAG *)0x8008c000)	1	45	traducido: rama PS1
+src/dooa/dooa.c	0x8008e000	#define DOOA_ORDERING_TABLE_1 ((GsOT_TAG *)0x8008e000)	1	46	traducido: rama PS1
 src/dooa/dooa_bss_us.c	0x80040000	0x0e840000, (GsOT_TAG *)0x80040000,	1	1015	no aplica: residuo del REL
 src/dooa/dooa_bss_us.c	0x80040000	0x7f040000, 0x0ef80000, (GsOT_TAG *)0x80040000,	1	1020	no aplica: residuo del REL
 src/dooa/dooa_bss_us.c	0x80040000	0x8f070000, (void *)0x0f600000, (void *)0x80040000, 0x0f700000,	1	1032	no aplica: residuo del REL
 src/dooa/dooa_bss_us.c	0x80040000	{ 0x80040000, 0x0fec0000, 0x81040000, 0x10000000 },	1	1042	no aplica: residuo del REL
-src/evl/evl.c	0x80020000	#define EVL_MMD_BUFFER 0x80020000	1	28	pendiente
+src/evl/evl.c	0x80020000	#define EVL_MMD_BUFFER ((unsigned int)PS1_RAM_ADDR(0x80020000))	1	29	traducido
+src/evl/evl.c	0x80020000	#define EVL_MMD_BUFFER 0x80020000	1	31	traducido: rama PS1
 src/fish/fish.c	0x80000000	if ((FISH_SCRATCH->flag & 0x80000000) != 0) {	1	1689	no aplica: constante
 src/fish/fish_bss_us.c	0x80040000	0x80040000,	1	1032	no aplica: residuo del REL
-src/main/btl.c	0x80052ae0	#define BTL_FINISHER_TIM ((char *)0x80052ae0)	1	23	pendiente
-src/main/btl.c	0x80053800	#define BTL_FINISHER_MODEL ((char *)0x80053800)	1	24	pendiente
-src/main/btl.c	0x80054838	#define BTL_CONFUSION_MODEL ((char *)0x80054838)	1	25	pendiente
-src/main/btl.c	0x80054d00	#define BTL_STUN_MODEL ((char *)0x80054d00)	1	26	pendiente
-src/main/btl.c	0x80055328	#define BTL_BUFF_MODEL ((TMDModel *)0x80055328)	1	27	pendiente
-src/main/utils2.c	0x80080800	#define shop_START ((char *)0x80080800)	1	24	pendiente
+src/main/btl.c	0x80052ae0	#define BTL_FINISHER_TIM ((char *)PS1_RAM_ADDR(0x80052ae0))	1	24	traducido
+src/main/btl.c	0x80053800	#define BTL_FINISHER_MODEL ((char *)PS1_RAM_ADDR(0x80053800))	1	25	traducido
+src/main/btl.c	0x80054838	#define BTL_CONFUSION_MODEL ((char *)PS1_RAM_ADDR(0x80054838))	1	26	traducido
+src/main/btl.c	0x80054d00	#define BTL_STUN_MODEL ((char *)PS1_RAM_ADDR(0x80054d00))	1	27	traducido
+src/main/btl.c	0x80055328	#define BTL_BUFF_MODEL ((TMDModel *)PS1_RAM_ADDR(0x80055328))	1	28	traducido
+src/main/btl.c	0x80052ae0	#define BTL_FINISHER_TIM ((char *)0x80052ae0)	1	30	traducido: rama PS1
+src/main/btl.c	0x80053800	#define BTL_FINISHER_MODEL ((char *)0x80053800)	1	31	traducido: rama PS1
+src/main/btl.c	0x80054838	#define BTL_CONFUSION_MODEL ((char *)0x80054838)	1	32	traducido: rama PS1
+src/main/btl.c	0x80054d00	#define BTL_STUN_MODEL ((char *)0x80054d00)	1	33	traducido: rama PS1
+src/main/btl.c	0x80055328	#define BTL_BUFF_MODEL ((TMDModel *)0x80055328)	1	34	traducido: rama PS1
+src/main/utils2.c	0x80080800	#define shop_START ((char *)PS1_RAM_ADDR(0x80080800))	1	25	traducido
+src/main/utils2.c	0x80080800	#define shop_START ((char *)0x80080800)	1	27	traducido: rama PS1
 src/main/vecmath.c	0x80000000	return shift != 0 ? 0x80000000 : 0;	1	151	no aplica: constante
 src/main/vecmath.c	0x80000000	return deltaX < 0 ? 0x80000000 : deltaX;	1	174	no aplica: constante
 src/mov/mov_bss_us.c	0x80040000	0x80040000, 0x07000000, 0x38372022, 0x20220000,	1	6984	no aplica: residuo del REL
@@ -34,26 +45,42 @@ src/mov/mov_bss_us.c	0x8000b600	0x8000b600, 0x24000000, 0x0d000000, 0xe9001200,	
 src/mov/mov_bss_us.c	0x80040000	0x29540000, 0x7f040000, 0x29640000, 0x80040000,	1	23984	no aplica: residuo del REL
 src/mov/mov_bss_us.c	0x80020000	0x75da0000, 0x01020000, 0x75f20000, 0x80020000,	1	24698	no aplica: residuo del REL
 src/mov/mov_bss_us.c	0x80020000	0x75f80000, 0x80020000, 0x75fe0000, 0x02020000,	1	24699	no aplica: residuo del REL
-src/murd/murd.c	0x8008c000	#define MURD_ORDERING_TABLE_0 ((GsOT_TAG *)0x8008c000)	1	28	pendiente
+src/murd/murd.c	0x8008c000	#define MURD_ORDERING_TABLE_0 ((GsOT_TAG *)PS1_RAM_ADDR(0x8008c000))	1	29	traducido
+src/murd/murd.c	0x8008c000	#define MURD_ORDERING_TABLE_0 ((GsOT_TAG *)0x8008c000)	1	31	traducido: rama PS1
 src/std/std_effect.c	0x80000000	if ((EFE_PROJ_SCRATCH->flag & 0x80000000) == 0) {	1	2819	no aplica: constante
 src/std/std_effect.c	0x80000000	if ((EFE_SPRITE_SCRATCH->flag & 0x80000000) == 0) {	1	4299	no aplica: constante
 src/std/std_effect.c	0x80000000	if ((EFE_RIBBON_SCRATCH->proj.flag & 0x80000000) == 0) {	1	5482	no aplica: constante
-src/std/std_hud.c	0x80038000	#define STD_TMD_BUFFER ((uint8_t *)0x80038000)	1	29	pendiente
-src/std/std_hud.c	0x80000000	STD_VERSUS_MODEL_OBJECTS[i].data.obj.attribute = 0x80000000;	1	1307	no aplica: constante
-src/std/std_setup.c	0x80052ae0	#define STD_FINISHER_TIM ((char *)0x80052ae0)	1	27	pendiente
-src/std/std_setup.c	0x80053800	#define STD_FINISHER_MODEL ((char *)0x80053800)	1	28	pendiente
-src/std/std_setup.c	0x80054838	#define STD_CONFUSION_MODEL ((char *)0x80054838)	1	29	pendiente
-src/std/std_setup.c	0x80054d00	#define STD_STUN_MODEL ((char *)0x80054d00)	1	30	pendiente
-src/std/std_setup.c	0x80055328	#define STD_BUFF_MODEL ((TMDModel *)0x80055328)	1	31	pendiente
+src/std/std_hud.c	0x80038000	#define STD_TMD_BUFFER ((uint8_t *)PS1_RAM_ADDR(0x80038000))	1	30	traducido
+src/std/std_hud.c	0x80038000	#define STD_TMD_BUFFER ((uint8_t *)0x80038000)	1	32	traducido: rama PS1
+src/std/std_hud.c	0x80000000	STD_VERSUS_MODEL_OBJECTS[i].data.obj.attribute = 0x80000000;	1	1311	no aplica: constante
+src/std/std_setup.c	0x80052ae0	#define STD_FINISHER_TIM ((char *)PS1_RAM_ADDR(0x80052ae0))	1	28	traducido
+src/std/std_setup.c	0x80053800	#define STD_FINISHER_MODEL ((char *)PS1_RAM_ADDR(0x80053800))	1	29	traducido
+src/std/std_setup.c	0x80054838	#define STD_CONFUSION_MODEL ((char *)PS1_RAM_ADDR(0x80054838))	1	30	traducido
+src/std/std_setup.c	0x80054d00	#define STD_STUN_MODEL ((char *)PS1_RAM_ADDR(0x80054d00))	1	31	traducido
+src/std/std_setup.c	0x80055328	#define STD_BUFF_MODEL ((TMDModel *)PS1_RAM_ADDR(0x80055328))	1	32	traducido
+src/std/std_setup.c	0x80052ae0	#define STD_FINISHER_TIM ((char *)0x80052ae0)	1	34	traducido: rama PS1
+src/std/std_setup.c	0x80053800	#define STD_FINISHER_MODEL ((char *)0x80053800)	1	35	traducido: rama PS1
+src/std/std_setup.c	0x80054838	#define STD_CONFUSION_MODEL ((char *)0x80054838)	1	36	traducido: rama PS1
+src/std/std_setup.c	0x80054d00	#define STD_STUN_MODEL ((char *)0x80054d00)	1	37	traducido: rama PS1
+src/std/std_setup.c	0x80055328	#define STD_BUFF_MODEL ((TMDModel *)0x80055328)	1	38	traducido: rama PS1
 src/vs/vs_effect.c	0x80000000	if ((EFE_PROJ_SCRATCH->flag & 0x80000000) == 0) {	1	2402	no aplica: constante
 src/vs/vs_effect.c	0x80000000	if ((EFE_SPRITE_SCRATCH->flag & 0x80000000) == 0) {	1	3882	no aplica: constante
 src/vs/vs_effect.c	0x80000000	if ((EFE_RIBBON_SCRATCH->proj.flag & 0x80000000) == 0) {	1	5067	no aplica: constante
-src/vs/vs_hud.c	0x80038000	#define VS_TMD_BUFFER ((uint8_t *)0x80038000)	1	20	pendiente
-include/dw/main.h	0x80010000	#define GENERAL_BUFFER ((uint8_t *)0x80010000)	1	8	pendiente
-include/dw/main.h	0x80088800	#define TEXTURE_BUFFER ((uint8_t *)0x80088800)	1	9	pendiente
-include/dw/main.h	0x80058000	#define BOSS_EFE_TMD_BUFFER ((uint8_t *)0x80058000)	1	10	pendiente
-include/dw/vs.h	0x80052ae0	#define VS_FINISHER_TIM ((char *)0x80052ae0)	1	14	pendiente
-include/dw/vs.h	0x80053800	#define VS_FINISHER_MODEL ((char *)0x80053800)	1	15	pendiente
-include/dw/vs.h	0x80054838	#define VS_CONFUSION_MODEL ((char *)0x80054838)	1	16	pendiente
-include/dw/vs.h	0x80054d00	#define VS_STUN_MODEL ((char *)0x80054d00)	1	17	pendiente
-include/dw/vs.h	0x80055328	#define VS_BUFF_MODEL ((TMDModel *)0x80055328)	1	18	pendiente
+src/vs/vs_hud.c	0x80038000	#define VS_TMD_BUFFER ((uint8_t *)PS1_RAM_ADDR(0x80038000))	1	21	traducido
+src/vs/vs_hud.c	0x80038000	#define VS_TMD_BUFFER ((uint8_t *)0x80038000)	1	23	traducido: rama PS1
+include/dw/main.h	0x80010000	#define GENERAL_BUFFER ((uint8_t *)PS1_RAM_ADDR(0x80010000))	1	9	traducido
+include/dw/main.h	0x80088800	#define TEXTURE_BUFFER ((uint8_t *)PS1_RAM_ADDR(0x80088800))	1	10	traducido
+include/dw/main.h	0x80058000	#define BOSS_EFE_TMD_BUFFER ((uint8_t *)PS1_RAM_ADDR(0x80058000))	1	11	traducido
+include/dw/main.h	0x80010000	#define GENERAL_BUFFER ((uint8_t *)0x80010000)	1	13	traducido: rama PS1
+include/dw/main.h	0x80088800	#define TEXTURE_BUFFER ((uint8_t *)0x80088800)	1	14	traducido: rama PS1
+include/dw/main.h	0x80058000	#define BOSS_EFE_TMD_BUFFER ((uint8_t *)0x80058000)	1	15	traducido: rama PS1
+include/dw/vs.h	0x80052ae0	#define VS_FINISHER_TIM ((char *)PS1_RAM_ADDR(0x80052ae0))	1	15	traducido
+include/dw/vs.h	0x80053800	#define VS_FINISHER_MODEL ((char *)PS1_RAM_ADDR(0x80053800))	1	16	traducido
+include/dw/vs.h	0x80054838	#define VS_CONFUSION_MODEL ((char *)PS1_RAM_ADDR(0x80054838))	1	17	traducido
+include/dw/vs.h	0x80054d00	#define VS_STUN_MODEL ((char *)PS1_RAM_ADDR(0x80054d00))	1	18	traducido
+include/dw/vs.h	0x80055328	#define VS_BUFF_MODEL ((TMDModel *)PS1_RAM_ADDR(0x80055328))	1	19	traducido
+include/dw/vs.h	0x80052ae0	#define VS_FINISHER_TIM ((char *)0x80052ae0)	1	21	traducido: rama PS1
+include/dw/vs.h	0x80053800	#define VS_FINISHER_MODEL ((char *)0x80053800)	1	22	traducido: rama PS1
+include/dw/vs.h	0x80054838	#define VS_CONFUSION_MODEL ((char *)0x80054838)	1	23	traducido: rama PS1
+include/dw/vs.h	0x80054d00	#define VS_STUN_MODEL ((char *)0x80054d00)	1	24	traducido: rama PS1
+include/dw/vs.h	0x80055328	#define VS_BUFF_MODEL ((TMDModel *)0x80055328)	1	25	traducido: rama PS1
