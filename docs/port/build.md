@@ -39,3 +39,27 @@ Los demás presets de AD-17 (`native`, `native-asan`, `web`) se agregan en la hi
 DOCKER_CONTEXT=default tools/port/docker_run.sh ctest --test-dir build/port/native-headless
 DOCKER_CONTEXT=default tools/port/docker_run.sh python3 -I tools/port/metrics/char_sign_diff.py
 ```
+
+## L0a: preprocesado igual a upstream e inventarios
+
+```sh
+DOCKER_CONTEXT=default tools/port/docker_run.sh sh tools/port/ci/preproc_check.sh
+```
+
+- Preprocesa cada TU USA (sin `DW1_PORT`, sin marcas de línea ni líneas en blanco) en el árbol
+  actual y en el merge-base con `upstream/main`, en las dos configuraciones de upstream (`gcc`, y
+  `mwcc` con `__MWERKS__` e `include/mwcc`), y falla nombrando el archivo que difiere (NFR-6).
+  Requiere la ref `upstream/main` (`git fetch upstream`).
+- Falla también si cambia la lista de TUs USA, si `config/`, `mk/` o el `Makefile` difieren de
+  upstream, o si cambió un `.c` que no es TU USA (L0a no podría verificarlo).
+- Corre `ps1_literals.py --check` e `isr_spins.py --check`: fallan si los TSV versionados de
+  `tools/port/metrics/` no coinciden con lo que genera el código actual.
+- Inventarios:
+  - `ps1_literals.tsv` (AD-4): literales `0x80000000`–`0x801FFFFF` en los TUs USA e `include/`.
+    Estados `traducido`, `no aplica: <motivo>` o `pendiente`.
+  - `isr_spins.tsv` (AD-8): loops sin ninguna llamada, con la función que los contiene en la
+    columna `kind`. Estados `port_yield` o `no aplica: <motivo>`; L0a exige cero `pendiente`.
+    Límites conocidos en el docstring de `isr_spins.py`.
+  - Al regenerar, el script avisa si un estado asignado a mano se pierde porque su fila cambió.
+  - Para regenerar, correr el script sin `--check`; los estados de filas existentes se conservan y
+    las nuevas quedan `pendiente`. `--no-pending` falla si queda alguna.
