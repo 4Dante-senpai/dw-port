@@ -41,3 +41,7 @@ node_modules/
 !/.claude/skills/*/assets/
 _bmad/config.user.toml
 _bmad/custom/config.user.toml
+
+# Core dumps can hold game memory (rule 1)
+core
+core.*

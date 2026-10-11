@@ -1,0 +1,40 @@
+== preset native-headless @ 7db469d + worktree
+ninja: no work to do.
+1/9 Test #1: tu_list ..........................   Passed    0.16 sec
+2/9 Test #2: inventory ........................   Passed   10.32 sec
+3/9 Test #3: preproc_check ....................   Passed   21.49 sec
+4/9 Test #4: test_preproc_check ...............   Passed  104.44 sec
+5/9 Test #5: ps1mem ...........................   Passed    0.01 sec
+6/9 Test #6: overlay_O0 .......................   Passed    0.00 sec
+7/9 Test #7: overlay_O2 .......................   Passed    0.00 sec
+8/9 Test #8: overlay_sections .................   Passed    0.00 sec
+9/9 Test #9: overlay_objects ..................   Passed    1.11 sec
+100% tests passed, 0 tests failed out of 9
+== preset native-asan @ 7db469d + worktree
+ninja: no work to do.
+1/7 Test #1: tu_list ..........................   Passed    0.17 sec
+2/7 Test #2: inventory ........................   Passed   10.32 sec
+3/7 Test #3: preproc_check ....................   Passed   21.52 sec
+4/7 Test #4: test_preproc_check ...............   Passed  104.57 sec
+5/7 Test #5: ps1mem ...........................   Passed    0.13 sec
+6/7 Test #6: overlay_O0 .......................   Passed    0.01 sec
+7/7 Test #7: overlay_O2 .......................   Passed    0.02 sec
+100% tests passed, 0 tests failed out of 7
+== overlay_probe
+btl	13096
+std	26368
+fish	14304
+evl	20836
+kar	36496
+vs	14853
+mov	469736
+doo2	40092
+dooa	12332
+trn	984
+shop	0
+dget	12
+trn2	760
+murd	4668
+endi	1960
+eab	2464
+overlays_with_data=15 expected=15 image_end=0x125622c in_window=1

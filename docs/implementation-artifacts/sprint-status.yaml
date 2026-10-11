@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-11-2026 12:35
-last_updated: 10-11-2026 16:56
+last_updated: 10-11-2026 17:21
 project: dw-port
 project_key: NOKEY
 tracking_system: file-system
@@ -38,7 +38,7 @@ development_status:
   epic-2: in-progress
   2-1-esqueleto-del-build-del-port-y-lista-generada-de-tus: done
   2-2-checks-l0a-y-los-inventarios-de-literales-y-spins: done
-  2-3-memoria-ps1-enlaces-de-ot-y-reinicio-de-overlays: backlog
+  2-3-memoria-ps1-enlaces-de-ot-y-reinicio-de-overlays: done
   2-4-traducción-de-direcciones-ps1-en-src-e-include: backlog
   2-5-reloj-virtual-y-semántica-de-vsync: backlog
   2-6-linkeo-completo-y-arranque-hasta-el-frame-0: backlog

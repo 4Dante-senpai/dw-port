@@ -12,12 +12,45 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
+    },
+    {
+      "name": "native-asan",
+      "displayName": "Native i686, headless, ASan + UBSan",
+      "inherits": "native-headless",
+      "binaryDir": "${sourceDir}/build/port/native-asan",
+      "cacheVariables": {
+        "CMAKE_C_FLAGS": "-m32 -fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=undefined",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined"
+      }
     }
   ],
   "buildPresets": [
     {
       "name": "native-headless",
       "configurePreset": "native-headless"
+    },
+    {
+      "name": "native-asan",
+      "configurePreset": "native-asan"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "native-headless",
+      "configurePreset": "native-headless",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "native-asan",
+      "configurePreset": "native-asan",
+      "output": {
+        "outputOnFailure": true
+      },
+      "environment": {
+        "ASAN_OPTIONS": "detect_stack_use_after_return=0"
+      }
     }
   ]
 }

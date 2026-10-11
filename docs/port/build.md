@@ -15,8 +15,10 @@ Presets (`CMakePresets.json`):
 | Preset | Qué es | Directorio |
 |---|---|---|
 | `native-headless` | i686 (`-m32`), sin SDL | `build/port/native-headless` |
+| `native-asan` | `native-headless` con ASan + UBSan (`detect_stack_use_after_return=0`) | `build/port/native-asan` |
 
-Los demás presets de AD-17 (`native`, `native-asan`, `web`) se agregan en la historia que los usa.
+Los demás presets de AD-17 (`native`, `web`) se agregan en la historia que los usa. Tests:
+`ctest --preset <preset>`.
 
 ## Qué compila
 
@@ -24,6 +26,13 @@ Los demás presets de AD-17 (`native`, `native-asan`, `web`) se agregan en la hi
   `config/us/*.yaml`) y queda en `build/port/<preset>/tu_list_us.tsv` con la unidad (`main` u
   overlay) y el estado (`build`, o `replaced` para `src/main/_psstart.c`, el crt de CodeWarrior,
   que reemplaza `port/psyq/crt.c`).
+- **Overlays (AD-6):** cada TU de un overlay se compila a través de un envoltorio generado en
+  `build/port/<preset>/ovl/` que pone todas sus variables globales en la sección
+  `dw1ovl_<overlay>` (y define `const` vacío para que ninguna la vuelva de solo lectura).
+  `port/psyq/overlay.c` copia cada sección al arrancar y la restaura en `port_overlay_loaded`.
+- **Memoria (AD-4, AD-5):** `port/psyq/ps1mem.h` (arena, scratchpad, `PS1_RAM`, `PS1_LINK`). Los
+  ejecutables nativos se linkean con `-no-pie -Wl,-Ttext-segment=0x01000000`, así globals, arena y
+  stacks estáticos caen en la ventana de OT `[0x01000000, 0x02000000)`.
 - **Headers de texto:** `text/<dir>/<name>.yaml` → `generated/text/<dir>/<name>.h` con
   `tools/gen_text.py`, como `mk/text.mk`.
 - **Include path del Juego**, en orden: `port/psyq/include` (reemplaza `include/gcc/inline_n.h`),

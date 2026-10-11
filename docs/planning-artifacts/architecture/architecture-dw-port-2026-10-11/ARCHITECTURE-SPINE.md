@@ -108,7 +108,7 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
   - **Web.** La ventana es `[0, 16 MB)` de la memoria lineal. `-sINITIAL_MEMORY` es fijo y no hay crecimiento.
   - **Native.** `-no-pie` y la imagen linkeada en `0x01000000` (`-Wl,-Ttext-segment=0x01000000`).
   - **Stack del juego.** El Host crea el hilo del juego con `pthread_attr_setstack` sobre un buffer estático dentro de la ventana, en ambos builds [ASSUMPTION: Emscripten lo respeta; se verifica en el spike de M4; si no, se aborta al arrancar].
-  - **Enlaces.** `PS1_LINK(ptr)` es la única forma de construir un enlace (la usan `addPrim`/`setaddr` de los headers del port) y verifica en debug que `ptr` está en la ventana. `PS1_LINK_PTR(link)` es la única forma de volver a un puntero.
+  - **Enlaces.** Un enlace es el offset de 24 bits dentro de la ventana (nativo `[0x01000000, 0x02000000)`). `PS1_LINK(ptr)` es la única forma de construir un enlace (la usan `addPrim`/`setaddr` de los headers del port) y verifica en debug que `ptr` está en la ventana. `PS1_LINK_PTR(link)` es la única forma de volver a un puntero.
   - **Fuera de la ventana.** Los buffers grandes del Backend (VRAM HD, framebuffers) salen de `malloc` y nunca se enlazan en un OT.
   - `native-asan` corre con `detect_stack_use_after_return=0`.
 
@@ -117,7 +117,7 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
 - **Binds:** FR-5, los 16 overlays, `port/psyq/overlay.*`, CMake
 - **Prevents:** estado viejo de un overlay que sobrevive a su recarga, o dos mecanismos o momentos de reinicio.
 - **Rule:**
-  - **Pertenencia.** Qué TU pertenece a qué overlay sale de la lista generada de AD-1. Cada TU de un overlay se compila a través de una TU envoltorio generada por CMake: `#pragma clang attribute push(__attribute__((section("dw1ovl_<ovl>"))), apply_to = variable(is_global))`, luego `#include` del archivo y por último `pop`. Así quedan en la sección los globals, los statics de archivo y los statics locales.
+  - **Pertenencia.** Qué TU pertenece a qué overlay sale de la lista generada de AD-1. Cada TU de un overlay se compila a través de una TU envoltorio generada por CMake: `#pragma clang attribute push(__attribute__((section("dw1ovl_<ovl>"))), apply_to = variable(is_global))`, luego `#define const` (un global `const` volvería la sección de solo lectura), el `#include` del archivo y por último `pop`. Así quedan en la sección los globals, los statics de archivo y los statics locales, incluidos los `const`.
   - **Snapshot.** Al arrancar, antes de entrar al `main` del juego, `port/psyq/overlay.c` guarda una copia de `[__start_dw1ovl_<ovl>, __stop_dw1ovl_<ovl>)`.
   - **Carga.** `loadDynamicLibrary` (en `src/`, con un hook `DW1_PORT`) sigue pidiendo el `*_REL.BIN` completo a `PS1_RAM(REL_BIN_OFFSETS[i])` por el camino del juego, síncrono o con la cola async de `file_queue.c`. Así los bloques TMD/TIM embebidos quedan en su dirección PS1 en la arena y se pisan las mismas regiones que en la consola. Las banderas de completado las escribe el código del juego; el port no las toca.
   - **Momento único del restore.** `port_overlay_loaded(lib)` restaura la copia en el momento del pedido, dentro de `loadDynamicLibrary`, tanto en carga síncrona como async. Es válido porque el código del overlay no corre hasta que el juego ve su bandera.
