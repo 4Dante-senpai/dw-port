@@ -3,7 +3,7 @@
 # project's own pipelines on the runner tagged dw1-data. Class B logs and artifacts must not
 # carry disc bytes: only hashes, metrics and pass/fail.
 #
-# Images are loaded on the runner host (docker save | docker load), not pulled from a registry.
+# Jobs pin the toolchain images by digest (AD-16); the images job publishes new ones.
 
 variables:
   GIT_DEPTH: 0                         # preproc_check needs the merge-base with upstream/main
@@ -11,9 +11,7 @@ variables:
   GIT_SUBMODULE_PATHS: external/psyq_headers
 
 default:
-  image:
-    name: dw-port:latest
-    pull_policy: if-not-present
+  image: $CI_REGISTRY_IMAGE/dw-port@sha256:aeba6b62e2bed564e9164fe086d176f4e85cc5dd8b5806b41b0ee9a68a020c2b
   before_script:
     - git config --global --add safe.directory "$CI_PROJECT_DIR"
     - git fetch --quiet https://github.com/jype0/dw_decomp.git main:refs/remotes/upstream/main
@@ -61,9 +59,8 @@ native-disc:
 
 matching:
   extends: .class_b
-  image:
-    name: dw-build:latest              # dw-port lacks gcc-mipsel-linux-gnu (docs/port/setup.md)
-    pull_policy: if-not-present
+  # dw-port lacks gcc-mipsel-linux-gnu (docs/port/setup.md)
+  image: $CI_REGISTRY_IMAGE/dw-build@sha256:1fa82f627f528ab6129fb9cf7c65da7bbfe8f3baab9ee2d4c8fe4530a59da30c
   script:
     - tools/dl_deps.sh > /dev/null
     - mkdir -p bin/cc_mips && cp /private/mwcc/cc_mips_40.dll bin/cc_mips/

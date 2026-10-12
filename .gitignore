@@ -47,3 +47,6 @@ _bmad/custom/config.user.toml
 # Core dumps can hold game memory (rule 1); also rejected anywhere by the pre-commit hook
 /core
 /core.*
+
+# Homelab hosts and tokens metadata (the GitHub repo is public)
+docs/port/local-infra.md

@@ -142,7 +142,8 @@ Devcontainer: `.devcontainer/port/devcontainer.json` (construye `dw-build` en
 
 ## CI (GitLab, AD-16)
 
-`.gitlab-ci.yml` corre en el runner `lab-runner-176` (executor docker, 192.168.0.176):
+`.gitlab-ci.yml` corre en el runner Docker del GitLab propio. Los hosts reales están en
+`docs/port/local-infra.md` (no versionado; el repo de GitHub es público):
 
 | Job | Clase | Imagen | Qué hace |
 |---|---|---|---|
@@ -150,13 +151,16 @@ Devcontainer: `.devcontainer/port/devcontainer.json` (construye `dw-build` en
 | `native-disc` | B | `dw-port` | CTest `pack_disc` y `dw1_overlay` con `DW1_DISC_DIR=/private/disc` |
 | `matching` | B | `dw-build` | `dumpsxiso` + `make regenerate` + `make` + `make compare` |
 
-Las imágenes no vienen del registry: se cargan en el host del runner y los jobs usan
-`pull_policy: if-not-present`. Los jobs de clase B llevan el tag `dw1-data` y solo corren en
+Los jobs usan `dw-build` y `dw-port` del registry del proyecto
+(`$CI_REGISTRY_IMAGE`), fijadas por digest en `.gitlab-ci.yml`. El job
+manual `images` (también automático si cambia un Dockerfile o `requirements.txt`) las construye en
+el docker del runner, las publica con el `CI_JOB_TOKEN` e imprime los digests nuevos, que se
+copian al YAML en un commit. Los jobs de clase B llevan el tag `dw1-data` y solo corren en
 pipelines `push`, `web` o `schedule`.
 
 ### Preparar el runner (procedimiento usado el 2026-10-12)
 
-Se repite si se reinstala el runner o si cambia un Dockerfile (en ese caso, solo los pasos 1, 3 y 6).
+Se repite si se reinstala el runner. Si solo cambia un Dockerfile, alcanza con el job `images`.
 Los pasos que copian datos del disco o tocan el runner los corre el dueño: el clasificador de
 permisos de Claude Code no los deja hacer al agente.
 
@@ -166,24 +170,28 @@ permisos de Claude Code no los deja hacer al agente.
    que no puede leer la contraseña):
 
    ```sh
-   ssh-copy-id -i /root/.ssh/id_rsa.pub root@192.168.0.176
+   ssh-copy-id -i /root/.ssh/id_rsa.pub root@<runner-host>
    ```
 
 2. **Disco del CT:** las dos imágenes ocupan ~4,4 GB (`dw-port` contiene a `dw-build`). El rootfs
    de 12 GB estaba al 91 %; se amplió a 40 GB desde el nodo: `pct resize <CT> rootfs +30G`.
-3. **Imágenes:**
+3. **Registry por HTTP:** el registry de GitLab no tiene TLS; el docker del runner lo acepta con
+   `insecure-registries` en `/etc/docker/daemon.json` y `systemctl restart docker`. Validar el
+   JSON antes de reiniciar (`python3 -m json.tool /etc/docker/daemon.json`): un archivo inválido
+   deja a docker caído y, tras tres intentos, systemd deja de reintentar (`systemctl reset-failed
+   docker && systemctl start docker`). Agregar el registry a la lista que ya tenga:
 
-   ```sh
-   DOCKER_CONTEXT=default docker save dw-build:latest dw-port:latest | gzip -1 | ssh root@192.168.0.176 'gunzip | docker load'
+   ```json
+   { "insecure-registries":["<gitlab-host>:5050"] }
    ```
 
 4. **Datos privados**, fuera de cualquier repo:
 
    ```sh
-   ssh root@192.168.0.176 'mkdir -p /srv/dw-port-private/disc /srv/dw-port-private/mwcc'
-   scp game_rom/extracted/Digimon\ World.bin game_rom/extracted/Digimon\ World.cue root@192.168.0.176:/srv/dw-port-private/disc/
-   scp bin/cc_mips/cc_mips_40.dll root@192.168.0.176:/srv/dw-port-private/mwcc/
-   ssh root@192.168.0.176 'chmod -R a+rX /srv/dw-port-private'
+   ssh root@<runner-host> 'mkdir -p /srv/dw-port-private/disc /srv/dw-port-private/mwcc'
+   scp game_rom/extracted/Digimon\ World.bin game_rom/extracted/Digimon\ World.cue root@<runner-host>:/srv/dw-port-private/disc/
+   scp bin/cc_mips/cc_mips_40.dll root@<runner-host>:/srv/dw-port-private/mwcc/
+   ssh root@<runner-host> 'chmod -R a+rX /srv/dw-port-private'
    ```
 
 5. **`config.toml`** (`/srv/gitlab-runner/config/config.toml` en el host; el runner lo recarga
@@ -191,15 +199,13 @@ permisos de Claude Code no los deja hacer al agente.
 
    ```toml
    volumes = ["/cache", "/var/run/docker.sock:/var/run/docker.sock", "/srv/dw-port-private:/private:ro"]
-   pull_policy = ["always"]
-   allowed_pull_policies = ["always", "if-not-present"]
    ```
 
-   Los demás proyectos siguen con `always`. El montaje `/private` lo ven todos los jobs del
+   El montaje `/private` lo ven todos los jobs del
    runner; no baja el aislamiento, porque todos montan `docker.sock` (root en el host).
 6. **Tag** `dw1-data` en el runner (Admin → CI/CD → Runners → Edit), manteniendo "Run untagged
-   jobs". Disparar un pipeline (`git push origin main` o "Run pipeline") y comprobar los tres jobs.
-7. **Cierre:** quitar la clave (`sed -i '/root@vscode-server/d' /root/.ssh/authorized_keys`) y
+   jobs". Correr el job `images`, fijar los digests y comprobar los tres jobs del pipeline.
+7. **Cierre (opcional):** quitar la clave (`sed -i '/<comentario-de-la-clave>/d' /root/.ssh/authorized_keys`) y
    volver `PermitRootLogin prohibit-password` + `systemctl restart ssh`.
 
 Antes de `.gitlab-ci.yml`, GitLab corría Auto DevOps en cada push (jobs fallidos sin relación).

@@ -89,11 +89,14 @@
   con los 13 bloques `DW1_PORT` actuales y `make compare` → `Compiled binaries match with target
   binaries`.
 
-- CI (AD-16): `origin` empuja a GitHub y a `gitlab.homelab.local/personal/dw-port` (segunda push
-  URL). Primer pipeline verde en `a8d2a2b` sobre `lab-runner-176` (tag `dw1-data`): `native`
+- CI (AD-16): `origin` empuja a GitHub y al GitLab propio (segunda push URL; hosts en
+  `docs/port/local-infra.md`, no versionado). Primer pipeline verde en `a8d2a2b` (runner con tag
+  `dw1-data`): `native`
   (23/23, 2 skips de clase B), `native-disc` (`pack_disc`, `dw1_overlay`) y `matching`
   (`Compiled binaries match with target binaries`). Disco y `cc_mips_40.dll` en
   `/srv/dw-port-private` del runner, montados como `/private:ro` (`docs/port/setup.md`).
+  Imágenes `dw-build`/`dw-port` publicadas en el registry del proyecto por el job `images` y
+  fijadas por digest en `.gitlab-ci.yml`.
 
 ## En curso
 
@@ -101,9 +104,8 @@
 
 ## Bloqueos
 
-- Aprobación del dueño para dos desvíos de AD-16: imágenes cargadas en el host del runner (no
-  desde el registry ni fijadas por digest) y runner de instancia sin la opción *protected*
-  (la clase B queda limitada por las `rules` del YAML).
+- Aprobación del dueño para un desvío de AD-16: runner de instancia sin la opción *protected* (la
+  clase B queda limitada por las `rules` del YAML).
 
 - Emulador de referencia (PCSX-Redux / DuckStation headless) no instalado: planificado como
   historia de M3.
@@ -134,7 +136,7 @@
 - El contexto Docker por defecto de esta máquina (`docker-server`) apunta a un host remoto; los
   comandos del port usan `DOCKER_CONTEXT=default` (daemon local) para que los bind mounts vean el
   repo. Durante la Fase 1 se lanzó por error un primer build contra el host remoto
-  (192.168.0.172): quedó la imagen intermedia `dw-build` y `ubuntu:noble` en ese servidor.
+  (`<docker-server>`): quedó la imagen intermedia `dw-build` y `ubuntu:noble` en ese servidor.
 
 - `origin` tenía una rama `master` previa con solo `LICENSE` (historia no relacionada); se dejó
   intacta y el trabajo se publica en `origin/main`.
