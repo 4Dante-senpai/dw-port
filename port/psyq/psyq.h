@@ -13,6 +13,11 @@ long VSyncCallbacks(int ch, void (*f)());
 long InterruptCallback(int irq, void (*f)());
 int ResetCallback(void);
 
+/* libgs.h */
+typedef unsigned char PACKET;
+void GsSetWorkBase(PACKET *outpacketp);
+PACKET *GsGetWorkBase(void);
+
 /* libapi.h */
 long SetRCnt(unsigned long spec, unsigned short target, long mode);
 long GetRCnt(unsigned long spec);

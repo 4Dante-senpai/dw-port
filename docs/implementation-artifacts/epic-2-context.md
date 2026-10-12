@@ -42,7 +42,7 @@ primer tramo prioritario del proyecto.
 
 - **Capas:** Juego (`src/`) → Capa PsyQ (`port/psyq`) → Backend (`port/backend`) y Host (`port/host`, interfaz `plat_*`). El Backend no llama a `plat_*`. Herramientas en `tools/port/`.
 - **TUs:** la lista se genera de `mk/version/us.mk` y `config/us/*.yaml`; no se linkea `asm/`; no existe `port/recomp/`.
-- **Native:** i686 (`-m32`), `_Static_assert(sizeof(void *) == 4)`; `native-headless` sin SDL; `-no-pie -Wl,-Ttext-segment=0x01000000` para la ventana de OT de 16 MB.
+- **Native:** i686 (`-m32`), `_Static_assert(sizeof(void *) == 4)`; `native-headless` sin SDL; `-no-pie`; la ventana de OT de 16 MB empieza en el segmento de datos.
 - **Flags del juego, idénticos en todos los presets:** `-fsigned-char -fwrapv -fno-strict-aliasing -fno-common -DDW1_PORT -DLANGUAGE_C -DVERSION_US`; `-ffile-prefix-map`, `SOURCE_DATE_EPOCH`. Presets: `native`, `native-headless`, `native-asan`, `web`.
 - **PsyQ:** una implementación por función en `port/psyq/<lib>.c` con comentario de fuente `dw2-pc:<archivo>` o `asm:asm/us/main/psyq/<lib>.s` (manda el asm de DW1); headers del port antes que los de upstream; macros GTE inline redefinidas como llamadas al GTE del Backend. Archivos adaptados de DW2-PC llevan `/* Adapted from DW2-PC (CC0): <ruta> @ 816ed0d */`.
 - **Memoria:** arena `Ps1_Ram[0x200000]` con `PS1_RAM(addr)`; scratchpad de 1 KB; traducción de direcciones solo en macros `DW1_PORT` y en entradas PsyQ con direcciones enteras; `__rts_info_t__.h` del port renombra `_end`/`_stack_*`. Enlaces de OT solo con `PS1_LINK`/`PS1_LINK_PTR`; stack del hilo del juego dentro de la ventana.

@@ -9,6 +9,9 @@
 #define VSYNC_SLOTS 8
 #define IRQ_COUNT 11
 
+/* Frame-end hook of the runtime (crt.c); absent in unit tests. */
+__attribute__((weak)) void port_frame_done(void);
+
 int Vcount; /* VBlanks counted by the VBlank trap; read by VSync(-1) */
 static int intr_started; /* asm: intrEnv+0 -- startIntr already ran */
 static int pre_vcount;
@@ -68,6 +71,8 @@ int VSync(int mode)
 	v_wait(Vcount + 1);
 	pre_vcount = Vcount;
 	hcount_cycle = clock_now();
+	if (port_frame_done)
+		port_frame_done();
 	return count;
 }
 

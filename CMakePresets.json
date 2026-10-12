@@ -19,8 +19,8 @@
       "inherits": "native-headless",
       "binaryDir": "${sourceDir}/build/port/native-asan",
       "cacheVariables": {
-        "CMAKE_C_FLAGS": "-m32 -fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=undefined",
-        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined"
+        "CMAKE_C_FLAGS": "-m32 -fsanitize=address,undefined -fno-sanitize=function -fno-omit-frame-pointer -fno-sanitize-recover=undefined",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined -shared-libasan"
       }
     }
   ],

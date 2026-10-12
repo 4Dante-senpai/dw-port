@@ -69,7 +69,7 @@ decomp. M0 y M1 ya están completos (`docs/STATUS.md`).
 - AD-2: una implementación por función PsyQ en `port/psyq/<lib>.c` con comentario `dw2-pc:` o `asm:`; headers del port primero en el include path; macros GTE redefinidas hacia el Backend; atribución DW2-PC en la primera línea.
 - AD-3: native es i686 (`-m32`) con `_Static_assert(sizeof(void *) == 4)`; `native-headless` sin SDL; SDL3 i686 en la historia del preset con ventana.
 - AD-4: arena `Ps1_Ram[0x200000]`, `PS1_RAM()` con assert, scratchpad de 1 KB; traducción de direcciones solo en macros `DW1_PORT` de `src/`/`include/` y en entradas PsyQ con direcciones enteras; inventario de literales generado por `tools/port/metrics/ps1_literals.py` y verificado en L0a; `__rts_info_t__.h` del port renombra `_end`/`_stack_*`.
-- AD-5: ventana de 16 MB para todo lo enlazable en un OT, incluido el stack del hilo del juego; nativo `-no-pie -Wl,-Ttext-segment=0x01000000`; `PS1_LINK`/`PS1_LINK_PTR` con assert; ASan con `detect_stack_use_after_return=0`.
+- AD-5: ventana de 16 MB para todo lo enlazable en un OT, incluido el stack del hilo del juego; nativo `-no-pie` con la ventana desde el segmento de datos; `PS1_LINK`/`PS1_LINK_PTR` con assert; ASan con `detect_stack_use_after_return=0`.
 - AD-6: TU envoltorio por archivo de overlay con `#pragma clang attribute` y sección `dw1ovl_<ovl>`; snapshot al arrancar; restore en `loadDynamicLibrary` (sync y async); detector de aliasing en debug; sin LTO en wasm; test L1 de reinicio.
 - AD-7: web con `-pthread -sSUPPORT_LONGJMP=wasm -fwasm-exceptions`, hilo del juego con stack estático (fallback `-sPROXY_TO_PTHREAD`), input en el hilo principal, AudioWorklet con ring en SAB; sin ASYNCIFY/JSPI.
 - AD-8: `port/psyq/clock.c` dueño único del tiempo (ciclos a 33.868.800 Hz + cola de eventos); toda entrada PsyQ avanza el reloj; callbacks solo en el hilo del juego; costos de CD/GPU/MDEC; `VSync(n)` con semántica PsyQ; inventario de spins por `tools/port/metrics/isr_spins.py` con `port_yield()`; reloj de pared con recuperación de 3 VBlanks y conteo de frames perdidos; input latcheado por VBlank.
@@ -222,7 +222,7 @@ para que el Juego use direcciones PS1 y que cada recarga de overlay empiece con 
 **Given** `port/psyq/ps1mem.{h,c}` y el preset `native-asan`
 **When** corren los tests L1 de memoria
 **Then** `PS1_RAM(0x80010000)` apunta a `Ps1_Ram + 0x10000`, una dirección fuera de RAM dispara `PORT_ASSERT`, el scratchpad tiene 0x400 bytes con assert de rango, y `PS1_LINK_PTR(PS1_LINK(p)) == p` para punteros dentro de la ventana de 16 MB
-**And** el binario nativo se linkea con `-no-pie -Wl,-Ttext-segment=0x01000000` y un test verifica que globals, arena y stack del hilo del juego caen dentro de la ventana
+**And** el binario nativo se linkea con `-no-pie` (la ventana empieza en el segmento de datos) y un test verifica que globals, arena y stack del hilo del juego caen dentro de la ventana
 
 **Given** las TUs envoltorio generadas por CMake para cada TU de overlay (sección `dw1ovl_<ovl>`)
 **When** corre el test L1 de reinicio (derivado de `tools/port/env_check/overlay_sections/`)
@@ -604,6 +604,10 @@ para validar el modelo de hilos y memoria de AD-5 y AD-7 en los dos navegadores.
 **When** `plat_present` presenta un frame del Renderer software
 **Then** el contenido leído del canvas en el test coincide píxel a píxel con el frame de VRAM convertido
 **And** el test mide y registra el tiempo de presentación por frame en ambos navegadores (sin umbral; insumo de la Épica 5)
+
+**Given** las llamadas del Juego por punteros a función de tipo distinto (UBSan `-fsanitize=function`, por ejemplo `src/main/world_object.c:101`)
+**When** se arma el build `web`
+**Then** existe un inventario automático de esas llamadas (y los stubs PsyQ generados tienen la firma de su prototipo) y cada una está resuelta (wrapper `DW1_PORT`, `-sEMULATE_FUNCTION_POINTER_CASTS` u otra opción registrada en la arquitectura), porque `call_indirect` de wasm aborta con firma distinta
 
 ### Story 4.2: Worker de E/S y pantalla de título en el navegador
 

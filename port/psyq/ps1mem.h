@@ -26,7 +26,10 @@ _Static_assert(sizeof(void *) == 4, "the port requires 32-bit pointers (native i
 #ifdef __EMSCRIPTEN__
 #define PS1_WINDOW_BASE 0x00000000u
 #else
-#define PS1_WINDOW_BASE 0x01000000u /* native image linked with -Wl,-Ttext-segment=0x01000000 */
+/* Native: the window starts at the data segment (globals, arena and static stacks come after it;
+ * code does not need to be inside). __data_start is defined by the C runtime's crt1.o. */
+extern char __data_start[];
+#define PS1_WINDOW_BASE ((uint32_t)(uintptr_t)__data_start & ~0xFFFu)
 #endif
 #define PS1_WINDOW_SIZE 0x01000000u
 
