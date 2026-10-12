@@ -237,3 +237,22 @@ if(NOT EMSCRIPTEN)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
   set_tests_properties(frame0 PROPERTIES TIMEOUT 120)
 endif()
+
+# Pack: the user's disc checked against the Manifest (port/host/pack/pack.h) and its CLI.
+add_library(dw1_pack_lib STATIC port/host/pack/pack.c port/host/pack/sha256.c)
+target_include_directories(dw1_pack_lib PUBLIC port/host/pack)
+target_compile_options(dw1_pack_lib PRIVATE -Wall -Wextra -Werror)
+if(NOT EMSCRIPTEN)
+  add_executable(dw1-pack tools/port/pack/dw1_pack.c)
+  target_link_libraries(dw1-pack dw1_pack_lib)
+  target_compile_options(dw1-pack PRIVATE -Wall -Wextra -Werror)
+
+  add_executable(test_pack port/host/pack/tests/test_pack.c)
+  target_link_libraries(test_pack dw1_pack_lib)
+  target_compile_options(test_pack PRIVATE -Wall -Wextra -Werror)
+  add_test(NAME pack COMMAND test_pack WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  # Class B: needs the user's disc in DW1_DISC_DIR (skipped without it).
+  add_test(NAME pack_disc COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_pack_disc.sh
+    $<TARGET_FILE:dw1-pack> ${CMAKE_SOURCE_DIR})
+  set_tests_properties(pack_disc PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600)
+endif()

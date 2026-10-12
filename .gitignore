@@ -25,7 +25,9 @@ dumps/
 *.mcr
 SLUS_*
 SCUS_*
-pack/
+/pack/
+*.pack
+*.pack.tmp
 # CodeWarrior and other proprietary binaries
 bin/cc_mips/*.dll
 *.dll
