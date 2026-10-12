@@ -16,6 +16,7 @@ extern char _end[];
 /* Game data initialized with translated PS1 addresses (story 2.4). The types are the ABI
  * equivalents of the game's own declarations (u_long *, uint8_t *, int32_t). */
 extern void *REL_BIN_OFFSETS[16];
+extern char *REL_BIN_FILES[16];
 extern char *BOSS_EFE_TMD;
 extern unsigned long *ENDI_FADE_CLUT_BUFFER;
 extern unsigned char *ARRAY_SECTION_START;
@@ -34,8 +35,10 @@ static int addresses_ok(void)
 	         (void *)BOSS_EFE_TMD == Ps1_Ram + 0x58000 &&               /* BOSS_EFE_TMD_BUFFER */
 	         ARRAY_SECTION_START == Ps1_Ram + 0x88800 &&                /* TEXTURE_BUFFER */
 	         MAIN_D_801349E4 == (int)(Ps1_Ram + 0x20000);               /* EVL_MMD_BUFFER */
+	/* libcd identifies a loaded overlay by its file name (port_overlay_id). */
 	for (int i = 0; i < 16; i++)
-		ok = ok && REL_BIN_OFFSETS[i] == starts[i] && ps1_in_window(REL_BIN_OFFSETS[i]);
+		ok = ok && REL_BIN_OFFSETS[i] == starts[i] && ps1_in_window(REL_BIN_OFFSETS[i]) &&
+		     port_overlay_id(REL_BIN_FILES[i]) == i + 1;
 	return ok;
 }
 

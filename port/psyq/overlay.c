@@ -27,7 +27,23 @@ static OverlayData overlays[PORT_OVERLAY_COUNT] = {
 };
 #undef OVL
 
+/* REL_BIN_FILES of src/main/utils2.c, in enum Overlay order. */
+static const char *const files[PORT_OVERLAY_COUNT] = {
+	NULL, "BTL_REL.BIN", "STD_REL.BIN", "FISH_REL.BIN", "EVL_REL.BIN", "KAR_REL.BIN",
+	"VS_REL.BIN", "MOV_REL.BIN", "DOO2_REL.BIN", "DOOA_REL.BIN", "TRN_REL.BIN", "SHOP_REL.BIN",
+	"DGET_REL.BIN", "TRN2_REL.BIN", "MURD_REL.BIN", "ENDI_REL.BIN", "EAB_REL.BIN"
+};
+
 static int snapshot_taken;
+
+int port_overlay_id(const char *file)
+{
+	for (int i = 1; i < PORT_OVERLAY_COUNT; i++) {
+		if (!strcmp(file, files[i]))
+			return i;
+	}
+	return 0;
+}
 
 void port_overlay_snapshot_all(void)
 {

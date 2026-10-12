@@ -1,4 +1,1 @@
 name	value	reason
-CdControl	1	command accepted; the game spins until it is
-CdRead	1	read started; the game retries until it is
-CdReadSync	0	read finished, no error

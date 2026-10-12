@@ -119,9 +119,14 @@ target_compile_options(dw1_game_objs PRIVATE
   -fsigned-char -fwrapv -fno-strict-aliasing -fno-common -w
   -include ${CMAKE_SOURCE_DIR}/port/psyq/include/port_game.h)
 
+# CD model over the Pack (port/backend/cdrom.h).
+add_library(dw1_backend STATIC port/backend/cdrom.c)
+target_link_libraries(dw1_backend PUBLIC dw1_pack_lib)
+target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
+
 add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c port/psyq/clock.c
-  port/psyq/libetc.c port/psyq/libapi.c port/psyq/libgs.c)
-target_link_libraries(dw1_psyq PUBLIC Threads::Threads)
+  port/psyq/libetc.c port/psyq/libapi.c port/psyq/libgs.c port/psyq/libcd.c port/psyq/stub.c)
+target_link_libraries(dw1_psyq PUBLIC Threads::Threads dw1_backend)
 target_compile_options(dw1_psyq PRIVATE -Wall -Wextra -Werror)
 
 enable_testing()
@@ -196,8 +201,8 @@ add_test(NAME overlay_objects COMMAND python3 -I -B tools/port/units/check_ovl_o
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
 
-# Runtime start, stub logging and PsyQ data the game references (linked only into the game).
-add_library(dw1_runtime STATIC port/psyq/crt.c port/psyq/stub.c port/psyq/libgs_data.c
+# Runtime start and PsyQ data the game references (linked only into the game).
+add_library(dw1_runtime STATIC port/psyq/crt.c port/psyq/libgs_data.c
   ${DW1_RTS_INFO_H})
 target_include_directories(dw1_runtime PRIVATE ${CMAKE_BINARY_DIR}/generated)
 target_compile_options(dw1_runtime PRIVATE -Wall -Wextra -Werror)
@@ -219,6 +224,12 @@ set_source_files_properties(${DW1_PSYQ_STUBS} PROPERTIES COMPILE_OPTIONS "-w")
 if(NOT EMSCRIPTEN)
   add_executable(dw1 port/host/headless/main.c ${DW1_PSYQ_STUBS} $<TARGET_OBJECTS:dw1_game_objs>)
   target_link_libraries(dw1 dw1_runtime)
+  # Only a Pack built from this build's Manifest opens (pack_open).
+  set(DW1_MANIFEST ${CMAKE_SOURCE_DIR}/tools/port/manifest/${DW1_VERSION}.tsv)
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${DW1_MANIFEST})
+  file(SHA256 ${DW1_MANIFEST} DW1_MANIFEST_SHA256)
+  set_source_files_properties(port/host/headless/main.c PROPERTIES
+    COMPILE_DEFINITIONS DW1_MANIFEST_SHA256="${DW1_MANIFEST_SHA256}")
   # L1: the game boots to frame 0 (return of its first VSync) with stubs where needed.
   add_test(NAME frame0 COMMAND sh -c "rm -f frame0_trace.log && DW1_TRACE=frame0_trace.log \
     $<TARGET_FILE:dw1> --headless --frames 1 > frame0.out 2>&1; s=$?; cat frame0.out; \
@@ -250,9 +261,30 @@ if(NOT EMSCRIPTEN)
   add_executable(test_pack port/host/pack/tests/test_pack.c)
   target_link_libraries(test_pack dw1_pack_lib)
   target_compile_options(test_pack PRIVATE -Wall -Wextra -Werror)
+  # Leaves the synthetic Pack (pack_t1.pack, pack_t.tsv) in the build directory.
   add_test(NAME pack COMMAND test_pack WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-  # Class B: needs the user's disc in DW1_DISC_DIR (skipped without it).
+  set_tests_properties(pack PROPERTIES FIXTURES_SETUP synthetic_pack)
+
+  # libcd and the CD model over the synthetic Pack.
+  add_executable(test_libcd port/psyq/tests/test_libcd.c)
+  target_link_libraries(test_libcd dw1_psyq)
+  target_compile_options(test_libcd PRIVATE -Wall -Wextra -Werror)
+  add_test(NAME libcd COMMAND test_libcd WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  set_tests_properties(libcd PROPERTIES FIXTURES_REQUIRED synthetic_pack)
+  # dw1 refuses a Pack of another Manifest.
+  add_test(NAME dw1_foreign_pack COMMAND sh -c "$<TARGET_FILE:dw1> --pack pack_t1.pack \
+    2> dw1_foreign_pack.err; s=$?; cat dw1_foreign_pack.err; test $s = 1 && \
+    grep -q 'built from another Manifest' dw1_foreign_pack.err"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  set_tests_properties(dw1_foreign_pack PROPERTIES FIXTURES_REQUIRED synthetic_pack)
+
+  # Class B: need the user's disc in DW1_DISC_DIR (skipped without it). pack_disc leaves the
+  # USA Pack at us.pack in the build directory for dw1_overlay.
   add_test(NAME pack_disc COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_pack_disc.sh
-    $<TARGET_FILE:dw1-pack> ${CMAKE_SOURCE_DIR})
-  set_tests_properties(pack_disc PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600)
+    $<TARGET_FILE:dw1-pack> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/us.pack)
+  set_tests_properties(pack_disc PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600 FIXTURES_SETUP disc_pack)
+  add_test(NAME dw1_overlay COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_dw1_overlay.sh
+    $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+  set_tests_properties(dw1_overlay PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600
+    FIXTURES_REQUIRED disc_pack)
 endif()
