@@ -151,16 +151,58 @@ Devcontainer: `.devcontainer/port/devcontainer.json` (construye `dw-build` en
 | `matching` | B | `dw-build` | `dumpsxiso` + `make regenerate` + `make` + `make compare` |
 
 Las imágenes no vienen del registry: se cargan en el host del runner y los jobs usan
-`pull_policy: if-not-present`. Hay que recargarlas cuando cambia un Dockerfile:
+`pull_policy: if-not-present`. Los jobs de clase B llevan el tag `dw1-data` y solo corren en
+pipelines `push`, `web` o `schedule`.
 
-```sh
-DOCKER_CONTEXT=default docker save dw-build:latest dw-port:latest | gzip -1 | ssh root@192.168.0.176 'gunzip | docker load'
-```
+### Preparar el runner (procedimiento usado el 2026-10-12)
 
-En el host del runner, fuera de cualquier repo: `/srv/dw-port-private/disc/` (`.bin`/`.cue`) y
-`/srv/dw-port-private/mwcc/cc_mips_40.dll`. `config.toml` monta ese directorio como `/private:ro`
-y agrega `allowed_pull_policies = ["always", "if-not-present"]`. Los jobs de clase B llevan el
-tag `dw1-data` y solo corren en pipelines `push`, `web` o `schedule`.
+Se repite si se reinstala el runner o si cambia un Dockerfile (en ese caso, solo los pasos 1, 3 y 6).
+Los pasos que copian datos del disco o tocan el runner los corre el dueño: el clasificador de
+permisos de Claude Code no los deja hacer al agente.
+
+1. **Acceso SSH temporal** con la clave de esta máquina. El CT del runner no traía `sshd`: se
+   instaló desde el nodo Proxmox (`pct exec <CT> -- apt-get install -y openssh-server`), se
+   habilitó `PermitRootLogin yes` y, desde una terminal interactiva (no con `!` en Claude Code,
+   que no puede leer la contraseña):
+
+   ```sh
+   ssh-copy-id -i /root/.ssh/id_rsa.pub root@192.168.0.176
+   ```
+
+2. **Disco del CT:** las dos imágenes ocupan ~4,4 GB (`dw-port` contiene a `dw-build`). El rootfs
+   de 12 GB estaba al 91 %; se amplió a 40 GB desde el nodo: `pct resize <CT> rootfs +30G`.
+3. **Imágenes:**
+
+   ```sh
+   DOCKER_CONTEXT=default docker save dw-build:latest dw-port:latest | gzip -1 | ssh root@192.168.0.176 'gunzip | docker load'
+   ```
+
+4. **Datos privados**, fuera de cualquier repo:
+
+   ```sh
+   ssh root@192.168.0.176 'mkdir -p /srv/dw-port-private/disc /srv/dw-port-private/mwcc'
+   scp game_rom/extracted/Digimon\ World.bin game_rom/extracted/Digimon\ World.cue root@192.168.0.176:/srv/dw-port-private/disc/
+   scp bin/cc_mips/cc_mips_40.dll root@192.168.0.176:/srv/dw-port-private/mwcc/
+   ssh root@192.168.0.176 'chmod -R a+rX /srv/dw-port-private'
+   ```
+
+5. **`config.toml`** (`/srv/gitlab-runner/config/config.toml` en el host; el runner lo recarga
+   solo). En `[runners.docker]`, con backup previo:
+
+   ```toml
+   volumes = ["/cache", "/var/run/docker.sock:/var/run/docker.sock", "/srv/dw-port-private:/private:ro"]
+   pull_policy = ["always"]
+   allowed_pull_policies = ["always", "if-not-present"]
+   ```
+
+   Los demás proyectos siguen con `always`. El montaje `/private` lo ven todos los jobs del
+   runner; no baja el aislamiento, porque todos montan `docker.sock` (root en el host).
+6. **Tag** `dw1-data` en el runner (Admin → CI/CD → Runners → Edit), manteniendo "Run untagged
+   jobs". Disparar un pipeline (`git push origin main` o "Run pipeline") y comprobar los tres jobs.
+7. **Cierre:** quitar la clave (`sed -i '/root@vscode-server/d' /root/.ssh/authorized_keys`) y
+   volver `PermitRootLogin prohibit-password` + `systemctl restart ssh`.
+
+Antes de `.gitlab-ci.yml`, GitLab corría Auto DevOps en cada push (jobs fallidos sin relación).
 
 ## Resultado de la verificación (2026-10-11)
 
