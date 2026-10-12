@@ -106,9 +106,9 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
 - **Rule:**
   - **Qué entra en la ventana.** Todo lo que puede quedar enlazado en un OT vive en una ventana de 16 MB: globals del juego y del port, arena, buffers de primitivas de PsyQ y **el stack del hilo del juego**.
   - **Web.** La ventana es `[0, 16 MB)` de la memoria lineal. `-sINITIAL_MEMORY` es fijo y no hay crecimiento.
-  - **Native.** `-no-pie` y la imagen linkeada en `0x01000000` (`-Wl,-Ttext-segment=0x01000000`).
+  - **Native.** `-no-pie`; la ventana empieza en el segmento de datos (`__data_start`), así que el código no necesita estar dentro y los globals, la arena y los stacks estáticos sí.
   - **Stack del juego.** El Host crea el hilo del juego con `pthread_attr_setstack` sobre un buffer estático dentro de la ventana, en ambos builds [ASSUMPTION: Emscripten lo respeta; se verifica en el spike de M4; si no, se aborta al arrancar].
-  - **Enlaces.** Un enlace es el offset de 24 bits dentro de la ventana (nativo `[0x01000000, 0x02000000)`). `PS1_LINK(ptr)` es la única forma de construir un enlace (la usan `addPrim`/`setaddr` de los headers del port) y verifica en debug que `ptr` está en la ventana. `PS1_LINK_PTR(link)` es la única forma de volver a un puntero.
+  - **Enlaces.** Un enlace es el offset de 24 bits dentro de la ventana. `PS1_LINK(ptr)` es la única forma de construir un enlace (la usan `addPrim`/`setaddr` de los headers del port) y verifica en debug que `ptr` está en la ventana. `PS1_LINK_PTR(link)` es la única forma de volver a un puntero.
   - **Fuera de la ventana.** Los buffers grandes del Backend (VRAM HD, framebuffers) salen de `malloc` y nunca se enlazan en un OT.
   - `native-asan` corre con `detect_stack_use_after_return=0`.
 

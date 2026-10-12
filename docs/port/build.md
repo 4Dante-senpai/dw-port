@@ -15,7 +15,7 @@ Presets (`CMakePresets.json`):
 | Preset | Qué es | Directorio |
 |---|---|---|
 | `native-headless` | i686 (`-m32`), sin SDL | `build/port/native-headless` |
-| `native-asan` | `native-headless` con ASan + UBSan (`detect_stack_use_after_return=0`) | `build/port/native-asan` |
+| `native-asan` | `native-headless` con ASan + UBSan, runtime de ASan compartido, sin `-fsanitize=function` (`detect_stack_use_after_return=0`) | `build/port/native-asan` |
 
 Los demás presets de AD-17 (`native`, `web`) se agregan en la historia que los usa. Tests:
 `ctest --preset <preset>`.
@@ -31,8 +31,8 @@ Los demás presets de AD-17 (`native`, `web`) se agregan en la historia que los 
   `dw1ovl_<overlay>` (y define `const` vacío para que ninguna la vuelva de solo lectura).
   `port/psyq/overlay.c` copia cada sección al arrancar y la restaura en `port_overlay_loaded`.
 - **Memoria (AD-4, AD-5):** `port/psyq/ps1mem.h` (arena, scratchpad, `PS1_RAM`, `PS1_LINK`). Los
-  ejecutables nativos se linkean con `-no-pie -Wl,-Ttext-segment=0x01000000`, así globals, arena y
-  stacks estáticos caen en la ventana de OT `[0x01000000, 0x02000000)`.
+  ejecutables nativos se linkean con `-no-pie`; la ventana de OT de 16 MB empieza en el segmento
+  de datos (`__data_start`), así globals, arena y stacks estáticos caen dentro.
 - **Headers de texto:** `text/<dir>/<name>.yaml` → `generated/text/<dir>/<name>.h` con
   `tools/gen_text.py`, como `mk/text.mk`.
 - **Include path del Juego**, en orden: `port/psyq/include` (reemplaza `include/gcc/inline_n.h`),
@@ -41,6 +41,20 @@ Los demás presets de AD-17 (`native`, `web`) se agregan en la historia que los 
   -DDW1_PORT -DLANGUAGE_C -DVERSION_US`, sin warnings (`-w`), con `port/psyq/include/port_game.h`
   incluido a la fuerza (asserts de `char` con signo y punteros de 32 bits). El código del port compila con
   `-Wall -Wextra -Werror`.
+
+## Correr el Juego
+
+```sh
+build/port/native-headless/dw1 --headless --frames 1   # sale con 0 al terminar el frame 0
+```
+
+- Sin Pack todavía: las funciones PsyQ que faltan son stubs generados en el build
+  (`tools/port/psyq/gen_stubs.py`), que registran su primera llamada en `$DW1_TRACE`
+  (`port_trace.log` por defecto) y devuelven 0 o el valor de `tools/port/psyq/stub_returns.tsv`.
+  El build imprime la cobertura (`psyq: used=… implemented=… host_libc=… stubs=…`).
+- Si el Juego no termina un frame en 30 s virtuales, sale con 3 (watchdog).
+- El `main` del Juego se compila como `dw1_game_main`; el punto de entrada es el Host
+  (`port/host/headless/main.c`), que arranca el hilo del juego (`port/psyq/crt.c`).
 
 ## Tests y métricas
 

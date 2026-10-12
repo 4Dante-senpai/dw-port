@@ -49,7 +49,7 @@
   `docs/implementation-artifacts/evidence/story-2-2.log`.
 
 - Historia 2.3 (memoria y overlays): `port/psyq/ps1mem` (arena 2 MB, scratchpad 1 KB, `PS1_RAM`,
-  enlaces de OT de 24 bits en la ventana `[0x01000000, 0x02000000)`), `port/psyq/overlay` (copia
+  enlaces de OT de 24 bits en una ventana de 16 MB desde el segmento de datos), `port/psyq/overlay` (copia
   y restauración de `dw1ovl_<ovl>`), TUs envoltorio por overlay (15 secciones en USA), preset
   `native-asan`. Evidencia: `docs/implementation-artifacts/evidence/story-2-3.log`.
 
@@ -63,9 +63,15 @@
   `InterruptCallback`/`ResetCallback` y `SetRCnt`/`GetRCnt`/`ResetRCnt` traducidos del asm de DW1.
   Evidencia: `docs/implementation-artifacts/evidence/story-2-5.log`.
 
+- Historia 2.6 (linkeo y frame 0): ejecutable `dw1` (`native-headless`) con los 119 objetos del
+  Juego, la Capa PsyQ del port y stubs generados en build (182 PsyQ + 11 GTE); **llega al frame 0**
+  (retorno del primer `VSync`, ciclo 565.044) también bajo ASan/UBSan. ASan encontró un string sin
+  terminador en `src/main/efe.c` (corregido con `DW1_PORT`). Evidencia:
+  `docs/implementation-artifacts/evidence/story-2-6.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.6 (linkeo completo y arranque hasta el frame 0).
+- Fase 5: próxima historia 2.7 (Manifest y herramienta nativa del Pack).
 
 ## Bloqueos
 
@@ -84,11 +90,15 @@
 | Funciones PsyQ usadas / cubiertas por DW2-PC | 202 / 81 |
 | Archivos C del juego que compilan a wasm32 sin cambios | 97 / 120 |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
-| Bloques `DW1_PORT` en `src/`/`include/` | 12 (`docs/port/src-changes.md`) |
+| Bloques `DW1_PORT` en `src/`/`include/` | 13 (`docs/port/src-changes.md`) |
+| Funciones PsyQ usadas: implementadas / stubs / libc del host | 4 / 182 / 13 (de 199) |
 | Escenas que funcionan (nativo) | 0 |
 | Escenas que funcionan (web) | 0 |
 
 ## Notas
+
+- Pregunta abierta (memlog): llamadas por puntero con tipo distinto en el Juego; en wasm abortan. Se
+  resuelven en la Historia 4.1.
 
 - Pregunta abierta (memlog de la arquitectura): el VBlank del reloj usa 59,94 Hz (NFR-1); psx-spx da
   ~59,83 Hz para NTSC no entrelazado. Se mide en la Historia 3.10 contra el Emulador de referencia.

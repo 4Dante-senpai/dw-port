@@ -1,0 +1,43 @@
+== preset native-headless @ 10494df + worktree
+psyq: used=199 implemented=4 host_libc=13 stubs=182 gte_stubs=11
+ 1/18 Test  #1: rts_info .........................   Passed    0.07 sec
+ 2/18 Test  #2: ovl_starts .......................   Passed    0.05 sec
+ 3/18 Test  #3: tu_list ..........................   Passed    0.16 sec
+ 4/18 Test  #4: inventory ........................   Passed   10.73 sec
+ 5/18 Test  #5: preproc_check ....................   Passed   21.74 sec
+ 6/18 Test  #6: test_preproc_check ...............   Passed  104.48 sec
+ 7/18 Test  #7: ps1_ram_addr_range ...............   Passed    0.02 sec
+ 8/18 Test  #8: ps1mem ...........................   Passed    0.00 sec
+ 9/18 Test  #9: setjmp ...........................   Passed    0.00 sec
+10/18 Test #10: clock ............................   Passed    0.01 sec
+11/18 Test #11: psyq_prototypes ..................   Passed    0.03 sec
+12/18 Test #12: overlay_O0 .......................   Passed    0.00 sec
+13/18 Test #13: overlay_O2 .......................   Passed    0.00 sec
+14/18 Test #14: overlay_sections .................   Passed    0.00 sec
+15/18 Test #15: overlay_objects ..................   Passed    1.08 sec
+16/18 Test #16: frame0 ...........................   Passed    0.01 sec
+17/18 Test #17: dw1_bad_args .....................   Passed    0.00 sec
+18/18 Test #18: watchdog .........................   Passed    1.49 sec
+100% tests passed, 0 tests failed out of 18
+== preset native-asan @ 10494df + worktree
+psyq: used=199 implemented=4 host_libc=13 stubs=182 gte_stubs=11
+ 1/16 Test  #1: rts_info .........................   Passed    0.07 sec
+ 2/16 Test  #2: ovl_starts .......................   Passed    0.05 sec
+ 3/16 Test  #3: tu_list ..........................   Passed    0.16 sec
+ 4/16 Test  #4: inventory ........................   Passed   10.55 sec
+ 5/16 Test  #5: preproc_check ....................   Passed   21.71 sec
+ 6/16 Test  #6: test_preproc_check ...............   Passed  103.95 sec
+ 7/16 Test  #7: ps1_ram_addr_range ...............   Passed    0.02 sec
+ 8/16 Test  #8: ps1mem ...........................   Passed    0.05 sec
+ 9/16 Test  #9: setjmp ...........................   Passed    0.01 sec
+10/16 Test #10: clock ............................   Passed    0.04 sec
+11/16 Test #11: psyq_prototypes ..................   Passed    0.03 sec
+12/16 Test #12: overlay_O0 .......................   Passed    0.01 sec
+13/16 Test #13: overlay_O2 .......................   Passed    0.01 sec
+14/16 Test #14: frame0 ...........................   Passed    0.03 sec
+15/16 Test #15: dw1_bad_args .....................   Passed    0.02 sec
+16/16 Test #16: watchdog .........................   Passed    4.40 sec
+100% tests passed, 0 tests failed out of 16
+== stubs called before frame 0 (native-headless):
+53
+port: reached frame 0 at cycle 565044

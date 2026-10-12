@@ -17,4 +17,15 @@ extern unsigned char Ps1_Ram[];
 	((void *)(Ps1_Ram + ((addr) & 0x1FFFFFu) +                                              \
 	          0 * sizeof(char[((addr) & 0xFFE00000u) == 0x80000000u ? 1 : -1])))
 
+/*
+ * PsyQ's setjmp/longjmp use a 48-byte jmp_buf (mw_lib41 setjmp.h). glibc's _setjmp/_longjmp on
+ * i686 store 28 bytes (no signal mask), so the game's buffers are large enough; the full setjmp
+ * would save the signal mask past their end (tests/test_setjmp.c). [hypothesis for web: checked
+ * when the Emscripten build exists, story 4.1]
+ */
+#ifndef __EMSCRIPTEN__
+#define setjmp _setjmp
+#define longjmp _longjmp
+#endif
+
 #endif

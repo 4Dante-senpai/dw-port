@@ -82,12 +82,27 @@ add_custom_command(OUTPUT ${DW1_OVERLAY_STARTS_H}
     ${CMAKE_SOURCE_DIR}/tools/port/units/ovl_starts.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
+# PS1 values of the CodeWarrior linker words (__rts_info_t__.h) for port/psyq/crt.c (AD-4).
+set(DW1_RTS_INFO_H ${CMAKE_BINARY_DIR}/generated/dw1_rts_info.h)
+add_custom_command(OUTPUT ${DW1_RTS_INFO_H}
+  COMMAND python3 -I -B tools/port/units/rts_info.py config/${DW1_VERSION} ${DW1_RTS_INFO_H}
+  DEPENDS ${CMAKE_SOURCE_DIR}/config/${DW1_VERSION}/main.ld
+    ${CMAKE_SOURCE_DIR}/config/${DW1_VERSION}/bss.yaml ${CMAKE_SOURCE_DIR}/tools/port/units/rts_info.py
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
 add_compile_options(-std=gnu99 -ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 
-# Native: fixed image address so globals, arena and game stack fall in the OT window (AD-5).
+# Native: no PIE, so addresses (and traces) are the same in every run. The OT window starts at
+# the data segment (port/psyq/ps1mem.h, AD-5).
 if(NOT EMSCRIPTEN)
   add_compile_options(-fno-pie)
-  add_link_options(-no-pie -Wl,-Ttext-segment=0x01000000)
+  add_link_options(-no-pie)
+  # native-asan links the shared ASan runtime: point the executables at the compiler's copy.
+  if(CMAKE_C_FLAGS MATCHES "sanitize")
+    execute_process(COMMAND ${CMAKE_C_COMPILER} -m32 -print-runtime-dir
+      OUTPUT_VARIABLE DW1_CLANG_RT_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+    add_link_options(-Wl,-rpath,${DW1_CLANG_RT_DIR})
+  endif()
 endif()
 find_package(Threads REQUIRED)
 
@@ -97,16 +112,21 @@ target_include_directories(dw1_game_objs PRIVATE
   port/psyq/include external/psyq_headers/mw_lib41/include include ${CMAKE_BINARY_DIR}/generated)
 target_compile_definitions(dw1_game_objs PRIVATE
   DW1_PORT LANGUAGE_C VERSION_${DW1_VERSION_MACRO})
+# The game's main becomes dw1_game_main; the host owns the process entry (port/psyq/crt.c).
+set_source_files_properties(${CMAKE_SOURCE_DIR}/src/main/main.c PROPERTIES
+  COMPILE_DEFINITIONS main=dw1_game_main)
 target_compile_options(dw1_game_objs PRIVATE
   -fsigned-char -fwrapv -fno-strict-aliasing -fno-common -w
   -include ${CMAKE_SOURCE_DIR}/port/psyq/include/port_game.h)
 
 add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c port/psyq/clock.c
-  port/psyq/libetc.c port/psyq/libapi.c)
+  port/psyq/libetc.c port/psyq/libapi.c port/psyq/libgs.c)
 target_link_libraries(dw1_psyq PUBLIC Threads::Threads)
 target_compile_options(dw1_psyq PRIVATE -Wall -Wextra -Werror)
 
 enable_testing()
+add_test(NAME rts_info COMMAND python3 -I -B tools/port/units/test_rts_info.py
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME ovl_starts COMMAND python3 -I -B tools/port/units/test_ovl_starts.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME tu_list COMMAND python3 -I -B tools/port/units/test_tu_list.py
@@ -128,6 +148,13 @@ add_executable(test_ps1mem port/psyq/tests/test_ps1mem.c)
 target_compile_options(test_ps1mem PRIVATE -Wall -Wextra -Werror)
 target_link_libraries(test_ps1mem dw1_psyq Threads::Threads)
 add_test(NAME ps1mem COMMAND test_ps1mem)
+
+# The setjmp mapping of port_game.h fits PsyQ's 48-byte jmp_buf.
+add_executable(test_setjmp port/psyq/tests/test_setjmp.c)
+target_include_directories(test_setjmp PRIVATE external/psyq_headers/mw_lib41/include)
+target_compile_definitions(test_setjmp PRIVATE LANGUAGE_C)
+target_compile_options(test_setjmp PRIVATE -w -include ${CMAKE_SOURCE_DIR}/port/psyq/include/port_game.h)
+add_test(NAME setjmp COMMAND test_setjmp)
 
 add_executable(test_clock port/psyq/tests/test_clock.c)
 target_compile_options(test_clock PRIVATE -Wall -Wextra -Werror)
@@ -167,4 +194,46 @@ add_test(NAME overlay_sections COMMAND overlay_probe)
 add_test(NAME overlay_objects COMMAND python3 -I -B tools/port/units/check_ovl_objects.py
   ${DW1_TU_LIST} ${CMAKE_BINARY_DIR}/CMakeFiles/dw1_game_objs.dir
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+endif()
+
+# Runtime start, stub logging and PsyQ data the game references (linked only into the game).
+add_library(dw1_runtime STATIC port/psyq/crt.c port/psyq/stub.c port/psyq/libgs_data.c
+  ${DW1_RTS_INFO_H})
+target_include_directories(dw1_runtime PRIVATE ${CMAKE_BINARY_DIR}/generated)
+target_compile_options(dw1_runtime PRIVATE -Wall -Wextra -Werror)
+target_link_libraries(dw1_runtime PUBLIC dw1_psyq)
+
+# A stub for every PsyQ function the game calls that the port does not implement yet.
+set(DW1_PSYQ_STUBS ${CMAKE_BINARY_DIR}/generated/psyq_stubs.c)
+add_custom_command(OUTPUT ${DW1_PSYQ_STUBS}
+  COMMAND python3 -I -B tools/port/psyq/gen_stubs.py ${CMAKE_NM} tools/port/psyq/psyq_functions.tsv
+    ${DW1_PSYQ_STUBS} "$<TARGET_FILE:dw1_psyq>\;$<TARGET_FILE:dw1_runtime>"
+    $<TARGET_OBJECTS:dw1_game_objs>
+  DEPENDS dw1_psyq dw1_runtime dw1_game_objs $<TARGET_OBJECTS:dw1_game_objs>
+    ${CMAKE_SOURCE_DIR}/tools/port/psyq/gen_stubs.py ${CMAKE_SOURCE_DIR}/tools/port/psyq/psyq_functions.tsv
+    ${CMAKE_SOURCE_DIR}/tools/port/psyq/stub_returns.tsv
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  COMMAND_EXPAND_LISTS VERBATIM)
+set_source_files_properties(${DW1_PSYQ_STUBS} PROPERTIES COMPILE_OPTIONS "-w")
+
+if(NOT EMSCRIPTEN)
+  add_executable(dw1 port/host/headless/main.c ${DW1_PSYQ_STUBS} $<TARGET_OBJECTS:dw1_game_objs>)
+  target_link_libraries(dw1 dw1_runtime)
+  # L1: the game boots to frame 0 (return of its first VSync) with stubs where needed.
+  add_test(NAME frame0 COMMAND sh -c "rm -f frame0_trace.log && DW1_TRACE=frame0_trace.log \
+    $<TARGET_FILE:dw1> --headless --frames 1 > frame0.out 2>&1; s=$?; cat frame0.out; \
+    test $s = 0 && grep -q 'reached frame 0' frame0.out && \
+    ! grep -qE 'ERROR: AddressSanitizer|runtime error' frame0.out && \
+    test -s frame0_trace.log && sort -n -s -k1,1 -c frame0_trace.log"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  add_test(NAME dw1_bad_args COMMAND $<TARGET_FILE:dw1> --frames 0)
+  set_tests_properties(dw1_bad_args PROPERTIES WILL_FAIL TRUE)
+
+  # The watchdog stops a game that never ends a frame (exit 3).
+  add_executable(test_watchdog port/psyq/tests/test_watchdog.c)
+  target_link_libraries(test_watchdog dw1_runtime)
+  add_test(NAME watchdog COMMAND sh -c "$<TARGET_FILE:test_watchdog> 2> watchdog.err; s=$?; \
+    test $s = 3 && grep -q 'no frame in 30 virtual seconds' watchdog.err"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  set_tests_properties(frame0 PROPERTIES TIMEOUT 120)
 endif()

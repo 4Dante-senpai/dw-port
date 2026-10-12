@@ -4,6 +4,9 @@
 #include <kernel.h>
 #include <libapi.h>
 #include <libetc.h>
+#include <libgte.h>
+#include <libgpu.h>
+#include <libgs.h>
 
 #include "../psyq.h"
 
