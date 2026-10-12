@@ -89,18 +89,22 @@
   con los 13 bloques `DW1_PORT` actuales y `make compare` → `Compiled binaries match with target
   binaries`.
 
+- CI (AD-16): `origin` empuja a GitHub y a `gitlab.homelab.local/personal/dw-port` (segunda push
+  URL). Primer pipeline verde en `a8d2a2b` sobre `lab-runner-176` (tag `dw1-data`): `native`
+  (23/23, 2 skips de clase B), `native-disc` (`pack_disc`, `dw1_overlay`) y `matching`
+  (`Compiled binaries match with target binaries`). Disco y `cc_mips_40.dll` en
+  `/srv/dw-port-private` del runner, montados como `/private:ro` (`docs/port/setup.md`).
+
 ## En curso
 
 - Fase 5: próxima historia 2.9 (`libc`, `libapi` y `libetc` deterministas).
 
 ## Bloqueos
 
-- CI (AD-16): `origin` empuja a GitHub y a `gitlab.homelab.local/personal/dw-port` (segunda
-  push URL). `.gitlab-ci.yml` con `native` (clase A), `native-disc` y `matching` (clase B),
-  verificados con una simulación local. Pendiente del dueño en el runner `lab-runner-176`: copiar el
-  disco y `cc_mips_40.dll` a `/srv/dw-port-private`, montarlo en `config.toml` y agregar el tag
-  `dw1-data`. Desvíos de AD-16 a aprobar: imágenes cargadas en el host del runner (no desde el
-  registry ni fijadas por digest) y runner de instancia sin la opción *protected*.
+- Aprobación del dueño para dos desvíos de AD-16: imágenes cargadas en el host del runner (no
+  desde el registry ni fijadas por digest) y runner de instancia sin la opción *protected*
+  (la clase B queda limitada por las `rules` del YAML).
+
 - Emulador de referencia (PCSX-Redux / DuckStation headless) no instalado: planificado como
   historia de M3.
 
