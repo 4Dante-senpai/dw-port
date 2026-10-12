@@ -263,9 +263,9 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
 - **Binds:** NFR-4, NFR-6, NFR-7, AD-14, AD-18
 - **Prevents:** que datos del juego o CodeWarrior lleguen a un runner público o a un log, o que código de un fork corra en el servidor que tiene el disco.
 - **Rule:**
-  - **Forge.** GitLab CI en el GitLab autohospedado del dueño, con su runner Docker y su registry [ADOPTED: dueño, 2026-10-11]. Cómo llega el repo de `origin` (GitHub) a ese GitLab queda como pregunta abierta; hasta resolverla, las mismas clases corren a mano en el contenedor `dw-port` con los mismos scripts, y su log es la evidencia.
+  - **Forge.** GitLab CI en el GitLab autohospedado del dueño, con su runner Docker y su registry [ADOPTED: dueño, 2026-10-11]. `origin` tiene dos push URL (GitHub y el GitLab), así que cada `git push origin` llega a los dos [ADOPTED: dueño, 2026-10-12].
   - **Clase A, sin datos.** Corre en cualquier runner: L0a, L1, L3a, build web y check de tamaño NFR-3.
-  - **Clase B, con datos.** Corre solo en un runner protegido con etiqueta `dw1-data`, en el servidor del dueño. El disco y `cc_mips.dll`, cuando exista, están montados de solo lectura fuera del repo (`DW1_DISC_DIR`, `DW1_MWCC_DIR`). Incluye L0b, L2, L3b y el check NFR-4 de AD-18.
+  - **Clase B, con datos.** Corre solo en el runner con etiqueta `dw1-data`, en el servidor del dueño. El disco y `cc_mips.dll` están montados de solo lectura fuera del repo (`/private`; `DW1_DISC_DIR=/private/disc`). Ese runner es de instancia y no está marcado *protected*: la restricción la dan las reglas de disparo de abajo y que el proyecto es privado [ADOPTED: desvío aprobado por el dueño, 2026-10-12]. Incluye L0b, L2, L3b y el check NFR-4 de AD-18.
   - **Disparo de la clase B.** Solo pipelines de ramas del propio proyecto (`CI_PIPELINE_SOURCE` en `push`, `web` o `schedule`), **nunca** merge requests desde forks.
   - **Qué publica la clase B.** No sube artefactos derivados del disco: solo hashes, métricas y diffs numéricos.
   - **Imagen.** Todo job corre dentro de la imagen `dw-port`, publicada en el registry del GitLab y fijada por digest.

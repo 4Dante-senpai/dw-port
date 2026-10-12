@@ -29,7 +29,8 @@ images:
     GIT_SUBMODULE_STRATEGY: none
   before_script: []
   rules:
-    - changes: [Dockerfile, requirements.txt, tools/port/Dockerfile]
+    - if: $CI_PIPELINE_SOURCE == "push"   # changes is always true for other sources
+      changes: [Dockerfile, requirements.txt, tools/port/Dockerfile]
     - when: manual
       allow_failure: true
   script:

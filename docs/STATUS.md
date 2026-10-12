@@ -96,16 +96,14 @@
   (`Compiled binaries match with target binaries`). Disco y `cc_mips_40.dll` en
   `/srv/dw-port-private` del runner, montados como `/private:ro` (`docs/port/setup.md`).
   Imágenes `dw-build`/`dw-port` publicadas en el registry del proyecto por el job `images` y
-  fijadas por digest en `.gitlab-ci.yml`.
+  fijadas por digest en `.gitlab-ci.yml`. AD-16 enmendado: dos push URL en `origin` y runner
+  `dw1-data` sin *protected* (desvío aprobado por el dueño el 2026-10-12).
 
 ## En curso
 
 - Fase 5: próxima historia 2.9 (`libc`, `libapi` y `libetc` deterministas).
 
 ## Bloqueos
-
-- Aprobación del dueño para un desvío de AD-16: runner de instancia sin la opción *protected* (la
-  clase B queda limitada por las `rules` del YAML).
 
 - Emulador de referencia (PCSX-Redux / DuckStation headless) no instalado: planificado como
   historia de M3.
