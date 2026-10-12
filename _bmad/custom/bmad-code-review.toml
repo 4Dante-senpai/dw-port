@@ -1,0 +1,8 @@
+# Adds Codex (OpenAI) as a cross-model review layer next to the default subagent layers.
+
+[[workflow.review_layers]]
+id = "codex"
+name = "Codex Cross-Model Reviewer"
+instruction = """
+Run `{project-root}/tools/port/codex-review.sh "{diff_file}"` with the Bash tool (foreground, timeout 600000 ms), launched in the same turn as the other layers. Its stdout is this layer's findings, verbatim. A nonzero exit or empty output means the layer failed.
+"""
