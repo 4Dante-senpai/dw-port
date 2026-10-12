@@ -13,3 +13,13 @@
 - source_spec: `docs/implementation-artifacts/spec-2-6-linkeo-y-frame-0.md`
   summary: Inventario de llamadas por puntero con tipo distinto antes del build web.
   evidence: UBSan `-fsanitize=function` en `world_object.c:101`; wasm `call_indirect` aborta. Historia 4.1.
+
+- source_spec: `docs/implementation-artifacts/spec-2-7-manifest-y-herramienta-nativa-del-pack.md`
+  summary: Test del hook pre-commit y del `.gitignore` para todos los patrones prohibidos (incluidos `*.pack` y `*.pack.tmp`).
+  evidence: ningún test corre `tools/port/hooks/pre-commit`; quitar `|pack` del regex o volver a `pack/` en `.gitignore` deja todo verde.
+- source_spec: `docs/implementation-artifacts/spec-2-7-manifest-y-herramienta-nativa-del-pack.md`
+  summary: Confirmar que el SHA-256 de las filas `F2` (2336 B con EDC de Form 2) acepta dumps de otras herramientas.
+  evidence: medium sin verificar; se resuelve validando un segundo dump (otra herramienta) de un disco USA contra `us.tsv`.
+- source_spec: `docs/implementation-artifacts/spec-2-7-manifest-y-herramienta-nativa-del-pack.md`
+  summary: Verificar si el Juego lee archivos `F1` en `CdlModeSize1` (2340 B), que el Pack no puede servir sin subheader ni EDC/ECC.
+  evidence: medium sin verificar; Historia 2.8 (trazar los `CdControl(CdlSetmode)` del Juego).

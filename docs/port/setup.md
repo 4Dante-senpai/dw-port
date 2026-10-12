@@ -64,23 +64,44 @@ Devcontainer: `.devcontainer/port/devcontainer.json` (construye `dw-build` en
    sha1sum disks/us/SLUS_010.32   # debe dar 31ec666b987d5b007dec40eecc4092d27ed9085b
    ```
 
-5. Desensamblado (splat, no necesita CodeWarrior):
+5. Pack del disco (Manifest versionado en `tools/port/manifest/us.tsv`; el Pack nunca se versiona,
+   `*.pack` está en `.gitignore` y en el hook). `dw1-pack` valida todo el disco contra el Manifest
+   (primero `SLUS_010.32` por LBA) y escribe el Pack solo si todo coincide; sale con 0 (OK),
+   1 (falló una validación, el mensaje nombra el archivo) o 2 (uso):
+
+   ```sh
+   tools/port/docker_run.sh sh -c 'cmake --preset native-headless && cmake --build --preset native-headless --target dw1-pack'
+   tools/port/docker_run.sh build/port/native-headless/dw1-pack build \
+       "game_rom/extracted/Digimon World.cue" tools/port/manifest/us.tsv game_rom/us.pack
+   tools/port/docker_run.sh build/port/native-headless/dw1-pack verify \
+       game_rom/us.pack tools/port/manifest/us.tsv
+   ```
+
+   `dw1-pack manifest <imagen> <tsv>` regenera el Manifest (solo rutas, LBAs, sectores, modo,
+   tamaño y SHA-256). El test clase B `pack_disc` lo compara con `us.tsv`, construye el Pack dos
+   veces (mismo SHA-256) y lo verifica:
+
+   ```sh
+   tools/port/docker_run.sh sh -c 'cd build/port/native-headless && DW1_DISC_DIR=/dw/game_rom/extracted ctest -R pack_disc'
+   ```
+
+6. Desensamblado (splat, no necesita CodeWarrior):
 
    ```sh
    tools/port/docker_run.sh make -j$(nproc) regenerate
    ```
 
-6. Solo con `cc_mips.dll` (no disponible hoy): copiarlo a `bin/cc_mips/cc_mips_40.dll` y
+7. Solo con `cc_mips.dll` (no disponible hoy): copiarlo a `bin/cc_mips/cc_mips_40.dll` y
    `make -j$(nproc) && make compare`.
 
-7. Opcional, diagnóstico sin CodeWarrior: build PS1 **no matching** con GCC que trae upstream.
+8. Opcional, diagnóstico sin CodeWarrior: build PS1 **no matching** con GCC que trae upstream.
    No reemplaza a `make compare`; sirve para comprobar que el C compila con otro compilador.
 
    ```sh
    tools/port/docker_run.sh sh -c 'make TOOLCHAIN=gcc generate && make -j$(nproc) TOOLCHAIN=gcc'
    ```
 
-8. Smoke test del toolchain del port (SDL3 nativo con Clang y web con Emscripten, ejecutado en
+9. Smoke test del toolchain del port (SDL3 nativo con Clang y web con Emscripten, ejecutado en
    node):
 
    ```sh

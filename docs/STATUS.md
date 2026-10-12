@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-11
+Última actualización: 2026-10-12
 
 ## Modo de operación
 
@@ -69,9 +69,15 @@
   terminador en `src/main/efe.c` (corregido con `DW1_PORT`). Evidencia:
   `docs/implementation-artifacts/evidence/story-2-6.log`.
 
+- Historia 2.7 (Manifest y Pack): `port/host/pack/` (BIN/CUE, ISO9660, Manifest, Pack todo o nada,
+  `verify`, SHA-256 adaptado de DW2-PC) y la CLI `dw1-pack`; `tools/port/manifest/us.tsv` con 818
+  archivos + `@exe` (4 `F2`: `MOVIE/*.STR`), coincide con la extracción de `dumpsxiso`. Pack USA
+  determinista (SHA-256 `c01e5c36…0cf6`). Test clase B `pack_disc` (skip sin `DW1_DISC_DIR`).
+  Evidencia: `docs/implementation-artifacts/evidence/story-2-7.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.7 (Manifest y herramienta nativa del Pack).
+- Fase 5: próxima historia 2.8 (`libcd` y modelo del CD sobre el Pack).
 
 ## Bloqueos
 
@@ -92,6 +98,7 @@
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Bloques `DW1_PORT` en `src/`/`include/` | 13 (`docs/port/src-changes.md`) |
 | Funciones PsyQ usadas: implementadas / stubs / libc del host | 4 / 182 / 13 (de 199) |
+| Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
 | Escenas que funcionan (nativo) | 0 |
 | Escenas que funcionan (web) | 0 |
 

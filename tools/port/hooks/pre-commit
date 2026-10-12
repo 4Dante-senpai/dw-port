@@ -2,7 +2,7 @@
 # Rejects copyrighted game data, proprietary binaries and large binaries (CLAUDE.md rule 1).
 set -euo pipefail
 
-forbidden='^(game_rom|disks|dumps|assets|asm|expected|build|build-[^/]*|pack)/|^bin/cc_mips/|\.(bin|cue|iso|img|chd|ecm|pbp|7z|mcd|mcr|dll|exe)$|(^|/)(SLUS|SCUS)_[^/]*$|(^|/)core(\.[0-9]+)?$'
+forbidden='^(game_rom|disks|dumps|assets|asm|expected|build|build-[^/]*|pack)/|^bin/cc_mips/|\.(bin|cue|iso|img|chd|ecm|pbp|7z|mcd|mcr|dll|exe|pack|pack\.tmp)$|(^|/)(SLUS|SCUS)_[^/]*$|(^|/)core(\.[0-9]+)?$'
 max_bytes=$((1024 * 1024))
 fail=0
 
