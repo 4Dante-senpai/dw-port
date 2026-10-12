@@ -95,8 +95,12 @@
 
 ## Bloqueos
 
-- CI: falta definir cómo llega el repo de `origin` (GitHub) al GitLab propio; mientras tanto las
-  clases A/B de AD-16 corren a mano en el contenedor `dw-port`.
+- CI (AD-16): `origin` empuja a GitHub y a `gitlab.homelab.local/personal/dw-port` (segunda
+  push URL). `.gitlab-ci.yml` con `native` (clase A), `native-disc` y `matching` (clase B),
+  verificados con una simulación local. Pendiente del dueño en el runner `lab-runner-176`: copiar el
+  disco y `cc_mips_40.dll` a `/srv/dw-port-private`, montarlo en `config.toml` y agregar el tag
+  `dw1-data`. Desvíos de AD-16 a aprobar: imágenes cargadas en el host del runner (no desde el
+  registry ni fijadas por digest) y runner de instancia sin la opción *protected*.
 - Emulador de referencia (PCSX-Redux / DuckStation headless) no instalado: planificado como
   historia de M3.
 

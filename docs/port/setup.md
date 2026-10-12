@@ -140,6 +140,28 @@ Devcontainer: `.devcontainer/port/devcontainer.json` (construye `dw-build` en
    tools/port/docker_run.sh tools/port/env_check.sh
    ```
 
+## CI (GitLab, AD-16)
+
+`.gitlab-ci.yml` corre en el runner `lab-runner-176` (executor docker, 192.168.0.176):
+
+| Job | Clase | Imagen | Qué hace |
+|---|---|---|---|
+| `native` | A | `dw-port` | build `native-headless` + CTest (los tests de disco se saltean) |
+| `native-disc` | B | `dw-port` | CTest `pack_disc` y `dw1_overlay` con `DW1_DISC_DIR=/private/disc` |
+| `matching` | B | `dw-build` | `dumpsxiso` + `make regenerate` + `make` + `make compare` |
+
+Las imágenes no vienen del registry: se cargan en el host del runner y los jobs usan
+`pull_policy: if-not-present`. Hay que recargarlas cuando cambia un Dockerfile:
+
+```sh
+DOCKER_CONTEXT=default docker save dw-build:latest dw-port:latest | gzip -1 | ssh root@192.168.0.176 'gunzip | docker load'
+```
+
+En el host del runner, fuera de cualquier repo: `/srv/dw-port-private/disc/` (`.bin`/`.cue`) y
+`/srv/dw-port-private/mwcc/cc_mips_40.dll`. `config.toml` monta ese directorio como `/private:ro`
+y agrega `allowed_pull_policies = ["always", "if-not-present"]`. Los jobs de clase B llevan el
+tag `dw1-data` y solo corren en pipelines `push`, `web` o `schedule`.
+
 ## Resultado de la verificación (2026-10-11)
 
 | Paso | Resultado |

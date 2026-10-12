@@ -1,0 +1,52 @@
+# CI per AD-16. Class A needs no game data. Class B reads the user's disc and cc_mips.dll,
+# mounted read-only at /private by the runner (never from the repo), and only runs on the
+# project's own pipelines on the runner tagged dw1-data. Class B logs and artifacts must not
+# carry disc bytes: only hashes, metrics and pass/fail.
+#
+# Images are loaded on the runner host (docker save | docker load), not pulled from a registry.
+
+variables:
+  GIT_DEPTH: 0                         # preproc_check needs the merge-base with upstream/main
+  GIT_SUBMODULE_STRATEGY: normal
+  GIT_SUBMODULE_PATHS: external/psyq_headers
+
+default:
+  image:
+    name: dw-port:latest
+    pull_policy: if-not-present
+  before_script:
+    - git config --global --add safe.directory "$CI_PROJECT_DIR"
+    - git fetch --quiet https://github.com/jype0/dw_decomp.git main:refs/remotes/upstream/main
+
+.class_b:
+  tags: [dw1-data]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "schedule"
+
+native:
+  script:
+    - cmake --preset native-headless
+    - cmake --build --preset native-headless
+    - ctest --preset native-headless --output-on-failure
+
+native-disc:
+  extends: .class_b
+  variables:
+    DW1_DISC_DIR: /private/disc
+  script:
+    - cmake --preset native-headless
+    - cmake --build --preset native-headless
+    - ctest --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay"
+
+matching:
+  extends: .class_b
+  image:
+    name: dw-build:latest              # dw-port lacks gcc-mipsel-linux-gnu (docs/port/setup.md)
+    pull_policy: if-not-present
+  script:
+    - tools/dl_deps.sh > /dev/null
+    - mkdir -p bin/cc_mips && cp /private/mwcc/cc_mips_40.dll bin/cc_mips/
+    - bin/mkpsxiso-2.20-Linux/bin/dumpsxiso -x disks/us -s disks/us/us.xml "/private/disc/Digimon World.bin" > /dev/null
+    - make -j$(nproc) regenerate > /dev/null
+    - make -j$(nproc) > /dev/null
+    - make compare
