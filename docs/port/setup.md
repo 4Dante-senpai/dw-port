@@ -1,7 +1,7 @@
 # Entorno de desarrollo del port
 
-Procedimiento verificado el 2026-10-11 (M0). Modo usado: **sin compilador matching**
-(`cc_mips.dll` no disponible, regla 2 de `CLAUDE.md`).
+Procedimiento verificado el 2026-10-11 (M0). Desde el 2026-10-12 el modo es **con compilador
+matching**: `cc_mips.dll` de CodeWarrior for PlayStation Release 4 (regla 2 de `CLAUDE.md`).
 
 ## Requisitos del host
 
@@ -112,8 +112,19 @@ Devcontainer: `.devcontainer/port/devcontainer.json` (construye `dw-build` en
    tools/port/docker_run.sh make -j$(nproc) regenerate
    ```
 
-7. Solo con `cc_mips.dll` (no disponible hoy): copiarlo a `bin/cc_mips/cc_mips_40.dll` y
-   `make -j$(nproc) && make compare`.
+7. Build matching con `cc_mips.dll` (Release 4). El `.7z` del usuario trae una imagen raw de
+   2352 B/sector: se convierte a ISO de 2048 B y se extrae
+   `CodeWarrior PSX Pro/bin/plugins/Compiler/cc_mips.dll` (759.296 B, 1998-04-15, sha1
+   `5320c0acb9b3be317f73b4fd1a1e1e555e029b2b`) a `bin/cc_mips/cc_mips_40.dll` (ignorado por git y
+   bloqueado por el hook). La Release 5 trae otro `cc_mips.dll` (sha1 `20654adb…1c8c3a1897`) que
+   upstream no usa.
+
+   Corre en `dw-build`: en `dw-port`, `gcc-multilib` desinstala `gcc-mipsel-linux-gnu`
+   (los paquetes chocan), y el build PS1 lo usa para los `.s`.
+
+   ```sh
+   DW_IMAGE=dw-build:latest tools/port/docker_run.sh sh -c 'make -j$(nproc) && make compare'
+   ```
 
 8. Opcional, diagnóstico sin CodeWarrior: build PS1 **no matching** con GCC que trae upstream.
    No reemplaza a `make compare`; sirve para comprobar que el C compila con otro compilador.
@@ -137,7 +148,7 @@ Devcontainer: `.devcontainer/port/devcontainer.json` (construye `dw-build` en
 | `dumpsxiso` | OK; `SLUS_010.32` sha1 `31ec666b…5b` = `config/us/main.yaml` |
 | `make regenerate` | OK (≈10 s, 4 núcleos) |
 | `make TOOLCHAIN=gcc` | OK: `SLUS_010.32` + 15 `*_REL.BIN` |
-| `make` / `make compare` | **No ejecutado**: sin `cc_mips.dll` |
+| `make` / `make compare` | OK (2026-10-12, `dw-build`, build limpio): 120 TUs con `cc_mips_40.dll`, `Compiled binaries match with target binaries` |
 | `tools/port/env_check.sh` | OK: `SDL 3.4.16, platform Linux, sizeof(void*)=8` y `SDL 3.4.16, platform Emscripten, sizeof(void*)=4` |
 
 Criterio de salida de M0 en modo sin compilador: `make regenerate` OK y entorno del port

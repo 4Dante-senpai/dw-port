@@ -4,7 +4,9 @@
 
 ## Modo de operación
 
-- Compilador matching (`cc_mips.dll`): **NO_DISPONIBLE** — modo sin compilador matching (regla 2 de `CLAUDE.md`).
+- Compilador matching (`cc_mips.dll`): **DISPONIBLE** desde 2026-10-12 (CodeWarrior for PlayStation
+  Release 4, `bin/cc_mips/cc_mips_40.dll`). `make` + `make compare` obligatorios en cada merge
+  (regla 2 de `CLAUDE.md`); se corren en la imagen `dw-build` (`docs/port/setup.md`, paso 7).
 
 ## Hito actual
 
@@ -83,13 +85,16 @@
   anotado: solo se copian los bytes del archivo del último sector (ASan: `MAPHEAD_SCRIPT_BUFFER`).
   Evidencia: `docs/implementation-artifacts/evidence/story-2-8.log`.
 
+- Build matching: `cc_mips.dll` de la Release 4 provista por el dueño; build limpio de los 120 TUs
+  con los 13 bloques `DW1_PORT` actuales y `make compare` → `Compiled binaries match with target
+  binaries`.
+
 ## En curso
 
 - Fase 5: próxima historia 2.9 (`libc`, `libapi` y `libetc` deterministas).
 
 ## Bloqueos
 
-- `cc_mips.dll` no disponible: sin `make` / `make compare` del build PS1.
 - CI: falta definir cómo llega el repo de `origin` (GitHub) al GitLab propio; mientras tanto las
   clases A/B de AD-16 corren a mano en el contenedor `dw-port`.
 - Emulador de referencia (PCSX-Redux / DuckStation headless) no instalado: planificado como
