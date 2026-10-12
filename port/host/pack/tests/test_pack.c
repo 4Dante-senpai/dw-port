@@ -79,7 +79,8 @@ static uint8_t *user(int lba)
 
 /*
  * Sector 16 PVD, 20 root, 21 \MOVIE, 22-24 \SLUS_010.32;1 (5000 bytes), 25 \SYSTEM.CNF;1 (100),
- * 26-29 \MOVIE\OP1.STR;1 (4 sectors, 27 and 29 Form 2).
+ * 26-29 \MOVIE\OP1.STR;1 (4 sectors, 27 and 29 Form 2), 30-31 \MOV_REL.BIN;1 (3000, an overlay for
+ * test_libcd).
  */
 static void make_disc(void)
 {
@@ -107,7 +108,8 @@ static void make_disc(void)
 	p += dir_record(user(20) + p, "\1", 20, 2048, 1);
 	p += dir_record(user(20) + p, "MOVIE", 21, 2048, 1);
 	p += dir_record(user(20) + p, "SLUS_010.32;1", 22, 5000, 0);
-	dir_record(user(20) + p, "SYSTEM.CNF;1", 25, 100, 0);
+	p += dir_record(user(20) + p, "SYSTEM.CNF;1", 25, 100, 0);
+	dir_record(user(20) + p, "MOV_REL.BIN;1", 30, 3000, 0);
 	p = dir_record(user(21), "\0", 21, 2048, 1);
 	p += dir_record(user(21) + p, "\1", 20, 2048, 1);
 	dir_record(user(21) + p, "OP1.STR;1", 26, 4 * 2048, 0);
@@ -168,14 +170,15 @@ static void check_layout(const uint8_t *p, size_t n)
 	static const struct {
 		const char *path;
 		uint32_t lba, sectors, mode, size, offset;
-	} want[3] = {
+	} want[4] = {
 		{ "\\SLUS_010.32;1", 22, 3, PACK_F1, 5000, 2048 },
 		{ "\\SYSTEM.CNF;1", 25, 1, PACK_F1, 100, 8192 },
 		{ "\\MOVIE\\OP1.STR;1", 26, 4, PACK_F2, 4 * 2336, 10240 },
+		{ "\\MOV_REL.BIN;1", 30, 2, PACK_F1, 3000, 20480 },
 	};
 	size_t tsv_n;
 	uint8_t *tsv = read_file("pack_t.tsv", &tsv_n), sha[32];
-	uint32_t pos = PACK_HEADER_SIZE + 3 * PACK_ENTRY_SIZE;
+	uint32_t pos = PACK_HEADER_SIZE + 4 * PACK_ENTRY_SIZE;
 	Sha256 s;
 	int i, k;
 
@@ -183,10 +186,10 @@ static void check_layout(const uint8_t *p, size_t n)
 	Sha256_Update(&s, tsv, tsv_n);
 	Sha256_Final(&s, sha);
 	free(tsv);
-	CHECK(n == 10240 + 4 * 2336);
-	CHECK(memcmp(p, "DW1PACK\0", 8) == 0 && rd32(p + 8) == 1 && rd32(p + 12) == 3);
+	CHECK(n == 20480 + 3000);
+	CHECK(memcmp(p, "DW1PACK\0", 8) == 0 && rd32(p + 8) == 1 && rd32(p + 12) == 4);
 	CHECK(memcmp(p + 16, sha, 32) == 0 && rd32(p + 48) == 64 && rd32(p + 52) == 2048);
-	for (i = 0; i < 3; i++) {
+	for (i = 0; i < 4; i++) {
 		const uint8_t *e = p + 64 + i * 128, *d = p + want[i].offset;
 
 		CHECK(strncmp((const char *)e, want[i].path, 64) == 0);
@@ -247,6 +250,7 @@ int main(void)
 	CHECK(contains(tsv, "\n\\SLUS_010.32;1\t22\t3\tF1\t5000\t"));
 	CHECK(contains(tsv, "\n\\SYSTEM.CNF;1\t25\t1\tF1\t100\t"));
 	CHECK(contains(tsv, "\n\\MOVIE\\OP1.STR;1\t26\t4\tF2\t9344\t"));
+	CHECK(contains(tsv, "\n\\MOV_REL.BIN;1\t30\t2\tF1\t3000\t"));
 	CHECK(strstr(tsv, "\\SLUS") < strstr(tsv, "\\SYSTEM") && strstr(tsv, "\\SYSTEM") < strstr(tsv, "\\MOVIE"));
 	free(tsv);
 	/* The raw .bin alone gives the same Manifest. */
@@ -290,7 +294,7 @@ int main(void)
 	p1[8] ^= 1;
 	write_file("pack_t_bad.pack", p1, n1 - 1); /* truncated */
 	CHECK(pack_verify("pack_t_bad.pack", "pack_t.tsv", err, sizeof(err)) != 0);
-	CHECK(contains(err, "\\MOVIE\\OP1.STR;1"));
+	CHECK(contains(err, "\\MOV_REL.BIN;1"));
 	{
 		uint8_t *longer = calloc(n1 + 1, 1); /* one trailing byte */
 
@@ -325,9 +329,13 @@ int main(void)
 	/* A file missing from the Manifest, or one the disc does not have. */
 	edit_manifest("pack_t_less.tsv", "\\SYSTEM.CNF;1", 1, "");
 	build_fails("pack_t_less.tsv", "\\SYSTEM.CNF;1");
-	edit_manifest("pack_t_more.tsv", "\\MOVIE\\OP1.STR;1", 0,
-	              "\\MOVIE\\OP2.STR;1\t30\t1\tF1\t10\t0000000000000000000000000000000000000000000000000000000000000000\n");
+	edit_manifest("pack_t_more.tsv", "\\MOV_REL.BIN;1", 0,
+	              "\\MOVIE\\OP2.STR;1\t32\t1\tF1\t10\t0000000000000000000000000000000000000000000000000000000000000000\n");
 	build_fails("pack_t_more.tsv", "\\MOVIE\\OP2.STR;1");
+	/* A row sharing sectors with the previous one. */
+	edit_manifest("pack_t_overlap.tsv", "\\SYSTEM.CNF;1", 0,
+	              "\\SYSTEM.CNG;1\t25\t1\tF1\t10\t0000000000000000000000000000000000000000000000000000000000000000\n");
+	build_fails("pack_t_overlap.tsv", "shares sectors");
 
 	/* Track mode of the .cue, and a 2048-byte ISO. */
 	write_cue("MODE1/2352");

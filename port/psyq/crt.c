@@ -24,6 +24,7 @@ extern char _end[];      /* end of the image (.bss), from the linker */
 static uint8_t game_stack[GAME_STACK_SIZE] __attribute__((aligned(16)));
 
 static long frame_limit;
+static int exit_on_overlay;
 static long frames;
 static long watchdog_frames;
 
@@ -34,6 +35,14 @@ void port_frame_done(void)
 	if (frame_limit > 0 && frames >= frame_limit) {
 		printf("port: reached frame %ld at cycle %llu\n", frames - 1,
 		       (unsigned long long)clock_now());
+		exit(0);
+	}
+}
+
+void port_overlay_done(void)
+{
+	if (exit_on_overlay) {
+		printf("port: overlay loaded at cycle %llu\n", (unsigned long long)clock_now());
 		exit(0);
 	}
 }
@@ -62,9 +71,10 @@ static void *game_thread(void *arg)
 	exit(1);
 }
 
-int port_run_game(long frame_count)
+int port_run_game(long frame_count, int until_overlay)
 {
 	frame_limit = frame_count;
+	exit_on_overlay = until_overlay;
 	clock_reset();
 	port_overlay_snapshot_all();
 	/* Every object an OT can point to must be in the 16 MB window (AD-5); fatal in any build. */

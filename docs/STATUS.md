@@ -75,9 +75,17 @@
   determinista (SHA-256 `c01e5c36…0cf6`). Test clase B `pack_disc` (skip sin `DW1_DISC_DIR`).
   Evidencia: `docs/implementation-artifacts/evidence/story-2-7.log`.
 
+- Historia 2.8 (`libcd` sobre el Pack): lector del Pack, `port/backend/cdrom` (sectores de 2048 y
+  2340 B con MSF reconstruido) y `port/psyq/libcd.c` (`CdSearchFile`, `CdRead`, `CdReadSync`,
+  `CdControl*`, `CdSync`, `CdReadCallback`, `CdInit`, `CdIntToPos`/`CdPosToInt`) sobre el reloj
+  virtual (seek y sector a 75/150 sectores/s, hipótesis a calibrar en 3.10). `dw1 --pack` carga
+  `MOV_REL.BIN` en `mov_START` con el SHA-256 del Manifest y restaura sus datos una vez. Desvío
+  anotado: solo se copian los bytes del archivo del último sector (ASan: `MAPHEAD_SCRIPT_BUFFER`).
+  Evidencia: `docs/implementation-artifacts/evidence/story-2-8.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.8 (`libcd` y modelo del CD sobre el Pack).
+- Fase 5: próxima historia 2.9 (`libc`, `libapi` y `libetc` deterministas).
 
 ## Bloqueos
 
@@ -97,7 +105,7 @@
 | Archivos C del juego que compilan a wasm32 sin cambios | 97 / 120 |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Bloques `DW1_PORT` en `src/`/`include/` | 13 (`docs/port/src-changes.md`) |
-| Funciones PsyQ usadas: implementadas / stubs / libc del host | 4 / 182 / 13 (de 199) |
+| Funciones PsyQ usadas: implementadas / stubs / libc del host | 12 / 174 / 13 (de 199) |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
 | Escenas que funcionan (nativo) | 0 |
 | Escenas que funcionan (web) | 0 |

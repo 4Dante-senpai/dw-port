@@ -13,6 +13,9 @@
 void port_overlay_snapshot_all(void);
 void port_overlay_loaded(int lib);
 
+/* Id of an overlay file name as the game's REL_BIN_FILES lists it (MOV_REL.BIN -> 7), 0 if none. */
+int port_overlay_id(const char *file);
+
 /* Size in bytes of the overlay's data section (0 if it has none). */
 unsigned port_overlay_size(int lib);
 

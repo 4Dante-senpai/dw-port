@@ -10,5 +10,5 @@ int dw1_game_main(void)
 
 int main(void)
 {
-	return port_run_game(1);
+	return port_run_game(1, 0);
 }

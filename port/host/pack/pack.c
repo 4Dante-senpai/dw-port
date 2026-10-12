@@ -20,11 +20,7 @@
 #define MAX_DEPTH 8            /* ISO9660 directory depth limit */
 #define MAX_TEXT (4u << 20)    /* largest .cue / Manifest read */
 
-typedef struct {
-	char path[PACK_PATH_SIZE];
-	uint32_t lba, sectors, mode, size, offset;
-	uint8_t sha[32];
-} Entry;
+typedef PackEntry Entry;
 
 typedef struct {
 	Entry *e;
@@ -88,6 +84,13 @@ static int entry_cmp(const void *a, const void *b)
 		return x->lba < y->lba ? -1 : 1;
 	}
 	return strcmp(x->path, y->path);
+}
+
+/* e comes after prev in a Manifest or index: sorted by LBA and path, sectors not shared (each
+ * LBA belongs to at most one file, as the CD model looks files up by LBA). */
+static int follows(const Entry *prev, const Entry *e)
+{
+	return entry_cmp(prev, e) < 0 && (uint64_t)prev->lba + prev->sectors <= e->lba;
 }
 
 /* A whole small text file (.cue, Manifest), NUL-terminated; malloc'd. */
@@ -424,6 +427,17 @@ static int parse_sha(const char *s, uint8_t sha[32])
 	return 0;
 }
 
+/* The fields of a row (or index entry) agree: the sector count follows from the size, as the CD
+ * model (port/backend/cdrom.c) derives it. */
+static int entry_valid(const Entry *e)
+{
+	if (e->path[0] == 0 || (uint64_t)e->lba + e->sectors > MAX_SECTORS) {
+		return 0;
+	}
+	return e->mode == PACK_F1 ? e->sectors == (uint32_t)(((uint64_t)e->size + DATA - 1) / DATA)
+	                          : e->mode == PACK_F2 && e->size == e->sectors * PACK_F2_SECTOR;
+}
+
 static int parse_row(char *line, Entry *e)
 {
 	char *f[6];
@@ -448,15 +462,8 @@ static int parse_row(char *line, Entry *e)
 	} else {
 		return -1;
 	}
-	if ((uint64_t)e->lba + e->sectors > MAX_SECTORS) {
-		return -1;
-	}
 	strcpy(e->path, f[0]);
-	/* The sector count follows from the size, as story 2.8 derives it. */
-	return (e->mode == PACK_F1 ? e->sectors == (uint32_t)(((uint64_t)e->size + DATA - 1) / DATA)
-	                           : e->sectors <= MAX_SECTORS && e->size == e->sectors * PACK_F2_SECTOR)
-	               ? 0
-	               : -1;
+	return entry_valid(e) ? 0 : -1;
 }
 
 /* Reads a Manifest: the @exe row, the file rows (sorted by LBA and path) and its SHA-256. */
@@ -496,8 +503,9 @@ static int manifest_read(Ctx *c, const char *tsv, Entry *exe, List *l, uint8_t s
 				}
 				*exe = e;
 				have_exe = 1;
-			} else if (l->n > 0 && entry_cmp(&l->e[l->n - 1], &e) >= 0) {
-				fail(c, "%s line %d: %s is not sorted by LBA and path", tsv, line, e.path);
+			} else if (l->n > 0 && !follows(&l->e[l->n - 1], &e)) {
+				fail(c, "%s line %d: %s is not sorted by LBA and path, or shares sectors with the "
+				        "previous file", tsv, line, e.path);
 				goto out;
 			} else if (list_add(c, l, &e) != 0) {
 				goto out;
@@ -831,4 +839,135 @@ out:
 	}
 	free(m.e);
 	return r;
+}
+
+/* ---- reader ---- */
+
+struct Pack {
+	FILE *f;
+	List l;
+};
+
+static void entry_decode(const uint8_t b[PACK_ENTRY_SIZE], Entry *e)
+{
+	memset(e, 0, sizeof(*e));
+	memcpy(e->path, b, PACK_PATH_SIZE - 1);
+	e->lba = rd32(b + 64);
+	e->sectors = rd32(b + 68);
+	e->mode = rd32(b + 72);
+	e->size = rd32(b + 76);
+	e->offset = rd32(b + 80);
+	memcpy(e->sha, b + 84, 32);
+}
+
+Pack *pack_open(const char *pack, const char *manifest_sha256, char *err, size_t errlen)
+{
+	Ctx c = { err, errlen, NULL, 0, 0 };
+	Pack *p = calloc(1, sizeof(*p));
+	uint8_t h[PACK_HEADER_SIZE], want[PACK_HEADER_SIZE > PACK_ENTRY_SIZE ? PACK_HEADER_SIZE : PACK_ENTRY_SIZE];
+	uint8_t b[PACK_ENTRY_SIZE];
+	char hex[65];
+	uint32_t count, data_offset, i;
+	uint64_t pos;
+
+	if (p == NULL) {
+		fail(&c, "out of memory");
+		return NULL;
+	}
+	p->f = fopen(pack, "rb");
+	if (p->f == NULL) {
+		fail(&c, "cannot open %s", pack);
+		goto bad;
+	}
+	if (fread(h, 1, PACK_HEADER_SIZE, p->f) != PACK_HEADER_SIZE || memcmp(h, PACK_MAGIC, sizeof(PACK_MAGIC)) != 0 ||
+	    rd32(h + 8) != PACK_FORMAT_VERSION) {
+		fail(&c, "%s is not a Pack of format version %u: build it from your disc with dw1-pack build", pack,
+		     PACK_FORMAT_VERSION);
+		goto bad;
+	}
+	sha_hex(h + 16, hex);
+	if (manifest_sha256 != NULL && strcmp(hex, manifest_sha256) != 0) {
+		fail(&c, "%s was built from another Manifest (SHA-256 %s; this build expects %s): build it again "
+		         "from your disc with this version's dw1-pack build",
+		     pack, hex, manifest_sha256);
+		goto bad;
+	}
+	/* Header and index exactly as pack_build writes them: canonical entries, sorted, laid out. */
+	count = rd32(h + 12);
+	data_offset = align(PACK_HEADER_SIZE + (uint64_t)PACK_ENTRY_SIZE * count);
+	header_encode(want, count, h + 16, data_offset);
+	if (count == 0 || count > MAX_SECTORS || memcmp(h, want, PACK_HEADER_SIZE) != 0) {
+		goto corrupt;
+	}
+	pos = data_offset;
+	for (i = 0; i < count; i++) {
+		Entry e;
+
+		if (fread(b, 1, PACK_ENTRY_SIZE, p->f) != PACK_ENTRY_SIZE) {
+			goto corrupt;
+		}
+		entry_decode(b, &e);
+		entry_encode(want, &e);
+		if (memcmp(b, want, PACK_ENTRY_SIZE) != 0 || !entry_valid(&e) || e.offset != align(pos) ||
+		    (p->l.n > 0 && !follows(&p->l.e[p->l.n - 1], &e))) {
+			goto corrupt;
+		}
+		pos = (uint64_t)e.offset + e.size;
+		if (list_add(&c, &p->l, &e) != 0) {
+			goto bad;
+		}
+	}
+	if (fseeko(p->f, 0, SEEK_END) != 0 || ftello(p->f) != (off_t)pos) {
+		goto corrupt;
+	}
+	return p;
+corrupt:
+	fail(&c, "%s: bad header or index (corrupt or truncated Pack): build it again with dw1-pack build", pack);
+bad:
+	pack_close(p);
+	return NULL;
+}
+
+void pack_close(Pack *p)
+{
+	if (p != NULL) {
+		if (p->f != NULL) {
+			fclose(p->f);
+		}
+		free(p->l.e);
+		free(p);
+	}
+}
+
+const PackEntry *pack_find_path(const Pack *p, const char *path)
+{
+	size_t i;
+
+	for (i = 0; i < p->l.n; i++) {
+		if (strcmp(p->l.e[i].path, path) == 0) {
+			return &p->l.e[i];
+		}
+	}
+	return NULL;
+}
+
+/* ponytail: linear scans over the ~820 files; an index by LBA if a profile ever shows them. */
+const PackEntry *pack_find_lba(const Pack *p, uint32_t lba)
+{
+	size_t i;
+
+	for (i = 0; i < p->l.n; i++) {
+		if (lba - p->l.e[i].lba < p->l.e[i].sectors) {
+			return &p->l.e[i];
+		}
+	}
+	return NULL;
+}
+
+int pack_read(Pack *p, const PackEntry *e, uint32_t offset, void *buf, uint32_t n)
+{
+	if (offset > e->size || n > e->size - offset) {
+		return -1;
+	}
+	return fseeko(p->f, (off_t)e->offset + offset, SEEK_SET) == 0 && fread(buf, 1, n, p->f) == n ? 0 : -1;
 }

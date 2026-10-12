@@ -85,6 +85,27 @@ Devcontainer: `.devcontainer/port/devcontainer.json` (construye `dw-build` en
    tools/port/docker_run.sh sh -c 'cd build/port/native-headless && DW1_DISC_DIR=/dw/game_rom/extracted ctest -R pack_disc'
    ```
 
+   Correr el Juego (`dw1`, headless) sobre el Pack. `dw1` solo abre un Pack construido con el
+   Manifest de su propio build (el SHA-256 de `us.tsv` se compila en `dw1`); con otro sale con 1 y
+   pide reconstruirlo. Sin `--pack` el disco está vacío (`CdSearchFile` no encuentra nada y las
+   lecturas no escriben datos). La traza (`DW1_TRACE`, por defecto `port_trace.log`) registra la
+   primera llamada a cada stub y cada carga de overlay
+   (`<ciclo> overlay <id> <ruta> dest=<dir PS1> sha256=<hash>`):
+
+   ```sh
+   tools/port/docker_run.sh sh -c 'DW1_TRACE=build/dw1_trace.log build/port/native-headless/dw1 \
+       --headless --pack game_rom/us.pack --until-overlay'
+   ```
+
+   `--frames N` sale con 0 tras N frames; `--until-overlay`, tras la primera carga de overlay. El
+   test clase B `dw1_overlay` usa el Pack que deja `pack_disc` en el directorio de build
+   (`us.pack`) y comprueba que el primer overlay (`MOV_REL.BIN`) queda en su `mov_START` con el
+   SHA-256 del Manifest:
+
+   ```sh
+   tools/port/docker_run.sh sh -c 'cd build/port/native-headless && DW1_DISC_DIR=/dw/game_rom/extracted ctest -R "pack_disc|dw1_overlay"'
+   ```
+
 6. Desensamblado (splat, no necesita CodeWarrior):
 
    ```sh

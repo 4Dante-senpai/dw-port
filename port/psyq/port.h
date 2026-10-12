@@ -17,4 +17,7 @@
 	        : (fprintf(stderr, "PORT_ASSERT %s:%d: %s\n", __FILE__, __LINE__, #cond), abort()))
 #endif
 
+/* One line "<cycle> <text>" in the trace file $DW1_TRACE (default port_trace.log). */
+void port_trace(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+
 #endif
