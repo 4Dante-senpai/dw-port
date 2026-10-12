@@ -23,6 +23,27 @@ default:
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "schedule"
 
+# Builds both images on the runner's Docker daemon and publishes them to the project registry.
+# Runs when a Dockerfile changes, or by hand; then pin the printed digests below.
+images:
+  image: docker:27.3.1-cli
+  variables:
+    GIT_SUBMODULE_STRATEGY: none
+  before_script: []
+  rules:
+    - changes: [Dockerfile, requirements.txt, tools/port/Dockerfile]
+    - when: manual
+      allow_failure: true
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - build="$CI_REGISTRY_IMAGE/dw-build:$CI_COMMIT_SHORT_SHA"
+    - port="$CI_REGISTRY_IMAGE/dw-port:$CI_COMMIT_SHORT_SHA"
+    - docker build --pull --tag "$build" .
+    - docker build --tag "$port" --build-arg BASE_IMAGE="$build" --file tools/port/Dockerfile .
+    - docker push --quiet "$build"
+    - docker push --quiet "$port"
+    - docker image inspect --format '{{index .RepoDigests 0}}' "$build" "$port"
+
 native:
   script:
     - cmake --preset native-headless
