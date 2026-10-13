@@ -1,12 +1,16 @@
 #ifndef PORT_PSYQ_H
 #define PORT_PSYQ_H
 
+#include <stddef.h>
+
 /*
  * Prototypes of the PsyQ functions the port implements, as in the mw_lib41 headers the game
  * compiles against (external/psyq_headers/mw_lib41/include), plus the port's internal hooks.
  */
 
 /* libetc.h */
+void PadInit(int mode);
+unsigned long PadRead(int id);
 int VSync(int mode);
 int VSyncCallback(void (*f)());
 long VSyncCallbacks(int ch, void (*f)());
@@ -22,6 +26,15 @@ PACKET *GsGetWorkBase(void);
 long SetRCnt(unsigned long spec, unsigned short target, long mode);
 long GetRCnt(unsigned long spec);
 long ResetRCnt(unsigned long spec);
+
+/* malloc.h */
+void InitHeap3(unsigned long *addr, unsigned long size);
+void *malloc3(size_t size);
+void free3(void *ptr);
+
+/* rand.h */
+int rand(void);
+void srand(unsigned int seed);
 
 /* kernel.h (values checked against it by tests/psyq_prototypes.c) */
 #ifndef RCntCNT0
@@ -71,6 +84,7 @@ extern int Vcount;
 void psyq_raise_irq(int irq); /* runs the InterruptCallback of line irq */
 void psyq_libetc_reset(void);
 void psyq_libapi_reset(void);
+void psyq_libc_reset(void);
 void psyq_libcd_reset(void);
 
 #endif

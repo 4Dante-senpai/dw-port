@@ -99,9 +99,16 @@
   fijadas por digest en `.gitlab-ci.yml`. AD-16 enmendado: dos push URL en `origin` y runner
   `dw1-data` sin *protected* (desvío aprobado por el dueño el 2026-10-12).
 
+- Historia 2.9 (`libc`, `libapi`, `libetc` deterministas): `rand`/`srand` con el LCG del BIOS
+  (A(2Fh)/A(30h); semilla de arranque `0x24040001` como hipótesis), `InitHeap3`/`malloc3`/`free3`
+  traducidos del asm (direcciones PS1 verificadas en L1) y `PadInit`/`PadRead` sin input del host.
+  `gen_stubs.py` cuenta la `libc` del port como implementada (con test). Cadenas, `mem*` y
+  `sprintf` siguen en la libc del host (hipótesis para la Épica 3). Evidencia:
+  `docs/implementation-artifacts/evidence/story-2-9.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.9 (`libc`, `libapi` y `libetc` deterministas).
+- Fase 5: próxima historia 2.10 (modelo GTE y macros inline).
 
 ## Bloqueos
 
@@ -118,7 +125,7 @@
 | Archivos C del juego que compilan a wasm32 sin cambios | 97 / 120 |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Bloques `DW1_PORT` en `src/`/`include/` | 13 (`docs/port/src-changes.md`) |
-| Funciones PsyQ usadas: implementadas / stubs / libc del host | 12 / 174 / 13 (de 199) |
+| Funciones PsyQ usadas: implementadas / stubs / libc del host | 18 / 169 / 12 (de 199) |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
 | Escenas que funcionan (nativo) | 0 |
 | Escenas que funcionan (web) | 0 |

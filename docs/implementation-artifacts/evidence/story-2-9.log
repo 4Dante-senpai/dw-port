@@ -1,0 +1,205 @@
+Historia 2.9 — evidencia automática (2026-10-13)
+Ejecución directa dentro del contenedor existente, en /dw (sin Docker anidado).
+No se modificaron src/ ni include/. No se crearon commits.
+
+$ cmake --preset native-headless && cmake --build --preset native-headless
+Resultado: exit 0
+psyq: used=199 implemented=18 host_libc=12 stubs=169 gte_stubs=11
+
+$ env -u DW1_DISC_DIR ctest --preset native-headless
+Test project /dw/build/port/native-headless
+      Start  1: rts_info
+ 1/24 Test  #1: rts_info .........................   Passed    0.09 sec
+      Start  2: ovl_starts
+ 2/24 Test  #2: ovl_starts .......................   Passed    0.05 sec
+      Start  3: tu_list
+ 3/24 Test  #3: tu_list ..........................   Passed    0.19 sec
+      Start  4: inventory
+ 4/24 Test  #4: inventory ........................   Passed   10.99 sec
+      Start  5: preproc_check
+ 5/24 Test  #5: preproc_check ....................   Passed   25.12 sec
+      Start  6: test_preproc_check
+ 6/24 Test  #6: test_preproc_check ...............   Passed  125.76 sec
+      Start  7: ps1_ram_addr_range
+ 7/24 Test  #7: ps1_ram_addr_range ...............   Passed    0.02 sec
+      Start  8: ps1mem
+ 8/24 Test  #8: ps1mem ...........................   Passed    0.00 sec
+      Start  9: setjmp
+ 9/24 Test  #9: setjmp ...........................   Passed    0.00 sec
+      Start 10: clock
+10/24 Test #10: clock ............................   Passed    0.01 sec
+      Start 11: libc_heap_pad
+11/24 Test #11: libc_heap_pad ....................   Passed    0.00 sec
+      Start 12: psyq_prototypes
+12/24 Test #12: psyq_prototypes ..................   Passed    0.03 sec
+      Start 13: overlay_O0
+13/24 Test #13: overlay_O0 .......................   Passed    0.00 sec
+      Start 14: overlay_O2
+14/24 Test #14: overlay_O2 .......................   Passed    0.00 sec
+      Start 15: overlay_sections
+15/24 Test #15: overlay_sections .................   Passed    0.00 sec
+      Start 16: overlay_objects
+16/24 Test #16: overlay_objects ..................   Passed    1.12 sec
+      Start 17: frame0
+17/24 Test #17: frame0 ...........................   Passed    0.01 sec
+      Start 18: dw1_bad_args
+18/24 Test #18: dw1_bad_args .....................   Passed    0.00 sec
+      Start 19: watchdog
+19/24 Test #19: watchdog .........................   Passed    1.58 sec
+      Start 20: pack
+20/24 Test #20: pack .............................   Passed    0.01 sec
+      Start 21: libcd
+21/24 Test #21: libcd ............................   Passed    0.00 sec
+      Start 22: dw1_foreign_pack
+22/24 Test #22: dw1_foreign_pack .................   Passed    0.00 sec
+      Start 23: pack_disc
+23/24 Test #23: pack_disc ........................***Skipped   0.00 sec
+      Start 24: dw1_overlay
+24/24 Test #24: dw1_overlay ......................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 24
+
+Total Test time (real) = 165.02 sec
+
+The following tests did not run:
+	 23 - pack_disc (Skipped)
+	 24 - dw1_overlay (Skipped)
+
+Extractos de LastTest.log:
+preproc_check: tus=120 configs=gcc,mwcc differ=0 base=09c174c012365cafd219dff54813dd1ccb9c87ce
+test_preproc_check: OK
+test_libc_heap_pad: OK
+port: reached frame 0 at cycle 127700052
+
+$ cmake --preset native-asan && cmake --build --preset native-asan
+Resultado: exit 0
+psyq: used=199 implemented=18 host_libc=12 stubs=169 gte_stubs=11
+
+$ env -u DW1_DISC_DIR ctest --preset native-asan
+Test project /dw/build/port/native-asan
+      Start  1: rts_info
+ 1/22 Test  #1: rts_info .........................   Passed    0.07 sec
+      Start  2: ovl_starts
+ 2/22 Test  #2: ovl_starts .......................   Passed    0.07 sec
+      Start  3: tu_list
+ 3/22 Test  #3: tu_list ..........................   Passed    0.17 sec
+      Start  4: inventory
+ 4/22 Test  #4: inventory ........................   Passed   10.71 sec
+      Start  5: preproc_check
+ 5/22 Test  #5: preproc_check ....................   Passed   25.12 sec
+      Start  6: test_preproc_check
+ 6/22 Test  #6: test_preproc_check ...............   Passed  125.84 sec
+      Start  7: ps1_ram_addr_range
+ 7/22 Test  #7: ps1_ram_addr_range ...............   Passed    0.02 sec
+      Start  8: ps1mem
+ 8/22 Test  #8: ps1mem ...........................   Passed    0.05 sec
+      Start  9: setjmp
+ 9/22 Test  #9: setjmp ...........................   Passed    0.01 sec
+      Start 10: clock
+10/22 Test #10: clock ............................   Passed    0.04 sec
+      Start 11: libc_heap_pad
+11/22 Test #11: libc_heap_pad ....................   Passed    0.02 sec
+      Start 12: psyq_prototypes
+12/22 Test #12: psyq_prototypes ..................   Passed    0.03 sec
+      Start 13: overlay_O0
+13/22 Test #13: overlay_O0 .......................   Passed    0.01 sec
+      Start 14: overlay_O2
+14/22 Test #14: overlay_O2 .......................   Passed    0.01 sec
+      Start 15: frame0
+15/22 Test #15: frame0 ...........................   Passed    0.04 sec
+      Start 16: dw1_bad_args
+16/22 Test #16: dw1_bad_args .....................   Passed    0.02 sec
+      Start 17: watchdog
+17/22 Test #17: watchdog .........................   Passed    4.43 sec
+      Start 18: pack
+18/22 Test #18: pack .............................   Passed    0.06 sec
+      Start 19: libcd
+19/22 Test #19: libcd ............................   Passed    0.03 sec
+      Start 20: dw1_foreign_pack
+20/22 Test #20: dw1_foreign_pack .................   Passed    0.02 sec
+      Start 21: pack_disc
+21/22 Test #21: pack_disc ........................***Skipped   0.00 sec
+      Start 22: dw1_overlay
+22/22 Test #22: dw1_overlay ......................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 22
+
+Total Test time (real) = 166.82 sec
+
+The following tests did not run:
+	 21 - pack_disc (Skipped)
+	 22 - dw1_overlay (Skipped)
+
+Extractos de LastTest.log:
+preproc_check: tus=120 configs=gcc,mwcc differ=0 base=09c174c012365cafd219dff54813dd1ccb9c87ce
+test_preproc_check: OK
+test_libc_heap_pad: OK
+port: reached frame 0 at cycle 127700052
+
+Comprobación de generated/psyq_stubs.c en ambos presets: sin stubs de
+InitHeap3, malloc3, free3, PadInit, PadRead ni rand.
+
+$ DW1_DISC_DIR=/dw/game_rom/extracted ctest --preset native-headless -R "pack_disc|dw1_overlay"
+Test project /dw/build/port/native-headless
+    Start 23: pack_disc
+1/2 Test #23: pack_disc ........................   Passed   34.21 sec
+    Start 24: dw1_overlay
+2/2 Test #24: dw1_overlay ......................   Passed    0.03 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =  34.24 sec
+
+Extractos de LastTest.log:
+pack_disc: OK, Pack sha256 c01e5c3680ffdf50d0342f16ec978c6d107a33529688dae6a817bd63947f0cf6
+port: overlay loaded at cycle 104326400
+dw1_overlay: OK, \MOV_REL.BIN;1 at 0x80010000 sha256 c86c52aae727b5dc8a8d2f4b37f16b3665a7d3314ce79bd02abba584b9275fb7
+
+$ DW1_DISC_DIR=/dw/game_rom/extracted ctest --preset native-asan -R "pack_disc|dw1_overlay"
+Test project /dw/build/port/native-asan
+    Start 21: pack_disc
+1/2 Test #21: pack_disc ........................   Passed  194.60 sec
+    Start 22: dw1_overlay
+2/2 Test #22: dw1_overlay ......................   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) = 194.69 sec
+
+Extractos de LastTest.log:
+pack_disc: OK, Pack sha256 c01e5c3680ffdf50d0342f16ec978c6d107a33529688dae6a817bd63947f0cf6
+port: overlay loaded at cycle 104326400
+dw1_overlay: OK, \MOV_REL.BIN;1 at 0x80010000 sha256 c86c52aae727b5dc8a8d2f4b37f16b3665a7d3314ce79bd02abba584b9275fb7
+
+$ git diff --check
+Resultado: exit 0
+
+Pendientes de validación contra el Emulador (fuera de esta historia): semilla BIOS
+0x24040001 y equivalencia de la libc delegada al host para los casos indicados en la spec.
+
+## Reverificación tras la revisión (Claude)
+$ for p in native-headless native-asan: build + ctest (sin disco) + ctest -R "pack_disc|dw1_overlay" (DW1_DISC_DIR=/dw/game_rom/extracted)
+psyq: used=199 implemented=18 host_libc=12 stubs=169 gte_stubs=11
+      Start  4: gen_stubs
+ 4/25 Test  #4: gen_stubs ........................   Passed    0.03 sec
+      Start 12: libc_heap_pad
+12/25 Test #12: libc_heap_pad ....................   Passed    0.00 sec
+100% tests passed, 0 tests failed out of 25
+1/2 Test #24: pack_disc ........................   Passed   34.60 sec
+2/2 Test #25: dw1_overlay ......................   Passed    0.03 sec
+100% tests passed, 0 tests failed out of 2
+psyq: used=199 implemented=18 host_libc=12 stubs=169 gte_stubs=11
+      Start  4: gen_stubs
+ 4/23 Test  #4: gen_stubs ........................   Passed    0.04 sec
+      Start 12: libc_heap_pad
+12/23 Test #12: libc_heap_pad ....................   Passed    0.02 sec
+100% tests passed, 0 tests failed out of 23
+1/2 Test #22: pack_disc ........................   Passed  198.97 sec
+2/2 Test #23: dw1_overlay ......................   Passed    0.08 sec
+100% tests passed, 0 tests failed out of 2
+ps1_literals: rows=85 pending=0
+isr_spins: rows=67 pending=0
+$ sh tools/port/ci/preproc_check.sh
+preproc_check: tus=120 configs=gcc,mwcc differ=0 base=09c174c012365cafd219dff54813dd1ccb9c87ce
+ps1_literals: rows=85 pending=0
+isr_spins: rows=67 pending=0
