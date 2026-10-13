@@ -19,6 +19,27 @@ static uint64_t hcount_cycle;
 static void (*vsync_callbacks[VSYNC_SLOTS])(void);
 static void (*irq_callbacks[IRQ_COUNT])(void);
 
+/* asm: config/us/bss.yaml, libetc at 0x80135450; both words start at zero. */
+static uint32_t pad_buf;
+static int PadIdentifier;
+
+/* asm:asm/us/main/psyq/libetc.s:PadInit -- PAD_init and ChangeClearPAD await host input. */
+void PadInit(int mode)
+{
+	clock_psyq_entry();
+	PadIdentifier = mode;
+	pad_buf = 0xFFFFFFFFu;
+	ResetCallback();
+}
+
+/* asm:asm/us/main/psyq/libetc.s:PadRead -- PAD_dr has no effect without host input. */
+unsigned long PadRead(int id)
+{
+	clock_psyq_entry();
+	(void)id;
+	return ~pad_buf;
+}
+
 /* asm: trapIntrVSync -- Vcount++, then the 8 callback slots in order. */
 static void trap_vsync(void)
 {
@@ -126,6 +147,8 @@ int ResetCallback(void)
 /* Back to the state before boot (tests). */
 void psyq_libetc_reset(void)
 {
+	pad_buf = 0;
+	PadIdentifier = 0;
 	Vcount = pre_vcount = 0;
 	hcount_cycle = 0;
 	intr_started = 0;

@@ -99,9 +99,17 @@
   fijadas por digest en `.gitlab-ci.yml`. AD-16 enmendado: dos push URL en `origin` y runner
   `dw1-data` sin *protected* (desvío aprobado por el dueño el 2026-10-12).
 
+- Historia 2.9 (`libc`, `libapi`, `libetc` deterministas), implementada y lista para revisión:
+  `rand`/`srand` BIOS con reset, heap de 8 B traducido del asm y pad sin input del host.
+  Contador PsyQ: 18 implementadas / 169 stubs / 12 de libc del host. Sin cambios en `src/` ni
+  `include/`. Build y CTest verdes en ambos presets: 22 tests ejecutados en headless y 20 en
+  ASan/UBSan, más `pack_disc` y `dw1_overlay` con disco en cada uno; L0a OK (120 TUs, gcc/mwcc).
+  `frame0` llega al ciclo 127.700.052 en ambos presets. Hipótesis de semilla BIOS y libc del
+  host pendientes de la Épica 3. Evidencia: `docs/implementation-artifacts/evidence/story-2-9.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.9 (`libc`, `libapi` y `libetc` deterministas).
+- Fase 5: historia 2.9 implementada en `story/2-9-libc-libapi-libetc`; falta la revisión BMAD (step-04) y el merge.
 
 ## Bloqueos
 
@@ -118,7 +126,7 @@
 | Archivos C del juego que compilan a wasm32 sin cambios | 97 / 120 |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Bloques `DW1_PORT` en `src/`/`include/` | 13 (`docs/port/src-changes.md`) |
-| Funciones PsyQ usadas: implementadas / stubs / libc del host | 12 / 174 / 13 (de 199) |
+| Funciones PsyQ usadas: implementadas / stubs / libc del host | 18 / 169 / 12 (de 199) |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
 | Escenas que funcionan (nativo) | 0 |
 | Escenas que funcionan (web) | 0 |

@@ -1,8 +1,9 @@
-/* libapi: root counters over the virtual clock (AD-8). asm:asm/us/main/psyq/libapi.s (mw_lib41) */
+/* libapi: root counters and the game heap. asm:asm/us/main/psyq/libapi.s (mw_lib41) */
 #include <stdint.h>
 
 #include "clock.h"
 #include "port.h"
+#include "ps1mem.h"
 #include "psyq.h"
 
 #define IRQ_RCNT0 4
@@ -15,6 +16,91 @@ typedef struct {
 } RootCounter;
 
 static RootCounter counters[3] = { { 0, 0, 0, -1 }, { 0, 0, 0, -1 }, { 0, 0, 0, -1 } };
+
+typedef struct HeapBlock {
+	struct HeapBlock *next;
+	uint32_t units;
+} HeapBlock;
+
+_Static_assert(sizeof(HeapBlock) == 8, "PsyQ heap headers occupy one 8-byte unit");
+static HeapBlock *freep;
+
+/* asm:asm/us/main/psyq/libapi.s:InitHeap3 -- round size down to 8 bytes and put a
+ * zero-sized sentinel at the end of the circular free list. addr is a PS1 address. */
+void InitHeap3(unsigned long *addr, unsigned long size)
+{
+	clock_psyq_entry();
+	if (!addr || !size)
+		return;
+	uint32_t ps1_addr = (uint32_t)(uintptr_t)addr;
+	PORT_ASSERT(ps1_addr_is_ram(ps1_addr));
+	size &= ~7u;
+	PORT_ASSERT(size >= 8 && size <= PS1_RAM_SIZE - (ps1_addr & (PS1_RAM_SIZE - 1)));
+	PORT_ASSERT((ps1_addr & 3) == 0);
+	HeapBlock *first = ps1_ram(ps1_addr);
+	HeapBlock *sentinel = (HeapBlock *)((uint8_t *)first + size - 8);
+	sentinel->next = first;
+	sentinel->units = 0;
+	first->next = sentinel;
+	first->units = ((size + 7) >> 3) - 1;
+	freep = first;
+}
+
+/* asm:asm/us/main/psyq/libapi.s:malloc3 -- round up to 8 bytes, add the header,
+ * then split from the end of the first fitting free block (or unlink an exact fit). */
+void *malloc3(size_t size)
+{
+	clock_psyq_entry();
+	if (!size)
+		return NULL;
+	uint32_t rounded = ((uint32_t)size + 7u) & ~7u;
+	uint32_t units = ((rounded + 7u) >> 3) + 1;
+	PORT_ASSERT(freep != NULL);
+	HeapBlock *prev = freep;
+	for (HeapBlock *p = prev->next;; prev = p, p = p->next) {
+		if ((int32_t)p->units >= (int32_t)units) {
+			if (p->units == units) {
+				prev->next = p->next;
+			} else {
+				p->units -= units;
+				p = (HeapBlock *)((uint8_t *)p + p->units * 8);
+				p->units = units;
+			}
+			freep = prev;
+			return (uint8_t *)p + 8;
+		}
+		if (p == freep)
+			return NULL;
+	}
+}
+
+/* asm:asm/us/main/psyq/libapi.s:free3 -- insert by address and coalesce both neighbors,
+ * except the zero-sized sentinel. Unread _r_bp/_r_p/_r_freep debug writes are omitted. */
+void free3(void *ptr)
+{
+	clock_psyq_entry();
+	HeapBlock *block = (HeapBlock *)((uint8_t *)ptr - 8);
+	HeapBlock *p = freep;
+	while (!((uintptr_t)p < (uintptr_t)block && (uintptr_t)block < (uintptr_t)p->next)) {
+		if ((uintptr_t)p >= (uintptr_t)p->next &&
+		    ((uintptr_t)p < (uintptr_t)block || (uintptr_t)block < (uintptr_t)p->next))
+			break;
+		p = p->next;
+	}
+	if ((uint8_t *)block + block->units * 8 == (uint8_t *)p->next && p->next->units) {
+		block->units += p->next->units;
+		block->next = p->next->next;
+	} else {
+		block->next = p->next;
+	}
+	if ((uint8_t *)p + p->units * 8 == (uint8_t *)block) {
+		p->units += block->units;
+		p->next = block->next;
+	} else {
+		p->next = block;
+	}
+	freep = p;
+}
 
 static int hblank_mode(int rc)
 {
@@ -115,6 +201,7 @@ long ResetRCnt(unsigned long spec)
 
 void psyq_libapi_reset(void)
 {
+	freep = NULL;
 	for (int i = 0; i < 3; i++) {
 		clock_cancel(counters[i].event);
 		counters[i] = (RootCounter){ 0, 0, 0, -1 };

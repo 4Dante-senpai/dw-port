@@ -125,7 +125,7 @@ target_link_libraries(dw1_backend PUBLIC dw1_pack_lib)
 target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
 
 add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c port/psyq/clock.c
-  port/psyq/libetc.c port/psyq/libapi.c port/psyq/libgs.c port/psyq/libcd.c port/psyq/stub.c)
+  port/psyq/libetc.c port/psyq/libapi.c port/psyq/libc.c port/psyq/libgs.c port/psyq/libcd.c port/psyq/stub.c)
 target_link_libraries(dw1_psyq PUBLIC Threads::Threads dw1_backend)
 target_compile_options(dw1_psyq PRIVATE -Wall -Wextra -Werror)
 
@@ -165,6 +165,11 @@ add_executable(test_clock port/psyq/tests/test_clock.c)
 target_compile_options(test_clock PRIVATE -Wall -Wextra -Werror)
 target_link_libraries(test_clock dw1_psyq Threads::Threads)
 add_test(NAME clock COMMAND test_clock)
+
+add_executable(test_libc_heap_pad port/psyq/tests/test_libc_heap_pad.c)
+target_compile_options(test_libc_heap_pad PRIVATE -Wall -Wextra -Werror)
+target_link_libraries(test_libc_heap_pad dw1_psyq)
+add_test(NAME libc_heap_pad COMMAND test_libc_heap_pad)
 
 # The port's PsyQ prototypes must match the mw_lib41 headers the game compiles against.
 add_test(NAME psyq_prototypes COMMAND ${CMAKE_C_COMPILER} -m32 -fsyntax-only -w

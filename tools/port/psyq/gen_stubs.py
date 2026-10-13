@@ -3,9 +3,10 @@
 
 Inputs: the PsyQ function list (psyq_functions.tsv), the game objects and the port's PsyQ
 library. A stub logs its first call (port_stub_hit) and returns 0, or the value listed in
-stub_returns.tsv when 0 would make the game wait forever (each row says why). PsyQ's libc is left to the
-host C library (setjmp/longjmp are mapped by port_game.h); the port's GTE calls (port_gte_*) are
-stubbed too until the GTE model exists. Prints the coverage counters.
+stub_returns.tsv when 0 would make the game wait forever (each row says why). PsyQ's libc is left
+to the host C library unless defined by the port (setjmp/longjmp are mapped by port_game.h).
+The port's GTE calls (port_gte_*) are stubbed too until the GTE model exists. Prints the coverage
+counters.
 Usage: gen_stubs.py NM FUNCTIONS_TSV OUT_C PORT_LIBS GAME_OBJ...   (PORT_LIBS: ';'-separated)
 
 ponytail: stubs are unprototyped `long f()`, fine for i686 cdecl; the web build needs typed
@@ -42,8 +43,8 @@ def main():
     undefined = nm(objs, "-u") - nm(objs, "--defined-only", "--extern-only")
     defined_by_port = nm(port_libs, "--defined-only", "--extern-only")
     used = sorted(s for s in undefined if s in lib_of)
-    host_libc = [s for s in used if lib_of[s] == "libc"]
-    implemented = [s for s in used if s not in host_libc and s in defined_by_port]
+    host_libc = [s for s in used if lib_of[s] == "libc" and s not in defined_by_port]
+    implemented = [s for s in used if s in defined_by_port]
     stubs = sorted(s for s in undefined
                    if (s in lib_of and lib_of[s] != "libc" or s.startswith("port_gte_"))
                    and s not in defined_by_port)

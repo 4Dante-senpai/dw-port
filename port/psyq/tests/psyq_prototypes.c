@@ -8,6 +8,8 @@
 #include <libgpu.h>
 #include <libgs.h>
 #include <libcd.h>
+#include <malloc.h>
+#include <rand.h>
 
 #include "../psyq.h"
 
