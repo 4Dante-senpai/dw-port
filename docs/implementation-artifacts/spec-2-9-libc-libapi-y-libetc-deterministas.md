@@ -2,7 +2,7 @@
 title: 'Historia 2.9: libc, libapi y libetc deterministas'
 type: 'feature'
 created: '2026-10-12'
-status: 'in-review'
+status: 'done'
 baseline_commit: '1933638b7d2afbd1b24eb7633cae2996bd9d8a2b'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -126,6 +126,23 @@ reimplementar cadenas, `memcpy`/`memset` o `setjmp`/`longjmp`.
   `implemented=18 host_libc=12 stubs=169`; sin stubs de heap/pad ni cambios en `src/`/`include/`.
   Evidencia: `docs/implementation-artifacts/evidence/story-2-9.log`. Sin commits.
 
+- Revisión (3 capas Codex): patches #1–#3 aplicados; reverificado: `native-headless` 25/25 y
+  `native-asan` 23/23 sin disco (2 skips de clase B), `pack_disc`/`dw1_overlay` con disco en ambos,
+  L0a `differ=0`, contadores `18/169/12`.
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+| # | Hallazgo | Veredicto | Evidencia / ruta |
+|---|---|---|---|
+| 1 | `dw1_psyq` accede a `Ps1_Ram` (`uint8_t[]`) como `HeapBlock *` sin `-fno-strict-aliasing` (blind) | medium | Verificado: el flag solo está en los TUs del Juego (`CMakeLists.txt:119`); hoy es Debug `-O0`, pero un build optimizado (web) puede romper el heap. **patch**: `-fno-strict-aliasing` en `dw1_psyq`. |
+| 2 | La verificación de 10.000 valores de `rand` usa una suma, insensible al orden (blind) | low | Verificado: un reordenamiento pasaba. Corrección directa. **patch**: digest `h = h * 31 + v`, dorados regenerados con Python. |
+| 3 | El contador de `gen_stubs.py` (`libc` del port como `implemented`) no tiene test (verification gap) | low | Pre-verificado: volver a la regla anterior pasaba CTest. **patch**: `classify()` extraída y `tools/port/psyq/test_gen_stubs.py` en CTest. |
+| 4 | `malloc3` con tamaño ≥ `0xFFFFFFF9` desborda el redondeo (blind, edge) | low | Real, pero idéntico al asm (`addiu`/`andi` de 32 bits) y el Juego nunca pide eso. Rechazado. |
+| 5 | `free3` sin detección de doble liberación ni puntero ajeno (blind, edge ×2) | low | Mismo comportamiento que la consola; detectarlo agrega estado y ramas. Rechazado. |
+| 6 | Faltan tests negativos de tamaño < 8, base desalineada o heap que cruza el fin de la RAM (blind) | low | Esos asserts son invariantes de debug fuera del asm; el Juego pasa valores fijos válidos. Rechazado. |
+| 7 | Equivalencia de la libc del host (relleno de `strncpy`) sin pruebas (blind) | low | Decisión del bloque congelado, marcada como hipótesis para la Épica 3; corregirlo edita el spec. Rechazado. |
+| 8 | Con `NDEBUG`, `PORT_ASSERT` no aborta en `InitHeap3`/`malloc3` y el test de abort falla (edge ×3) | false | Todos los presets son Debug (`CMakePresets.json:12`); mismo criterio que la 2.8 (#9). |
+| 9 | `free3(NULL)` o sin heap inicializado (edge) | low | El asm hace lo mismo (`ptr - 8`); el Juego solo libera punteros de `malloc3`. Rechazado. |
+| 10 | El test sigue tras una asignación inesperada y puede caerse en `memset` (edge) | low | El test falla igual (crash o `FAIL`). Rechazado. |

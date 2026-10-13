@@ -127,7 +127,8 @@ target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
 add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c port/psyq/clock.c
   port/psyq/libetc.c port/psyq/libapi.c port/psyq/libc.c port/psyq/libgs.c port/psyq/libcd.c port/psyq/stub.c)
 target_link_libraries(dw1_psyq PUBLIC Threads::Threads dw1_backend)
-target_compile_options(dw1_psyq PRIVATE -Wall -Wextra -Werror)
+# The heap and the CD model store typed data in the uint8_t arena Ps1_Ram, like the game does.
+target_compile_options(dw1_psyq PRIVATE -Wall -Wextra -Werror -fno-strict-aliasing)
 
 enable_testing()
 add_test(NAME rts_info COMMAND python3 -I -B tools/port/units/test_rts_info.py
@@ -135,6 +136,8 @@ add_test(NAME rts_info COMMAND python3 -I -B tools/port/units/test_rts_info.py
 add_test(NAME ovl_starts COMMAND python3 -I -B tools/port/units/test_ovl_starts.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME tu_list COMMAND python3 -I -B tools/port/units/test_tu_list.py
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME gen_stubs COMMAND python3 -I -B tools/port/psyq/test_gen_stubs.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME inventory COMMAND python3 -I -B tools/port/metrics/test_inventory.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})

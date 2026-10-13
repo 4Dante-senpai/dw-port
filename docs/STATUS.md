@@ -99,17 +99,16 @@
   fijadas por digest en `.gitlab-ci.yml`. AD-16 enmendado: dos push URL en `origin` y runner
   `dw1-data` sin *protected* (desvío aprobado por el dueño el 2026-10-12).
 
-- Historia 2.9 (`libc`, `libapi`, `libetc` deterministas), implementada y lista para revisión:
-  `rand`/`srand` BIOS con reset, heap de 8 B traducido del asm y pad sin input del host.
-  Contador PsyQ: 18 implementadas / 169 stubs / 12 de libc del host. Sin cambios en `src/` ni
-  `include/`. Build y CTest verdes en ambos presets: 22 tests ejecutados en headless y 20 en
-  ASan/UBSan, más `pack_disc` y `dw1_overlay` con disco en cada uno; L0a OK (120 TUs, gcc/mwcc).
-  `frame0` llega al ciclo 127.700.052 en ambos presets. Hipótesis de semilla BIOS y libc del
-  host pendientes de la Épica 3. Evidencia: `docs/implementation-artifacts/evidence/story-2-9.log`.
+- Historia 2.9 (`libc`, `libapi`, `libetc` deterministas): `rand`/`srand` con el LCG del BIOS
+  (A(2Fh)/A(30h); semilla de arranque `0x24040001` como hipótesis), `InitHeap3`/`malloc3`/`free3`
+  traducidos del asm (direcciones PS1 verificadas en L1) y `PadInit`/`PadRead` sin input del host.
+  `gen_stubs.py` cuenta la `libc` del port como implementada (con test). Cadenas, `mem*` y
+  `sprintf` siguen en la libc del host (hipótesis para la Épica 3). Evidencia:
+  `docs/implementation-artifacts/evidence/story-2-9.log`.
 
 ## En curso
 
-- Fase 5: historia 2.9 implementada en `story/2-9-libc-libapi-libetc`; falta la revisión BMAD (step-04) y el merge.
+- Fase 5: próxima historia 2.10 (modelo GTE y macros inline).
 
 ## Bloqueos
 

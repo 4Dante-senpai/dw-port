@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-11-2026 12:35
-last_updated: 10-12-2026 21:41
+last_updated: 10-12-2026 22:02
 project: dw-port
 project_key: NOKEY
 tracking_system: file-system
@@ -44,7 +44,7 @@ development_status:
   2-6-linkeo-completo-y-arranque-hasta-el-frame-0: done
   2-7-manifest-y-herramienta-nativa-del-pack: done
   2-8-libcd-y-modelo-del-cd-sobre-el-pack: done
-  2-9-libc-libapi-y-libetc-deterministas: review
+  2-9-libc-libapi-y-libetc-deterministas: done
   2-10-modelo-gte-y-macros-inline: backlog
   2-11-libgte-y-tablas-leídas-del-exe-en-el-pack: backlog
   2-12-renderer-software-y-libgpu: backlog

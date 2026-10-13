@@ -22,16 +22,17 @@ static int failures;
 static void random_sequences(void)
 {
 	/* Independent golden generation (Python, not the implementation under test):
-python3 -c 'from itertools import accumulate; print([(hex(s), (v := [(x >> 16) & 32767 for x in accumulate(range(10000), lambda x, _: (x * 1103515245 + 12345) & 0xffffffff, initial=s)][1:])[:5], sum(v)) for s in (1, 0, 0x24040001)])'
+python3 -c 'from itertools import accumulate as a; from functools import reduce; print([(hex(s), (v := [(x >> 16) & 32767 for x in a(range(10000), lambda x, _: (x * 1103515245 + 12345) & 0xffffffff, initial=s)][1:])[:5], reduce(lambda h, x: (h * 31 + x) & 0xffffffff, v, 0)) for s in (1, 0, 0x24040001)])'
+	 * digest is order-sensitive: h = h * 31 + value (mod 2^32).
 	 */
 	static const struct {
 		unsigned int seed;
 		int first[5];
-		uint32_t sum;
+		uint32_t digest;
 	} golden[] = {
-		{ 1, { 16838, 5758, 10113, 17515, 31051 }, 164659211 },
-		{ 0, { 0, 21468, 9988, 22117, 3498 }, 164351053 },
-		{ 0x24040001, { 20346, 17442, 3669, 9391, 11839 }, 162052043 },
+		{ 1, { 16838, 5758, 10113, 17515, 31051 }, 3636028843u },
+		{ 0, { 0, 21468, 9988, 22117, 3498 }, 3637297253u },
+		{ 0x24040001, { 20346, 17442, 3669, 9391, 11839 }, 4256336683u },
 	};
 	uint64_t before = clock_now();
 	/* Check static initialization before calling either srand or the reset hook. */
@@ -39,15 +40,15 @@ python3 -c 'from itertools import accumulate; print([(hex(s), (v := [(x >> 16) &
 	CHECK(rand() == 17442);
 	for (size_t s = 0; s < sizeof golden / sizeof golden[0]; s++) {
 		srand(golden[s].seed);
-		uint32_t sum = 0;
+		uint32_t digest = 0;
 		for (int i = 0; i < 10000; i++) {
 			int value = rand();
 			CHECK(value >= 0 && value <= 0x7FFF);
 			if (i < 5)
 				CHECK(value == golden[s].first[i]);
-			sum += value;
+			digest = digest * 31u + (uint32_t)value;
 		}
-		CHECK(sum == golden[s].sum);
+		CHECK(digest == golden[s].digest);
 	}
 	psyq_libc_reset();
 	CHECK(rand() == 20346);

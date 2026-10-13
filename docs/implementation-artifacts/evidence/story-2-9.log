@@ -176,3 +176,30 @@ Resultado: exit 0
 
 Pendientes de validación contra el Emulador (fuera de esta historia): semilla BIOS
 0x24040001 y equivalencia de la libc delegada al host para los casos indicados en la spec.
+
+## Reverificación tras la revisión (Claude)
+$ for p in native-headless native-asan: build + ctest (sin disco) + ctest -R "pack_disc|dw1_overlay" (DW1_DISC_DIR=/dw/game_rom/extracted)
+psyq: used=199 implemented=18 host_libc=12 stubs=169 gte_stubs=11
+      Start  4: gen_stubs
+ 4/25 Test  #4: gen_stubs ........................   Passed    0.03 sec
+      Start 12: libc_heap_pad
+12/25 Test #12: libc_heap_pad ....................   Passed    0.00 sec
+100% tests passed, 0 tests failed out of 25
+1/2 Test #24: pack_disc ........................   Passed   34.60 sec
+2/2 Test #25: dw1_overlay ......................   Passed    0.03 sec
+100% tests passed, 0 tests failed out of 2
+psyq: used=199 implemented=18 host_libc=12 stubs=169 gte_stubs=11
+      Start  4: gen_stubs
+ 4/23 Test  #4: gen_stubs ........................   Passed    0.04 sec
+      Start 12: libc_heap_pad
+12/23 Test #12: libc_heap_pad ....................   Passed    0.02 sec
+100% tests passed, 0 tests failed out of 23
+1/2 Test #22: pack_disc ........................   Passed  198.97 sec
+2/2 Test #23: dw1_overlay ......................   Passed    0.08 sec
+100% tests passed, 0 tests failed out of 2
+ps1_literals: rows=85 pending=0
+isr_spins: rows=67 pending=0
+$ sh tools/port/ci/preproc_check.sh
+preproc_check: tus=120 configs=gcc,mwcc differ=0 base=09c174c012365cafd219dff54813dd1ccb9c87ce
+ps1_literals: rows=85 pending=0
+isr_spins: rows=67 pending=0
