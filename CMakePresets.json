@@ -22,9 +22,25 @@
         "CMAKE_C_FLAGS": "-m32 -fsanitize=address,undefined -fno-sanitize=function -fno-omit-frame-pointer -fno-sanitize-recover=undefined",
         "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined -shared-libasan"
       }
+    },
+    {
+      "name": "web",
+      "displayName": "WebAssembly game objects and Backend (no link)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/port/web",
+      "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
     }
   ],
   "buildPresets": [
+    {
+      "name": "web",
+      "configurePreset": "web",
+      "targets": ["dw1_game_objs", "dw1_backend"]
+    },
     {
       "name": "native-headless",
       "configurePreset": "native-headless"

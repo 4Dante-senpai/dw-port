@@ -49,6 +49,12 @@ native:
     - cmake --build --preset native-headless
     - ctest --preset native-headless --output-on-failure
 
+# Class A: the game objects and the Backend compile to wasm32 (no link yet, story 4.1).
+web-objects:
+  script:
+    - cmake --preset web
+    - cmake --build --preset web
+
 native-disc:
   extends: .class_b
   variables:
