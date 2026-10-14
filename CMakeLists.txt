@@ -119,8 +119,8 @@ target_compile_options(dw1_game_objs PRIVATE
   -fsigned-char -fwrapv -fno-strict-aliasing -fno-common -w
   -include ${CMAKE_SOURCE_DIR}/port/psyq/include/port_game.h)
 
-# CD model over the Pack (port/backend/cdrom.h).
-add_library(dw1_backend STATIC port/backend/cdrom.c)
+# Hardware models (CD over the Pack and GTE).
+add_library(dw1_backend STATIC port/backend/cdrom.c port/backend/gte.c)
 target_link_libraries(dw1_backend PUBLIC dw1_pack_lib)
 target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
 
@@ -174,6 +174,13 @@ target_compile_options(test_libc_heap_pad PRIVATE -Wall -Wextra -Werror)
 target_link_libraries(test_libc_heap_pad dw1_psyq)
 add_test(NAME libc_heap_pad COMMAND test_libc_heap_pad)
 
+if(NOT EMSCRIPTEN)
+  add_executable(test_gte port/backend/tests/test_gte.c)
+  target_compile_options(test_gte PRIVATE -Wall -Wextra -Werror)
+  target_link_libraries(test_gte dw1_psyq)
+  add_test(NAME gte COMMAND test_gte)
+endif()
+
 # The port's PsyQ prototypes must match the mw_lib41 headers the game compiles against.
 add_test(NAME psyq_prototypes COMMAND ${CMAKE_C_COMPILER} -m32 -fsyntax-only -w
   -I${CMAKE_SOURCE_DIR}/external/psyq_headers/mw_lib41/include
@@ -220,9 +227,9 @@ target_link_libraries(dw1_runtime PUBLIC dw1_psyq)
 set(DW1_PSYQ_STUBS ${CMAKE_BINARY_DIR}/generated/psyq_stubs.c)
 add_custom_command(OUTPUT ${DW1_PSYQ_STUBS}
   COMMAND python3 -I -B tools/port/psyq/gen_stubs.py ${CMAKE_NM} tools/port/psyq/psyq_functions.tsv
-    ${DW1_PSYQ_STUBS} "$<TARGET_FILE:dw1_psyq>\;$<TARGET_FILE:dw1_runtime>"
+    ${DW1_PSYQ_STUBS} "$<TARGET_FILE:dw1_psyq>\;$<TARGET_FILE:dw1_runtime>\;$<TARGET_FILE:dw1_backend>"
     $<TARGET_OBJECTS:dw1_game_objs>
-  DEPENDS dw1_psyq dw1_runtime dw1_game_objs $<TARGET_OBJECTS:dw1_game_objs>
+  DEPENDS dw1_psyq dw1_runtime dw1_backend dw1_game_objs $<TARGET_OBJECTS:dw1_game_objs>
     ${CMAKE_SOURCE_DIR}/tools/port/psyq/gen_stubs.py ${CMAKE_SOURCE_DIR}/tools/port/psyq/psyq_functions.tsv
     ${CMAKE_SOURCE_DIR}/tools/port/psyq/stub_returns.tsv
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

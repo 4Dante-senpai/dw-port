@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-12
+Última actualización: 2026-10-13
 
 ## Modo de operación
 
@@ -106,9 +106,18 @@
   `sprintf` siguen en la libc del host (hipótesis para la Épica 3). Evidencia:
   `docs/implementation-artifacts/evidence/story-2-9.log`.
 
+- Historia 2.10 (modelo GTE y macros inline, cerrada): `port/backend/gte` adapta
+  el modelo de DW2-PC e implementa RTPS/RTPT, NCLIP, AVSZ3/4, MVMVA y NCCS/NCCT; las once
+  macros dejan de ser stubs (`gte_stubs=0`). Test L1 con vectores propios, memoria sin alinear,
+  saturaciones/FIFOs/flags, abortos y reloj sin avance. Preset `web`: 119 TUs del Juego y
+  Backend compilados con emcc, sin linkear el ejecutable. Suites nativas, ASan/UBSan, L0a,
+  `frame0`, `pack_disc` y `dw1_overlay` verdes. Sin cambios en `src/`/`include/`. Revisión
+  (3 capas Codex): `gen_stubs` falla si quedaría un stub `port_gte_*`, job de CI `web-objects`
+  y test MVMVA reforzado. Evidencia: `docs/implementation-artifacts/evidence/story-2-10.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.10 (modelo GTE y macros inline).
+- Fase 5: próxima historia 2.11 (`libgte` y tablas leídas del exe en el Pack).
 
 ## Bloqueos
 
@@ -122,10 +131,11 @@
 | Funciones del juego en C / total (USA) | 2741 / 2741 |
 | % descompilado del juego (bytes) | 100 % (931.800 B); PsyQ en asm: 612 funciones, 144.348 B (se reemplaza) |
 | Funciones PsyQ usadas / cubiertas por DW2-PC | 202 / 81 |
-| Archivos C del juego que compilan a wasm32 sin cambios | 97 / 120 |
+| Archivos C del juego que compilan a wasm32 en el preset `web` | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Bloques `DW1_PORT` en `src/`/`include/` | 13 (`docs/port/src-changes.md`) |
 | Funciones PsyQ usadas: implementadas / stubs / libc del host | 18 / 169 / 12 (de 199) |
+| Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
 | Escenas que funcionan (nativo) | 0 |
 | Escenas que funcionan (web) | 0 |

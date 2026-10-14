@@ -1,0 +1,346 @@
+Historia 2.10 — evidencia automática (2026-10-13/14 UTC)
+Ejecución directa dentro del contenedor existente, en /dw (sin Docker anidado).
+Sin cambios en src/, include/ ni port/psyq/include/inline_n.h; sin commits.
+
+$ cmake --preset native-headless && cmake --build --preset native-headless
+Resultado: exit 0
+psyq: used=199 implemented=18 host_libc=12 stubs=169 gte_stubs=0
+
+$ env -u DW1_DISC_DIR ctest --preset native-headless
+Test project /dw/build/port/native-headless
+      Start  1: rts_info
+ 1/26 Test  #1: rts_info .........................   Passed    0.07 sec
+      Start  2: ovl_starts
+ 2/26 Test  #2: ovl_starts .......................   Passed    0.05 sec
+      Start  3: tu_list
+ 3/26 Test  #3: tu_list ..........................   Passed    0.16 sec
+      Start  4: gen_stubs
+ 4/26 Test  #4: gen_stubs ........................   Passed    0.03 sec
+      Start  5: inventory
+ 5/26 Test  #5: inventory ........................   Passed   10.75 sec
+      Start  6: preproc_check
+ 6/26 Test  #6: preproc_check ....................   Passed   25.70 sec
+      Start  7: test_preproc_check
+ 7/26 Test  #7: test_preproc_check ...............   Passed  132.97 sec
+      Start  8: ps1_ram_addr_range
+ 8/26 Test  #8: ps1_ram_addr_range ...............   Passed    0.03 sec
+      Start  9: ps1mem
+ 9/26 Test  #9: ps1mem ...........................   Passed    0.00 sec
+      Start 10: setjmp
+10/26 Test #10: setjmp ...........................   Passed    0.00 sec
+      Start 11: clock
+11/26 Test #11: clock ............................   Passed    0.01 sec
+      Start 12: libc_heap_pad
+12/26 Test #12: libc_heap_pad ....................   Passed    0.00 sec
+      Start 13: gte
+13/26 Test #13: gte ..............................   Passed    0.00 sec
+      Start 14: psyq_prototypes
+14/26 Test #14: psyq_prototypes ..................   Passed    0.04 sec
+      Start 15: overlay_O0
+15/26 Test #15: overlay_O0 .......................   Passed    0.00 sec
+      Start 16: overlay_O2
+16/26 Test #16: overlay_O2 .......................   Passed    0.00 sec
+      Start 17: overlay_sections
+17/26 Test #17: overlay_sections .................   Passed    0.00 sec
+      Start 18: overlay_objects
+18/26 Test #18: overlay_objects ..................   Passed    1.11 sec
+      Start 19: frame0
+19/26 Test #19: frame0 ...........................   Passed    0.01 sec
+      Start 20: dw1_bad_args
+20/26 Test #20: dw1_bad_args .....................   Passed    0.00 sec
+      Start 21: watchdog
+21/26 Test #21: watchdog .........................   Passed    1.59 sec
+      Start 22: pack
+22/26 Test #22: pack .............................   Passed    0.01 sec
+      Start 23: libcd
+23/26 Test #23: libcd ............................   Passed    0.00 sec
+      Start 24: dw1_foreign_pack
+24/26 Test #24: dw1_foreign_pack .................   Passed    0.00 sec
+      Start 25: pack_disc
+25/26 Test #25: pack_disc ........................***Skipped   0.00 sec
+      Start 26: dw1_overlay
+26/26 Test #26: dw1_overlay ......................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 26
+
+Total Test time (real) = 172.58 sec
+
+The following tests did not run:
+	 25 - pack_disc (Skipped)
+	 26 - dw1_overlay (Skipped)
+
+$ cmake --preset native-asan && cmake --build --preset native-asan
+Resultado: exit 0
+psyq: used=199 implemented=18 host_libc=12 stubs=169 gte_stubs=0
+
+$ env -u DW1_DISC_DIR ctest --preset native-asan
+Test project /dw/build/port/native-asan
+      Start  1: rts_info
+ 1/24 Test  #1: rts_info .........................   Passed    0.07 sec
+      Start  2: ovl_starts
+ 2/24 Test  #2: ovl_starts .......................   Passed    0.05 sec
+      Start  3: tu_list
+ 3/24 Test  #3: tu_list ..........................   Passed    0.16 sec
+      Start  4: gen_stubs
+ 4/24 Test  #4: gen_stubs ........................   Passed    0.03 sec
+      Start  5: inventory
+ 5/24 Test  #5: inventory ........................   Passed   10.93 sec
+      Start  6: preproc_check
+ 6/24 Test  #6: preproc_check ....................   Passed   25.78 sec
+      Start  7: test_preproc_check
+ 7/24 Test  #7: test_preproc_check ...............   Passed  132.82 sec
+      Start  8: ps1_ram_addr_range
+ 8/24 Test  #8: ps1_ram_addr_range ...............   Passed    0.02 sec
+      Start  9: ps1mem
+ 9/24 Test  #9: ps1mem ...........................   Passed    0.05 sec
+      Start 10: setjmp
+10/24 Test #10: setjmp ...........................   Passed    0.01 sec
+      Start 11: clock
+11/24 Test #11: clock ............................   Passed    0.04 sec
+      Start 12: libc_heap_pad
+12/24 Test #12: libc_heap_pad ....................   Passed    0.02 sec
+      Start 13: gte
+13/24 Test #13: gte ..............................   Passed    0.03 sec
+      Start 14: psyq_prototypes
+14/24 Test #14: psyq_prototypes ..................   Passed    0.03 sec
+      Start 15: overlay_O0
+15/24 Test #15: overlay_O0 .......................   Passed    0.01 sec
+      Start 16: overlay_O2
+16/24 Test #16: overlay_O2 .......................   Passed    0.01 sec
+      Start 17: frame0
+17/24 Test #17: frame0 ...........................   Passed    0.04 sec
+      Start 18: dw1_bad_args
+18/24 Test #18: dw1_bad_args .....................   Passed    0.02 sec
+      Start 19: watchdog
+19/24 Test #19: watchdog .........................   Passed    4.40 sec
+      Start 20: pack
+20/24 Test #20: pack .............................   Passed    0.07 sec
+      Start 21: libcd
+21/24 Test #21: libcd ............................   Passed    0.03 sec
+      Start 22: dw1_foreign_pack
+22/24 Test #22: dw1_foreign_pack .................   Passed    0.02 sec
+      Start 23: pack_disc
+23/24 Test #23: pack_disc ........................***Skipped   0.00 sec
+      Start 24: dw1_overlay
+24/24 Test #24: dw1_overlay ......................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 24
+
+Total Test time (real) = 174.68 sec
+
+The following tests did not run:
+	 23 - pack_disc (Skipped)
+	 24 - dw1_overlay (Skipped)
+
+$ cmake --preset web && cmake --build --preset web
+Resultado: exit 0 (configuración y build; sin linkeo de ejecutable ni ejecución web).
+119 objetos de dw1_game_objs; 2 TUs del Backend (cdrom.c, gte.c).
+0 objetos de dw1_psyq construidos por este preset.
+GTE compilado con -Wall -Wextra -Werror en los tres presets.
+Nativos: clang -m32; web: emcc, toolchain desde EMSDK=/opt/emsdk.
+El Backend solo se archiva en libdw1_backend.a.
+
+$ DW1_DISC_DIR=/dw/game_rom/extracted ctest --preset native-headless -R 'pack_disc|dw1_overlay'
+Test project /dw/build/port/native-headless
+    Start 25: pack_disc
+1/2 Test #25: pack_disc ........................   Passed   35.32 sec
+    Start 26: dw1_overlay
+2/2 Test #26: dw1_overlay ......................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =  35.35 sec
+
+$ DW1_DISC_DIR=/dw/game_rom/extracted ctest --preset native-asan -R 'pack_disc|dw1_overlay'
+Test project /dw/build/port/native-asan
+    Start 23: pack_disc
+1/2 Test #23: pack_disc ........................   Passed  197.53 sec
+    Start 24: dw1_overlay
+2/2 Test #24: dw1_overlay ......................   Passed    0.10 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) = 197.64 sec
+
+$ git diff --check
+Resultado: exit 0.
+$ git diff --exit-code -- src include port/psyq/include/inline_n.h
+Resultado: exit 0 (sin modificaciones).
+
+Vectores propios: cálculo independiente de una sola vez, sin leer el modelo bajo prueba
+ni los vectores de DW2-PC. Script Python ejecutado dentro del contenedor; constantes
+trasladadas a port/backend/tests/test_gte.c. No forma parte del runtime ni del test.
+La matriz no requiere datos del disco. Pruebas de registros/macros: patrones sintéticos.
+
+$ python3 /tmp/gte_goldens.py
+        { "normal", { 100, -50, 1000 }, { 10, -20, 0 }, 500, { 10485760, 7864320 }, 64, 4096, 1, 0,
+          { 5570775, 1000, 110, -70, 1000, 2101248, 513 }, 0x00000000u }, /* MAC [110, -70, 1000]; Q 32768 */
+        { "ir_xy", { 100, -50, 1000 }, { 40000, -40000, 0 }, 0, { 0, 0 }, 0, 0, 1, 0,
+          { 0, 1000, 32767, -32768, 1000, 0, 0 }, 0x81800000u }, /* MAC [40100, -40050, 1000]; Q 0 */
+        { "z_negative", { 0, 0, -1 }, { 0, 0, 0 }, 1, { 0, 0 }, 0, 0, 1, 0,
+          { 0, 0, 0, 0, -1, 0, 0 }, 0x80060000u }, /* MAC [0, 0, -1]; Q 131071 */
+        { "z_large", { 0, 0, 1000 }, { 0, 0, 70000 }, 0, { 0, 0 }, 0, 0, 1, 0,
+          { 0, 65535, 0, 0, 32767, 0, 0 }, 0x80440000u }, /* MAC [0, 0, 71000]; Q 0 */
+        { "near_equal", { 0, 0, 100 }, { 0, 0, 0 }, 200, { 0, 0 }, 0, 0, 1, 0,
+          { 0, 100, 0, 0, 100, 0, 0 }, 0x80020000u }, /* MAC [0, 0, 100]; Q 131071 */
+        { "screen", { 2000, -2000, 1000 }, { 0, 0, 0 }, 1000, { 0, 0 }, 0, 0, 1, 0,
+          { 4227859455, 1000, 2000, -2000, 1000, 0, 0 }, 0x80006000u }, /* MAC [2000, -2000, 1000]; Q 65536 */
+        { "cue_negative", { 0, 0, 1000 }, { 0, 0, 0 }, 500, { 0, 0 }, -1, 0, 1, 0,
+          { 0, 1000, 0, 0, 1000, -32768, 0 }, 0x00001000u }, /* MAC [0, 0, 1000]; Q 32768 */
+        { "cue_large", { 0, 0, 1000 }, { 0, 0, 0 }, 500, { 0, 0 }, 1024, 0, 1, 0,
+          { 0, 1000, 0, 0, 1000, 33554432, 4096 }, 0x00001000u }, /* MAC [0, 0, 1000]; Q 32768 */
+        { "unr", { 123, -234, 457 }, { 0, 0, 0 }, 123, { 10485760, 7864320 }, 1, 0, 1, 0,
+          { 3735745, 457, 123, -234, 457, 17639, 4 }, 0x00000000u }, /* MAC [123, -234, 457]; Q 17639 */
+        { "unr_end", { 100, -100, 0 }, { 0, 0, 65535 }, 65535, { 0, 0 }, 1, 0, 1, 0,
+          { 4288413795, 65535, 100, -100, 32767, 65535, 15 }, 0x00400000u }, /* MAC [100, -100, 65535]; Q 65535 */
+        { "unr_clamp", { 0, 0, 0 }, { 0, 0, 65535 }, 65087, { 0, 0 }, 1, 0, 1, 0,
+          { 0, 65535, 0, 0, 32767, 65087, 15 }, 0x00400000u }, /* MAC [0, 0, 65535]; Q 65087 */
+        { "sf_zero", { 2, -3, 10 }, { 0, 0, 0 }, 0, { 0, 0 }, 0, 0, 0, 0,
+          { 0, 10, 8192, -12288, 32767, 0, 0 }, 0x00000000u }, /* MAC [8192, -12288, 40960]; Q 0 */
+        { "lm", { 0, 0, -1 }, { 0, 0, 0 }, 0, { 0, 0 }, 0, 0, 1, 1,
+          { 0, 0, 0, 0, 0, 0, 0 }, 0x80060000u }, /* MAC [0, 0, -1]; Q 131071 */
+        { "mac0_pos", { 32767, 32767, 1000 }, { 0, 0, 0 }, 1999, { 0, 0 }, 32767, 2147483647, 1, 0,
+          { 67044351, 1000, 32767, 32767, 1000, 2145222720, 4096 }, 0x80017000u }, /* MAC [32767, 32767, 1000]; Q 131007 */
+        { "mac0_neg", { -32768, -32768, 1000 }, { 0, 0, 0 }, 1999, { 0, 0 }, -32768, -2147483648, 1, 0,
+          { 4227922944, 1000, -32768, -32768, 1000, -2145353728, 0 }, 0x8000F000u }, /* MAC [-32768, -32768, 1000]; Q 131007 */
+        { "ir3_only", { 0, 0, 32767 }, { 0, 0, 1 }, 0, { 0, 0 }, 0, 0, 1, 0,
+          { 0, 32768, 0, 0, 32767, 0, 0 }, 0x00400000u }, /* MAC [0, 0, 32768]; Q 0 */
+        { "screen_bounds", { -1024, 1023, 1000 }, { 0, 0, 0 }, 1000, { 0, 0 }, 0, 0, 1, 0,
+          { 67107840, 1000, -1024, 1023, 1000, 0, 0 }, 0x00000000u }, /* MAC [-1024, 1023, 1000]; Q 65536 */
+        { "cue_bound", { 0, 0, 1000 }, { 0, 0, 0 }, 0, { 0, 0 }, 0, 16777216, 1, 0,
+          { 0, 1000, 0, 0, 1000, 16777216, 4096 }, 0x00000000u }, /* MAC [0, 0, 1000]; Q 0 */
+RTPT regular:
+([6226130, 1000, 100, -50, 1000, 2101248, 513, 0], [100, -50, 1000], 32768)
+([8519820, 2000, -80, 40, 2000, 1052672, 257, 0], [-80, 40, 2000], 16384)
+([11796670, 500, 30, 60, 500, 4198400, 1025, 0], [30, 60, 500], 65536)
+RTPT cue only third:
+([0, 51, 0, 0, 51, -294342262, 4096, 2147553280], [0, 0, 51], 128502)
+([0, 100, 0, 0, 100, 1937418112, 4096, 4096], [0, 0, 100], 65536)
+([0, 1000, 0, 0, 1000, 4754918, 1160, 0], [0, 0, 1000], 6554)
+MVMVA:
+[-5120, -23040, 34304] [-2, -6, 8]
+44-bit overflows:
+8797166694401 -8795019350015 -2147221521 -2147221521
+-8797166731264 8795019313152 2147221512 2147221512
+NCCS/NCCT:
+[2048, 2816, 3328] [3840, 3584, 5248] [1920, 896, 656] 0x34293878
+[4608, 1536, 3072] [6272, 2944, 4352] [3136, 736, 544] 0x34222ec4
+[2560, 4352, 1152] [3264, 5248, 3840] [1632, 1312, 480] 0x341e5266
+AVSZ:
+3 32767 6442156035 2147188739 1572792
+3 -32768 -6442352640 -2147385344 -1572840
+4 32767 8589541380 -393212 2097056
+4 -32768 -8589803520 131072 -2097120
+Additional overflow/color constants:
+NCLIP extrema: -131071 131071
+AVSZ saturation without MAC0 overflow: [805294080, 1073725440]
+Color saturation: 8160 -4080 32639 133689360
+UNR rounding clamp: ([0, 21384, 0, 0, 21384, 131071, 31, 0], [0, 0, 21384], 131071)
+RTPS non-diagonal: [-2, -6, 108] (30341, 0) 0xfffdffff
+
+Script utilizado (conservado aquí para reproducir los cálculos):
+# One-shot independent arithmetic from psx-spx, no imports of the GTE under test.
+def signed32(n):
+    return (n + 2**31) % 2**32 - 2**31
+
+def divide(h,z):
+    if h >= z*2: return 131071, 0x20000
+    shift = 16-z.bit_length()
+    d = z*2**shift
+    index = (d-0x7fc0)//128
+    u = max(0,(0x40000//(index+256)+1)//2-257)+257
+    r = (0x2000080-d*u)//256
+    r = (128+r*u)//256
+    return min(131071,(h*2**shift*r+32768)//65536),0
+
+def projection(v,t,h,offset,dqa,dqb,sf=1,lm=0):
+    flag=0
+    m=[(v[i]+t[i])*4096 for i in range(3)]
+    mac=[signed32(n//(4096 if sf else 1)) for n in m]
+    ir=[]
+    for i,n in enumerate(mac):
+        low=0 if lm else -32768
+        ir.append(min(32767,max(low,n)))
+        test=m[2]//4096 if i==2 else n
+        if test < (-32768 if i==2 else low) or test>32767: flag|=1<<(24-i)
+    z=min(65535,max(0,m[2]//4096))
+    if z!=m[2]//4096: flag|=0x40000
+    q,f=divide(h,z); flag|=f
+    xy=[]
+    for i in range(2):
+        n=q*ir[i]+offset[i]
+        if n>2**31-1:flag|=0x10000
+        if n< -2**31:flag|=0x8000
+        raw=n//65536
+        xy.append(min(1023,max(-1024,raw)))
+        if raw!=xy[-1]:flag|=1<<(14-i)
+    cue=q*dqa+dqb
+    if cue>2**31-1:flag|=0x10000
+    if cue< -2**31:flag|=0x8000
+    ir0=min(4096,max(0,cue//4096))
+    if ir0!=cue//4096:flag|=0x1000
+    if flag & 0x7f87e000: flag|=0x80000000
+    return [((xy[1]&65535)<<16)|(xy[0]&65535),z,*ir,signed32(cue),ir0,flag],mac,q
+cases=[
+('normal',(100,-50,1000),(10,-20,0),500,(160*65536,120*65536),64,4096,1,0),
+('ir_xy',(100,-50,1000),(40000,-40000,0),0,(0,0),0,0,1,0),
+('z_negative',(0,0,-1),(0,0,0),1,(0,0),0,0,1,0),
+('z_large',(0,0,1000),(0,0,70000),0,(0,0),0,0,1,0),
+('near_equal',(0,0,100),(0,0,0),200,(0,0),0,0,1,0),
+('screen',(2000,-2000,1000),(0,0,0),1000,(0,0),0,0,1,0),
+('cue_negative',(0,0,1000),(0,0,0),500,(0,0),-1,0,1,0),
+('cue_large',(0,0,1000),(0,0,0),500,(0,0),1024,0,1,0),
+('unr',(123,-234,457),(0,0,0),123,(160*65536,120*65536),1,0,1,0),
+('unr_end',(100,-100,0),(0,0,65535),65535,(0,0),1,0,1,0),
+('unr_clamp',(0,0,0),(0,0,0xffff),0xfe3f,(0,0),1,0,1,0),
+('sf_zero',(2,-3,10),(0,0,0),0,(0,0),0,0,0,0),
+('lm',(0,0,-1),(0,0,0),0,(0,0),0,0,1,1),
+('mac0_pos',(32767,32767,1000),(0,0,0),1999,(0,0),32767,2147483647,1,0),
+('mac0_neg',(-32768,-32768,1000),(0,0,0),1999,(0,0),-32768,-2147483648,1,0),
+('ir3_only',(0,0,32767),(0,0,1),0,(0,0),0,0,1,0),
+('screen_bounds',(-1024,1023,1000),(0,0,0),1000,(0,0),0,0,1,0),
+('cue_bound',(0,0,1000),(0,0,0),0,(0,0),0,16777216,1,0),
+]
+for name,v,t,h,o,a,b,sf,lm in cases:
+    result,mac,q=projection(v,t,h,o,a,b,sf,lm)
+    vec=lambda xs:'{ '+', '.join(map(str,xs))+' }'
+    print('        { "'+name+'", '+vec(v)+', '+vec(t)+f', {h}, '+vec(o)+f', {a}, {b}, {sf}, {lm},')
+    print('          '+vec(result[:-1])+f', 0x{result[-1]:08X}u'+' }, /* MAC '+str(mac)+'; Q '+str(q)+' */')
+print('RTPT regular:')
+for v in [(100,-50,1000),(-80,40,2000),(30,60,500)]:
+    print(projection(v,(0,0,0),500,(160*65536,120*65536),64,4096))
+print('RTPT cue only third:')
+for z in [51,100,1000]:
+    print(projection((0,0,z),(0,0,0),100,(0,0),32767,-210000000))
+print('MVMVA:')
+M=[[4096,2048,-1024],[-2048,4096,512],[1024,-512,4096]]
+v=[3,-5,7]
+p=[sum(a*b for a,b in zip(row,v)) for row in M]
+print(p,[x//4096 for x in p])
+print('44-bit overflows:')
+for t,v in [(2147483647,32767),(-2147483648,-32768)]:
+    n=t*4096+32767*v
+    wrapped=(n+2**43)%2**44-2**43
+    print(n,wrapped,wrapped//4096,signed32(wrapped//4096))
+print('NCCS/NCCT:')
+L=[[4096,2048,0],[0,4096,1024],[1024,0,4096]]
+C=[[4096,0,2048],[1024,4096,0],[0,2048,4096]]
+for v in [[1024,2048,3072],[4096,1024,2048],[512,4096,1024]]:
+    light=[sum(a*b for a,b in zip(row,v))//4096 for row in L]
+    color=[bk+sum(a*b for a,b in zip(row,light))//4096 for bk,row in zip([128,256,512],C)]
+    mac=[c*i*16//4096 for c,i in zip([128,64,32],color)]
+    rgb=0x34000000 | sum((x//16)<<(8*i) for i,x in enumerate(mac))
+    print(light,color,mac,hex(rgb))
+print('AVSZ:')
+for n in [3,4]:
+    for scale in [32767,-32768]:
+        val=65535*n*scale
+        print(n,scale,val,signed32(val),val//4096)
+print('Additional overflow/color constants:')
+print('NCLIP extrema:', signed32(65535**2), signed32(-65535**2))
+print('AVSZ saturation without MAC0 overflow:', [65535*n*4096 for n in (3,4)])
+print('Color saturation:', 255*8192*16//4096, 255*(-4096)*16//4096,
+      255*32767*16//4096, 255*32767*16)
+print('UNR rounding clamp:',projection((0,0,21384),(0,0,0),42767,(0,0),1,0))
+print('RTPS non-diagonal:', [-5120//4096, -23040//4096, (34304+100*4096)//4096],
+      divide(50,108), hex(((-6*30341//65536)&65535)<<16|((-2*30341//65536)&65535)))
