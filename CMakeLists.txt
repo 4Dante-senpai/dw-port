@@ -90,6 +90,15 @@ add_custom_command(OUTPUT ${DW1_RTS_INFO_H}
     ${CMAKE_SOURCE_DIR}/config/${DW1_VERSION}/bss.yaml ${CMAKE_SOURCE_DIR}/tools/port/units/rts_info.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
+# Read-only libgte table regions in the user's EXE (metadata only).
+set(DW1_GTE_TABLES_H ${CMAKE_BINARY_DIR}/generated/dw1_gte_tables.h)
+add_custom_command(OUTPUT ${DW1_GTE_TABLES_H}
+  COMMAND python3 -I -B tools/port/psyq/gte_tables.py config/${DW1_VERSION} ${DW1_GTE_TABLES_H}
+  DEPENDS ${CMAKE_SOURCE_DIR}/config/${DW1_VERSION}/main.yaml
+    ${CMAKE_SOURCE_DIR}/config/${DW1_VERSION}/symbols.txt
+    ${CMAKE_SOURCE_DIR}/tools/port/psyq/gte_tables.py
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
 add_compile_options(-std=gnu99 -ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 
 # Native: no PIE, so addresses (and traces) are the same in every run. The OT window starts at
@@ -125,12 +134,25 @@ target_link_libraries(dw1_backend PUBLIC dw1_pack_lib)
 target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
 
 add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c port/psyq/clock.c
-  port/psyq/libetc.c port/psyq/libapi.c port/psyq/libc.c port/psyq/libgs.c port/psyq/libcd.c port/psyq/stub.c)
+  port/psyq/libetc.c port/psyq/libapi.c port/psyq/libc.c port/psyq/libgs.c port/psyq/libcd.c
+  port/psyq/libgte.c port/psyq/stub.c ${DW1_GTE_TABLES_H})
+target_include_directories(dw1_psyq PRIVATE ${CMAKE_BINARY_DIR}/generated)
 target_link_libraries(dw1_psyq PUBLIC Threads::Threads dw1_backend)
 # The heap and the CD model store typed data in the uint8_t arena Ps1_Ram, like the game does.
 target_compile_options(dw1_psyq PRIVATE -Wall -Wextra -Werror -fno-strict-aliasing)
 
 enable_testing()
+add_test(NAME gte_tables COMMAND python3 -I -B tools/port/psyq/test_gte_tables.py
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+if(NOT EMSCRIPTEN)
+  add_executable(test_libgte port/psyq/tests/test_libgte.c)
+  target_compile_options(test_libgte PRIVATE -Wall -Wextra -Werror)
+  target_link_libraries(test_libgte dw1_psyq)
+  add_test(NAME libgte COMMAND test_libgte WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  set_tests_properties(libgte PROPERTIES FIXTURES_REQUIRED synthetic_pack)
+endif()
+add_test(NAME pre_commit COMMAND sh tools/port/hooks/test_pre_commit.sh ${CMAKE_SOURCE_DIR}
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME rts_info COMMAND python3 -I -B tools/port/units/test_rts_info.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME ovl_starts COMMAND python3 -I -B tools/port/units/test_ovl_starts.py
@@ -239,6 +261,7 @@ set_source_files_properties(${DW1_PSYQ_STUBS} PROPERTIES COMPILE_OPTIONS "-w")
 if(NOT EMSCRIPTEN)
   add_executable(dw1 port/host/headless/main.c ${DW1_PSYQ_STUBS} $<TARGET_OBJECTS:dw1_game_objs>)
   target_link_libraries(dw1 dw1_runtime)
+  target_compile_options(dw1 PRIVATE -Wall -Wextra -Werror)
   # Only a Pack built from this build's Manifest opens (pack_open).
   set(DW1_MANIFEST ${CMAKE_SOURCE_DIR}/tools/port/manifest/${DW1_VERSION}.tsv)
   set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${DW1_MANIFEST})
@@ -286,6 +309,9 @@ if(NOT EMSCRIPTEN)
   target_compile_options(test_libcd PRIVATE -Wall -Wextra -Werror)
   add_test(NAME libcd COMMAND test_libcd WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
   set_tests_properties(libcd PROPERTIES FIXTURES_REQUIRED synthetic_pack)
+  add_test(NAME libgte_host COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/psyq/test_libgte_host.py
+    $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+  set_tests_properties(libgte_host PROPERTIES FIXTURES_REQUIRED synthetic_pack)
   # dw1 refuses a Pack of another Manifest.
   add_test(NAME dw1_foreign_pack COMMAND sh -c "$<TARGET_FILE:dw1> --pack pack_t1.pack \
     2> dw1_foreign_pack.err; s=$?; cat dw1_foreign_pack.err; test $s = 1 && \
@@ -298,6 +324,10 @@ if(NOT EMSCRIPTEN)
   add_test(NAME pack_disc COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_pack_disc.sh
     $<TARGET_FILE:dw1-pack> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/us.pack)
   set_tests_properties(pack_disc PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600 FIXTURES_SETUP disc_pack)
+  add_test(NAME gte_tables_disc COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/psyq/test_gte_tables_disc.sh
+    $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+  set_tests_properties(gte_tables_disc PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600
+    FIXTURES_REQUIRED disc_pack)
   add_test(NAME dw1_overlay COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_dw1_overlay.sh
     $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   set_tests_properties(dw1_overlay PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600

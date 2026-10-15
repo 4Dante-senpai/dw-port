@@ -79,6 +79,51 @@ CdlFILE *CdSearchFile(CdlFILE *fp, char *name);
 CdlLOC *CdIntToPos(int i, CdlLOC *p);
 int CdPosToInt(CdlLOC *p);
 
+/* libgte.h: native and wasm32 retain the PS1 layout. */
+#ifndef _LIBGTE_H_
+typedef struct { short m[3][3]; long t[3]; } MATRIX;
+typedef struct { long vx, vy, vz, pad; } VECTOR;
+typedef struct { short vx, vy, vz, pad; } SVECTOR;
+typedef struct { unsigned char r, g, b, cd; } CVECTOR;
+#endif
+SVECTOR *ApplyMatrixSV(MATRIX *m, SVECTOR *v0, SVECTOR *v1);
+MATRIX *RotMatrix(SVECTOR *r, MATRIX *m);
+MATRIX *RotMatrixYXZ(SVECTOR *r, MATRIX *m);
+MATRIX *RotMatrixZYX(SVECTOR *r, MATRIX *m);
+long ratan2(long y, long x);
+MATRIX *ScaleMatrix(MATRIX *m, VECTOR *v);
+MATRIX *TransMatrix(MATRIX *m, VECTOR *v);
+int rsin(int a);
+int rcos(int a);
+VECTOR *ApplyMatrixLV(MATRIX *m, VECTOR *v0, VECTOR *v1);
+void SetRotMatrix(MATRIX *m);
+void SetTransMatrix(MATRIX *m);
+void PopMatrix(void);
+void PushMatrix(void);
+MATRIX *MulMatrix0(MATRIX *m0, MATRIX *m1, MATRIX *m2);
+long RotTransPers4(SVECTOR *v0, SVECTOR *v1, SVECTOR *v2, SVECTOR *v3,
+			long *sxy0, long *sxy1, long *sxy2, long *sxy3,
+			long *p, long *flag);
+VECTOR *ApplyMatrix(MATRIX *m, SVECTOR *v0, VECTOR *v1);
+MATRIX *TransposeMatrix(MATRIX *m0, MATRIX *m1);
+void NormalColorCol3(SVECTOR *v0, SVECTOR *v1, SVECTOR *v2, CVECTOR *v3,
+			CVECTOR *v4, CVECTOR *v5, CVECTOR *v6);
+long RotNclip3(SVECTOR *v0, SVECTOR *v1, SVECTOR *v2,
+			long *sxy0, long *sxy1, long *sxy2, long *p, long *otz,
+			long *flag);
+long RotNclip4(SVECTOR *v0, SVECTOR *v1, SVECTOR *v2, SVECTOR *v3,
+			long *sxy0, long *sxy1, long *sxy2, long *sxy3,
+			long *p, long *otz, long *flag);
+VECTOR *ApplyTransposeMatrixLV(MATRIX *m, VECTOR *v0, VECTOR *v1);
+long RotTransPers(SVECTOR *v0, long *sxy, long *p, long *flag);
+long SquareRoot0(long a);
+MATRIX *CompMatrix(MATRIX *m0, MATRIX *m1, MATRIX *m2);
+MATRIX *MulMatrix(MATRIX *m0, MATRIX *m1);
+void NormalColorCol(SVECTOR *v0, CVECTOR *v1, CVECTOR *v2);
+void SetLightMatrix(MATRIX *m);
+long RotTransPers3(SVECTOR *v0, SVECTOR *v1, SVECTOR *v2,
+			long *sxy0, long *sxy1, long *sxy2, long *p, long *flag);
+
 /* Port internals. */
 extern int Vcount;
 void psyq_raise_irq(int irq); /* runs the InterruptCallback of line irq */

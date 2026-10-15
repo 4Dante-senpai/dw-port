@@ -9,6 +9,12 @@ fail=0
 while IFS=$'\t' read -r added deleted path; do
     # Skip submodule gitlinks (e.g. reference/dw2-pc)
     [ "$(git ls-files -s -- "$path" | cut -d' ' -f1)" = "160000" ] && continue
+    if [[ ( "$path" == port/* || "$path" == tools/port/* ) && "$path" != tools/port/hooks/* ]]; then
+        if git show ":$path" | grep -ai 'incbin' > /dev/null; then
+            echo "pre-commit: forbidden incbin directive in $path" >&2
+            fail=1
+        fi
+    fi
     if [[ "$path" =~ $forbidden ]]; then
         echo "pre-commit: forbidden path (game data / proprietary / build output): $path" >&2
         fail=1
