@@ -62,7 +62,7 @@ native-disc:
   script:
     - cmake --preset native-headless
     - cmake --build --preset native-headless
-    - ctest --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay"
+    - ctest --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc"
 
 matching:
   extends: .class_b

@@ -5,6 +5,8 @@
 
 #include "../../backend/cdrom.h"
 #include "../../psyq/crt.h"
+#include "../../psyq/libgte.h"
+#include "../pack/sha256.h"
 
 /* SHA-256 of tools/port/manifest/<version>.tsv, set by CMake: only a Pack built from it opens. */
 #ifndef DW1_MANIFEST_SHA256
@@ -50,6 +52,22 @@ int main(int argc, char **argv)
 		if (cdrom_open(pack, DW1_MANIFEST_SHA256, err, sizeof(err)) != 0) {
 			fprintf(stderr, "dw1: %s\n", err);
 			return 1;
+		}
+		if (libgte_load_tables(err, sizeof(err)) != 0) {
+			fprintf(stderr, "dw1: %s\n", err);
+			cdrom_close();
+			return 1;
+		}
+		const char *names[] = {"rsin_tbl", "SQRT", "rcossin_tbl", "ratan_tbl"};
+		for (unsigned i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+			size_t size;
+			const void *data = libgte_table(names[i], &size);
+			Sha256 hash;
+			uint8_t digest[32];
+			Sha256_Init(&hash); Sha256_Update(&hash, data, size); Sha256_Final(&hash, digest);
+			printf("port: libgte table %s sha256 ", names[i]);
+			for (unsigned j = 0; j < sizeof(digest); j++) printf("%02x", digest[j]);
+			printf("\n");
 		}
 	}
 	return port_run_game(frames, until_overlay);

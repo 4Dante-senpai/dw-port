@@ -23,6 +23,9 @@ void cdrom_close(void);
 const PackEntry *cdrom_find_path(const char *path);
 const PackEntry *cdrom_find_lba(uint32_t lba);
 
+/* Read a file region; returns -1 without a Pack, for an absent file or an invalid range. */
+int cdrom_read_file(const PackEntry *entry, uint32_t offset, void *out, uint32_t size);
+
 /* One sector as the drive delivers it, size CDROM_SECTOR_DATA or CDROM_SECTOR_SIZE1:
  * - Form 1 file: its user data (zeros past the file size); not readable with CdlModeSize1.
  * - Form 2 file: the 2048 bytes after the subheader, or the rebuilt header (BCD MSF, mode 2)

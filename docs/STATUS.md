@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-13
+Última actualización: 2026-10-15
 
 ## Modo de operación
 
@@ -115,9 +115,19 @@
   (3 capas Codex): `gen_stubs` falla si quedaría un stub `port_gte_*`, job de CI `web-objects`
   y test MVMVA reforzado. Evidencia: `docs/implementation-artifacts/evidence/story-2-10.log`.
 
+- Historia 2.11 (`libgte` y tablas del EXE): 29 entradas traducidas del asm USA sobre el
+  Backend GTE, con pila de 20 matrices y aritmética de 32 bits; offsets y tamaños generados
+  desde `config/us/`. El Host carga `rsin_tbl`, `SQRT`, `rcossin_tbl` y `ratan_tbl` del Pack,
+  publica sus SHA-256 y rechaza un EXE ausente/corto. Tests con tablas sintéticas, valores
+  esperados calculados aparte y comparación de hashes contra sectores raw del disco.
+  `native-headless`, ASan/UBSan, web (ahora incluye PsyQ), L0a y clase B verdes; hook contra
+  inclusión binaria con test `pre_commit` en CTest. Revisión (3 capas Codex): `gte_tables_disc`
+  agregado al job `native-disc` del CI y test del hook; 10 hallazgos rechazados. Sin cambios en `src/`/`include/` ni
+  datos del disco añadidos. Evidencia: `docs/implementation-artifacts/evidence/story-2-11.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.11 (`libgte` y tablas leídas del exe en el Pack).
+- Fase 5: próxima historia 2.12 (renderer software y `libgpu`).
 
 ## Bloqueos
 
@@ -134,7 +144,7 @@
 | Archivos C del juego que compilan a wasm32 en el preset `web` | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Bloques `DW1_PORT` en `src/`/`include/` | 13 (`docs/port/src-changes.md`) |
-| Funciones PsyQ usadas: implementadas / stubs / libc del host | 18 / 169 / 12 (de 199) |
+| Funciones PsyQ usadas: implementadas / stubs / libc del host | 47 / 140 / 12 (de 199) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
 | Escenas que funcionan (nativo) | 0 |

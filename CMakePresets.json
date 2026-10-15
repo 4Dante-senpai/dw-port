@@ -25,7 +25,7 @@
     },
     {
       "name": "web",
-      "displayName": "WebAssembly game objects and Backend (no link)",
+      "displayName": "WebAssembly game objects, PsyQ and Backend (no link)",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/port/web",
       "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
@@ -39,7 +39,7 @@
     {
       "name": "web",
       "configurePreset": "web",
-      "targets": ["dw1_game_objs", "dw1_backend"]
+      "targets": ["dw1_game_objs", "dw1_backend", "dw1_psyq"]
     },
     {
       "name": "native-headless",

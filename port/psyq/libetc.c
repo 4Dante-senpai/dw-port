@@ -21,7 +21,7 @@ static void (*irq_callbacks[IRQ_COUNT])(void);
 
 /* asm: config/us/bss.yaml, libetc at 0x80135450; both words start at zero. */
 static uint32_t pad_buf;
-static int PadIdentifier;
+static int PadIdentifier __attribute__((unused)); /* Stored by PsyQ; host input is not wired yet. */
 
 /* asm:asm/us/main/psyq/libetc.s:PadInit -- PAD_init and ChangeClearPAD await host input. */
 void PadInit(int mode)

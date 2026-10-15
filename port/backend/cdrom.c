@@ -32,6 +32,11 @@ const PackEntry *cdrom_find_lba(uint32_t lba)
 	return pack != NULL ? pack_find_lba(pack, lba) : NULL;
 }
 
+int cdrom_read_file(const PackEntry *entry, uint32_t offset, void *out, uint32_t size)
+{
+	return pack && entry ? pack_read(pack, entry, offset, out, size) : -1;
+}
+
 static uint8_t bcd(uint32_t v)
 {
 	return (uint8_t)(v / 10 << 4 | v % 10);
