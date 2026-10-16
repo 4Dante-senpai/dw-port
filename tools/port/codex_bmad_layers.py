@@ -9,7 +9,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 SKILLS = ["bmad-build", "bmad-code-review"]
 WRAPPER = """Run this with the Bash tool (foreground, timeout 600000 ms), launched in the same turn as the other layers. Its stdout is this layer's findings, verbatim; a nonzero exit or empty output means the layer failed.
 
-{project-root}/tools/port/codex-run.sh read-only <<'CODEX_PROMPT'
+AGENT_ROLE=review-%s {project-root}/tools/port/codex-run.sh read-only <<'CODEX_PROMPT'
 %s
 CODEX_PROMPT
 """
@@ -17,7 +17,7 @@ CODEX_PROMPT
 # test; it can outlast the Bash foreground limit, hence the background run.
 HANDOFF = """Run this with the Bash tool with run_in_background: true and wait for its completion notification. Its stdout is the implementer's report. On a nonzero exit, report the error to the user and implement directly from the spec.
 
-{project-root}/tools/port/codex-run.sh container 5400 <<'CODEX_PROMPT'
+AGENT_ROLE=impl {project-root}/tools/port/codex-run.sh container 5400 <<'CODEX_PROMPT'
 Read {spec_file} fully and implement it — the spec is the sole source of truth. Load every file listed in its frontmatter `context:` before you start. Build and run the tests inside this container; do not commit.
 
 When done, report what you changed, how you verified it, and anything left incomplete or risky.
@@ -32,7 +32,7 @@ MERGED = ["blind-hunter", "verification-gap", "edge-case-hunter"]
 MERGED_WRAPPER = """Run this with the Bash tool with run_in_background: true, launched in the same turn as the other layers, and wait for its completion notification. Its stdout has one section per review headed `## <layer id>`; treat each section as the findings of the layer with that id, verbatim. A nonzero exit or empty output means all three layers failed; a missing or empty section means that layer failed.
 
 awk '/^diff --git /{skip = $4 ~ "^b/docs/implementation-artifacts/"} !skip' {diff_file} > {diff_file}.code
-{project-root}/tools/port/codex-run.sh read-only 1800 <<'CODEX_PROMPT'
+AGENT_ROLE=review-merged {project-root}/tools/port/codex-run.sh read-only 1800 <<'CODEX_PROMPT'
 You will run %d independent reviews of the same change, in the order given. Finish each review before reading anything the next one points to, and do not let a later review's inputs change an earlier review's findings. Your final message has exactly one section per review, headed `## <id>`, containing that review's output.
 
 %s
@@ -55,7 +55,7 @@ def layer(table, layer):
     out = [f"[[workflow.{table}]]", f'id = "{layer["id"]}"', f'name = "{layer["name"]} (Codex)"']
     if layer.get("when"):
         out.append(f"when = '{layer['when']}'")
-    instruction = WRAPPER % prompt.strip()
+    instruction = WRAPPER % (layer["id"], prompt.strip())
     assert "'''" not in instruction
     out.append(f"instruction = '''\n{instruction}'''\n")
     return "\n".join(out)

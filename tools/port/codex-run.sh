@@ -9,12 +9,19 @@
 # Runs are kept in $CODEX_HOME/sessions so their token usage can be audited.
 # CODEX_RESUME=<session id> continues that session (e.g. review fixes for the implementer) instead
 # of starting a new one, so its context is reused rather than rebuilt.
+# AGENT_LABEL (default <project>/<story>/<AGENT_ROLE or codex>, story taken from a story/<n-m>-…
+# branch) and the caller's CLAUDE_CODE_SESSION_ID reach the Codex process, also inside the
+# container, so the AI Usage Hub can name the run and link it to the Claude session that launched it.
 set -euo pipefail
 
 mode=$1
 limit=${2:-570}
 model=${3:-${CODEX_MODEL:-gpt-6.1-sol}}
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
+branch=$(git -C "$root" rev-parse --abbrev-ref HEAD)
+[[ $branch =~ ^story/([0-9]+-[0-9]+) ]] && story=${BASH_REMATCH[1]} || story=${branch//\//-}
+project=$(basename "$(dirname "$(git -C "$root" rev-parse --path-format=absolute --git-common-dir)")")
+export AGENT_LABEL=${AGENT_LABEL:-$project/$story/${AGENT_ROLE:-codex}}
 tmp=$(mktemp -d)
 name=codex-$$
 trap 'docker kill "$name" >/dev/null 2>&1 || true; rm -rf "$tmp"' EXIT
@@ -24,6 +31,7 @@ if [ "$mode" = container ]; then
     # BMAD prompts). The host's Codex install and credentials are shared with the container.
     export DOCKER_CONTEXT=${DOCKER_CONTEXT:-default}
     codex=(docker run -i --rm --name "$name" --user "$(id -u):$(id -g)" -e HOME=/tmp -e CODEX_HOME=/codex
+        -e AGENT_LABEL -e CLAUDE_CODE_SESSION_ID
         -v "$root":/dw -v "$root":"$root" -v dw_venv:/dw/.venv -v "$tmp":"$tmp"
         -v "$(npm root -g)/@openai/codex":/opt/codex:ro -v "${CODEX_HOME:-$HOME/.codex}":/codex
         -w /dw "${DW_IMAGE:-dw-port:latest}" node /opt/codex/bin/codex.js exec)
