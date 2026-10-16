@@ -1,0 +1,345 @@
+Historia 2.15 — evidencia automática (2026-10-16)
+Ejecución dentro de /dw en el contenedor actual; sin Docker anidado y sin commits.
+Todos los builds del port: -Wall -Wextra -Werror en Host, Runtime, PsyQ y Backend.
+Suite completa inicial: 37 tests nativos / 35 ASan, cuatro skips clase B por suite.
+Después se agregó scene_runner; sus tests y scene_flags se verificaron en ambos presets.
+
+$ run.py title --build native-headless (Pack real)
+/dw/build/port/native-headless/scenes/title/run-1.ppm: sha256=14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7 colors=256
+/dw/build/port/native-headless/scenes/title/run-1.clock: sha256=1dec875aa3d350ae40a2e1a85bee8449582f7cdcf94fbf2e7a20ebcbfeb92cdb
+/dw/build/port/native-headless/scenes/title/run-2.ppm: sha256=14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7 colors=256
+/dw/build/port/native-headless/scenes/title/run-2.clock: sha256=1dec875aa3d350ae40a2e1a85bee8449582f7cdcf94fbf2e7a20ebcbfeb92cdb
+scene_title: native-headless: OK (two identical captures and clock traces)
+
+$ run.py title --build native-asan (Pack real)
+/dw/build/port/native-asan/scenes/title/run-1.ppm: sha256=14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7 colors=256
+/dw/build/port/native-asan/scenes/title/run-1.clock: sha256=befd2a432def9899c3ad14ed9bee58f471bd89a19aee6c02ce01ea9667d71465
+/dw/build/port/native-asan/scenes/title/run-2.ppm: sha256=14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7 colors=256
+/dw/build/port/native-asan/scenes/title/run-2.clock: sha256=befd2a432def9899c3ad14ed9bee58f471bd89a19aee6c02ce01ea9667d71465
+scene_title: native-asan: OK (two identical captures and clock traces)
+
+$ env -u DW1_DISC_DIR ctest --preset native-headless
+Test project /dw/build/port/native-headless
+      Start  1: gpu
+ 1/37 Test  #1: gpu ..............................   Passed    0.42 sec
+      Start  2: libgs
+ 2/37 Test  #2: libgs ............................   Passed    0.00 sec
+      Start  3: libgpu
+ 3/37 Test  #3: libgpu ...........................   Passed    0.02 sec
+      Start  4: gte_tables
+ 4/37 Test  #4: gte_tables .......................   Passed    0.07 sec
+      Start 28: pack
+ 5/37 Test #28: pack .............................   Passed    0.01 sec
+      Start  5: libgte
+ 6/37 Test  #5: libgte ...........................   Passed    0.00 sec
+      Start  6: pre_commit
+ 7/37 Test  #6: pre_commit .......................   Passed    0.06 sec
+      Start  7: rts_info
+ 8/37 Test  #7: rts_info .........................   Passed    0.08 sec
+      Start  8: ovl_starts
+ 9/37 Test  #8: ovl_starts .......................   Passed    0.06 sec
+      Start  9: tu_list
+10/37 Test  #9: tu_list ..........................   Passed    0.16 sec
+      Start 10: gen_stubs
+11/37 Test #10: gen_stubs ........................   Passed    0.03 sec
+      Start 11: inventory
+12/37 Test #11: inventory ........................   Passed   13.41 sec
+      Start 12: preproc_check
+13/37 Test #12: preproc_check ....................   Passed   27.38 sec
+      Start 13: test_preproc_check
+14/37 Test #13: test_preproc_check ...............   Passed  138.62 sec
+      Start 14: ps1_ram_addr_range
+15/37 Test #14: ps1_ram_addr_range ...............   Passed    0.03 sec
+      Start 15: ps1mem
+16/37 Test #15: ps1mem ...........................   Passed    0.02 sec
+      Start 16: setjmp
+17/37 Test #16: setjmp ...........................   Passed    0.00 sec
+      Start 17: clock
+18/37 Test #17: clock ............................   Passed    0.01 sec
+      Start 18: libc_heap_pad
+19/37 Test #18: libc_heap_pad ....................   Passed    0.01 sec
+      Start 19: gte
+20/37 Test #19: gte ..............................   Passed    0.01 sec
+      Start 20: psyq_prototypes
+21/37 Test #20: psyq_prototypes ..................   Passed    0.08 sec
+      Start 21: overlay_O0
+22/37 Test #21: overlay_O0 .......................   Passed    0.00 sec
+      Start 22: overlay_O2
+23/37 Test #22: overlay_O2 .......................   Passed    0.00 sec
+      Start 23: overlay_sections
+24/37 Test #23: overlay_sections .................   Passed    0.00 sec
+      Start 24: overlay_objects
+25/37 Test #24: overlay_objects ..................   Passed    1.20 sec
+      Start 25: frame0
+26/37 Test #25: frame0 ...........................   Passed    0.01 sec
+      Start 26: dw1_bad_args
+27/37 Test #26: dw1_bad_args .....................   Passed    0.00 sec
+      Start 27: watchdog
+28/37 Test #27: watchdog .........................   Passed    1.61 sec
+      Start 29: av_stubs
+29/37 Test #29: av_stubs .........................   Passed    0.01 sec
+      Start 30: libcd
+30/37 Test #30: libcd ............................   Passed    0.00 sec
+      Start 31: libgte_host
+31/37 Test #31: libgte_host ......................   Passed    0.04 sec
+      Start 32: dw1_foreign_pack
+32/37 Test #32: dw1_foreign_pack .................   Passed    0.00 sec
+      Start 33: scene_flags
+33/37 Test #33: scene_flags ......................   Passed    0.06 sec
+      Start 34: pack_disc
+34/37 Test #34: pack_disc ........................***Skipped   0.00 sec
+      Start 35: gte_tables_disc
+35/37 Test #35: gte_tables_disc ..................***Skipped   0.00 sec
+      Start 36: scene_title
+36/37 Test #36: scene_title ......................***Skipped   0.00 sec
+      Start 37: dw1_overlay
+37/37 Test #37: dw1_overlay ......................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 37
+
+Total Test time (real) = 183.46 sec
+
+The following tests did not run:
+	 34 - pack_disc (Skipped)
+	 35 - gte_tables_disc (Skipped)
+	 36 - scene_title (Skipped)
+	 37 - dw1_overlay (Skipped)
+
+$ env -u DW1_DISC_DIR ctest --preset native-asan
+Test project /dw/build/port/native-asan
+      Start  1: gpu
+ 1/35 Test  #1: gpu ..............................   Passed    2.86 sec
+      Start  2: libgs
+ 2/35 Test  #2: libgs ............................   Passed    0.03 sec
+      Start  3: libgpu
+ 3/35 Test  #3: libgpu ...........................   Passed    0.09 sec
+      Start  4: gte_tables
+ 4/35 Test  #4: gte_tables .......................   Passed    0.08 sec
+      Start 26: pack
+ 5/35 Test #26: pack .............................   Passed    0.07 sec
+      Start  5: libgte
+ 6/35 Test  #5: libgte ...........................   Passed    0.02 sec
+      Start  6: pre_commit
+ 7/35 Test  #6: pre_commit .......................   Passed    0.08 sec
+      Start  7: rts_info
+ 8/35 Test  #7: rts_info .........................   Passed    0.08 sec
+      Start  8: ovl_starts
+ 9/35 Test  #8: ovl_starts .......................   Passed    0.06 sec
+      Start  9: tu_list
+10/35 Test  #9: tu_list ..........................   Passed    0.19 sec
+      Start 10: gen_stubs
+11/35 Test #10: gen_stubs ........................   Passed    0.03 sec
+      Start 11: inventory
+12/35 Test #11: inventory ........................   Passed   11.43 sec
+      Start 12: preproc_check
+13/35 Test #12: preproc_check ....................   Passed   26.42 sec
+      Start 13: test_preproc_check
+14/35 Test #13: test_preproc_check ...............   Passed  139.07 sec
+      Start 14: ps1_ram_addr_range
+15/35 Test #14: ps1_ram_addr_range ...............   Passed    0.03 sec
+      Start 15: ps1mem
+16/35 Test #15: ps1mem ...........................   Passed    0.05 sec
+      Start 16: setjmp
+17/35 Test #16: setjmp ...........................   Passed    0.01 sec
+      Start 17: clock
+18/35 Test #17: clock ............................   Passed    0.04 sec
+      Start 18: libc_heap_pad
+19/35 Test #18: libc_heap_pad ....................   Passed    0.02 sec
+      Start 19: gte
+20/35 Test #19: gte ..............................   Passed    0.03 sec
+      Start 20: psyq_prototypes
+21/35 Test #20: psyq_prototypes ..................   Passed    0.04 sec
+      Start 21: overlay_O0
+22/35 Test #21: overlay_O0 .......................   Passed    0.01 sec
+      Start 22: overlay_O2
+23/35 Test #22: overlay_O2 .......................   Passed    0.01 sec
+      Start 23: frame0
+24/35 Test #23: frame0 ...........................   Passed    0.04 sec
+      Start 24: dw1_bad_args
+25/35 Test #24: dw1_bad_args .....................   Passed    0.02 sec
+      Start 25: watchdog
+26/35 Test #25: watchdog .........................   Passed    4.46 sec
+      Start 27: av_stubs
+27/35 Test #27: av_stubs .........................   Passed    0.03 sec
+      Start 28: libcd
+28/35 Test #28: libcd ............................   Passed    0.05 sec
+      Start 29: libgte_host
+29/35 Test #29: libgte_host ......................   Passed    0.11 sec
+      Start 30: dw1_foreign_pack
+30/35 Test #30: dw1_foreign_pack .................   Passed    0.02 sec
+      Start 31: scene_flags
+31/35 Test #31: scene_flags ......................   Passed    0.34 sec
+      Start 32: pack_disc
+32/35 Test #32: pack_disc ........................***Skipped   0.00 sec
+      Start 33: gte_tables_disc
+33/35 Test #33: gte_tables_disc ..................***Skipped   0.00 sec
+      Start 34: scene_title
+34/35 Test #34: scene_title ......................***Skipped   0.00 sec
+      Start 35: dw1_overlay
+35/35 Test #35: dw1_overlay ......................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 35
+
+Total Test time (real) = 185.85 sec
+
+The following tests did not run:
+	 32 - pack_disc (Skipped)
+	 33 - gte_tables_disc (Skipped)
+	 34 - scene_title (Skipped)
+	 35 - dw1_overlay (Skipped)
+
+$ L1 y skips finales native-headless
+Internal ctest changing into directory: /dw/build/port/native-headless
+Test project /dw/build/port/native-headless
+    Start 28: pack
+1/5 Test #28: pack .............................   Passed    0.01 sec
+    Start 33: scene_runner
+2/5 Test #33: scene_runner .....................   Passed    0.13 sec
+    Start 34: scene_flags
+3/5 Test #34: scene_flags ......................   Passed    0.06 sec
+    Start 35: pack_disc
+4/5 Test #35: pack_disc ........................***Skipped   0.00 sec
+    Start 37: scene_title
+5/5 Test #37: scene_title ......................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Total Test time (real) =   0.21 sec
+
+The following tests did not run:
+	 35 - pack_disc (Skipped)
+	 37 - scene_title (Skipped)
+
+$ L1 y skips finales native-asan
+Internal ctest changing into directory: /dw/build/port/native-asan
+Test project /dw/build/port/native-asan
+    Start 26: pack
+1/5 Test #26: pack .............................   Passed    0.07 sec
+    Start 31: scene_runner
+2/5 Test #31: scene_runner .....................   Passed    0.11 sec
+    Start 32: scene_flags
+3/5 Test #32: scene_flags ......................   Passed    0.33 sec
+    Start 33: pack_disc
+4/5 Test #33: pack_disc ........................***Skipped   0.00 sec
+    Start 35: scene_title
+5/5 Test #35: scene_title ......................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Total Test time (real) =   0.51 sec
+
+The following tests did not run:
+	 33 - pack_disc (Skipped)
+	 35 - scene_title (Skipped)
+
+$ clock y captura diferida native-headless
+Internal ctest changing into directory: /dw/build/port/native-headless
+Test project /dw/build/port/native-headless
+    Start 17: clock
+1/2 Test #17: clock ............................   Passed    0.01 sec
+    Start 33: scene_flags
+2/2 Test #33: scene_flags ......................   Passed    0.08 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   0.10 sec
+
+$ clock y captura diferida native-asan
+Internal ctest changing into directory: /dw/build/port/native-asan
+Test project /dw/build/port/native-asan
+    Start 17: clock
+1/2 Test #17: clock ............................   Passed    0.09 sec
+    Start 31: scene_flags
+2/2 Test #31: scene_flags ......................   Passed    0.59 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   0.68 sec
+
+$ CTest scene_title con disco native-headless (incluye fixture)
+Internal ctest changing into directory: /dw/build/port/native-headless
+Test project /dw/build/port/native-headless
+    Start 34: pack_disc
+1/2 Test #34: pack_disc ........................   Passed   38.28 sec
+    Start 36: scene_title
+2/2 Test #36: scene_title ......................   Passed    1.81 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =  40.09 sec
+
+$ L0a: sh tools/port/ci/preproc_check.sh
+preproc_check: tus=120 configs=gcc,mwcc differ=0 base=09c174c012365cafd219dff54813dd1ccb9c87ce
+ps1_literals: rows=85 pending=0
+isr_spins: rows=67 pending=0
+
+$ cmake --build --preset web (final)
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- Configuring done (0.7s)
+-- Generating done (0.0s)
+-- Build files have been written to: /dw/build/port/web
+[0/2] Re-checking globbed directories...
+[1/2] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/clock.c.o
+[2/2] Linking C static library libdw1_psyq.a
+
+$ make compare
+Compiled binaries match with target binaries
+
+Build matching: make -j4 CC="/tmp/dw1-cross-gcc/usr/bin/mipsel-linux-gnu-gcc-12 -B/tmp/dw1-cross-tools/ -B/usr/lib/gcc-cross/mipsel-linux-gnu/12/"
+Driver extraído de gcc-12-mipsel-linux-gnu en /tmp; compilador del Juego: cc_mips_40.dll vía mwccwrap.
+Sin imágenes en esta evidencia. Los PPM y las trazas están en el build ignorado.
+
+$ CTest scene_title con disco native-asan (incluye fixture y L1)
+Internal ctest changing into directory: /dw/build/port/native-asan
+Test project /dw/build/port/native-asan
+    Start 26: pack
+1/4 Test #26: pack .............................   Passed    0.10 sec
+    Start 31: scene_flags
+2/4 Test #31: scene_flags ......................   Passed    0.37 sec
+    Start 32: pack_disc
+3/4 Test #32: pack_disc ........................   Passed  202.96 sec
+    Start 34: scene_title
+4/4 Test #34: scene_title ......................   Passed    7.08 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) = 210.52 sec
+
+$ Build nativo final
+[0/2] Re-checking globbed directories...
+[1/2] Building C object CMakeFiles/dw1.dir/port/host/headless/main.c.o
+[2/2] Linking C executable dw1
+
+$ Build ASan final
+[0/2] Re-checking globbed directories...
+[1/2] Building C object CMakeFiles/dw1.dir/port/host/headless/main.c.o
+[2/2] Linking C executable dw1
+
+$ Flags finales nativos
+Internal ctest changing into directory: /dw/build/port/native-headless
+Test project /dw/build/port/native-headless
+    Start 28: pack
+1/2 Test #28: pack .............................   Passed    0.01 sec
+    Start 34: scene_flags
+2/2 Test #34: scene_flags ......................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   0.07 sec
+
+$ Flags finales ASan
+Internal ctest changing into directory: /dw/build/port/native-asan
+Test project /dw/build/port/native-asan
+    Start 26: pack
+1/2 Test #26: pack .............................   Passed    0.06 sec
+    Start 32: scene_flags
+2/2 Test #32: scene_flags ......................   Passed    0.34 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   0.40 sec
+
+Resultado: todas las verificaciones aprobadas. Cuatro skips clase B por suite sin DW1_DISC_DIR.
+La captura de título tiene 256 colores y las dos corridas coinciden en PPM y reloj dentro de cada preset.
+Pendiente fuera de alcance: paridad con emulador, video real y revisión del DRAWENV previo, flags de todos los TMD.

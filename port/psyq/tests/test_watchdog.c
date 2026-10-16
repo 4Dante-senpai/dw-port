@@ -1,4 +1,5 @@
 /* A game that never ends a frame: the runtime's watchdog must stop it with status 3. */
+#include <stddef.h>
 #include "../clock.h"
 #include "../crt.h"
 
@@ -10,5 +11,5 @@ int dw1_game_main(void)
 
 int main(void)
 {
-	return port_run_game(1, 0);
+	return port_run_game(1, 0, NULL);
 }

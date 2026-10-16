@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "../backend/gpu.h"
 
 #include "clock.h"
 #include "crt.h"
@@ -28,6 +31,61 @@ static int exit_on_overlay;
 static long frames;
 static long watchdog_frames;
 
+static PortCapture capture_config;
+static int marked;
+static uint32_t mark_vblank;
+static FILE *clock_trace;
+
+void port_scene_mark(const char *name)
+{
+	port_trace("mark %s", name);
+	if (!marked && capture_config.mark && !strcmp(name, capture_config.mark)) {
+		marked = 1;
+		mark_vblank = clock_vblanks();
+	}
+}
+
+static void trace_event(uint64_t cycle, int kind, void *arg)
+{
+	(void)arg;
+	if (fprintf(clock_trace, "%llu %d\n", (unsigned long long)cycle, kind) < 0) {
+		fprintf(stderr, "port: cannot write clock trace\n");
+		exit(1);
+	}
+}
+
+static void capture_vblank(void)
+{
+	if (!marked || (uint32_t)(clock_vblanks() - mark_vblank) < capture_config.vblank)
+		return;
+	static uint32_t pixels[640 * 480];
+	int width, height;
+	if (!gpu_read_display(pixels, &width, &height)) {
+		fprintf(stderr, "port: capture display is disabled\n");
+		exit(1);
+	}
+	FILE *file = fopen(capture_config.capture, "wb");
+	if (!file) {
+		perror("port: capture");
+		exit(1);
+	}
+	int failed = fprintf(file, "P6\n%d %d\n255\n", width, height) < 0;
+	for (int i = 0; i < width * height && !failed; i++) {
+		unsigned char rgb[] = {pixels[i] >> 16, pixels[i] >> 8, pixels[i]};
+		failed = fwrite(rgb, 1, 3, file) != 3;
+	}
+	failed |= fclose(file) != 0;
+	if (clock_trace)
+		failed |= fclose(clock_trace) != 0;
+	if (failed) {
+		remove(capture_config.capture);
+		fprintf(stderr, "port: cannot write capture or clock trace\n");
+		exit(1);
+	}
+	printf("port: captured %dx%d at VBlank %u\n", width, height, clock_vblanks());
+	exit(0);
+}
+
 /* A frame ends when VSync(0/n) returns (AD-15 frame 0 is the first one). */
 void port_frame_done(void)
 {
@@ -36,7 +94,7 @@ void port_frame_done(void)
 		port_trace("frame %ld", frames - 1);
 		printf("port: reached frame %ld at cycle %llu\n", frames - 1,
 		       (unsigned long long)clock_now());
-		exit(0);
+		exit(capture_config.mark ? 1 : 0);
 	}
 }
 
@@ -44,7 +102,7 @@ void port_overlay_done(void)
 {
 	if (exit_on_overlay) {
 		printf("port: overlay loaded at cycle %llu\n", (unsigned long long)clock_now());
-		exit(0);
+		exit(capture_config.mark ? 1 : 0);
 	}
 }
 
@@ -66,16 +124,27 @@ static void watchdog(void *arg)
 static void *game_thread(void *arg)
 {
 	(void)arg;
+	if (capture_config.clock_trace) {
+		clock_trace = fopen(capture_config.clock_trace, "w");
+		if (!clock_trace) {
+			perror("port: clock trace");
+			exit(1);
+		}
+		clock_set_trace(trace_event);
+	}
+	clock_set_vblank_observer(capture_vblank);
 	clock_schedule((uint64_t)WATCHDOG_SECONDS * CLOCK_HZ, watchdog, NULL);
 	dw1_game_main();
 	fprintf(stderr, "port: the game's main returned\n");
 	exit(1);
 }
 
-int port_run_game(long frame_count, int until_overlay)
+int port_run_game(long frame_count, int until_overlay, const PortCapture *config)
 {
 	frame_limit = frame_count;
 	exit_on_overlay = until_overlay;
+	if (config)
+		capture_config = *config;
 	clock_reset();
 	port_overlay_snapshot_all();
 	/* Every object an OT can point to must be in the 16 MB window (AD-5); fatal in any build. */

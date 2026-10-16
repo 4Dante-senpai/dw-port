@@ -1,0 +1,5 @@
+id = "title"
+overlay = "mov"
+inputs = []
+mark = "runLandingScreen"
+capture_vblank = 60

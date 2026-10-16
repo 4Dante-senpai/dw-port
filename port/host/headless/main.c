@@ -1,4 +1,6 @@
 /* Native headless host: runs the game without a window (tests, AD-14). */
+#include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +20,8 @@ static int usage(const char *argv0)
 	fprintf(stderr, "usage: %s [--headless] [--pack FILE] [--frames N] [--until-overlay]\n"
 	                "  --pack FILE      the Pack of your disc (dw1-pack build); without it the disc is empty\n"
 	                "  --frames N       exit with status 0 after N frames\n"
+	                "  --capture-mark NAME --capture-vblank K --capture FILE  capture after mark + K VBlanks\n"
+	                "  --clock-trace FILE  write deterministic clock events\n"
 	                "  --until-overlay  exit with status 0 once the first overlay is loaded\n",
 	        argv0);
 	return 2;
@@ -26,6 +30,7 @@ static int usage(const char *argv0)
 int main(int argc, char **argv)
 {
 	long frames = 0;
+	PortCapture config = {0};
 	int until_overlay = 0;
 	const char *pack = NULL;
 	for (int i = 1; i < argc; i++) {
@@ -39,6 +44,30 @@ int main(int argc, char **argv)
 			pack = argv[++i];
 			continue;
 		}
+		if (i + 1 < argc) {
+			if (!strcmp(argv[i], "--capture-mark")) {
+				config.mark = argv[++i];
+				continue;
+			}
+			if (!strcmp(argv[i], "--capture")) {
+				config.capture = argv[++i];
+				continue;
+			}
+			if (!strcmp(argv[i], "--clock-trace")) {
+				config.clock_trace = argv[++i];
+				continue;
+			}
+			if (!strcmp(argv[i], "--capture-vblank")) {
+				char *end;
+				const char *value = argv[++i];
+				errno = 0;
+				config.vblank = strtoul(value, &end, 10);
+				if (!errno && *value >= '0' && *value <= '9' && !*end &&
+				    config.vblank > 0 && config.vblank <= UINT_MAX)
+					continue;
+				return usage(argv[0]);
+			}
+		}
 		if (!strcmp(argv[i], "--frames") && i + 1 < argc) {
 			char *end;
 			frames = strtol(argv[++i], &end, 10);
@@ -47,6 +76,9 @@ int main(int argc, char **argv)
 		}
 		return usage(argv[0]);
 	}
+	if ((config.mark || config.capture || config.vblank) &&
+	    (!config.mark || !*config.mark || !config.capture || !*config.capture || !config.vblank))
+		return usage(argv[0]);
 	if (pack) {
 		char err[1024];
 		if (cdrom_open(pack, DW1_MANIFEST_SHA256, err, sizeof(err)) != 0) {
@@ -70,5 +102,5 @@ int main(int argc, char **argv)
 			printf("\n");
 		}
 	}
-	return port_run_game(frames, until_overlay);
+	return port_run_game(frames, until_overlay, &config);
 }
