@@ -5,7 +5,8 @@
 #   container: runs Codex inside the port image ($DW_IMAGE, default dw-port:latest), which is the
 #   sandbox: the toolchain is native there and Codex gets no Docker socket.
 # model defaults to $CODEX_MODEL, then gpt-6.1-sol. Env: CODEX_EFFORT (default medium),
-# CODEX_COMPACT_LIMIT (default 250000 tokens; at 100000 runs compacted mid-task and re-read files).
+# CODEX_COMPACT_LIMIT (default 150000 tokens: at 100000 runs compacted mid-task and re-read
+# files; at 250000 every call resent up to 245k cached tokens and a resumed run compacted at once).
 # Runs are kept in $CODEX_HOME/sessions so their token usage can be audited.
 # CODEX_RESUME=<session id> continues that session (e.g. review fixes for the implementer) instead
 # of starting a new one, so its context is reused rather than rebuilt.
@@ -51,7 +52,7 @@ fi
 
 if ! timeout "$limit" "${codex[@]}" -m "$model" \
         -c "model_reasoning_effort=\"${CODEX_EFFORT:-medium}\"" \
-        -c "model_auto_compact_token_limit=${CODEX_COMPACT_LIMIT:-250000}" -o "$tmp/out" - >"$tmp/log" 2>&1; then
+        -c "model_auto_compact_token_limit=${CODEX_COMPACT_LIMIT:-150000}" -o "$tmp/out" - >"$tmp/log" 2>&1; then
     echo "codex run failed:" >&2
     tail -20 "$tmp/log" >&2
     exit 1
