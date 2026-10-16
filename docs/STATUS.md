@@ -148,9 +148,21 @@
   `[hypothesis]` sobre la llegada de los TMD del disco sin mapear; la paridad de escenas
   contra emulador corresponde a M3. Evidencia: `docs/implementation-artifacts/evidence/story-2-13.log`.
 
+- Historia 2.14 (stubs con comportamiento definido): las 52 entradas restantes
+  tienen firmas PsyQ verificadas, avance del reloj y comentario `stub-m2:`. Audio
+  silencioso con retornos de éxito; tarjeta ausente con comandos consumidos sin
+  espera; video sintético negro con callbacks iterativos sin recursión. El test L1
+  `av_stubs` enlaza el overlay `mov` real sobre el Pack sintético: película completada,
+  20 slices negros y 8 VBlanks. `frame0` conserva su evidencia mediante una traza
+  explícita al alcanzar el límite del Host. Suites sin disco verdes: nativo 32
+  aprobadas + 3 omitidas, ASan/UBSan 30 aprobadas + 3 omitidas; web y L0a verdes.
+  Las 52 entradas y sus reemplazos en Épica 3 están en `docs/port/stubs.md`, incluida
+  la limitación previa de `DRAWENV` sin inicializar en `MOV_playMovie`. Sin cambios
+  en `src/`/`include/`. Evidencia: `docs/implementation-artifacts/evidence/story-2-14.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.14 (stubs con comportamiento definido para audio, video y Memory card).
+- Fase 5: próxima historia 2.15 (pantalla de título en nativo headless).
 
 ## Bloqueos
 
@@ -167,7 +179,7 @@
 | Archivos C del juego que compilan a wasm32 en el preset `web` | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Bloques `DW1_PORT` en `src/`/`include/` | 13 (`docs/port/src-changes.md`) |
-| Funciones PsyQ usadas: implementadas / stubs / libc del host | 135 / 52 / 12 (de 199) |
+| Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (52 mínimas M2) / 0 / 12 (de 199) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
 | Escenas que funcionan (nativo) | 0 |

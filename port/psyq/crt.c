@@ -33,6 +33,7 @@ void port_frame_done(void)
 {
 	frames++;
 	if (frame_limit > 0 && frames >= frame_limit) {
+		port_trace("frame %ld", frames - 1);
 		printf("port: reached frame %ld at cycle %llu\n", frames - 1,
 		       (unsigned long long)clock_now());
 		exit(0);

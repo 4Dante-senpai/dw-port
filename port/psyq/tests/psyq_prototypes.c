@@ -9,6 +9,10 @@
 #include <libgpu.h>
 #include <libgs.h>
 #include <libcd.h>
+#include <libspu.h>
+#include <libsnd.h>
+#include <libpress.h>
+#include <libmcrd.h>
 #include <malloc.h>
 #include <rand.h>
 
@@ -85,3 +89,12 @@ _Static_assert(__builtin_offsetof(TMD_P_F3,n0)==8 && __builtin_offsetof(TMD_P_F4
                __builtin_offsetof(TMD_P_TF4,n0)==20 && __builtin_offsetof(TMD_P_TG4,v3)==34 &&
                __builtin_offsetof(TMD_P_TNF3,v0)==20 && __builtin_offsetof(TMD_P_TNG4,v0)==36,
                "TMD vertex and normal offsets");
+
+_Static_assert(sizeof(StHEADER) == 32 && offsetof(StHEADER, frameCount) == 8 &&
+               offsetof(StHEADER, width) == 16 && offsetof(StHEADER, loc) == 28,
+               "stream header ABI");
+_Static_assert(sizeof(SpuReverbAttr) == 20 && offsetof(SpuReverbAttr, depth) == 8,
+               "SPU reverb ABI");
+_Static_assert(SPU_OFF == 0 && McFuncExist == 1 && McFuncAccept == 2 &&
+               McFuncReadFile == 3 && McFuncWriteFile == 4 && McErrCardNotExist == 1,
+               "silent audio and absent card constants");

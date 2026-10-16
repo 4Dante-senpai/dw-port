@@ -30,3 +30,7 @@
 - source_spec: `docs/implementation-artifacts/spec-2-13-libgs-con-el-pipeline-tmd.md`
   summary: Validar con los TMD del Pack que llegan sin mapear (bit 0 de flags en 0) antes de `GsMapModelingData`.
   evidence: `[hypothesis]` anotada en `port/psyq/libgs.c`; si alguno llegara mapeado con direcciones PS1, `GsLinkObject4` apuntaría fuera de la memoria del port. Se resuelve leyendo el campo flags de cada TMD del disco (Historia 2.15, con el Pack real).
+
+- source_spec: `docs/implementation-artifacts/spec-2-14-stubs-con-comportamiento-definido-para-audio-video-y-memory.md`
+  summary: `MOV_playMovie` (`src/mov/mov.c:263`) pasa un `DRAWENV` local sin inicializar a `PutDrawEnv`; con los stubs de 2.14 ese camino ya se ejecuta en el port.
+  evidence: lectura de stack sin inicializar (UB en C, igual que en la PS1); puede dejar estado de dibujo dependiente de la pila y romper la captura determinista de 2.15. Se resuelve con un bloque `DW1_PORT` (por ejemplo `SetDefDrawEnv`) o comprobando en 2.15 que dos corridas den el mismo hash.
