@@ -17,12 +17,34 @@ CODEX_PROMPT
 # test; it can outlast the Bash foreground limit, hence the background run.
 HANDOFF = """Run this with the Bash tool with run_in_background: true and wait for its completion notification. Its stdout is the implementer's report. On a nonzero exit, report the error to the user and implement directly from the spec.
 
-{project-root}/tools/port/codex-run.sh container 5400 gpt-6-astra <<'CODEX_PROMPT'
+{project-root}/tools/port/codex-run.sh container 5400 <<'CODEX_PROMPT'
 Read {spec_file} fully and implement it — the spec is the sole source of truth. Load every file listed in its frontmatter `context:` before you start. Build and run the tests inside this container; do not commit.
 
 When done, report what you changed, how you verified it, and anything left incomplete or risky.
 CODEX_PROMPT
 """
+# These layers run in one Codex session so the diff and code are read once instead of three times.
+# Order keeps the isolation that matters: blind-hunter finishes before any claims are read, and
+# edge-case-hunter, the only layer that reads the claims file, goes last.
+MERGED = ["blind-hunter", "verification-gap", "edge-case-hunter"]
+MERGED_WRAPPER = """Run this with the Bash tool with run_in_background: true, launched in the same turn as the other layers, and wait for its completion notification. Its stdout has one section per review headed `## <layer id>`; treat each section as the findings of the layer with that id, verbatim. A nonzero exit or empty output means all three layers failed; a missing or empty section means that layer failed.
+
+{project-root}/tools/port/codex-run.sh read-only 1800 <<'CODEX_PROMPT'
+You will run %d independent reviews of the same change, in the order given. Finish each review before reading anything the next one points to, and do not let a later review's inputs change an earlier review's findings. Your final message has exactly one section per review, headed `## <id>`, containing that review's output.
+
+%s
+CODEX_PROMPT
+"""
+
+
+def merged(table, layers):
+    reviews = [f"### Review {i}: id `{l['id']}`\n\n{l['instruction'].partition(chr(10))[2].strip()}"
+               for i, l in enumerate(layers, 1)]
+    instruction = MERGED_WRAPPER % (len(layers), "\n\n".join(reviews))
+    assert "'''" not in instruction
+    names = " + ".join(l["name"] for l in layers)
+    return "\n".join([f"[[workflow.{table}]]", 'id = "codex-merged"', f'name = "{names} (Codex)"',
+                      f"instruction = '''\n{instruction}'''\n"])
 
 
 def layer(table, layer):
@@ -42,5 +64,12 @@ for skill in SKILLS:
     if "implementation_handoff" in workflow:
         parts.append(f"[workflow]\nimplementation_handoff = '''\n{HANDOFF}'''\n")
     for table in ("review_layers", "oneshot_review_layers"):
-        parts += [layer(table, l) for l in workflow.get(table, [])]
+        layers = workflow.get(table, [])
+        group = sorted((l for l in layers if l["id"] in MERGED and not l.get("when")),
+                       key=lambda l: MERGED.index(l["id"]))
+        if len(group) > 1:
+            parts.append(merged(table, group))
+        else:
+            group = []
+        parts += [layer(table, l) for l in layers if l not in group]
     (ROOT / f"_bmad/custom/{skill}.toml").write_text("\n".join(parts))

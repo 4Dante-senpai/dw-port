@@ -115,6 +115,9 @@ Targets de build (CMake + Ninja para el port, Makefile upstream para matching):
 
 ## Operación de cada sesión
 
+Las ejecuciones de Codex lanzadas por `tools/port/codex-run.sh` ignoran esta sección: no leen
+`docs/STATUS.md` ni el sprint, y no commitean ni pushean.
+
 1. Leer este archivo, `docs/STATUS.md` y el sprint activo de BMAD.
 2. Trabajar sobre la historia en curso siguiendo el workflow de desarrollo de BMAD.
 3. Al terminar: actualizar `docs/STATUS.md` (hecho, en curso, bloqueos, métricas de % descompilado
