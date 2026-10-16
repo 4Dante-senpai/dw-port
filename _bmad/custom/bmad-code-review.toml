@@ -43,6 +43,18 @@ CODEX_PROMPT
 '''
 
 [[workflow.review_layers]]
+id = "blind-hunter"
+instruction = ''
+
+[[workflow.review_layers]]
+id = "verification-gap"
+instruction = ''
+
+[[workflow.review_layers]]
+id = "edge-case-hunter"
+instruction = ''
+
+[[workflow.review_layers]]
 id = "acceptance-auditor"
 name = "Acceptance Auditor (Codex)"
 when = 'Only when {review_mode} = "full".'

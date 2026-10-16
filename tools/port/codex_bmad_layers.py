@@ -69,6 +69,8 @@ for skill in SKILLS:
                        key=lambda l: MERGED.index(l["id"]))
         if len(group) > 1:
             parts.append(merged(table, group))
+            # Layers merge with the defaults by id; an empty instruction disables a default.
+            parts += [f"[[workflow.{table}]]\nid = \"{l['id']}\"\ninstruction = ''\n" for l in group]
         else:
             group = []
         parts += [layer(table, l) for l in layers if l not in group]

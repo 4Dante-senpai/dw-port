@@ -53,6 +53,18 @@ Do not invoke any skill, and do not spawn subagents of your own — you are the 
 CODEX_PROMPT
 '''
 
+[[workflow.review_layers]]
+id = "blind-hunter"
+instruction = ''
+
+[[workflow.review_layers]]
+id = "verification-gap"
+instruction = ''
+
+[[workflow.review_layers]]
+id = "edge-case-hunter"
+instruction = ''
+
 [[workflow.oneshot_review_layers]]
 id = "blind-hunter"
 name = "Blind Hunter (Codex)"
