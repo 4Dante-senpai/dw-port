@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-15
+Última actualización: 2026-10-16
 
 ## Modo de operación
 
@@ -136,9 +136,21 @@
   `frame0`; build web con `-Werror` y L0a verdes. Sin cambios en `src/`/`include/`.
   Evidencia: `docs/implementation-artifacts/evidence/story-2-12.log`.
 
+- Historia 2.13 (`libgs` con el pipeline TMD): las 35 entradas usadas de `libgs` y las
+  27 `GsTMDfast*`/`GsTMDdiv*` están implementadas desde el asm USA. Estado global tipado,
+  matrices y luces, mapeo y agrupación TMD, culling, subdivisión, OT, primitivas 2D y doble
+  buffer; enlaces mediante `PS1_LINK`/`PS1_LINK_PTR`. Test L1 de las 27 entradas con campos
+  calculados aparte y 27 SHA-256 de paquetes/OT (enlaces normalizados para nativo y ASan),
+  subdivisión a dos niveles, ABI, utilidades y VRAM. Suites sin disco: nativo 34 pruebas y
+  ASan/UBSan 32, con tres omisiones por suite; las tres pruebas de disco pasan tanto en nativo como en ASan/UBSan.
+  Revisión: 1 corrección (las `GsTMDdiv*` descartaban caras por FLAG; el asm recorta en `RCpoly*`)
+  y 4 tests agregados. Build web, L0a y `make compare` verdes. Sin cambios en `src/`/`include/` ni en el Backend. Se conserva
+  `[hypothesis]` sobre la llegada de los TMD del disco sin mapear; la paridad de escenas
+  contra emulador corresponde a M3. Evidencia: `docs/implementation-artifacts/evidence/story-2-13.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.13 (`libgs` con el pipeline TMD).
+- Fase 5: próxima historia 2.14 (stubs con comportamiento definido para audio, video y Memory card).
 
 ## Bloqueos
 
@@ -155,7 +167,7 @@
 | Archivos C del juego que compilan a wasm32 en el preset `web` | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Bloques `DW1_PORT` en `src/`/`include/` | 13 (`docs/port/src-changes.md`) |
-| Funciones PsyQ usadas: implementadas / stubs / libc del host | 75 / 112 / 12 (de 199) |
+| Funciones PsyQ usadas: implementadas / stubs / libc del host | 135 / 52 / 12 (de 199) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
 | Escenas que funcionan (nativo) | 0 |
