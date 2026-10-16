@@ -49,7 +49,7 @@ development_status:
   2-11-libgte-y-tablas-leídas-del-exe-en-el-pack: done
   2-12-renderer-software-y-libgpu: done
   2-13-libgs-con-el-pipeline-tmd: done
-  2-14-stubs-con-comportamiento-definido-para-audio-video-y-memory: backlog
+  2-14-stubs-con-comportamiento-definido-para-audio-video-y-memory: done
   2-15-pantalla-de-título-en-nativo-headless: backlog
   epic-2-retrospective: optional
 

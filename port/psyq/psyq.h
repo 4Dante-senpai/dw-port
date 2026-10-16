@@ -221,6 +221,88 @@ PACKET *GsTMDdivTNF4(void *prim, SVECTOR *verts, PACKET *pk, unsigned n, int shi
 PACKET *GsTMDdivTG4NL(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
 PACKET *GsTMDdivTNG4(void *prim, SVECTOR *verts, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
 
+/* Audio/video/card subset: layouts and prototypes checked against mw_lib41. */
+#ifndef _LIBCD_H_
+typedef struct {
+    unsigned short id, type, secCount, nSectors;
+    unsigned long frameCount, frameSize;
+    unsigned short width, height;
+    unsigned long dummy1, dummy2;
+    CdlLOC loc;
+} StHEADER;
+#endif
+#ifndef _LIBSPU_H_
+#define SPU_OFF 0
+typedef struct { short left, right; } SpuVolume;
+typedef struct {
+    unsigned long mask;
+    long mode;
+    SpuVolume depth;
+    long delay, feedback;
+} SpuReverbAttr;
+#endif
+#ifndef _MEMCARD_H_
+#define McFuncExist 1
+#define McFuncAccept 2
+#define McFuncReadFile 3
+#define McFuncWriteFile 4
+#define McErrCardNotExist 1
+#endif
+struct DIRENTRY;
+
+void SsEnd(void);
+void SsInit(void);
+void SsQuit(void);
+void SsStart(void);
+void SsSeqClose(short id);
+void SsSeqStop(short id);
+void SsVabClose(short id);
+void SsUtAllKeyOff(short id);
+void SsSeqPlay(short id, char mode, short repeat);
+void SsSeqSetVol(short id, short left, short right);
+void SsSetMVol(short left, short right);
+void SsSetTableSize(char *table, short seqs, short seps);
+void SsSetTickMode(long mode);
+short SsSeqOpen(unsigned long *data, short vabid);
+short SsVabOpenHeadSticky(unsigned char *data, short vabid, unsigned long addr);
+short SsVabTransBody(unsigned char *data, short vabid);
+short SsVabTransCompleted(short mode);
+unsigned long SsUtGetVBaddrInSB(short vabid);
+short SsUtKeyOffV(short voice);
+short SsUtAutoVol(short voice, short start, short end, short time);
+short SsUtKeyOnV(short voice, short vabid, short prog, short tone, short note, short fine, short left, short right);
+long SpuClearReverbWorkArea(long mode);
+long SpuGetKeyStatus(unsigned long voice);
+long SpuSetReverb(long on);
+long SpuSetReverbDepth(SpuReverbAttr *attr);
+long SpuSetReverbModeParam(SpuReverbAttr *attr);
+unsigned long SpuSetReverbVoice(long on, unsigned long voice);
+void MemCardInit(long flag);
+void MemCardStart(void);
+long MemCardExist(long chan);
+long MemCardAccept(long chan);
+long MemCardReadFile(long chan, char *name, long *data, long offset, long bytes);
+long MemCardWriteFile(long chan, char *name, long *data, long offset, long bytes);
+long MemCardCreateFile(long chan, char *name, long blocks);
+long MemCardDeleteFile(long chan, char *name);
+long MemCardFormat(long chan);
+long MemCardGetDirentry(long chan, char *name, struct DIRENTRY *dir, long *files, long offset, long max);
+long MemCardSync(long mode, unsigned long *cmd, unsigned long *result);
+int CdRead2(long mode);
+void StSetRing(unsigned long *ring, unsigned long size);
+void StUnSetRing(void);
+void StSetStream(unsigned long mode, unsigned long start, unsigned long end, void (*first)(), void (*second)());
+void StCdInterrupt(void);
+unsigned long StFreeRing(unsigned long *base);
+int StGetBackloc(CdlLOC *loc);
+unsigned long StGetNext(unsigned long **addr, unsigned long **head);
+void DecDCTReset(int mode);
+void DecDCTin(unsigned long *buf, int mode);
+int DecDCTvlc2(unsigned long *bs, unsigned long *buf, unsigned short *table);
+void DecDCTvlcBuild(unsigned short *table);
+int DecDCToutCallback(void (*func)());
+void DecDCTout(unsigned long *buf, int size);
+
 /* Port internals. */
 extern int Vcount;
 void psyq_raise_irq(int irq); /* runs the InterruptCallback of line irq */

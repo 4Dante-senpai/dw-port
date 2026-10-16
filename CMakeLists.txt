@@ -136,7 +136,8 @@ target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
 
 add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c port/psyq/clock.c
   port/psyq/libetc.c port/psyq/libapi.c port/psyq/libc.c port/psyq/libgs.c port/psyq/libcd.c
-  port/psyq/libgte.c port/psyq/libgpu.c port/psyq/stub.c ${DW1_GTE_TABLES_H})
+  port/psyq/libgte.c port/psyq/libgpu.c port/psyq/libsnd.c port/psyq/libspu.c
+  port/psyq/libpress.c port/psyq/libmcrd.c port/psyq/libcd_stream.c port/psyq/stub.c ${DW1_GTE_TABLES_H})
 target_include_directories(dw1_psyq PRIVATE ${CMAKE_BINARY_DIR}/generated)
 target_link_libraries(dw1_psyq PUBLIC Threads::Threads dw1_backend)
 # The heap and the CD model store typed data in the uint8_t arena Ps1_Ram, like the game does.
@@ -291,7 +292,7 @@ if(NOT EMSCRIPTEN)
     $<TARGET_FILE:dw1> --headless --frames 1 > frame0.out 2>&1; s=$?; cat frame0.out; \
     test $s = 0 && grep -q 'reached frame 0' frame0.out && \
     ! grep -qE 'ERROR: AddressSanitizer|runtime error' frame0.out && \
-    test -s frame0_trace.log && sort -n -s -k1,1 -c frame0_trace.log"
+    grep -q ' frame 0$' frame0_trace.log && sort -n -s -k1,1 -c frame0_trace.log"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
   add_test(NAME dw1_bad_args COMMAND $<TARGET_FILE:dw1> --frames 0)
   set_tests_properties(dw1_bad_args PROPERTIES WILL_FAIL TRUE)
@@ -320,6 +321,18 @@ if(NOT EMSCRIPTEN)
   # Leaves the synthetic Pack (pack_t1.pack, pack_t.tsv) in the build directory.
   add_test(NAME pack COMMAND test_pack WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
   set_tests_properties(pack PROPERTIES FIXTURES_SETUP synthetic_pack)
+
+  # Exercise the exact movie overlay objects used by the game, without its main/runtime.
+  add_executable(test_av_stubs port/psyq/tests/test_av_stubs.c
+    $<FILTER:$<TARGET_OBJECTS:dw1_game_objs>,INCLUDE,/src/mov/.*[.]o$>
+    port/psyq/libgs_data.c)
+  target_include_directories(test_av_stubs PRIVATE include)
+  target_compile_options(test_av_stubs PRIVATE -Wall -Wextra -Werror
+    -idirafter ${CMAKE_SOURCE_DIR}/external/psyq_headers/mw_lib41/include)
+  target_link_options(test_av_stubs PRIVATE -Wl,--wrap=LoadImage)
+  target_link_libraries(test_av_stubs dw1_psyq)
+  add_test(NAME av_stubs COMMAND test_av_stubs WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  set_tests_properties(av_stubs PROPERTIES FIXTURES_REQUIRED synthetic_pack TIMEOUT 30)
 
   # libcd and the CD model over the synthetic Pack.
   add_executable(test_libcd port/psyq/tests/test_libcd.c)
