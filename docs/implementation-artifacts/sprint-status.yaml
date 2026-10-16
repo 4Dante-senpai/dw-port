@@ -35,7 +35,7 @@ project_key: NOKEY
 tracking_system: file-system
 story_location: docs/implementation-artifacts
 development_status:
-  epic-2: in-progress
+  epic-2: done
   2-1-esqueleto-del-build-del-port-y-lista-generada-de-tus: done
   2-2-checks-l0a-y-los-inventarios-de-literales-y-spins: done
   2-3-memoria-ps1-enlaces-de-ot-y-reinicio-de-overlays: done
@@ -50,7 +50,7 @@ development_status:
   2-12-renderer-software-y-libgpu: done
   2-13-libgs-con-el-pipeline-tmd: done
   2-14-stubs-con-comportamiento-definido-para-audio-video-y-memory: done
-  2-15-pantalla-de-título-en-nativo-headless: backlog
+  2-15-pantalla-de-título-en-nativo-headless: done
   epic-2-retrospective: optional
 
   epic-3: backlog

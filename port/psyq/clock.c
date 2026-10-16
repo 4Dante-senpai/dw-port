@@ -22,6 +22,9 @@ static Event events[MAX_EVENTS];
 static int generation = 1;
 static int in_handler;
 static void (*vblank_handler)(void);
+static void (*vblank_observer)(void);
+/* Keep observation pending if a callback advances time past run_until's target. */
+static int observed_vblank;
 static void (*trace)(uint64_t, int, void *);
 static pthread_t owner;
 static int has_owner;
@@ -69,6 +72,12 @@ void clock_set_vblank_handler(void (*fn)(void))
 	vblank_handler = fn;
 }
 
+void clock_set_vblank_observer(void (*fn)(void))
+{
+	check_thread();
+	vblank_observer = fn;
+}
+
 void clock_set_trace(void (*fn)(uint64_t, int, void *))
 {
 	check_thread();
@@ -82,6 +91,7 @@ void clock_reset(void)
 	for (int i = 0; i < MAX_EVENTS; i++)
 		events[i].id = 0;
 	in_handler = 0;
+	observed_vblank = 0;
 	has_owner = 0;
 }
 
@@ -147,11 +157,18 @@ static void run_until(uint64_t target)
 	for (;;) {
 		int index;
 		uint64_t due = next_due(&index);
+		if (observed_vblank && due > now) {
+			observed_vblank = 0;
+			if (vblank_observer)
+				vblank_observer();
+		}
 		if (due > target)
 			break;
 		if (due > now)
 			now = due;
 		dispatch(index);
+		if (index < 0)
+			observed_vblank = 1;
 	}
 	if (target > now)
 		now = target;

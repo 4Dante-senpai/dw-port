@@ -53,6 +53,9 @@ void clock_cancel(int id);
 /* Called on every VBlank, after the VBlank count is incremented (libetc's trap). */
 void clock_set_vblank_handler(void (*fn)(void));
 
+/* Host observation after the VBlank callback and events due at that cycle. */
+void clock_set_vblank_observer(void (*fn)(void));
+
 /* Optional trace of dispatched events (cycle, kind) for determinism tests; kind -1 = VBlank. */
 void clock_set_trace(void (*fn)(uint64_t cycle, int kind, void *arg));
 

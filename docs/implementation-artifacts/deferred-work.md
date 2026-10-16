@@ -29,8 +29,12 @@
 
 - source_spec: `docs/implementation-artifacts/spec-2-13-libgs-con-el-pipeline-tmd.md`
   summary: Validar con los TMD del Pack que llegan sin mapear (bit 0 de flags en 0) antes de `GsMapModelingData`.
-  evidence: `[hypothesis]` anotada en `port/psyq/libgs.c`; si alguno llegara mapeado con direcciones PS1, `GsLinkObject4` apuntaría fuera de la memoria del port. Se resuelve leyendo el campo flags de cada TMD del disco (Historia 2.15, con el Pack real).
+  evidence: `[hypothesis]` anotada en `port/psyq/libgs.c`; si alguno llegara mapeado con direcciones PS1, `GsLinkObject4` apuntaría fuera de la memoria del port. Se resuelve leyendo el campo flags de cada TMD del disco (Historia 3.11); la especificación 2.15 difiere expresamente esa validación.
 
 - source_spec: `docs/implementation-artifacts/spec-2-14-stubs-con-comportamiento-definido-para-audio-video-y-memory.md`
   summary: `MOV_playMovie` (`src/mov/mov.c:263`) pasa un `DRAWENV` local sin inicializar a `PutDrawEnv`; con los stubs de 2.14 ese camino ya se ejecuta en el port.
-  evidence: lectura de stack sin inicializar (UB en C, igual que en la PS1); puede dejar estado de dibujo dependiente de la pila y romper la captura determinista de 2.15. Se resuelve con un bloque `DW1_PORT` (por ejemplo `SetDefDrawEnv`) o comprobando en 2.15 que dos corridas den el mismo hash.
+  evidence: lectura de stack sin inicializar (UB en C, igual que en la PS1); puede dejar estado de dibujo dependiente de la pila y romper la captura determinista de 2.15. Comprobación 2.15: las dos corridas de `title` en cada preset (`native-headless` y `native-asan`) dan el mismo SHA-256 de captura y de reloj dentro de cada preset. La captura también coincide entre presets; no se exige igualdad de trazas entre builds. No afecta la captura observada del título; no se modifica `MOV_playMovie`. La lectura sin inicializar sigue pendiente para el video real de la Épica 3.
+
+- source_spec: `docs/implementation-artifacts/spec-2-15-pantalla-de-titulo-en-nativo-headless.md`
+  summary: La traza de eventos del reloj de la Escena `title` difiere entre `native-headless` y `native-asan` (SHA-256 `1dec875a…` frente a `befd2a43…`), aunque la captura coincide.
+  evidence: cada preset es determinista consigo mismo, pero el tiempo virtual no debería depender del build; candidatos: costos de `DrawSync` que dependen del contenido de paquetes con stack sin inicializar (`DRAWENV` de `MOV_playMovie`) o del layout de memoria. Se resuelve comparando las dos trazas hasta el primer evento distinto (antes de la Historia 3.10, calibración del reloj).

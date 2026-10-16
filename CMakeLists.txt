@@ -350,6 +350,16 @@ if(NOT EMSCRIPTEN)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
   set_tests_properties(dw1_foreign_pack PROPERTIES FIXTURES_REQUIRED synthetic_pack)
 
+  add_test(NAME scene_runner COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/scenes/test_runner.py)
+  add_test(NAME scene_flags COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/scenes/test_host.py
+    $<TARGET_FILE:dw1> $<TARGET_FILE:test_scene_capture> ${CMAKE_BINARY_DIR})
+  set_tests_properties(scene_flags PROPERTIES FIXTURES_REQUIRED synthetic_pack TIMEOUT 120)
+  add_executable(test_scene_capture port/psyq/tests/test_scene_capture.c)
+  target_link_libraries(test_scene_capture dw1_runtime)
+  target_compile_options(test_scene_capture PRIVATE -Wall -Wextra -Werror)
+
   # Class B: need the user's disc in DW1_DISC_DIR (skipped without it). pack_disc leaves the
   # USA Pack at us.pack in the build directory for dw1_overlay.
   add_test(NAME pack_disc COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_pack_disc.sh
@@ -359,6 +369,11 @@ if(NOT EMSCRIPTEN)
     $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   set_tests_properties(gte_tables_disc PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600
     FIXTURES_REQUIRED disc_pack)
+  get_filename_component(DW1_SCENE_PRESET ${CMAKE_BINARY_DIR} NAME)
+  add_test(NAME scene_title COMMAND sh -c
+    "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py title --build ${DW1_SCENE_PRESET}")
+  set_tests_properties(scene_title PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1200
+    FIXTURES_REQUIRED disc_pack WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
   add_test(NAME dw1_overlay COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_dw1_overlay.sh
     $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   set_tests_properties(dw1_overlay PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600

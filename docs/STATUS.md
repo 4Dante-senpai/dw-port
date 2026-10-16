@@ -12,6 +12,7 @@
 
 - M0 Entorno: **completo** (modo sin compilador matching).
 - M1 Inventario: **completo** (`docs/research/`).
+- M2 Nativo headless: **completo** (título determinista, sin referencia).
 
 ## Hecho
 
@@ -160,9 +161,21 @@
   la limitación previa de `DRAWENV` sin inicializar en `MOV_playMovie`. Sin cambios
   en `src/`/`include/`. Evidencia: `docs/implementation-artifacts/evidence/story-2-14.log`.
 
+- Historia 2.15 (pantalla de título en nativo headless): marca por símbolo en
+  `runLandingScreen`, captura PPM del display en el VBlank 60 posterior a la primera marca,
+  traza de eventos sin punteros y runner de la escena `title`. Dos corridas por preset
+  (`native-headless` y `native-asan`) producen la misma captura de 320×240 y 256 colores,
+  y trazas deterministas dentro de cada preset. Tests L1 de flags, marca ausente/repetida,
+  orden de captura, display apagado y fallos del runner; `scene_title` clase B con fixture
+  del Pack. Suites sin disco, builds web, L0a y matching verdes. El `DRAWENV` de la película
+  no afecta la captura observada; la paridad contra emulador corresponde a M3.
+  Revisión (3 capas Codex): `--pack` explícito inexistente falla y 3 tests agregados (marca
+  tardía, salida por overlay, errores de E/S); diferida la traza del reloj distinta entre
+  presets. Evidencia: `docs/implementation-artifacts/evidence/story-2-15.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.15 (pantalla de título en nativo headless).
+- Fase 5: Épica 2 (M2) cerrada con la historia 2.15. Próxima: historia 4.1 (el Juego en wasm), según el orden de dependencias del contexto de la Épica 2.
 
 ## Bloqueos
 
@@ -178,11 +191,11 @@
 | Funciones PsyQ usadas / cubiertas por DW2-PC | 202 / 81 |
 | Archivos C del juego que compilan a wasm32 en el preset `web` | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
-| Bloques `DW1_PORT` en `src/`/`include/` | 13 (`docs/port/src-changes.md`) |
+| Bloques `DW1_PORT` en `src/`/`include/` | 14 (`docs/port/src-changes.md`) |
 | Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (52 mínimas M2) / 0 / 12 (de 199) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
-| Escenas que funcionan (nativo) | 0 |
+| Escenas que funcionan (nativo) | 1 (título, sin referencia) |
 | Escenas que funcionan (web) | 0 |
 
 ## Notas

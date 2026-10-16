@@ -3586,6 +3586,12 @@ void initializeFramebuffer(void)
 
 void runLandingScreen(void)
 {
+#ifdef DW1_PORT
+	{
+		extern void port_scene_mark(const char *name);
+		port_scene_mark("runLandingScreen");
+	}
+#endif
 	int32_t done;
 	int32_t timer;
 #if VERSION_IS(JP_TRIAL) || VERSION_IS(JP_BOMBOM)
