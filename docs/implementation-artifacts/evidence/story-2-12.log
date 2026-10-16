@@ -417,3 +417,4 @@ native-asan: 100% tests passed, 0 tests failed out of 31 (same 3 skipped)
 DW1_DISC_DIR=/dw/game_rom/extracted -R 'pack_disc|dw1_overlay|gte_tables_disc': 3/3 passed in both native presets
 web build: exit 0; preproc_check.sh: exit 0
 grep 'PsxHd|Pgxp|psxgpu_hd' port/: 0 matches; generated psyq_stubs.c: no libgpu function among the 28
+make (dw-build) exit 0; make compare: Compiled binaries match with target binaries
