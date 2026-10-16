@@ -6,6 +6,8 @@
 #   sandbox: the toolchain is native there and Codex gets no Docker socket.
 # model defaults to $CODEX_MODEL, then gpt-6.1-sol. Env: CODEX_EFFORT (default medium).
 # Runs are kept in $CODEX_HOME/sessions so their token usage can be audited.
+# CODEX_RESUME=<session id> continues that session (e.g. review fixes for the implementer) instead
+# of starting a new one, so its context is reused rather than rebuilt.
 set -euo pipefail
 
 mode=$1
@@ -23,9 +25,19 @@ if [ "$mode" = container ]; then
     codex=(docker run -i --rm --name "$name" --user "$(id -u):$(id -g)" -e HOME=/tmp -e CODEX_HOME=/codex
         -v "$root":/dw -v "$root":"$root" -v dw_venv:/dw/.venv -v "$tmp":"$tmp"
         -v "$(npm root -g)/@openai/codex":/opt/codex:ro -v "${CODEX_HOME:-$HOME/.codex}":/codex
-        "${DW_IMAGE:-dw-port:latest}" node /opt/codex/bin/codex.js exec -s danger-full-access -C /dw)
+        -w /dw "${DW_IMAGE:-dw-port:latest}" node /opt/codex/bin/codex.js exec)
+    sandbox=danger-full-access
 else
-    codex=(codex exec -s "$mode" -C "$root")
+    codex=(codex exec)
+    sandbox=$mode
+fi
+# exec resume takes no -s/-C: the sandbox goes through config and the session keeps its cwd.
+if [ -n "${CODEX_RESUME:-}" ]; then
+    codex+=(resume "$CODEX_RESUME" -c "sandbox_mode=\"$sandbox\"")
+elif [ "$mode" = container ]; then
+    codex+=(-s "$sandbox" -C /dw)
+else
+    codex+=(-s "$sandbox" -C "$root")
 fi
 
 if ! timeout "$limit" "${codex[@]}" -m "$model" \
