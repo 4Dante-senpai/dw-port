@@ -25,10 +25,13 @@ CODEX_PROMPT
 """
 # These layers run in one Codex session so the diff and code are read once instead of three times.
 # Order keeps the isolation that matters: blind-hunter finishes before any claims are read, and
-# edge-case-hunter, the only layer that reads the claims file, goes last.
+# edge-case-hunter, the only layer that reads the claims file, goes last. The reviews get the diff
+# without docs/implementation-artifacts: the spec there would unblind blind-hunter, and the
+# evidence logs are test output, not code.
 MERGED = ["blind-hunter", "verification-gap", "edge-case-hunter"]
 MERGED_WRAPPER = """Run this with the Bash tool with run_in_background: true, launched in the same turn as the other layers, and wait for its completion notification. Its stdout has one section per review headed `## <layer id>`; treat each section as the findings of the layer with that id, verbatim. A nonzero exit or empty output means all three layers failed; a missing or empty section means that layer failed.
 
+awk '/^diff --git /{skip = $4 ~ "^b/docs/implementation-artifacts/"} !skip' {diff_file} > {diff_file}.code
 {project-root}/tools/port/codex-run.sh read-only 1800 <<'CODEX_PROMPT'
 You will run %d independent reviews of the same change, in the order given. Finish each review before reading anything the next one points to, and do not let a later review's inputs change an earlier review's findings. Your final message has exactly one section per review, headed `## <id>`, containing that review's output.
 
@@ -40,7 +43,7 @@ CODEX_PROMPT
 def merged(table, layers):
     reviews = [f"### Review {i}: id `{l['id']}`\n\n{l['instruction'].partition(chr(10))[2].strip()}"
                for i, l in enumerate(layers, 1)]
-    instruction = MERGED_WRAPPER % (len(layers), "\n\n".join(reviews))
+    instruction = MERGED_WRAPPER % (len(layers), "\n\n".join(reviews).replace("{diff_file}", "{diff_file}.code"))
     assert "'''" not in instruction
     names = " + ".join(l["name"] for l in layers)
     return "\n".join([f"[[workflow.{table}]]", 'id = "codex-merged"', f'name = "{names} (Codex)"',

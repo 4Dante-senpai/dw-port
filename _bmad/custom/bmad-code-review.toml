@@ -6,6 +6,7 @@ name = "Blind Hunter + Verification Gap Reviewer + Edge Case Hunter (Codex)"
 instruction = '''
 Run this with the Bash tool with run_in_background: true, launched in the same turn as the other layers, and wait for its completion notification. Its stdout has one section per review headed `## <layer id>`; treat each section as the findings of the layer with that id, verbatim. A nonzero exit or empty output means all three layers failed; a missing or empty section means that layer failed.
 
+awk '/^diff --git /{skip = $4 ~ "^b/docs/implementation-artifacts/"} !skip' {diff_file} > {diff_file}.code
 {project-root}/tools/port/codex-run.sh read-only 1800 <<'CODEX_PROMPT'
 You will run 3 independent reviews of the same change, in the order given. Finish each review before reading anything the next one points to, and do not let a later review's inputs change an earlier review's findings. Your final message has exactly one section per review, headed `## <id>`, containing that review's output.
 
@@ -18,7 +19,7 @@ Output a Markdown list of findings only — no severity, priority, or ranking.
 If the content is empty, stop and say so.
 If you have zero findings, re-check and keep thinking; do not stop with an empty list.
 
-CONTENT: the unified diff at `{diff_file}`. Read that file — it is the content under review.
+CONTENT: the unified diff at `{diff_file}.code`. Read that file — it is the content under review.
 
 Do not invoke any skill, and do not spawn subagents of your own — you are the reviewer. Return your findings as text in your final message; do not route them through any findings-reporting tool the host may offer.
 
@@ -26,7 +27,7 @@ Do not invoke any skill, and do not spawn subagents of your own — you are the 
 
 Read `{skill-root}/review-prompts/verification-gap.md` completely and follow it as your review instructions.
 
-Review content: the unified diff at `{diff_file}`. Read that file — it is the content under review.
+Review content: the unified diff at `{diff_file}.code`. Read that file — it is the content under review.
 
 Do not invoke any skill, and do not spawn subagents of your own — you are the reviewer. If the instruction file is unreadable, report that exact failure and stop. Return your findings as text in your final message; do not route them through any findings-reporting tool the host may offer.
 
@@ -36,7 +37,7 @@ Read `{skill-root}/review-prompts/edge-case-hunter.md` completely and follow it 
 
 claims_file (leave unread until your instructions call for it): {claims_file}
 
-Review content: the unified diff at `{diff_file}`. Read that file — it is the content under review.
+Review content: the unified diff at `{diff_file}.code`. Read that file — it is the content under review.
 
 Do not invoke any skill, and do not spawn subagents of your own — you are the reviewer. If the instruction file is unreadable, report that exact failure and stop. Return your findings as text in your final message; do not route them through any findings-reporting tool the host may offer.
 CODEX_PROMPT
