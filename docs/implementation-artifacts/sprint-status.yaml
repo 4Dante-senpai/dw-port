@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-11-2026 12:35
-last_updated: 10-15-2026 21:47
+last_updated: 2026-10-16
 project: dw-port
 project_key: NOKEY
 tracking_system: file-system
@@ -48,7 +48,7 @@ development_status:
   2-10-modelo-gte-y-macros-inline: done
   2-11-libgte-y-tablas-leídas-del-exe-en-el-pack: done
   2-12-renderer-software-y-libgpu: done
-  2-13-libgs-con-el-pipeline-tmd: backlog
+  2-13-libgs-con-el-pipeline-tmd: done
   2-14-stubs-con-comportamiento-definido-para-audio-video-y-memory: backlog
   2-15-pantalla-de-título-en-nativo-headless: backlog
   epic-2-retrospective: optional

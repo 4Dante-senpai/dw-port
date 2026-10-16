@@ -26,3 +26,7 @@
 - source_spec: `docs/implementation-artifacts/spec-2-12-renderer-software-y-libgpu.md`
   summary: Verificar contra el Emulador de referencia el orden de copia de filas de GP0 80 (`MoveImage`) con solape, incluida la envoltura 511→0.
   evidence: `gpu_soft.c` elige el orden por `dy > sy` (semántica memmove); si el hardware copia siempre de arriba hacia abajo, las copias solapadas hacia abajo difieren. Se resuelve con un caso sintético en DuckStation (Historia 3.1).
+
+- source_spec: `docs/implementation-artifacts/spec-2-13-libgs-con-el-pipeline-tmd.md`
+  summary: Validar con los TMD del Pack que llegan sin mapear (bit 0 de flags en 0) antes de `GsMapModelingData`.
+  evidence: `[hypothesis]` anotada en `port/psyq/libgs.c`; si alguno llegara mapeado con direcciones PS1, `GsLinkObject4` apuntaría fuera de la memoria del port. Se resuelve leyendo el campo flags de cada TMD del disco (Historia 2.15, con el Pack real).

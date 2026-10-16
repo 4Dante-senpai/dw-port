@@ -51,10 +51,7 @@ long VSyncCallbacks(int ch, void (*f)());
 long InterruptCallback(int irq, void (*f)());
 int ResetCallback(void);
 
-/* libgs.h */
-typedef unsigned char PACKET;
-void GsSetWorkBase(PACKET *outpacketp);
-PACKET *GsGetWorkBase(void);
+
 
 /* libapi.h */
 long SetRCnt(unsigned long spec, unsigned short target, long mode);
@@ -157,6 +154,72 @@ void NormalColorCol(SVECTOR *v0, CVECTOR *v1, CVECTOR *v2);
 void SetLightMatrix(MATRIX *m);
 long RotTransPers3(SVECTOR *v0, SVECTOR *v1, SVECTOR *v2,
 			long *sxy0, long *sxy1, long *sxy2, long *p, long *flag);
+
+
+/* libgs.h */
+#include "gs_types.h"
+void GsInitGraph(unsigned short x, unsigned short y, unsigned short mode, unsigned short dith, unsigned short vram);
+void GsInit3D(void);
+void GsMapModelingData(unsigned long *p);
+void GsSetProjection(long h);
+int GsSetFlatLight(int id, GsF_LIGHT *lt);
+void GsSetLightMode(int mode);
+void GsSetAmbient(long r, long g, long b);
+void GsDrawOt(GsOT *ot);
+void GsSetWorkBase(PACKET *p);
+PACKET *GsGetWorkBase(void);
+void GsSortSprite(GsSPRITE *sp, GsOT *ot, unsigned short pri);
+void GsSortFastSprite(GsSPRITE *sp, GsOT *ot, unsigned short pri);
+void GsSortBoxFill(GsBOXF *bp, GsOT *ot, unsigned short pri);
+void GsSortPoly(void *pp, GsOT *ot, unsigned short pri);
+void GsClearOt(unsigned short offset, unsigned short point, GsOT *ot);
+GsOT *GsSortOt(GsOT *src, GsOT *dst);
+void GsDefDispBuff(unsigned short x0, unsigned short y0, unsigned short x1, unsigned short y1);
+void GsSortClear(unsigned char r, unsigned char g, unsigned char b, GsOT *ot);
+void GsGetTimInfo(unsigned long *im, GsIMAGE *tim);
+void GsSwapDispBuff(void);
+int GsGetActiveBuff(void);
+void GsSetOrign(long x, long y);
+void GsInitCoordinate2(GsCOORDINATE2 *super, GsCOORDINATE2 *base);
+void GsMulCoord0(MATRIX *a, MATRIX *b, MATRIX *out);
+void GsMulCoord3(MATRIX *a, MATRIX *b);
+void GsGetLw(GsCOORDINATE2 *c, MATRIX *out);
+void GsGetLs(GsCOORDINATE2 *c, MATRIX *out);
+void GsGetLws(GsCOORDINATE2 *c, MATRIX *outw, MATRIX *outs);
+void GsLinkObject4(unsigned long base, GsDOBJ2 *obj, int n);
+void GsSetLightMatrix(MATRIX *m);
+int GsSetRefView2(GsRVIEW2 *v);
+int GsSetView2(GsVIEW2 *v);
+void GsSetLsMatrix(MATRIX *m);
+void GsSortObject4J(GsDOBJ2 *obj, GsOT *ot, int shift, unsigned long *scratch);
+void GsSetNearClip(long z);
+PACKET *GsTMDfastF3L(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastNF4(void *prim, SVECTOR *verts, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastF4NL(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastF4L(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastG3L(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastG4L(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastTNF3(void *prim, SVECTOR *verts, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastTF3NL(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastTF3L(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastTNF4(void *prim, SVECTOR *verts, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastTF4NL(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastTF4L(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastTNG3(void *prim, SVECTOR *verts, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastTG3NL(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastTG3L(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastTNG4(void *prim, SVECTOR *verts, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastTG4NL(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDfastTG4L(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDdivTF3NL(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDdivTNF3(void *prim, SVECTOR *verts, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDdivTG3NL(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDdivTNG3(void *prim, SVECTOR *verts, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDdivTF4L(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDdivTF4NL(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDdivTNF4(void *prim, SVECTOR *verts, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDdivTG4NL(void *prim, SVECTOR *verts, SVECTOR *norms, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
+PACKET *GsTMDdivTNG4(void *prim, SVECTOR *verts, PACKET *pk, unsigned n, int shift, GsOT *ot, unsigned long *scratch);
 
 /* Port internals. */
 extern int Vcount;

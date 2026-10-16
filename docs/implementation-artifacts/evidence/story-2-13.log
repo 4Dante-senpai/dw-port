@@ -1,0 +1,350 @@
+Historia 2.13 — libgs con el pipeline TMD
+Fecha: 2026-10-16
+Ejecutado directamente dentro del contenedor, en /dw (mismo árbol que /envs/demian/dw-port).
+Fuentes de intención: especificación 2.13 completa y epic-2-context.md de su frontmatter.
+Sin commits; sin cambios en src/, include/ ni Backend; sin datos del disco añadidos.
+
+Oráculos L1: campos de paquetes calculados aparte a partir del asm y aritmética GTE.
+Los SHA-256 son regresiones fijadas después de la primera corrida verde de esos campos.
+Se normalizan únicamente los enlaces de OT/paquetes a offsets canónicos para comparar
+native-headless y ASan; colores, XY, UV/CLUT/tpage, longitudes y orden permanecen literales.
+El test replica las 27 casillas registradas por initializeGsTMDMap del Juego.
+Cubre dos primitivas por grupo, grupos distintos, culling, entrada vacía sin avance de reloj,
+subdivisión a uno y dos niveles, OT hija, shift 2, 2D, matrices/cache/luces, TIM y dos frames en VRAM.
+La hipótesis de TMD del disco sin mapear queda explícita en libgs.c; paridad de escenas contra
+emulador pertenece a M3, no se afirma con esta evidencia.
+
+=== Configuración native-headless: cmake --preset native-headless ===
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_C_COMPILER="clang"
+  CMAKE_C_FLAGS="-m32"
+  CMAKE_EXPORT_COMPILE_COMMANDS="ON"
+
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /dw/build/port/native-headless
+
+=== Build native-headless: cmake --build --preset native-headless ===
+[0/2] Re-checking globbed directories...
+[1/18] Building C object CMakeFiles/test_libgs.dir/port/psyq/tests/test_libgs.c.o
+[2/18] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgs.c.o
+[3/18] Linking C static library libdw1_psyq.a
+[4/18] Linking C executable test_ps1mem
+[5/18] Linking C executable test_libgs
+[6/18] Linking C executable test_libgpu
+[7/18] Linking C executable test_libc_heap_pad
+[8/18] Linking C executable test_clock
+[9/18] Linking C executable test_libgte
+[10/18] Linking C executable test_overlay_O0
+[11/18] Linking C executable test_watchdog
+[12/18] Linking C executable test_gte
+[13/18] Linking C executable test_overlay_O2
+[14/18] Linking C executable test_libcd
+[15/18] Linking C executable overlay_probe
+[16/18] Generating generated/psyq_stubs.c
+psyq: used=199 implemented=135 host_libc=12 stubs=52 gte_stubs=0
+[17/17] Linking C executable dw1
+
+=== Suite sin disco: env -u DW1_DISC_DIR ctest --preset native-headless ===
+Test project /dw/build/port/native-headless
+      Start  1: gpu
+ 1/34 Test  #1: gpu ..............................   Passed    0.83 sec
+      Start  2: libgs
+ 2/34 Test  #2: libgs ............................   Passed    0.01 sec
+      Start  3: libgpu
+ 3/34 Test  #3: libgpu ...........................   Passed    0.05 sec
+      Start  4: gte_tables
+ 4/34 Test  #4: gte_tables .......................   Passed    0.12 sec
+      Start 28: pack
+ 5/34 Test #28: pack .............................   Passed    0.03 sec
+      Start  5: libgte
+ 6/34 Test  #5: libgte ...........................   Passed    0.00 sec
+      Start  6: pre_commit
+ 7/34 Test  #6: pre_commit .......................   Passed    0.08 sec
+      Start  7: rts_info
+ 8/34 Test  #7: rts_info .........................   Passed    0.08 sec
+      Start  8: ovl_starts
+ 9/34 Test  #8: ovl_starts .......................   Passed    0.06 sec
+      Start  9: tu_list
+10/34 Test  #9: tu_list ..........................   Passed    0.21 sec
+      Start 10: gen_stubs
+11/34 Test #10: gen_stubs ........................   Passed    0.08 sec
+      Start 11: inventory
+12/34 Test #11: inventory ........................   Passed   11.54 sec
+      Start 12: preproc_check
+13/34 Test #12: preproc_check ....................   Passed   26.62 sec
+      Start 13: test_preproc_check
+14/34 Test #13: test_preproc_check ...............   Passed  133.26 sec
+      Start 14: ps1_ram_addr_range
+15/34 Test #14: ps1_ram_addr_range ...............   Passed    0.03 sec
+      Start 15: ps1mem
+16/34 Test #15: ps1mem ...........................   Passed    0.00 sec
+      Start 16: setjmp
+17/34 Test #16: setjmp ...........................   Passed    0.00 sec
+      Start 17: clock
+18/34 Test #17: clock ............................   Passed    0.01 sec
+      Start 18: libc_heap_pad
+19/34 Test #18: libc_heap_pad ....................   Passed    0.00 sec
+      Start 19: gte
+20/34 Test #19: gte ..............................   Passed    0.00 sec
+      Start 20: psyq_prototypes
+21/34 Test #20: psyq_prototypes ..................   Passed    0.04 sec
+      Start 21: overlay_O0
+22/34 Test #21: overlay_O0 .......................   Passed    0.00 sec
+      Start 22: overlay_O2
+23/34 Test #22: overlay_O2 .......................   Passed    0.00 sec
+      Start 23: overlay_sections
+24/34 Test #23: overlay_sections .................   Passed    0.00 sec
+      Start 24: overlay_objects
+25/34 Test #24: overlay_objects ..................   Passed    1.15 sec
+      Start 25: frame0
+26/34 Test #25: frame0 ...........................   Passed    0.01 sec
+      Start 26: dw1_bad_args
+27/34 Test #26: dw1_bad_args .....................   Passed    0.00 sec
+      Start 27: watchdog
+28/34 Test #27: watchdog .........................   Passed    1.60 sec
+      Start 29: libcd
+29/34 Test #29: libcd ............................   Passed    0.00 sec
+      Start 30: libgte_host
+30/34 Test #30: libgte_host ......................   Passed    0.04 sec
+      Start 31: dw1_foreign_pack
+31/34 Test #31: dw1_foreign_pack .................   Passed    0.00 sec
+      Start 32: pack_disc
+32/34 Test #32: pack_disc ........................***Skipped   0.00 sec
+      Start 33: gte_tables_disc
+33/34 Test #33: gte_tables_disc ..................***Skipped   0.00 sec
+      Start 34: dw1_overlay
+34/34 Test #34: dw1_overlay ......................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 34
+
+Total Test time (real) = 175.90 sec
+
+The following tests did not run:
+	 32 - pack_disc (Skipped)
+	 33 - gte_tables_disc (Skipped)
+	 34 - dw1_overlay (Skipped)
+
+=== Configuración native-asan: cmake --preset native-asan ===
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_C_COMPILER="clang"
+  CMAKE_C_FLAGS="-m32 -fsanitize=address,undefined -fno-sanitize=function -fno-omit-frame-pointer -fno-sanitize-recover=undefined"
+  CMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined -shared-libasan"
+  CMAKE_EXPORT_COMPILE_COMMANDS="ON"
+
+-- Configuring done (0.3s)
+-- Generating done (0.1s)
+-- Build files have been written to: /dw/build/port/native-asan
+
+=== Build native-asan: cmake --build --preset native-asan ===
+[0/2] Re-checking globbed directories...
+[1/17] Building C object CMakeFiles/test_libgs.dir/port/psyq/tests/test_libgs.c.o
+[2/17] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgs.c.o
+[3/17] Linking C static library libdw1_psyq.a
+[4/17] Linking C executable test_libgpu
+[5/17] Linking C executable test_libc_heap_pad
+[6/17] Linking C executable test_ps1mem
+[7/17] Linking C executable test_libgs
+[8/17] Linking C executable test_clock
+[9/17] Linking C executable test_libgte
+[10/17] Linking C executable test_gte
+[11/17] Linking C executable test_overlay_O0
+[12/17] Linking C executable test_overlay_O2
+[13/17] Linking C executable test_watchdog
+[14/17] Linking C executable test_libcd
+[15/17] Generating generated/psyq_stubs.c
+psyq: used=199 implemented=135 host_libc=12 stubs=52 gte_stubs=0
+[16/16] Linking C executable dw1
+
+=== Suite sin disco: env -u DW1_DISC_DIR ctest --preset native-asan ===
+Test project /dw/build/port/native-asan
+      Start  1: gpu
+ 1/32 Test  #1: gpu ..............................   Passed    3.03 sec
+      Start  2: libgs
+ 2/32 Test  #2: libgs ............................   Passed    0.03 sec
+      Start  3: libgpu
+ 3/32 Test  #3: libgpu ...........................   Passed    0.06 sec
+      Start  4: gte_tables
+ 4/32 Test  #4: gte_tables .......................   Passed    0.07 sec
+      Start 26: pack
+ 5/32 Test #26: pack .............................   Passed    0.07 sec
+      Start  5: libgte
+ 6/32 Test  #5: libgte ...........................   Passed    0.02 sec
+      Start  6: pre_commit
+ 7/32 Test  #6: pre_commit .......................   Passed    0.06 sec
+      Start  7: rts_info
+ 8/32 Test  #7: rts_info .........................   Passed    0.07 sec
+      Start  8: ovl_starts
+ 9/32 Test  #8: ovl_starts .......................   Passed    0.06 sec
+      Start  9: tu_list
+10/32 Test  #9: tu_list ..........................   Passed    0.16 sec
+      Start 10: gen_stubs
+11/32 Test #10: gen_stubs ........................   Passed    0.03 sec
+      Start 11: inventory
+12/32 Test #11: inventory ........................   Passed   10.99 sec
+      Start 12: preproc_check
+13/32 Test #12: preproc_check ....................   Passed   26.64 sec
+      Start 13: test_preproc_check
+14/32 Test #13: test_preproc_check ...............   Passed  133.06 sec
+      Start 14: ps1_ram_addr_range
+15/32 Test #14: ps1_ram_addr_range ...............   Passed    0.02 sec
+      Start 15: ps1mem
+16/32 Test #15: ps1mem ...........................   Passed    0.05 sec
+      Start 16: setjmp
+17/32 Test #16: setjmp ...........................   Passed    0.01 sec
+      Start 17: clock
+18/32 Test #17: clock ............................   Passed    0.04 sec
+      Start 18: libc_heap_pad
+19/32 Test #18: libc_heap_pad ....................   Passed    0.02 sec
+      Start 19: gte
+20/32 Test #19: gte ..............................   Passed    0.03 sec
+      Start 20: psyq_prototypes
+21/32 Test #20: psyq_prototypes ..................   Passed    0.04 sec
+      Start 21: overlay_O0
+22/32 Test #21: overlay_O0 .......................   Passed    0.01 sec
+      Start 22: overlay_O2
+23/32 Test #22: overlay_O2 .......................   Passed    0.01 sec
+      Start 23: frame0
+24/32 Test #23: frame0 ...........................   Passed    0.04 sec
+      Start 24: dw1_bad_args
+25/32 Test #24: dw1_bad_args .....................   Passed    0.02 sec
+      Start 25: watchdog
+26/32 Test #25: watchdog .........................   Passed    4.44 sec
+      Start 27: libcd
+27/32 Test #27: libcd ............................   Passed    0.03 sec
+      Start 28: libgte_host
+28/32 Test #28: libgte_host ......................   Passed    0.08 sec
+      Start 29: dw1_foreign_pack
+29/32 Test #29: dw1_foreign_pack .................   Passed    0.02 sec
+      Start 30: pack_disc
+30/32 Test #30: pack_disc ........................***Skipped   0.00 sec
+      Start 31: gte_tables_disc
+31/32 Test #31: gte_tables_disc ..................***Skipped   0.00 sec
+      Start 32: dw1_overlay
+32/32 Test #32: dw1_overlay ......................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 32
+
+Total Test time (real) = 179.23 sec
+
+The following tests did not run:
+	 30 - pack_disc (Skipped)
+	 31 - gte_tables_disc (Skipped)
+	 32 - dw1_overlay (Skipped)
+
+=== Configuración web: cmake --preset web ===
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_EXPORT_COMPILE_COMMANDS="ON"
+  CMAKE_TOOLCHAIN_FILE:FILEPATH="/opt/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+
+-- Configuring done (2.0s)
+-- Generating done (0.2s)
+-- Build files have been written to: /dw/build/port/web
+
+=== Build web: cmake --build --preset web ===
+[0/2] Re-checking globbed directories...
+[1/2] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgs.c.o
+[2/2] Linking C static library libdw1_psyq.a
+
+=== Revalidación tras agregar casos de borde: ctest --preset native-headless -R libgs|psyq_prototypes|libgpu|frame0 ===
+Test project /dw/build/port/native-headless
+    Start  2: libgs
+1/4 Test  #2: libgs ............................   Passed    0.00 sec
+    Start  3: libgpu
+2/4 Test  #3: libgpu ...........................   Passed    0.02 sec
+    Start 20: psyq_prototypes
+3/4 Test #20: psyq_prototypes ..................   Passed    0.04 sec
+    Start 25: frame0
+4/4 Test #25: frame0 ...........................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   0.08 sec
+
+=== Revalidación tras agregar casos de borde: ctest --preset native-asan -R libgs|psyq_prototypes|libgpu|frame0 ===
+Test project /dw/build/port/native-asan
+    Start  2: libgs
+1/4 Test  #2: libgs ............................   Passed    0.03 sec
+    Start  3: libgpu
+2/4 Test  #3: libgpu ...........................   Passed    0.06 sec
+    Start 20: psyq_prototypes
+3/4 Test #20: psyq_prototypes ..................   Passed    0.04 sec
+    Start 23: frame0
+4/4 Test #23: frame0 ...........................   Passed    0.04 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   0.17 sec
+
+=== Con disco: DW1_DISC_DIR=/dw/game_rom/extracted ctest --preset native-headless -R pack_disc|dw1_overlay|gte_tables_disc ===
+Test project /dw/build/port/native-headless
+    Start 32: pack_disc
+1/3 Test #32: pack_disc ........................   Passed   37.42 sec
+    Start 33: gte_tables_disc
+2/3 Test #33: gte_tables_disc ..................   Passed    0.10 sec
+    Start 34: dw1_overlay
+3/3 Test #34: dw1_overlay ......................   Passed    0.03 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =  37.55 sec
+
+=== 27 SHA-256: build/port/native-headless/test_libgs --record ===
+HASH F3L 26df65a74b23a029823b6ec35c2d742fe2f67d72af65c8975dfcde11e9163f8d
+HASH G3L 4d5854435adb56a62edaaa3b70534b4e7e88358777a5a466f5d410c157154261
+HASH F4L 6d49fc1150de6ccf14cecfaf3384575333fd62119a999a5bac3b3bd19d5404c6
+HASH F4NL f69fb9fdba13dd69f6b6906e6160c0c5ba7dfdaa4c7d8efb197060b267b55f30
+HASH NF4 e9ad7fa77defb372cca8b9c34ac8536c200ec80b6f3f8758640b532502e96bd6
+HASH G4L 61ec48ce5472872538aafc91dceebc851c59bbfb6620c0e5fd271bbda0ddb30e
+HASH TF3L eb1e503ec6332387eae0c8b9c6b6f90e94c33205541a440ad34ac2b5591ba412
+HASH TF3NL 6f53590bb998cf1d9355beb4e501d9f0e27378916886daee565a03703b373245
+HASH TNF3 cb8699564a4bfc591e7b8325088cada55f7b0f94540a814f52798be1806ddb8e
+HASH TF4L 695965e38deca3fa87e397b073581b9271bbfeb2817571b95f1824e2f073925c
+HASH TF4NL 2c4fc3ef9a62981bfda653d3ef0a382a4e04ab2325ba0bc4fc35abe0418e915c
+HASH TNF4 5ef7471c7c0fdd43540ddb81f16ddbd6b2071ed6b0cfded729d837f8dc1e1cef
+HASH TG3L feb13b1abf5cd2755ebf1ec986170f08eae1eebe68be2a29c95a3b223a864b32
+HASH TG3NL 576cbb79def05b513eab15b76cf76d9f2a884ce9a9d5f4fea630bfe5b296b955
+HASH TNG3 cf83b6f4cff6dd1a6b8659dd0727b98bdeda01df527f66bccef7dfaea32824f9
+HASH TG4L 65ab5c14ef2b46c1c69186e89b953cce23c42e8cbce816410930e0d7d01c7a05
+HASH TG4NL 439c13dbdabc0fc6a5530a65999187a5c5034b46f527924eb54ba704c018283e
+HASH TNG4 124b79c55388945f2f76cb87369bb7712b254eb0619cb907049b5cb0a4c0563d
+HASH divTF3NL c2b5c3108c47f61ab174e244022e23649a4200bae1283bae9df99b3af997c993
+HASH divTNF3 4764a07dffcd303c7c608bb108ceda49294890af818e9b83f9b852551f3e5ff0
+HASH divTG3NL 8febbc20136ab6f6df1dba3da4626c40541da2e0b8ed110c935c788dfb25e224
+HASH divTNG3 cd3f3ea026b6a7c40519fcbeb2efc877a6d5ec7b9b56aa4b1325aabef7e471c8
+HASH divTF4L 43c108d2b1c1680dd1d329a23af82a2cb422f93e57857f3b195c7b5d0da6f3b4
+HASH divTF4NL abb98dbbd99633a7b20b1c07a1013670aca3e18eae63a3a2ee07c5d22514e17d
+HASH divTNF4 9642b59f2345df309a5951909124720df9aab4f0fff7da780c5802aa13141b79
+HASH divTG4NL 2beb9f4298f32bfd4fce46fd15d3ec0d6a1e54ca25d6662638de6ddd4f292ab0
+HASH divTNG4 c0294d1ad2cd9228badae1a30b54c9f63a4712f8772f8047f833c45d5b9d010d
+libgs: 27 TMD kernels, OT, 2D, matrices, utilities, double buffer; failures=0
+
+=== Auditoría automática de símbolos y capas ===
+35 entradas libgs + 27 GsTMD; 52 stubs, ninguno Gs*.
+Único include del Backend: ../backend/gte.h. src/ e include/ sin cambios.
+
+=== Con disco: DW1_DISC_DIR=/dw/game_rom/extracted ctest --preset native-asan -R pack_disc|dw1_overlay|gte_tables_disc ===
+Test project /dw/build/port/native-asan
+    Start 30: pack_disc
+1/3 Test #30: pack_disc ........................   Passed  196.64 sec
+    Start 31: gte_tables_disc
+2/3 Test #31: gte_tables_disc ..................   Passed    0.16 sec
+    Start 32: dw1_overlay
+3/3 Test #32: dw1_overlay ......................   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) = 196.89 sec
+
+=== Tras la revisión (parches en tmd_div y 4 tests nuevos) ===
+native-headless: 100% tests passed, 0 tests failed out of 34 (3 de disco omitidos sin DW1_DISC_DIR)
+native-asan: 100% tests passed, 0 tests failed out of 32 (3 de disco omitidos sin DW1_DISC_DIR)
+DW1_DISC_DIR=/dw/game_rom/extracted -R 'pack_disc|dw1_overlay|gte_tables_disc': 3/3 passed in both native presets
+web: build exit 0; L0a preproc_check: exit 0
+make (dw-build) exit 0; make compare: Compiled binaries match with target binaries
