@@ -125,9 +125,20 @@
   agregado al job `native-disc` del CI y test del hook; 10 hallazgos rechazados. Sin cambios en `src/`/`include/` ni
   datos del disco añadidos. Evidencia: `docs/implementation-artifacts/evidence/story-2-11.log`.
 
+- Historia 2.12 (renderer software y `libgpu`): Backend GPU con VRAM privada 1024×512,
+  primitivas planas/Gouraud/texturadas, CLUT, dithering, mezcla, máscaras y transferencias;
+  adaptación CC0 de DW2-PC sin dependencias de presentación. Las 28 funciones usadas de
+  `libgpu`, más `DrawOTag`/`ClearOTagR`, implementan paquetes, TIM y listas con enlaces PS1.
+  `DrawSync` espera el evento de fin en el reloj virtual; los costes por palabra/píxel y
+  las transferencias inmediatas quedan como hipótesis a calibrar en 3.10. Tests de píxeles
+  calculados aparte y 30 SHA-256 de VRAM, ABI (tamaños y offsets), OT y ciclos verdes; suites completas nativa
+  (33, 3 omitidas sin disco) y ASan/UBSan (31, 3 omitidas); con disco 3/3, incluido
+  `frame0`; build web con `-Werror` y L0a verdes. Sin cambios en `src/`/`include/`.
+  Evidencia: `docs/implementation-artifacts/evidence/story-2-12.log`.
+
 ## En curso
 
-- Fase 5: próxima historia 2.12 (renderer software y `libgpu`).
+- Fase 5: próxima historia 2.13 (`libgs` con el pipeline TMD).
 
 ## Bloqueos
 
@@ -144,7 +155,7 @@
 | Archivos C del juego que compilan a wasm32 en el preset `web` | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Bloques `DW1_PORT` en `src/`/`include/` | 13 (`docs/port/src-changes.md`) |
-| Funciones PsyQ usadas: implementadas / stubs / libc del host | 47 / 140 / 12 (de 199) |
+| Funciones PsyQ usadas: implementadas / stubs / libc del host | 75 / 112 / 12 (de 199) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
 | Escenas que funcionan (nativo) | 0 |

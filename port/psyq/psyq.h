@@ -8,6 +8,40 @@
  * compiles against (external/psyq_headers/mw_lib41/include), plus the port's internal hooks.
  */
 
+
+/* libgpu.h */
+#include "gpu_types.h"
+DISPENV *PutDispEnv(DISPENV *env);
+DRAWENV *PutDrawEnv(DRAWENV *env);
+DISPENV *SetDefDispEnv(DISPENV *env, int x, int y, int w, int h);
+TIM_IMAGE *ReadTIM(TIM_IMAGE *image);
+int ClearImage(RECT *rect, unsigned char r, unsigned char g, unsigned char b);
+int DrawSync(int mode);
+int LoadImage(RECT *rect, unsigned long *src);
+int StoreImage(RECT *rect, unsigned long *dst);
+int MoveImage(RECT *rect, int x, int y);
+int OpenTIM(unsigned long *addr);
+int ResetGraph(int mode);
+int SetGraphDebug(int level);
+unsigned long *ClearOTagR(unsigned long *ot, int n);
+unsigned short GetClut(int x, int y);
+unsigned short GetTPage(int tp, int abr, int x, int y);
+unsigned short LoadClut(unsigned long *src, int x, int y);
+void AddPrim(void *ot, void *prim);
+void DrawOTag(unsigned long *ot);
+void SetDispMask(int on);
+void SetDrawLoad(DR_LOAD *p, RECT *rect);
+void SetDrawOffset(DR_OFFSET *p, unsigned short *ofs);
+void SetSemiTrans(void *p, int on);
+void SetPolyFT3(POLY_FT3 *p);
+void SetPolyFT4(POLY_FT4 *p);
+void SetPolyF4(POLY_F4 *p);
+void SetPolyG4(POLY_G4 *p);
+void SetPolyGT4(POLY_GT4 *p);
+void SetLineF2(LINE_F2 *p);
+void SetLineF3(LINE_F3 *p);
+void SetLineF4(LINE_F4 *p);
+
 /* libetc.h */
 void PadInit(int mode);
 unsigned long PadRead(int id);

@@ -1,0 +1,419 @@
+Historia 2.12 — renderer software y libgpu
+Fecha: 2026-10-16 UTC
+Entorno: contenedor de trabajo /dw (i686 nativo y Emscripten wasm32).
+Base: 3519fe1fda9b0e064216f779b9da998aaa65860f
+Especificación y todo su context cargados antes de implementar.
+Sin commits. Sin cambios en src/ ni include/. Sin datos del disco añadidos.
+
+Implementación:
+- GPU software adaptada de DW2-PC backend/psxgpu.c @ 816ed0d (CC0).
+- VRAM privada 1024x512; API gpu_*; sin dependencias de presentación.
+- 28 entradas libgpu usadas + DrawOTag/ClearOTagR; cada entrada avanza clock_psyq_entry.
+- OT con PS1_LINK/PS1_LINK_PTR, END y límite 0x100000 con diagnóstico.
+- Costes GPU: 2 ciclos/palabra y 1 ciclo/píxel escrito [hipótesis, calibración 3.10].
+- Transferencias inmediatas y evento virtual de fin; DrawSync(0) espera ese ciclo exacto.
+- Tests independientes de píxeles/paquetes y 28 hashes completos de VRAM congelados
+  después de pasar las expectativas de píxeles; los hashes se verifican en modo normal.
+
+Comandos de build (todos terminaron con exit 0):
+cmake --preset native-headless
+cmake --build --preset native-headless
+cmake --preset native-asan
+cmake --build --preset native-asan
+EMSDK=/opt/emsdk cmake --preset web
+cmake --build --preset web
+Backend y PsyQ se compilan con -Wall -Wextra -Werror en los tres presets.
+
+Suite completa: env -u DW1_DISC_DIR ctest --preset native-headless
+Test project /dw/build/port/native-headless
+      Start  1: gpu
+ 1/33 Test  #1: gpu ..............................   Passed    0.43 sec
+      Start  2: libgpu
+ 2/33 Test  #2: libgpu ...........................   Passed    0.02 sec
+      Start  3: gte_tables
+ 3/33 Test  #3: gte_tables .......................   Passed    0.10 sec
+      Start 27: pack
+ 4/33 Test #27: pack .............................   Passed    0.02 sec
+      Start  4: libgte
+ 5/33 Test  #4: libgte ...........................   Passed    0.00 sec
+      Start  5: pre_commit
+ 6/33 Test  #5: pre_commit .......................   Passed    0.09 sec
+      Start  6: rts_info
+ 7/33 Test  #6: rts_info .........................   Passed    0.08 sec
+      Start  7: ovl_starts
+ 8/33 Test  #7: ovl_starts .......................   Passed    0.05 sec
+      Start  8: tu_list
+ 9/33 Test  #8: tu_list ..........................   Passed    0.17 sec
+      Start  9: gen_stubs
+10/33 Test  #9: gen_stubs ........................   Passed    0.03 sec
+      Start 10: inventory
+11/33 Test #10: inventory ........................   Passed   11.31 sec
+      Start 11: preproc_check
+12/33 Test #11: preproc_check ....................   Passed   26.47 sec
+      Start 12: test_preproc_check
+13/33 Test #12: test_preproc_check ...............   Passed  128.23 sec
+      Start 13: ps1_ram_addr_range
+14/33 Test #13: ps1_ram_addr_range ...............   Passed    0.03 sec
+      Start 14: ps1mem
+15/33 Test #14: ps1mem ...........................   Passed    0.00 sec
+      Start 15: setjmp
+16/33 Test #15: setjmp ...........................   Passed    0.00 sec
+      Start 16: clock
+17/33 Test #16: clock ............................   Passed    0.01 sec
+      Start 17: libc_heap_pad
+18/33 Test #17: libc_heap_pad ....................   Passed    0.00 sec
+      Start 18: gte
+19/33 Test #18: gte ..............................   Passed    0.00 sec
+      Start 19: psyq_prototypes
+20/33 Test #19: psyq_prototypes ..................   Passed    0.04 sec
+      Start 20: overlay_O0
+21/33 Test #20: overlay_O0 .......................   Passed    0.00 sec
+      Start 21: overlay_O2
+22/33 Test #21: overlay_O2 .......................   Passed    0.00 sec
+      Start 22: overlay_sections
+23/33 Test #22: overlay_sections .................   Passed    0.00 sec
+      Start 23: overlay_objects
+24/33 Test #23: overlay_objects ..................   Passed    1.10 sec
+      Start 24: frame0
+25/33 Test #24: frame0 ...........................   Passed    0.11 sec
+      Start 25: dw1_bad_args
+26/33 Test #25: dw1_bad_args .....................   Passed    0.00 sec
+      Start 26: watchdog
+27/33 Test #26: watchdog .........................   Passed    1.61 sec
+      Start 28: libcd
+28/33 Test #28: libcd ............................   Passed    0.00 sec
+      Start 29: libgte_host
+29/33 Test #29: libgte_host ......................   Passed    0.05 sec
+      Start 30: dw1_foreign_pack
+30/33 Test #30: dw1_foreign_pack .................   Passed    0.00 sec
+      Start 31: pack_disc
+31/33 Test #31: pack_disc ........................***Skipped   0.00 sec
+      Start 32: gte_tables_disc
+32/33 Test #32: gte_tables_disc ..................***Skipped   0.00 sec
+      Start 33: dw1_overlay
+33/33 Test #33: dw1_overlay ......................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 33
+
+Total Test time (real) = 170.00 sec
+
+The following tests did not run:
+	 31 - pack_disc (Skipped)
+	 32 - gte_tables_disc (Skipped)
+	 33 - dw1_overlay (Skipped)
+
+Suite completa: env -u DW1_DISC_DIR ctest --preset native-asan
+Test project /dw/build/port/native-asan
+      Start  1: gpu
+ 1/31 Test  #1: gpu ..............................   Passed    2.58 sec
+      Start  2: libgpu
+ 2/31 Test  #2: libgpu ...........................   Passed    0.07 sec
+      Start  3: gte_tables
+ 3/31 Test  #3: gte_tables .......................   Passed    0.09 sec
+      Start 25: pack
+ 4/31 Test #25: pack .............................   Passed    0.08 sec
+      Start  4: libgte
+ 5/31 Test  #4: libgte ...........................   Passed    0.02 sec
+      Start  5: pre_commit
+ 6/31 Test  #5: pre_commit .......................   Passed    0.15 sec
+      Start  6: rts_info
+ 7/31 Test  #6: rts_info .........................   Passed    0.16 sec
+      Start  7: ovl_starts
+ 8/31 Test  #7: ovl_starts .......................   Passed    0.06 sec
+      Start  8: tu_list
+ 9/31 Test  #8: tu_list ..........................   Passed    0.18 sec
+      Start  9: gen_stubs
+10/31 Test  #9: gen_stubs ........................   Passed    0.04 sec
+      Start 10: inventory
+11/31 Test #10: inventory ........................   Passed   11.02 sec
+      Start 11: preproc_check
+12/31 Test #11: preproc_check ....................   Passed   26.52 sec
+      Start 12: test_preproc_check
+13/31 Test #12: test_preproc_check ...............   Passed  128.13 sec
+      Start 13: ps1_ram_addr_range
+14/31 Test #13: ps1_ram_addr_range ...............   Passed    0.02 sec
+      Start 14: ps1mem
+15/31 Test #14: ps1mem ...........................   Passed    0.05 sec
+      Start 15: setjmp
+16/31 Test #15: setjmp ...........................   Passed    0.01 sec
+      Start 16: clock
+17/31 Test #16: clock ............................   Passed    0.04 sec
+      Start 17: libc_heap_pad
+18/31 Test #17: libc_heap_pad ....................   Passed    0.02 sec
+      Start 18: gte
+19/31 Test #18: gte ..............................   Passed    0.05 sec
+      Start 19: psyq_prototypes
+20/31 Test #19: psyq_prototypes ..................   Passed    0.04 sec
+      Start 20: overlay_O0
+21/31 Test #20: overlay_O0 .......................   Passed    0.02 sec
+      Start 21: overlay_O2
+22/31 Test #21: overlay_O2 .......................   Passed    0.02 sec
+      Start 22: frame0
+23/31 Test #22: frame0 ...........................   Passed    0.04 sec
+      Start 23: dw1_bad_args
+24/31 Test #23: dw1_bad_args .....................   Passed    0.02 sec
+      Start 24: watchdog
+25/31 Test #24: watchdog .........................   Passed    4.45 sec
+      Start 26: libcd
+26/31 Test #26: libcd ............................   Passed    0.03 sec
+      Start 27: libgte_host
+27/31 Test #27: libgte_host ......................   Passed    0.08 sec
+      Start 28: dw1_foreign_pack
+28/31 Test #28: dw1_foreign_pack .................   Passed    0.02 sec
+      Start 29: pack_disc
+29/31 Test #29: pack_disc ........................***Skipped   0.00 sec
+      Start 30: gte_tables_disc
+30/31 Test #30: gte_tables_disc ..................***Skipped   0.00 sec
+      Start 31: dw1_overlay
+31/31 Test #31: dw1_overlay ......................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 31
+
+Total Test time (real) = 174.04 sec
+
+The following tests did not run:
+	 29 - pack_disc (Skipped)
+	 30 - gte_tables_disc (Skipped)
+	 31 - dw1_overlay (Skipped)
+
+Rebuild final nativo (ABI y casos de reinicio/clamp adicionales)
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /dw/build/port/native-headless
+[0/2] Re-checking globbed directories...
+[1/27] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgs.c.o
+[2/27] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libetc.c.o
+[3/27] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libapi.c.o
+[4/27] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libc.c.o
+[5/27] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libcd.c.o
+[6/27] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgte.c.o
+[7/27] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgpu.c.o
+[8/27] Building C object CMakeFiles/test_libgpu.dir/port/psyq/tests/test_libgpu.c.o
+[9/27] Building C object CMakeFiles/test_libc_heap_pad.dir/port/psyq/tests/test_libc_heap_pad.c.o
+[10/27] Building C object CMakeFiles/test_clock.dir/port/psyq/tests/test_clock.c.o
+[11/27] Building C object CMakeFiles/test_libgte.dir/port/psyq/tests/test_libgte.c.o
+[12/27] Linking C static library libdw1_psyq.a
+[13/27] Building C object CMakeFiles/test_libcd.dir/port/psyq/tests/test_libcd.c.o
+[14/27] Linking C executable test_ps1mem
+[15/27] Linking C executable test_libgpu
+[16/27] Linking C executable test_libc_heap_pad
+[17/27] Linking C executable test_libgte
+[18/27] Linking C executable test_clock
+[19/27] Linking C executable test_gte
+[20/27] Linking C executable test_overlay_O2
+[21/27] Linking C executable test_overlay_O0
+[22/27] Linking C executable test_watchdog
+[23/27] Linking C executable test_libcd
+[24/27] Linking C executable overlay_probe
+[25/27] Generating generated/psyq_stubs.c
+psyq: used=199 implemented=75 host_libc=12 stubs=112 gte_stubs=0
+[26/26] Linking C executable dw1
+
+Rebuild final ASan/UBSan
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /dw/build/port/native-asan
+[0/2] Re-checking globbed directories...
+[1/26] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libc.c.o
+[2/26] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgs.c.o
+[3/26] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libetc.c.o
+[4/26] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libcd.c.o
+[5/26] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libapi.c.o
+[6/26] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgpu.c.o
+[7/26] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgte.c.o
+[8/26] Building C object CMakeFiles/test_libgte.dir/port/psyq/tests/test_libgte.c.o
+[9/26] Building C object CMakeFiles/test_libc_heap_pad.dir/port/psyq/tests/test_libc_heap_pad.c.o
+[10/26] Building C object CMakeFiles/test_libgpu.dir/port/psyq/tests/test_libgpu.c.o
+[11/26] Building C object CMakeFiles/test_clock.dir/port/psyq/tests/test_clock.c.o
+[12/26] Linking C static library libdw1_psyq.a
+[13/26] Building C object CMakeFiles/test_libcd.dir/port/psyq/tests/test_libcd.c.o
+[14/26] Linking C executable test_ps1mem
+[15/26] Linking C executable test_libgpu
+[16/26] Linking C executable test_clock
+[17/26] Linking C executable test_gte
+[18/26] Linking C executable test_libgte
+[19/26] Linking C executable test_libc_heap_pad
+[20/26] Linking C executable test_overlay_O0
+[21/26] Linking C executable test_overlay_O2
+[22/26] Linking C executable test_watchdog
+[23/26] Linking C executable test_libcd
+[24/26] Generating generated/psyq_stubs.c
+psyq: used=199 implemented=75 host_libc=12 stubs=112 gte_stubs=0
+[25/25] Linking C executable dw1
+
+Build web final
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- Configuring done (0.7s)
+-- Generating done (0.0s)
+-- Build files have been written to: /dw/build/port/web
+[0/2] Re-checking globbed directories...
+[1/8] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgs.c.o
+[2/8] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libetc.c.o
+[3/8] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libcd.c.o
+[4/8] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libc.c.o
+[5/8] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libapi.c.o
+[6/8] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgte.c.o
+[7/8] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgpu.c.o
+[8/8] Linking C static library libdw1_psyq.a
+
+Tras las últimas comprobaciones: ctest --preset native-headless -R "^(gpu|libgpu|psyq_prototypes|frame0)$"
+Test project /dw/build/port/native-headless
+    Start  1: gpu
+1/4 Test  #1: gpu ..............................   Passed    0.40 sec
+    Start  2: libgpu
+2/4 Test  #2: libgpu ...........................   Passed    0.02 sec
+    Start 19: psyq_prototypes
+3/4 Test #19: psyq_prototypes ..................   Passed    0.03 sec
+    Start 24: frame0
+4/4 Test #24: frame0 ...........................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   0.47 sec
+
+Tras las últimas comprobaciones: ctest --preset native-asan -R "^(gpu|libgpu|psyq_prototypes|frame0)$"
+Test project /dw/build/port/native-asan
+    Start  1: gpu
+1/4 Test  #1: gpu ..............................   Passed    2.35 sec
+    Start  2: libgpu
+2/4 Test  #2: libgpu ...........................   Passed    0.06 sec
+    Start 19: psyq_prototypes
+3/4 Test #19: psyq_prototypes ..................   Passed    0.03 sec
+    Start 22: frame0
+4/4 Test #22: frame0 ...........................   Passed    0.04 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   2.48 sec
+
+L0a: sh tools/port/ci/preproc_check.sh
+preproc_check: tus=120 configs=gcc,mwcc differ=0 base=09c174c012365cafd219dff54813dd1ccb9c87ce
+ps1_literals: rows=85 pending=0
+isr_spins: rows=67 pending=0
+
+Salida final de los tests (incluye diagnóstico de OT cíclica):
+Start testing: Oct 16 00:25 UTC
+----------------------------------------------------------
+1/33 Testing: gpu
+1/33 Test: gpu
+Command: "/dw/build/port/native-headless/test_gpu"
+Directory: /dw/build/port/native-headless
+"gpu" start time: Oct 16 00:25 UTC
+Output:
+----------------------------------------------------------
+[gpu] GP0 20: command cut off at the packet end, dropped (logged once)
+[gpu] GP0 C0: VRAM to CPU in a packet, ignored (logged once)
+gpu: exact pixels and VRAM hashes passed
+<end of output>
+Test time =   0.40 sec
+----------------------------------------------------------
+Test Passed.
+"gpu" end time: Oct 16 00:25 UTC
+"gpu" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/33 Testing: libgpu
+2/33 Test: libgpu
+Command: "/dw/build/port/native-headless/test_libgpu"
+Directory: /dw/build/port/native-headless
+"libgpu" start time: Oct 16 00:25 UTC
+Output:
+----------------------------------------------------------
+[libgpu] OT traversal stopped after 0x100000 packets (unterminated list)
+libgpu: packets, TIM, OT and cycle timing passed
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"libgpu" end time: Oct 16 00:25 UTC
+"libgpu" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/33 Testing: psyq_prototypes
+19/33 Test: psyq_prototypes
+Command: "/usr/bin/clang" "-m32" "-fsyntax-only" "-w" "-I/dw/external/psyq_headers/mw_lib41/include" "/dw/port/psyq/tests/psyq_prototypes.c"
+Directory: /dw/build/port/native-headless
+"psyq_prototypes" start time: Oct 16 00:25 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"psyq_prototypes" end time: Oct 16 00:25 UTC
+"psyq_prototypes" time elapsed: 00:00:00
+----------------------------------------------------------
+
+24/33 Testing: frame0
+24/33 Test: frame0
+Command: "/usr/bin/sh" "-c" "rm -f frame0_trace.log && DW1_TRACE=frame0_trace.log     /dw/build/port/native-headless/dw1 --headless --frames 1 > frame0.out 2>&1; s=$?; cat frame0.out;     test $s = 0 && grep -q 'reached frame 0' frame0.out &&     ! grep -qE 'ERROR: AddressSanitizer|runtime error' frame0.out &&     test -s frame0_trace.log && sort -n -s -k1,1 -c frame0_trace.log"
+Directory: /dw/build/port/native-headless
+"frame0" start time: Oct 16 00:25 UTC
+Output:
+----------------------------------------------------------
+port: reached frame 0 at cycle 127700052
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"frame0" end time: Oct 16 00:25 UTC
+"frame0" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 16 00:25 UTC
+
+SHA-256 esperados de VRAM (tabla congelada, verificada por test_gpu):
+interpolation f935048fb8ffe907d5302d2e169941ed1cea4fb746922ad06855d10acc1a32fd
+F3 e276f828841d894c6534f474ee29e1191e44d2f5869a5628bcab1f993ea9f438
+F4 1d0de764d4708c094ae4cdaa1defb6af584134274830e715f2e00605cd1b5c2a
+G3 e276f828841d894c6534f474ee29e1191e44d2f5869a5628bcab1f993ea9f438
+G4 1d0de764d4708c094ae4cdaa1defb6af584134274830e715f2e00605cd1b5c2a
+FT3 4ccde4f0ba1357529b32254f69d838b1b36277cf0820f8c2cc33731faf344ea9
+FT4 5d1d0931db4f7c0fe721b245e0eb6c49f29f52dd8140bcf9515e29b4e46617ac
+GT3 4ccde4f0ba1357529b32254f69d838b1b36277cf0820f8c2cc33731faf344ea9
+GT4 5d1d0931db4f7c0fe721b245e0eb6c49f29f52dd8140bcf9515e29b4e46617ac
+tile ab40744895b26195ab58bd8243b04d45a35f2249a5bffc0e7467704b16f3639b
+sprite 4d95a5c1a04f03ee1d63f92bf0215e8ff75a74d2144fd758f49a566274b05db3
+F2-line bd64aa45fa47fbb14b5e8558c6bda3c9cfd5a624d9494205591c81fdb2772102
+F3-line 009bc5f0dabdbbb47b7a6cb093b8c602b0b8c461cad936521bf3dd8886417b19
+F4-line c26f51d30d05be29e33100c1f39260cc325df8ed417e775d56aa20af2ea8e604
+fill 87b6addf24083cae4f815c647f68b434a9c7fa488a5cb68f7ff2959f25b7a654
+blend0 e52718763d0e293f94f04cefc97cad09d0184b2e2a9b89f4f09778e16f7a53bf
+blend1 153eca0119e92bf60c921ee8c5b15bdeacd772a315cc65180cb99818811401cc
+blend2 78962d013d3b40edc4a08edbd9ba6b7442141b8a88ecca966ed0a13452ec464d
+blend3 709f4ddbe9282f1c25f737b1baf91de8a5072deb4a6dd0f11d0a927c5717a454
+dither-off 162dec402c822cf61926ec614decc231d7de8f8b3e74bc23569ecaa9e951f97e
+dither-on 43c9090e5839800417f3a498024715549e89164d6ceb76cb071fc5dd46826419
+clut4 8a8b69f1095fc350848d846c459e9553deda8487e535e8e16cb25d4df33ee630
+clut8 46abbd95b3419c7789c31768a9ad643a981335f85aa247f96f2027faa159d15d
+texture-window 67d4dea7887c0023c71341e52916b1e8deee59a9a80e829cf87cf5d9859f57b8
+mask 9ce4ffb668886dab953cfdabb4e01069ecab0681885884fccdad4d4f32033257
+transfers 11cd8e8986c9ac169a9f91f5d2e1dab912164e30e6b39e635739792fed6f8999
+gp0-transfer e7ab4197d15c1f7e6251e7f5ecdf1e39e2537a957986bbe0d6f361d4f7b5d098
+clip-offset 2f3fe8e5c1a12da6e4e7877af762a033d494a6cc2491abce2ad2bf5b25709977
+
+Inspección automática de alcance:
+- nm libgpu.c.o: 30 símbolos públicos; todas sus funciones tienen clock_psyq_entry.
+- generated/psyq_stubs.c: 112 stubs; intersección con libgpu en psyq_functions.tsv vacía.
+- Conteo anterior: 47 implementadas, 140 stubs, 12 libc host; actual: 75 / 112 / 12.
+- rg -n 'PsxHd|Pgxp|psxgpu_hd' port/: sin coincidencias.
+- git diff --check: exit 0.
+- git diff -- src/ include/: vacío.
+
+Límites:
+Las pruebas de clase B pack_disc/gte_tables_disc/dw1_overlay se omiten expresamente
+sin DW1_DISC_DIR. No se ejecuta comparación con un emulador en esta historia.
+Los costes y la inmutabilidad del origen LoadImage hasta DrawSync siguen siendo hipótesis.
+No se añade presentación ni se afirma que una escena del juego funcione.
+
+== Post-review verification (Claude orchestrator, 2026-10-15T21:47:11-03:00) ==
+native-headless: 100% tests passed, 0 tests failed out of 33 (pack_disc, gte_tables_disc, dw1_overlay skipped without DW1_DISC_DIR)
+native-asan: 100% tests passed, 0 tests failed out of 31 (same 3 skipped)
+DW1_DISC_DIR=/dw/game_rom/extracted -R 'pack_disc|dw1_overlay|gte_tables_disc': 3/3 passed in both native presets
+web build: exit 0; preproc_check.sh: exit 0
+grep 'PsxHd|Pgxp|psxgpu_hd' port/: 0 matches; generated psyq_stubs.c: no libgpu function among the 28

@@ -23,3 +23,6 @@
 - source_spec: `docs/implementation-artifacts/spec-2-7-manifest-y-herramienta-nativa-del-pack.md`
   summary: Verificar si el Juego lee archivos `F1` en `CdlModeSize1` (2340 B), que el Pack no puede servir sin subheader ni EDC/ECC.
   evidence: medium sin verificar; Historia 2.8 (trazar los `CdControl(CdlSetmode)` del Juego).
+- source_spec: `docs/implementation-artifacts/spec-2-12-renderer-software-y-libgpu.md`
+  summary: Verificar contra el Emulador de referencia el orden de copia de filas de GP0 80 (`MoveImage`) con solape, incluida la envoltura 511→0.
+  evidence: `gpu_soft.c` elige el orden por `dy > sy` (semántica memmove); si el hardware copia siempre de arriba hacia abajo, las copias solapadas hacia abajo difieren. Se resuelve con un caso sintético en DuckStation (Historia 3.1).

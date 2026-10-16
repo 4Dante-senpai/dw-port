@@ -23,6 +23,9 @@
 #define CLOCK_PSYQ_ENTRY_CYCLES 64u
 /* [hypothesis] NTSC lines per frame, for VSync(1) and root counter 1; checked in story 3.10 */
 #define CLOCK_LINES_PER_FRAME 263u
+/* [hypothesis] GPU work costs in CPU cycles; calibrate in story 3.10. */
+#define CLOCK_GPU_WORD_CYCLES 2u
+#define CLOCK_GPU_PIXEL_CYCLES 1u
 
 typedef void (*ClockFn)(void *arg);
 
