@@ -129,19 +129,32 @@ target_compile_options(dw1_game_objs PRIVATE
   -include ${CMAKE_SOURCE_DIR}/port/psyq/include/port_game.h)
 
 # Hardware models (CD over the Pack and GTE).
-add_library(dw1_backend STATIC port/backend/cdrom.c port/backend/gte.c)
+add_library(dw1_backend STATIC port/backend/cdrom.c port/backend/gte.c
+  port/backend/gpu_soft/gpu_soft.c)
 target_link_libraries(dw1_backend PUBLIC dw1_pack_lib)
 target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
 
 add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c port/psyq/clock.c
   port/psyq/libetc.c port/psyq/libapi.c port/psyq/libc.c port/psyq/libgs.c port/psyq/libcd.c
-  port/psyq/libgte.c port/psyq/stub.c ${DW1_GTE_TABLES_H})
+  port/psyq/libgte.c port/psyq/libgpu.c port/psyq/stub.c ${DW1_GTE_TABLES_H})
 target_include_directories(dw1_psyq PRIVATE ${CMAKE_BINARY_DIR}/generated)
 target_link_libraries(dw1_psyq PUBLIC Threads::Threads dw1_backend)
 # The heap and the CD model store typed data in the uint8_t arena Ps1_Ram, like the game does.
 target_compile_options(dw1_psyq PRIVATE -Wall -Wextra -Werror -fno-strict-aliasing)
 
 enable_testing()
+if(NOT EMSCRIPTEN)
+  add_executable(test_gpu port/backend/tests/test_gpu.c)
+  target_link_libraries(test_gpu dw1_backend)
+  target_compile_options(test_gpu PRIVATE -Wall -Wextra -Werror)
+  add_test(NAME gpu COMMAND test_gpu)
+  add_executable(test_libgpu port/psyq/tests/test_libgpu.c)
+  target_link_libraries(test_libgpu dw1_psyq)
+  target_compile_options(test_libgpu PRIVATE -Wall -Wextra -Werror)
+  add_test(NAME libgpu COMMAND test_libgpu)
+  set_tests_properties(libgpu PROPERTIES TIMEOUT 30)
+endif()
+
 add_test(NAME gte_tables COMMAND python3 -I -B tools/port/psyq/test_gte_tables.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 if(NOT EMSCRIPTEN)
