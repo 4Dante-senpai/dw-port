@@ -288,15 +288,34 @@ static void subdivision_clipping(void)
     GsClearOt(4,0,&ot);GsSetWorkBase((PACKET *)packets);p[2]=0;
     GsSortObject4J(&obj,&ot,2,scratch);CHECK(GsGetWorkBase()==(PACKET *)packets);
 }
+/* Nodes of the parent OT list, walked from its tag to the end as DrawOTag does. */
+static int count_nodes(void)
+{
+    int n=1;
+    for(unsigned long *p=(unsigned long *)ot.tag;(*p&0xffffffu)!=PS1_LINK_END&&n<=4096;n++) p=PS1_LINK_PTR(*p&0xffffffu);
+    return n;
+}
+static int reachable(unsigned long *first,int n)
+{
+    for(int i=0;i<n;i++) {
+        unsigned long *p=(unsigned long *)ot.tag;
+        for(int steps=0;p!=first+i&&(*p&0xffffffu)!=PS1_LINK_END&&steps<4096;steps++) p=PS1_LINK_PTR(*p&0xffffffu);
+        if(p!=first+i) return 0;
+    }
+    return 1;
+}
 static void ordering(void)
 {
     setup();GsOT child={4,(GsOT_TAG *)other,0,0,NULL};GsClearOt(2,9,&child);
     CHECK(child.offset==2&&child.point==9&&child.tag==(GsOT_TAG *)(other+15));CHECK(other[0]==PS1_LINK_END);
     for(int i=1;i<16;i++) CHECK(other[i]==PS1_LINK(other+i-1));
     CHECK(GsSortOt(&child,&ot)==&ot);CHECK(tags[5]==PS1_LINK(other+15));CHECK(other[0]==PS1_LINK(tags+4));
-    /* A primitive at bucket 0 replaces the last non-sentinel link during nesting. */
-    GsClearOt(0,8,&child);packets[0]=0x01000000;packets[1]=0;AddPrim(other,packets);
-    CHECK(GsSortOt(&child,&ot)==&ot);CHECK((other[0]&0xffffffu)==PS1_LINK(tags+3));
+    CHECK(reachable(other,16)&&count_nodes()==256+16);
+    /* A primitive at bucket 0 of the child stays drawn: it, not other[0], links to the parent. */
+    setup();GsClearOt(0,8,&child);packets[0]=0x01000000;packets[1]=0;AddPrim(other,packets);
+    CHECK(GsSortOt(&child,&ot)==&ot);CHECK(other[0]==PS1_LINK(packets));
+    CHECK(packets[0]==(0x01000000u|PS1_LINK(tags+3)));CHECK(tags[4]==PS1_LINK(other+15));
+    CHECK(reachable(other,16)&&reachable(packets,1)&&count_nodes()==256+16+1);
 }
 static void two_d(void)
 {
