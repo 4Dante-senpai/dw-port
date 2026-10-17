@@ -224,6 +224,11 @@
   patches, 1 diferido (test de inputs del Lua, para 3.3) y 6 rechazados. Uso en `docs/port/reference.md`.
   Evidencia: `docs/implementation-artifacts/evidence/story-3-1.log`.
 
+- Retrospectiva de la Épica 2 (`docs/implementation-artifacts/epic-2-retro-2026-10-17.md`):
+  veredicto `accepted-with-open-items`; CTest con disco 42/42 en `19487fb`. 6 acciones en
+  `sprint-status.yaml`; la más urgente es A1 (`GsSortOt` pierde las primitivas del bucket 0 de la
+  OT hija porque `ClearOTagR` omite los paquetes terminales), antes de comparar escenas que lo usan.
+
 ## En curso
 
 - Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 cerrada; próxima 3.2 (runner de Escenas y pantalla de título exacta). El resto de la Épica 4 sigue después de la Épica 3.
