@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-11-2026 12:35
-last_updated: 10-17-2026 20:25
+last_updated: 10-17-2026 20:34
 project: dw-port
 project_key: NOKEY
 tracking_system: file-system
@@ -119,7 +119,7 @@ action_items:
     action: "Fix GsSortOt over the OT without terminal packets (or restore nop2/sys_nop
       in ClearOTagR) and make test_libgs.c check every primitive stays reachable (F1)"
     owner: "dev"
-    status: open
+    status: done
     ref: "docs/implementation-artifacts/epic-2-retro-2026-10-17.md"
   - id: "epic-2-retro-item-2-add-scene_title-to-the-native-disc-ci-jo"
     epic: 2
