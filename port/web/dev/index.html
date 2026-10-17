@@ -79,7 +79,9 @@ async function launch() {
     } catch (error) { if (error.name !== 'NotFoundError') throw error; }
     load.disabled = false;
   } catch (error) { status.textContent = error.message; load.disabled = true; }
-  play.onclick = () => { location.href = '/?pack=1&frames=1000000000'; };
+  // ponytail: a finite run, because the game thread's OffscreenCanvas only shows a frame once the
+  // thread returns to its event loop; an endless run stays blank. Continuous presentation is deferred.
+  play.onclick = () => { location.href = '/?pack=1&frames=300'; };
   load.onclick = () => {
     load.disabled = true; play.disabled = true; progress.hidden = false;
     const worker = new Worker('/seed_worker.js');

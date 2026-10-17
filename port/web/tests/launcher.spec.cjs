@@ -32,9 +32,9 @@ test('launcher copies with progress, persists sidecar, detects stale Pack and st
   await page.route('**/__fixture/us.pack.sha256', r => r.fulfill({body:sha}));
   await page.reload();
   await expect(page.locator('#play')).toBeEnabled();
-  await page.route('**/?pack=1&frames=1000000000', r => r.fulfill({body:'game navigation'}));
+  await page.route('**/?pack=1&frames=300', r => r.fulfill({body:'game navigation'}));
   await page.locator('#play').click();
-  await expect(page).toHaveURL(/\/\?pack=1&frames=1000000000$/);
+  await expect(page).toHaveURL(/\/\?pack=1&frames=300$/);
   expect(failures).toEqual([]);
 });
 test('failed replacement invalidates the existing sidecar', async ({page}) => {

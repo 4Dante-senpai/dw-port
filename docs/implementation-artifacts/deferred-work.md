@@ -44,3 +44,7 @@
 - source_spec: `docs/implementation-artifacts/spec-4-1-el-juego-en-wasm-con-su-propio-hilo-y-presentacion.md`
   summary: con `-fsanitize=function` en `native-asan`, la escena del título (clase B) produjo un solo color en lugar de 256, sin diagnóstico de ASan/UBSan.
   evidence: observado en la iteración 0 de la historia 4.1 (adaptadores manuales, luego revertidos); el control con `-fno-sanitize=function` dio 256 colores. Causa no aislada (maybe-false, medium si es real): repetir con el árbol final y `-fsanitize=function` para ver si persiste; la hipótesis previa es `DRAWENV` sin inicializar en `MOV_playMovie`.
+
+- source_spec: `docs/implementation-artifacts/spec-8-5-entorno-de-testing-en-el-homelab.md`
+  summary: Presentación continua en el navegador: con una corrida sin fin el canvas queda en blanco, porque `plat_present` dibuja en el `OffscreenCanvas` del hilo del juego (AD-9) y el navegador solo compone ese frame cuando el hilo vuelve a su bucle de eventos, cosa que no pasa hasta que termina la corrida.
+  evidence: Reproducido 2026-10-17 en Chromium con el build web: `?pack=1&frames=300` muestra el título al terminar; `?pack=1&frames=1000000000` sigue en blanco a los 15 s. Los tests no lo detectaron porque leen el framebuffer con `glReadPixels`. Requiere una decisión de arquitectura (por ejemplo, presentar desde el hilo principal con `requestAnimationFrame` leyendo un buffer compartido, o ceder el hilo con JSPI/ASYNCIFY) antes de las historias interactivas de la Épica 4 (4.5 en adelante). Mientras tanto, "Jugar" usa 300 frames.
