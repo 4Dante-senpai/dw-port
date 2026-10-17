@@ -56,3 +56,7 @@
 - source_spec: `docs/implementation-artifacts/spec-3-1-emulador-de-referencia-y-captura-automatica.md`
   summary: Verificar en `tools/port/reference/capture.lua` el efecto real de los inputs por VBlank (pulsación, mantenimiento y liberación en el latch previsto) con una secuencia no vacía.
   evidence: Revisión de 3.1 (medium): `test_capture.py` reemplaza el adaptador Lua por un comentario y la escena `title` usa `inputs = []`, así que borrar `pad.setOverride` no rompe ningún test. Corresponde a la historia 3.3, la primera con inputs.
+
+- source_spec: `docs/implementation-artifacts/spec-e2-retro-a1-gssortot-sin-terminales.md`
+  summary: Decidir contra el Emulador de referencia si `ClearOTagR` debe restaurar los paquetes terminales `nop2` → `sys_nop` del original (GP0 `0x80` con `0x80000000, 0, 0, 0x00000002` y cuatro NOP al final de cada OT).
+  evidence: `asm/us/main/psyq/libgpu.s` `ClearOTagR` y `asm/us/main/data/psyq/libgpu.data.s:66-84`; el port los omite (`port/psyq/libgpu.c`, comentario de `ClearOTagR`), así que `DrawOTag` no ejecuta esa copia de VRAM ni su costo en `DrawSync`. Puede afectar al bit de máscara y al ritmo; se resuelve en la 3.2 (diff de píxeles) o en la 3.10 (costos).

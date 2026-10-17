@@ -133,15 +133,15 @@ void GsClearOt(unsigned short offset,unsigned short point,GsOT *ot)
     clock_psyq_entry();ot->offset=offset;ot->point=point;unsigned n=1u<<(ot->length&31);
     ot->tag=ot->org+n-1;ClearOTagR((unsigned long *)ot->org,n);
 }
-/* asm:asm/us/main/psyq/libgs.s GsSortOt */
+/* asm:asm/us/main/psyq/libgs.s GsSortOt. The asm relinks the node two before the end because
+ * PsyQ's ClearOTagR ends every OT with nop2 -> sys_nop; the port's ClearOTagR omits them, so the
+ * last node itself is the one to relink. */
 GsOT *GsSortOt(GsOT *src,GsOT *dst)
 {
-    clock_psyq_entry();unsigned long *node=(unsigned long *)src->org,*previous=node,*next=node;
-    while((*node&0xffffffu)!=PS1_LINK_END) {
-        previous=next;next=node;node=PS1_LINK_PTR(*node&0xffffffu);
-    }
+    clock_psyq_entry();unsigned long *last=(unsigned long *)src->org;
+    while((*last&0xffffffu)!=PS1_LINK_END) last=PS1_LINK_PTR(*last&0xffffffu);
     unsigned long *target=(unsigned long *)dst->org+(src->point-dst->offset);
-    *previous=(*previous&0xff000000u)|(*target&0xffffffu);
+    *last=(*last&0xff000000u)|(*target&0xffffffu);
     *target=(*target&0xff000000u)|PS1_LINK(src->tag);return dst;
 }
 /* asm:asm/us/main/psyq/libgs.s GsInitCoordinate2 */
