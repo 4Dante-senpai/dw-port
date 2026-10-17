@@ -75,3 +75,47 @@ matching:
     - make -j$(nproc) regenerate > /dev/null
     - make -j$(nproc) > /dev/null
     - make compare
+
+# Protected variables are available only on the protected default branch.
+.testing_base:
+  extends: .class_b
+  resource_group: dw1-testing
+  variables:
+    DW1_DISC_DIR: /private/disc
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_REF_PROTECTED == "true" && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "schedule")'
+  environment:
+    name: testing
+
+testing:
+  extends: .testing_base
+  script:
+    - cmake --preset native-headless
+    - cmake --build --preset native-headless
+    - cmake --preset web
+    - cmake --build --preset web
+    - ctest --preset web -R "pack_disc|native_title_capture|web_scene_title|web_launcher|testing_deploy|testing_context"
+    - tools/port/testing/install-docker.sh /tmp/dw1-docker-cli
+    - export PATH="/tmp/dw1-docker-cli:$PATH"
+    - |
+      DW1_WEB_URL=$(python3 -c 'import os; from urllib.parse import urlsplit; host=urlsplit(os.environ["HUB_DOCKER_HOST"]).hostname; assert host; host="["+host+"]" if ":" in host else host; print("http://"+host+":"+os.environ.get("DW1_TESTING_PORT", "8090"))')
+      export DW1_WEB_URL
+      export DW1_WEB_INSECURE_ORIGIN="$DW1_WEB_URL"
+      export DW1_WEB_EXPECTED_COMMIT="$CI_COMMIT_SHA"
+      tools/port/testing/deploy.sh
+      echo "Testing URL: $DW1_WEB_URL"
+      if ! python3 port/web/tests/run.py build/port/web title --project chromium; then
+        tools/port/testing/deploy.sh --rollback || true
+        exit 1
+      fi
+
+testing-rollback:
+  extends: .testing_base
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_REF_PROTECTED == "true" && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "schedule")'
+      when: manual
+      allow_failure: true
+  script:
+    - tools/port/testing/install-docker.sh /tmp/dw1-docker-cli
+    - export PATH="/tmp/dw1-docker-cli:$PATH"
+    - tools/port/testing/deploy.sh --rollback

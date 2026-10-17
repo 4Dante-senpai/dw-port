@@ -3,10 +3,19 @@
 <title>DW1 development host</title>
 <canvas id="canvas" width="320" height="240"></canvas>
 <pre id="status"></pre>
+<section id="launcher" hidden>
+  <p>Commit: <span id="version">dev</span></p>
+  <p id="pack-status">Pack ausente</p>
+  <button id="load-pack" disabled>Cargar Pack</button>
+  <button id="play" disabled>Jugar</button>
+  <progress id="progress" hidden></progress>
+</section>
 <script>
 const status = document.querySelector('#status');
 if (!crossOriginIsolated) {
   status.textContent = 'cross-origin isolation required';
+} else if (!location.search) {
+  launch();
 } else {
   const query = new URLSearchParams(location.search);
   var Module = {
@@ -38,5 +47,58 @@ if (!crossOriginIsolated) {
   const script = document.createElement('script');
   script.src = '/dw1.js' + (query.has('poison') ? '?poison=1' : '');
   document.head.append(script);
+}
+async function launch() {
+  document.querySelector('#canvas').hidden = true;
+  document.querySelector('#launcher').hidden = false;
+  const state = document.querySelector('#pack-status');
+  const load = document.querySelector('#load-pack');
+  const play = document.querySelector('#play');
+  const progress = document.querySelector('#progress');
+  let expected;
+  try {
+    try {
+      const version = await fetch('/version.txt');
+      if (version.ok) document.querySelector('#version').textContent = (await version.text()).trim();
+    } catch (_) { /* Keep the local development fallback. */ }
+    const response = await fetch('/__fixture/us.pack.sha256');
+    if (!response.ok) throw Error('Pack SHA-256 HTTP ' + response.status);
+    expected = (await response.text()).trim();
+    if (!/^[a-f0-9]{64}$/.test(expected)) throw Error('invalid Pack SHA-256');
+    const root = await navigator.storage.getDirectory();
+    try {
+      const dir = await root.getDirectoryHandle('dw1');
+      const pack = await (await dir.getFileHandle('us.pack')).getFile();
+      let stored = '';
+      try { stored = (await (await (await dir.getFileHandle('us.pack.sha256')).getFile()).text()).trim(); }
+      catch (error) { if (error.name !== 'NotFoundError') throw error; }
+      if (pack.size) {
+        state.textContent = stored === expected ? 'Pack disponible' : 'Pack desactualizado';
+        play.disabled = stored !== expected;
+      }
+    } catch (error) { if (error.name !== 'NotFoundError') throw error; }
+    load.disabled = false;
+  } catch (error) { status.textContent = error.message; load.disabled = true; }
+  play.onclick = () => { location.href = '/?pack=1&frames=1000000000'; };
+  load.onclick = () => {
+    load.disabled = true; play.disabled = true; progress.hidden = false;
+    const worker = new Worker('/seed_worker.js');
+    const finish = error => {
+      worker.terminate(); load.disabled = false; progress.hidden = true;
+      if (error) { status.textContent = error; state.textContent = 'Pack ausente'; }
+      else { status.textContent = ''; state.textContent = 'Pack disponible'; play.disabled = false; }
+    };
+    worker.onmessage = ({data}) => {
+      if (data.step) { status.textContent = data.step; return; }
+      if (data.progress !== undefined) {
+        status.textContent = data.progress + ' bytes';
+        if (data.total) { progress.max = data.total; progress.value = data.progress; }
+        return;
+      }
+      finish(data.error);
+    };
+    worker.onerror = e => finish(e.message);
+    worker.postMessage({url:'/__fixture/us.pack', sha256:expected});
+  };
 }
 </script>

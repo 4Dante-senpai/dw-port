@@ -18,7 +18,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         requested = urlsplit(path).path
         if requested.startswith('/__fixture/'):
             name = requested.removeprefix('/__fixture/')
-            if name in ('synthetic.pack', 'corrupt.pack', 'bad-index.pack', 'us.pack'):
+            if name in ('synthetic.pack', 'corrupt.pack', 'bad-index.pack', 'us.pack', 'us.pack.sha256'):
                 return str(Path(self.directory) / name)
         if urlsplit(path).path in ('/', '/index.html', '/isolated-off/'):
             return str(Path(self.directory) / 'dw1.html')

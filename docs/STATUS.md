@@ -205,6 +205,10 @@
 
 ## En curso
 
+- Historia 8.5 (entorno de testing en el homelab): implementada y revisada (3 capas Codex, 3 patches),
+  suite web con disco 22/22. En `review` hasta que el primer pipeline de `main` despliegue en el host
+  de deploy y Playwright confirme el título contra la URL real. Uso en `docs/port/testing-env.md`.
+
 - Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Próxima: historia 8.5 (entorno de testing en el homelab, agregada a pedido del dueño), luego Épica 3, historia 3.1 (emulador de referencia y captura automática), según el orden de `docs/planning-artifacts/epics.md`; el resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos

@@ -1,0 +1,28 @@
+{
+  "chromium_poison_false": {
+    "sha256": "14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7",
+    "native_sha256": "14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7",
+    "poison": false,
+    "storageAccesses": 0
+  },
+  "chromium_poison_true": {
+    "sha256": "14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7",
+    "native_sha256": "14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7",
+    "poison": true,
+    "storageAccesses": 0
+  },
+  "firefox_poison_false": {
+    "sha256": "14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7",
+    "native_sha256": "14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7",
+    "poison": false,
+    "storageAccesses": 0
+  },
+  "firefox_poison_true": {
+    "sha256": "14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7",
+    "native_sha256": "14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7",
+    "poison": true,
+    "storageAccesses": 0
+  },
+  "pack_sha256": "c01e5c3680ffdf50d0342f16ec978c6d107a33529688dae6a817bd63947f0cf6",
+  "docker_cli_archive_sha256": "9b4f6fe406e50f9085ee474c451e2bb5adb119a03591f467922d3b4e2ddf31d3"
+}
