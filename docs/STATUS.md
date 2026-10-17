@@ -203,13 +203,18 @@
   accesos al guard. Suites web (19), nativo, ASan y clase B con disco verdes. Evidencia:
   `docs/implementation-artifacts/evidence/story-4-2/`.
 
+- Historia 8.5 (entorno de testing en el homelab): job `testing` de clase B en `main` compila nativo y
+  web, arma el Pack, valida el título y despliega en el host de deploy (`HUB_DOCKER_HOST`) una imagen
+  nginx sin bytes del disco (chequeo `check_context.py`) construida en ese daemon; el Pack va a un
+  volumen con nombre vía la API de Docker, solo si cambió su hash. Playwright Chromium contra la URL
+  desplegada da el título nativo; rollback automático y job manual `testing-rollback`. `dw1.html` sin
+  parámetros es un lanzador ("Cargar Pack", "Jugar"). Uso en `docs/port/testing-env.md`. El digest de
+  `dw-port` en CI se actualizó a la imagen con Playwright. Evidencia (job 279 verde):
+  `docs/implementation-artifacts/evidence/story-8-5/`.
+
 ## En curso
 
-- Historia 8.5 (entorno de testing en el homelab): implementada y revisada (3 capas Codex, 3 patches),
-  suite web con disco 22/22. En `review` hasta que el primer pipeline de `main` despliegue en el host
-  de deploy y Playwright confirme el título contra la URL real. Uso en `docs/port/testing-env.md`.
-
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Próxima: historia 8.5 (entorno de testing en el homelab, agregada a pedido del dueño), luego Épica 3, historia 3.1 (emulador de referencia y captura automática), según el orden de `docs/planning-artifacts/epics.md`; el resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Próxima: Épica 3, historia 3.1 (emulador de referencia y captura automática), según el orden de `docs/planning-artifacts/epics.md`; el resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 

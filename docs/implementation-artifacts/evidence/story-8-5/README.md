@@ -63,3 +63,18 @@ no hubo cambios en `src/` ni `include/` y esta tarea no realiza un merge.
 - `DW1_DISC_DIR=<disc-dir> ctest --preset web` en la imagen `dw-port`: 22/22 aprobados, 0 omitidos
   (incluye `pack_disc`, `native_title_capture`, `web_scene_title`, `web_launcher`,
   `testing_deploy`, `testing_context`).
+
+## Pipeline real en `main` (2026-10-17)
+
+- Primer intento (commit `148da10`, job 272): falló porque la imagen `dw-port` fijada en
+  `.gitlab-ci.yml` era anterior a la Historia 4.1 y no tenía Playwright. Corregido fijando el digest
+  publicado por el job `images` 252 (`dw-port@sha256:e6470a29…b38842`, commit `4234e90`).
+- Job `testing` 279 (commit `4234e90`): verde. CTest 6/6; `build context: clean`; Pack sincronizado
+  en el volumen (`sha256 c01e5c36…0cf6`); `testing image healthy: 4234e909…`; Playwright Chromium
+  contra `http://<deploy-host>:<port>`: 2 de 2 títulos iguales al nativo (incluye el flujo
+  "Cargar Pack" del lanzador). Resto del pipeline (`native`, `web-objects`, `native-disc`,
+  `matching`) verde.
+- Comprobación externa desde la LAN: `/version.txt` devuelve `4234e909033339fe9563a64cdb8b88e6c61f33d2`,
+  `/` responde con COOP `same-origin` y COEP `require-corp`, `dw1.wasm` con `application/wasm`.
+- Sin verificar con un daemon real: rollback manual (`testing-rollback`) y el camino "Pack sin
+  cambios" en un redeploy; ambos cubiertos por `testing_deploy` con el doble de Docker.
