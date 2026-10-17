@@ -228,6 +228,10 @@
   veredicto `accepted-with-open-items`; CTest con disco 42/42 en `19487fb`. 6 acciones en
   `sprint-status.yaml`; la más urgente es A1 (`GsSortOt` pierde las primitivas del bucket 0 de la
   OT hija porque `ClearOTagR` omite los paquetes terminales), antes de comparar escenas que lo usan.
+- Acciones A1 y A2 de esa retro cerradas: `GsSortOt` reenlaza el último nodo de la OT hija
+  (test de alcanzabilidad; los terminales `nop2`/`sys_nop` quedan en `deferred-work.md` para
+  3.2/3.10) y CI corre `scene_title` en `native-disc` y la suite `native-asan` con disco
+  (`native-asan-disc`), fallando si un test se saltea. Pipeline 96 verde.
 
 ## En curso
 
