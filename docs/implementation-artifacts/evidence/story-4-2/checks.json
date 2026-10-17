@@ -1,0 +1,152 @@
+{
+  "date": "2026-10-17",
+  "container": true,
+  "playwright": "1.64.0",
+  "checks": {
+    "native-headless": {
+      "command": "ctest --preset native-headless",
+      "passed": [
+        "gpu",
+        "libgs",
+        "libgpu",
+        "gte_tables",
+        "pack",
+        "libgte",
+        "pre_commit",
+        "rts_info",
+        "ovl_starts",
+        "tu_list",
+        "gen_stubs",
+        "inventory",
+        "preproc_check",
+        "test_preproc_check",
+        "ps1_ram_addr_range",
+        "psyq_prototypes",
+        "setjmp",
+        "ps1mem",
+        "clock",
+        "libc_heap_pad",
+        "gte",
+        "overlay_O0",
+        "overlay_O2",
+        "overlay_sections",
+        "overlay_objects",
+        "frame0",
+        "dw1_bad_args",
+        "watchdog",
+        "av_stubs",
+        "libcd",
+        "libgte_host",
+        "dw1_foreign_pack",
+        "scene_runner",
+        "scene_flags",
+        "fnptr_scanner",
+        "fnptr_inventory"
+      ],
+      "skipped": [
+        "pack_disc",
+        "gte_tables_disc",
+        "scene_title",
+        "dw1_overlay"
+      ]
+    },
+    "native-asan": {
+      "command": "ctest --preset native-asan",
+      "passed": [
+        "gpu",
+        "libgs",
+        "libgpu",
+        "gte_tables",
+        "pack",
+        "libgte",
+        "pre_commit",
+        "rts_info",
+        "ovl_starts",
+        "tu_list",
+        "gen_stubs",
+        "inventory",
+        "preproc_check",
+        "test_preproc_check",
+        "ps1_ram_addr_range",
+        "psyq_prototypes",
+        "setjmp",
+        "ps1mem",
+        "clock",
+        "libc_heap_pad",
+        "gte",
+        "overlay_O0",
+        "overlay_O2",
+        "frame0",
+        "dw1_bad_args",
+        "watchdog",
+        "av_stubs",
+        "libcd",
+        "libgte_host",
+        "dw1_foreign_pack",
+        "scene_runner",
+        "scene_flags",
+        "fnptr_scanner",
+        "fnptr_inventory"
+      ],
+      "skipped": [
+        "pack_disc",
+        "gte_tables_disc",
+        "scene_title",
+        "dw1_overlay"
+      ]
+    },
+    "web-without-disc": {
+      "command": "ctest --preset web",
+      "passed": [
+        "gte_tables",
+        "pre_commit",
+        "rts_info",
+        "ovl_starts",
+        "tu_list",
+        "gen_stubs",
+        "inventory",
+        "preproc_check",
+        "test_preproc_check",
+        "ps1_ram_addr_range",
+        "psyq_prototypes",
+        "setjmp",
+        "fnptr_scanner",
+        "fnptr_inventory",
+        "web_boot",
+        "web_io"
+      ],
+      "skipped": [
+        "pack_disc",
+        "native_title_capture",
+        "web_scene_title"
+      ]
+    },
+    "web-title-with-disc": {
+      "command": "DW1_DISC_DIR=/dw/game_rom/extracted ctest --test-dir build/port/web -R web_scene_title --output-on-failure",
+      "passed": [
+        "pack_disc",
+        "native_title_capture",
+        "web_scene_title"
+      ],
+      "skipped": []
+    },
+    "native-asan-with-disc": {
+      "command": "DW1_DISC_DIR=/dw/game_rom/extracted ASAN_OPTIONS=detect_stack_use_after_return=0 ctest --test-dir build/port/native-asan -R \"^(scene_title|gte_tables_disc|dw1_overlay)$\" --output-on-failure",
+      "passed": [
+        "pack_disc",
+        "gte_tables_disc",
+        "scene_title",
+        "dw1_overlay"
+      ],
+      "skipped": []
+    }
+  },
+  "sha256": {
+    "build/port/web/dw1.wasm": "f910fdf52037f8a899668aa6ebbfe220bc7db7468e80a8363aaa030855c4d48f",
+    "build/port/web/us.pack": "c01e5c3680ffdf50d0342f16ec978c6d107a33529688dae6a817bd63947f0cf6",
+    "build/port/native-headless/scenes/title/run-1.ppm": "14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7",
+    "build/port/native-headless/scenes/title/run-2.ppm": "14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7",
+    "build/port/native-asan/scenes/title/run-1.ppm": "14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7",
+    "build/port/native-asan/scenes/title/run-2.ppm": "14d5bb083e6cef60e669d0bf533560174a2efd7dc419db3657e324f12930e7e7"
+  }
+}

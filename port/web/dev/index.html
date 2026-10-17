@@ -10,14 +10,33 @@ if (!crossOriginIsolated) {
 } else {
   const query = new URLSearchParams(location.search);
   var Module = {
+    noInitialRun: true,
     canvas: document.querySelector('#canvas'),
     arguments: ['--frames', query.get('frames') || '1', ...(query.get('pattern') === '1' ? ['--pattern'] : []), ...(query.get('validate') === '1' ? ['--validate'] : [])],
     print: text => { console.log(text); status.textContent += text + '\n'; },
     printErr: text => { console.error(text); status.textContent += text + '\n'; }
   };
+  if (query.has('pack')) Module.arguments.push('--pack', 'dw1/us.pack');
+  if (query.has('io-test')) Module.arguments.push(query.get('io-test') === 'guard' ? '--io-guard-test' : '--io-test');
+  if (query.has('capture-mark')) Module.arguments.push('--capture-mark', query.get('capture-mark'),
+      '--capture-vblank', query.get('capture-vblank'));
+  Module.onRuntimeInitialized = async () => {
+    try {
+      if (query.has('pack') || query.has('io-test')) {
+        Module.ioWorker = new Worker('/io_worker.js');
+        await new Promise((resolve, reject) => {
+          Module.ioWorker.onmessage = ({data}) => data.ready ? resolve() : reject(Error(data.error));
+          Module.ioWorker.onerror = e => reject(Error(e.message));
+          Module.ioWorker.postMessage({memory: HEAPU8.buffer, address: Module._io_mailbox_address(),
+            delay: query.has('io-test') ? 5 : 0});
+        });
+      }
+      Module.callMain(Module.arguments);
+    } catch (error) { Module.printErr(error.message); Module.finished = 1; }
+  };
   if (query.get('validate') === '1') Module.presentations = [];
   const script = document.createElement('script');
-  script.src = '/dw1.js';
+  script.src = '/dw1.js' + (query.has('poison') ? '?poison=1' : '');
   document.head.append(script);
 }
 </script>

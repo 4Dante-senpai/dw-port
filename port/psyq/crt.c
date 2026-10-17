@@ -9,6 +9,7 @@
 #include "../host/plat.h"
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include "../host/web/io_mailbox.h"
 #include <emscripten/threading.h>
 #endif
 
@@ -91,7 +92,14 @@ static void capture_vblank(void)
 		exit(1);
 	}
 	printf("port: captured %dx%d at VBlank %u\n", width, height, clock_vblanks());
-	exit(0);
+#ifdef __EMSCRIPTEN__
+    MAIN_THREAD_EM_ASM({
+        Module.capture = Array.from(FS.readFile(UTF8ToString($0)));
+    }, capture_config.capture);
+    web_finish(0);
+#else
+    exit(0);
+#endif
 }
 
 /* A frame ends when VSync(0/n) returns (AD-15 frame 0 is the first one). */
@@ -105,7 +113,7 @@ void port_frame_done(void)
         MAIN_THREAD_EM_ASM({
             Module.print('port: reached frame ' + $0 + ' at cycle ' + $1);
         }, frames - 1, (double)clock_now());
-        pthread_exit(NULL);
+        web_finish(capture_config.mark ? 1 : 0);
 #else
 		printf("port: reached frame %ld at cycle %llu\n", frames - 1,
 		       (unsigned long long)clock_now());
@@ -141,6 +149,7 @@ static void *game_thread(void *arg)
 {
 	(void)arg;
 #ifdef __EMSCRIPTEN__
+    if (web_prepare()) web_finish(1);
     volatile int stack_probe = 0;
     PORT_ASSERT(ps1_in_window((const void *)&stack_probe));
     /* Avoid racing main's stdio flush when it returns with a live pthread. */

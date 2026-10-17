@@ -1,0 +1,10 @@
+[18/19] Linking C executable test_scene_capture
+[19/19] Linking C executable dw1
+
+Total Test time (real) = 156.74 sec
+
+The following tests did not run:
+	 33 - pack_disc (Skipped)
+	 34 - gte_tables_disc (Skipped)
+	 35 - scene_title (Skipped)
+	 36 - dw1_overlay (Skipped)

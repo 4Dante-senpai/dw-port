@@ -296,16 +296,17 @@ add_custom_command(OUTPUT ${DW1_PSYQ_STUBS}
   COMMAND_EXPAND_LISTS VERBATIM)
 set_source_files_properties(${DW1_PSYQ_STUBS} PROPERTIES COMPILE_OPTIONS "-w")
 
+# Only a Pack built from this build's Manifest opens (pack_open).
+set(DW1_MANIFEST ${CMAKE_SOURCE_DIR}/tools/port/manifest/${DW1_VERSION}.tsv)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${DW1_MANIFEST})
+file(SHA256 ${DW1_MANIFEST} DW1_MANIFEST_SHA256)
+set_source_files_properties(port/host/headless/main.c port/host/web/main.c PROPERTIES
+  COMPILE_DEFINITIONS DW1_MANIFEST_SHA256="${DW1_MANIFEST_SHA256}")
+
 if(NOT EMSCRIPTEN)
   add_executable(dw1 port/host/headless/main.c ${DW1_PSYQ_STUBS} $<TARGET_OBJECTS:dw1_game_objs>)
   target_link_libraries(dw1 dw1_runtime)
   target_compile_options(dw1 PRIVATE -Wall -Wextra -Werror)
-  # Only a Pack built from this build's Manifest opens (pack_open).
-  set(DW1_MANIFEST ${CMAKE_SOURCE_DIR}/tools/port/manifest/${DW1_VERSION}.tsv)
-  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${DW1_MANIFEST})
-  file(SHA256 ${DW1_MANIFEST} DW1_MANIFEST_SHA256)
-  set_source_files_properties(port/host/headless/main.c PROPERTIES
-    COMPILE_DEFINITIONS DW1_MANIFEST_SHA256="${DW1_MANIFEST_SHA256}")
   # L1: the game boots to frame 0 (return of its first VSync) with stubs where needed.
   add_test(NAME frame0 COMMAND sh -c "rm -f frame0_trace.log && DW1_TRACE=frame0_trace.log \
     $<TARGET_FILE:dw1> --headless --frames 1 > frame0.out 2>&1; s=$?; cat frame0.out; \
@@ -327,6 +328,10 @@ endif()
 
 # Pack: the user's disc checked against the Manifest (port/host/pack/pack.h) and its CLI.
 add_library(dw1_pack_lib STATIC port/host/pack/pack.c port/host/pack/sha256.c)
+if(EMSCRIPTEN)
+  target_sources(dw1_pack_lib PRIVATE port/host/web/io_mailbox.c)
+endif()
+target_link_libraries(dw1_pack_lib PUBLIC Threads::Threads)
 target_include_directories(dw1_pack_lib PUBLIC port/host/pack)
 target_compile_options(dw1_pack_lib PRIVATE -Wall -Wextra -Werror)
 if(NOT EMSCRIPTEN)
@@ -404,15 +409,36 @@ add_test(NAME fnptr_scanner COMMAND python3 -I -B
 add_test(NAME fnptr_inventory COMMAND python3 -I -B
   ${CMAKE_SOURCE_DIR}/tools/port/fnptr/inventory.py ${CMAKE_BINARY_DIR})
 if(EMSCRIPTEN)
+  configure_file(port/web/tests/seed.html ${CMAKE_BINARY_DIR}/seed.html COPYONLY)
+  configure_file(port/web/tests/seed_worker.js ${CMAKE_BINARY_DIR}/seed_worker.js COPYONLY)
+  configure_file(port/web/io_worker.js ${CMAKE_BINARY_DIR}/io_worker.js COPYONLY)
   configure_file(port/web/dev/index.html ${CMAKE_BINARY_DIR}/dw1.html COPYONLY)
   add_executable(dw1 port/host/web/main.c port/host/web/present_gl.c
     ${DW1_PSYQ_STUBS} $<TARGET_OBJECTS:dw1_game_objs>)
   target_link_libraries(dw1 dw1_runtime)
+  set_property(TARGET dw1 APPEND PROPERTY LINK_DEPENDS
+    ${CMAKE_SOURCE_DIR}/port/web/thread_storage_guard.js)
   target_compile_options(dw1 PRIVATE -Wall -Wextra -Werror)
   target_link_options(dw1 PRIVATE -Wl,--fatal-warnings -sINITIAL_MEMORY=67108864 -sALLOW_MEMORY_GROWTH=0
-    -sEMULATE_FUNCTION_POINTER_CASTS=1 -sOFFSCREENCANVAS_SUPPORT=1 -sPTHREAD_POOL_SIZE=1 -sEXIT_RUNTIME=0
+    -sEMULATE_FUNCTION_POINTER_CASTS=1 -sOFFSCREENCANVAS_SUPPORT=1 -sPTHREAD_POOL_SIZE=5 -sEXIT_RUNTIME=0
+    --pre-js ${CMAKE_SOURCE_DIR}/port/web/thread_storage_guard.js
+    -sEXPORTED_FUNCTIONS=_main,_io_mailbox_address -sEXPORTED_RUNTIME_METHODS=callMain
     -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sGL_ASSERTIONS=1)
   add_test(NAME web_boot COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR})
   set_tests_properties(web_boot PROPERTIES TIMEOUT 180)
+  add_test(NAME web_io COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} io)
+  set_tests_properties(web_io PROPERTIES TIMEOUT 180)
+  add_test(NAME pack_disc COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_pack_disc.sh
+    ${CMAKE_SOURCE_DIR}/build/port/native-headless/dw1-pack ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/us.pack)
+  set_tests_properties(pack_disc PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600 FIXTURES_SETUP disc_pack)
+  add_test(NAME native_title_capture COMMAND sh -c
+    "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py title --build native-headless --pack ${CMAKE_BINARY_DIR}/us.pack")
+  set_tests_properties(native_title_capture PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1200
+    FIXTURES_REQUIRED disc_pack FIXTURES_SETUP native_title WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+  add_test(NAME web_scene_title COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} title)
+  set_tests_properties(web_scene_title PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600
+    FIXTURES_REQUIRED "disc_pack;native_title")
 endif()

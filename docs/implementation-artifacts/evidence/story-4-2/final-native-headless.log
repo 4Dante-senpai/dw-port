@@ -1,0 +1,10 @@
+[16/17] Linking C executable dw1
+[17/17] Linking C executable overlay_probe
+
+Total Test time (real) = 153.06 sec
+
+The following tests did not run:
+	 35 - pack_disc (Skipped)
+	 36 - gte_tables_disc (Skipped)
+	 37 - scene_title (Skipped)
+	 38 - dw1_overlay (Skipped)

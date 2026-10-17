@@ -1,0 +1,10 @@
+[0/2] Re-checking globbed directories...
+ninja: no work to do.
+100% tests passed, 0 tests failed out of 19
+
+Total Test time (real) = 190.45 sec
+
+The following tests did not run:
+	 17 - pack_disc (Skipped)
+	 18 - native_title_capture (Skipped)
+	 19 - web_scene_title (Skipped)
