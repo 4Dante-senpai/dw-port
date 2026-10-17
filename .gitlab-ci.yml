@@ -11,7 +11,7 @@ variables:
   GIT_SUBMODULE_PATHS: external/psyq_headers
 
 default:
-  image: $CI_REGISTRY_IMAGE/dw-port@sha256:e6470a29c10565d6e35f2b88dc1302d02069e20298a4ccf529ada51fc3b38842
+  image: $CI_REGISTRY_IMAGE/dw-port@sha256:3c8d129bb4d30135112ceaa17c1d131463221ac93e65433c0250ab45ccec4345
   before_script:
     - git config --global --add safe.directory "$CI_PROJECT_DIR"
     - git fetch --quiet https://github.com/jype0/dw_decomp.git main:refs/remotes/upstream/main
@@ -25,6 +25,7 @@ default:
 # Runs when a Dockerfile changes, or by hand; then pin the printed digests below.
 images:
   image: docker:27.3.1-cli
+  timeout: 3h                          # a cold PCSX-Redux build (story 3.1) exceeds the 1 h default
   variables:
     GIT_SUBMODULE_STRATEGY: none
   before_script: []
@@ -62,12 +63,13 @@ native-disc:
   script:
     - cmake --preset native-headless
     - cmake --build --preset native-headless
-    - ctest --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc"
+    - xvfb-run -a pcsx-redux -version > /dev/null   # reference_title must run, not skip (77)
+    - ctest --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|reference_title"
 
 matching:
   extends: .class_b
   # dw-port lacks gcc-mipsel-linux-gnu (docs/port/setup.md)
-  image: $CI_REGISTRY_IMAGE/dw-build@sha256:1fa82f627f528ab6129fb9cf7c65da7bbfe8f3baab9ee2d4c8fe4530a59da30c
+  image: $CI_REGISTRY_IMAGE/dw-build@sha256:6ad8c939a6aec8e0bac71d61a93755788df4cfcde831fc6375bb0feba5e7cd09
   script:
     - tools/dl_deps.sh > /dev/null
     - mkdir -p bin/cc_mips && cp /private/mwcc/cc_mips_40.dll bin/cc_mips/

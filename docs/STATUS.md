@@ -13,6 +13,7 @@
 - M0 Entorno: **completo** (modo sin compilador matching).
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
+- M3 Paridad nativa: **en curso** (3.1 referencia PCSX-Redux/OpenBIOS del título).
 - M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo).
 
 ## Hecho
@@ -211,15 +212,25 @@
   parámetros es un lanzador ("Cargar Pack", "Jugar"). Uso en `docs/port/testing-env.md`. El digest de
   `dw-port` en CI se actualizó a la imagen con Playwright. Evidencia (job 279 verde):
   `docs/implementation-artifacts/evidence/story-8-5/`.
+- Historia 3.1 (emulador de referencia y captura automática): `tools/port/Dockerfile` compila
+  PCSX-Redux `2068784a…8b3f` y OpenBIOS en la etapa `pcsx-redux` (sobre la etapa `toolchain`), y a
+  `dw-port` solo pasan el binario, `openbios.bin` y Xvfb. `tools/port/reference/capture.py` + `capture.lua`
+  detectan el frame 0 (retorno del primer `VSync`, VBlank 822) y `runLandingScreen` (VBlank 8642)
+  con breakpoints, y capturan el display GP1 en marca+60 con la misma conversión PPM que el port.
+  Seis corridas dieron el mismo SHA-256 `56132366…260d` (320×240, 256 colores), fijado en
+  `title.toml`. Referencia **provisional** (OpenBIOS); la repetición con el BIOS del dueño queda en
+  `deferred-work.md`. Para 3.2: el port difiere en 10.674 píxeles (caja x 1..128, y 0..217, rayos
+  animados). CTest con disco 42/42 (`reference_title` incluido); en CI, pipeline 92 verde con `reference_title` real en `native-disc` (imagen del job `images` 305, timeout de 3 h, runner con 12 GB). Revisión (3 capas Codex): 2
+  patches, 1 diferido (test de inputs del Lua, para 3.3) y 6 rechazados. Uso en `docs/port/reference.md`.
+  Evidencia: `docs/implementation-artifacts/evidence/story-3-1.log`.
 
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Próxima: Épica 3, historia 3.1 (emulador de referencia y captura automática), según el orden de `docs/planning-artifacts/epics.md`; el resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 cerrada; próxima 3.2 (runner de Escenas y pantalla de título exacta). El resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 
-- Emulador de referencia (PCSX-Redux / DuckStation headless) no instalado: planificado como
-  historia de M3.
+- Ninguno. Pendiente del dueño: repetir la captura de `title` con su BIOS real (no bloquea).
 
 ## Métricas
 
@@ -234,7 +245,7 @@
 | Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (52 mínimas M2) / 0 / 12 (de 199) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
-| Escenas que funcionan (nativo) | 1 (título, sin referencia) |
+| Escenas que funcionan (nativo) | 1 (título; referencia capturada, todavía no idéntica: 3.2) |
 | Escenas que funcionan (web) | 1 (título, igual a nativo, Chromium y Firefox) |
 | Llamadas con firma distinta inventariadas / sin resolver | 1031 / 0 (`fnptr_casts.tsv`) |
 

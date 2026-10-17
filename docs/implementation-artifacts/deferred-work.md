@@ -48,3 +48,11 @@
 - source_spec: `docs/implementation-artifacts/spec-8-5-entorno-de-testing-en-el-homelab.md`
   summary: Presentación continua en el navegador: con una corrida sin fin el canvas queda en blanco, porque `plat_present` dibuja en el `OffscreenCanvas` del hilo del juego (AD-9) y el navegador solo compone ese frame cuando el hilo vuelve a su bucle de eventos, cosa que no pasa hasta que termina la corrida.
   evidence: Reproducido 2026-10-17 en Chromium con el build web: `?pack=1&frames=300` muestra el título al terminar; `?pack=1&frames=1000000000` sigue en blanco a los 15 s. Los tests no lo detectaron porque leen el framebuffer con `glReadPixels`. Requiere una decisión de arquitectura (por ejemplo, presentar desde el hilo principal con `requestAnimationFrame` leyendo un buffer compartido, o ceder el hilo con JSPI/ASYNCIFY) antes de las historias interactivas de la Épica 4 (4.5 en adelante). Mientras tanto, "Jugar" usa 300 frames.
+
+- source_spec: `docs/implementation-artifacts/spec-3-1-emulador-de-referencia-y-captura-automatica.md`
+  summary: Repetir la captura de referencia de `title` con el BIOS real del dueño (`capture.py title --bios <ruta>`, fuera del repo) y registrar en `docs/port/reference.md` si coincide con OpenBIOS o qué difiere (pregunta abierta 3 del PRD).
+  evidence: Decisión del dueño (2026-10-17, opción 1B): la historia 3.1 cierra con la referencia OpenBIOS marcada provisional; la corrida con BIOS real depende del dueño.
+
+- source_spec: `docs/implementation-artifacts/spec-3-1-emulador-de-referencia-y-captura-automatica.md`
+  summary: Verificar en `tools/port/reference/capture.lua` el efecto real de los inputs por VBlank (pulsación, mantenimiento y liberación en el latch previsto) con una secuencia no vacía.
+  evidence: Revisión de 3.1 (medium): `test_capture.py` reemplaza el adaptador Lua por un comentario y la escena `title` usa `inputs = []`, así que borrar `pad.setOverride` no rompe ningún test. Corresponde a la historia 3.3, la primera con inputs.

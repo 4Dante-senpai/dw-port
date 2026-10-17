@@ -125,3 +125,9 @@ Las ejecuciones de Codex lanzadas por `tools/port/codex-run.sh` ignoran esta sec
 4. **Detenerse y pedir intervención humana** solo para: proveer la imagen del disco o
    `cc_mips.dll`, aprobar PRD y arquitectura, decisiones irreversibles, force-push, o publicar
    un deploy accesible públicamente.
+
+## GitLab (gitlab.homelab.local)
+- Para operaciones sobre GitLab (issues, merge requests, ramas, pipelines, jobs, logs)
+  usar las herramientas del servidor MCP `GitLab-Local`. No usar curl ni tokens en la línea de comandos.
+- Para subir cambios del clon local usar `git push`; las credenciales ya están configuradas.
+- Para disparar o reintentar pipelines usar `save_pipeline`; para revisar fallos, `get_pipeline` y `get_job` con el log.

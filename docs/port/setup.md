@@ -224,19 +224,13 @@ Antes de `.gitlab-ci.yml`, GitLab corría Auto DevOps en cada push (jobs fallido
 Criterio de salida de M0 en modo sin compilador: `make regenerate` OK y entorno del port
 funcionando → **cumplido**.
 
-## Emulador de referencia (pendiente)
+## Emulador de referencia
 
-No se agregó a la imagen. Evaluación:
-
-- **PCSX-Redux**: tiene modo sin UI y scripting Lua (sirve para capturar frames y leer RAM) y trae
-  OpenBIOS, así que podría arrancar sin BIOS de Sony; compilarlo desde fuente arrastra muchas
-  dependencias y requiere contexto OpenGL (Xvfb en headless).
-- **DuckStation**: el binario `duckstation-regtest` corre headless y vuelca frames, pero necesita
-  una BIOS real (dato con copyright que el usuario tendría que proveer, fuera del repo).
-
-Se resuelve como historia propia de M3 (diff de frames contra referencia), en una imagen
-separada para no engordar `dw-port`.
-
+El Dockerfile de `dw-port` compila PCSX-Redux y OpenBIOS desde un SHA fijo
+en una etapa separada. Solo los artefactos de runtime pasan a la imagen final.
+La captura automática de la historia 3.1 usa Xvfb y Lua; consultar
+[referencia](reference.md) para uso, límites y procedimiento con BIOS propio.
+La referencia OpenBIOS es provisional hasta contrastarla con el BIOS del dueño.
 
 ## Web: hilo del juego y presentación (Historia 4.1)
 

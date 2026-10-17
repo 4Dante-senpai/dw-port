@@ -1,0 +1,56 @@
+# Story 3.1 evidence (2026-10-17, local dw-port image 64c6ec300bf3, DOCKER_CONTEXT=default)
+## final verification
+  "changeset": "2068784a552b598940191e8431585b7f96408b3f",
+build/reference/title/run-1.ppm: 320x240 colors=256 sha256=561323665a33d833c89339030f6a8c60e4a395add2cff467d1d47e92dd46260d
+build/reference/title/run-2.ppm: 320x240 colors=256 sha256=561323665a33d833c89339030f6a8c60e4a395add2cff467d1d47e92dd46260d
+reference_title: OK sha256=561323665a33d833c89339030f6a8c60e4a395add2cff467d1d47e92dd46260d
+update=0
+build/reference/title/run-1.ppm: 320x240 colors=256 sha256=561323665a33d833c89339030f6a8c60e4a395add2cff467d1d47e92dd46260d
+build/reference/title/run-2.ppm: 320x240 colors=256 sha256=561323665a33d833c89339030f6a8c60e4a395add2cff467d1d47e92dd46260d
+reference_title: OK sha256=561323665a33d833c89339030f6a8c60e4a395add2cff467d1d47e92dd46260d
+pinned=0
+build=0
+37/42 Test #37: scene_title ......................   Passed    1.67 sec
+      Start 38: dw1_overlay
+38/42 Test #38: dw1_overlay ......................   Passed    0.02 sec
+      Start 39: fnptr_scanner
+39/42 Test #39: fnptr_scanner ....................   Passed    0.16 sec
+      Start 40: fnptr_inventory
+40/42 Test #40: fnptr_inventory ..................   Passed   10.54 sec
+      Start 41: reference_capture_unit
+41/42 Test #41: reference_capture_unit ...........   Passed    1.16 sec
+      Start 42: reference_title
+42/42 Test #42: reference_title ..................   Passed  339.18 sec
+
+100% tests passed, 0 tests failed out of 42
+
+Total Test time (real) = 525.87 sec
+## after review patches
+2/2 Test #42: reference_title ..................   Passed  340.10 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) = 341.25 sec
+
+## image build tail
+Step 26/29 : RUN ln -s /usr/local/libexec/pcsx-redux /usr/local/bin/pcsx-redux && ldconfig &&     xvfb-run -a pcsx-redux -version
+ ---> Running in c3792b765894
+{
+  "version": "dw1-reference",
+  "changeset": "2068784a552b598940191e8431585b7f96408b3f",
+  "timestamp": "1792228172",
+  "timestampDecoded": "2026-10-17 09:09:32"
+}
+Removing intermediate container c3792b765894
+## reference progress (run-1)
+reference: before frame 0 at VBlank 0 
+reference: frame 0 at VBlank 822 
+reference: mark at VBlank 8642 
+reference: captured at VBlank 8702 
+## CI (GitLab)
+images job 305 (pipeline 91 retry, runner CT at 12 GB RAM, timeout 3h): success
+  dw-build@sha256:6ad8c939a6aec8e0bac71d61a93755788df4cfcde831fc6375bb0feba5e7cd09
+  dw-port@sha256:3c8d129bb4d30135112ceaa17c1d131463221ac93e65433c0250ab45ccec4345
+  (jobs 295 and 300 stalled: 1 h job timeout, then runner memory exhaustion at -j3)
+pipeline 92 (4e7d6f4648d39d4811f0659c37eab6fb9a406597): native, web-objects, native-disc, matching success
+native-disc job 310: pack_disc, gte_tables_disc, dw1_overlay Passed; reference_title Passed 354.28 sec
