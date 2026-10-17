@@ -1,0 +1,23 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>DW1 development host</title>
+<canvas id="canvas" width="320" height="240"></canvas>
+<pre id="status"></pre>
+<script>
+const status = document.querySelector('#status');
+if (!crossOriginIsolated) {
+  status.textContent = 'cross-origin isolation required';
+} else {
+  const query = new URLSearchParams(location.search);
+  var Module = {
+    canvas: document.querySelector('#canvas'),
+    arguments: ['--frames', query.get('frames') || '1', ...(query.get('pattern') === '1' ? ['--pattern'] : []), ...(query.get('validate') === '1' ? ['--validate'] : [])],
+    print: text => { console.log(text); status.textContent += text + '\n'; },
+    printErr: text => { console.error(text); status.textContent += text + '\n'; }
+  };
+  if (query.get('validate') === '1') Module.presentations = [];
+  const script = document.createElement('script');
+  script.src = '/dw1.js';
+  document.head.append(script);
+}
+</script>

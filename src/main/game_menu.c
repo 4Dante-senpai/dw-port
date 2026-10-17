@@ -227,7 +227,12 @@ void drawLine3P(int32_t color, int32_t x0, int32_t y0,
                 int32_t y2, int32_t zIndex, int32_t flag);
 int32_t hasDigimonRaised(int32_t digimonId);
 int32_t hasMedal(uint16_t medal);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void activateMedalTexture(uint8_t a);
+#define activateMedalTexture(p0, p1) activateMedalTexture(p0)
+#else
 void activateMedalTexture(int32_t medalId, int32_t previousMedalId);
+#endif
 int32_t loadCardImage(int32_t id);
 void renderEvoChartDetail(void);
 void renderCardImage(void);

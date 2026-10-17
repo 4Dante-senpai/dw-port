@@ -72,8 +72,16 @@ void setPosDataPolyFT4(POLY_FT4 *prim, int32_t posX, int32_t posY, int32_t width
 void setUVDataPolyFT4(POLY_FT4 *prim, int32_t uPos, int32_t vPos, int32_t width, int32_t height);
 void convertValueToDigits(int32_t n, int32_t value, int32_t *outCount, int32_t *buf);
 void swapByte(uint8_t *a, uint8_t *b);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t addObject(int32_t objectId, int32_t instanceId, void *tick, void *render);
+#else
 void addObject(int32_t objectId, int32_t instanceId, void *tick, void *render);
+#endif
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t removeObject(int32_t objectId, int32_t instanceId);
+#else
 void removeObject(int32_t objectId, int32_t instanceId);
+#endif
 void VS_renderMoveName(uint8_t i);
 void VS_setCommandIconUV(DigimonEntity *digimon, POLY_FT4 *prim, uint8_t index);
 void damageTick(FighterData *fighter, Stats *stats);

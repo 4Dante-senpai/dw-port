@@ -1,0 +1,33 @@
+Test project /dw/build/port/web
+      Start  1: gte_tables
+ 1/14 Test  #1: gte_tables .......................   Passed    0.07 sec
+      Start  2: pre_commit
+ 2/14 Test  #2: pre_commit .......................   Passed    0.06 sec
+      Start  3: rts_info
+ 3/14 Test  #3: rts_info .........................   Passed    0.07 sec
+      Start  4: ovl_starts
+ 4/14 Test  #4: ovl_starts .......................   Passed    0.05 sec
+      Start  5: tu_list
+ 5/14 Test  #5: tu_list ..........................   Passed    0.16 sec
+      Start  6: gen_stubs
+ 6/14 Test  #6: gen_stubs ........................   Passed    0.31 sec
+      Start  7: inventory
+ 7/14 Test  #7: inventory ........................   Passed   10.59 sec
+      Start  8: preproc_check
+ 8/14 Test  #8: preproc_check ....................   Passed   25.37 sec
+      Start  9: test_preproc_check
+ 9/14 Test  #9: test_preproc_check ...............   Passed  125.92 sec
+      Start 10: ps1_ram_addr_range
+10/14 Test #10: ps1_ram_addr_range ...............   Passed    0.11 sec
+      Start 11: psyq_prototypes
+11/14 Test #11: psyq_prototypes ..................   Passed    0.12 sec
+      Start 12: fnptr_scanner
+12/14 Test #12: fnptr_scanner ....................   Passed    0.16 sec
+      Start 13: fnptr_inventory
+13/14 Test #13: fnptr_inventory ..................   Passed   17.33 sec
+      Start 14: web_boot
+14/14 Test #14: web_boot .........................   Passed   18.15 sec
+
+100% tests passed, 0 tests failed out of 14
+
+Total Test time (real) = 198.48 sec

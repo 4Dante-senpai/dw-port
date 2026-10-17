@@ -6,6 +6,11 @@
 #include <string.h>
 
 #include "../backend/gpu.h"
+#include "../host/plat.h"
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <emscripten/threading.h>
+#endif
 
 #include "clock.h"
 #include "crt.h"
@@ -20,6 +25,9 @@ unsigned long dw1_rts_stack_addr = DW1_RTS_STACK_ADDR;
 unsigned long dw1_rts_stack_size = DW1_RTS_STACK_SIZE;
 
 int dw1_game_main(void); /* the game's main (src/main/main.c, renamed by CMake) */
+#ifdef __EMSCRIPTEN__
+#define _end __heap_base
+#endif
 extern char _end[];      /* end of the image (.bss), from the linker */
 
 /* Static so it lies in the OT window: primitives on the game's stack can be linked (AD-5). */
@@ -89,12 +97,20 @@ static void capture_vblank(void)
 /* A frame ends when VSync(0/n) returns (AD-15 frame 0 is the first one). */
 void port_frame_done(void)
 {
+	plat_present(frames);
 	frames++;
 	if (frame_limit > 0 && frames >= frame_limit) {
 		port_trace("frame %ld", frames - 1);
+#ifdef __EMSCRIPTEN__
+        MAIN_THREAD_EM_ASM({
+            Module.print('port: reached frame ' + $0 + ' at cycle ' + $1);
+        }, frames - 1, (double)clock_now());
+        pthread_exit(NULL);
+#else
 		printf("port: reached frame %ld at cycle %llu\n", frames - 1,
 		       (unsigned long long)clock_now());
-		exit(capture_config.mark ? 1 : 0);
+        exit(capture_config.mark ? 1 : 0);
+#endif
 	}
 }
 
@@ -124,6 +140,14 @@ static void watchdog(void *arg)
 static void *game_thread(void *arg)
 {
 	(void)arg;
+#ifdef __EMSCRIPTEN__
+    volatile int stack_probe = 0;
+    PORT_ASSERT(ps1_in_window((const void *)&stack_probe));
+    /* Avoid racing main's stdio flush when it returns with a live pthread. */
+    MAIN_THREAD_EM_ASM({
+        Module.print('port: stack verified 0x' + ($0 >>> 0).toString(16));
+    }, &stack_probe);
+#endif
 	if (capture_config.clock_trace) {
 		clock_trace = fopen(capture_config.clock_trace, "w");
 		if (!clock_trace) {
@@ -158,10 +182,18 @@ int port_run_game(long frame_count, int until_overlay, const PortCapture *config
 	pthread_attr_t attr;
 	pthread_t thread;
 	if (pthread_attr_init(&attr) || pthread_attr_setstack(&attr, game_stack, GAME_STACK_SIZE) ||
-	    pthread_create(&thread, &attr, game_thread, NULL)) {
+#ifdef __EMSCRIPTEN__
+        emscripten_pthread_attr_settransferredcanvases(&attr, "#canvas") ||
+#endif
+        pthread_create(&thread, &attr, game_thread, NULL)) {
 		fprintf(stderr, "port: cannot start the game thread\n");
 		return 1;
 	}
-	pthread_join(thread, NULL);
+    pthread_attr_destroy(&attr);
+#ifdef __EMSCRIPTEN__
+    pthread_detach(thread);
+#else
+    pthread_join(thread, NULL);
+#endif
 	return 0;
 }

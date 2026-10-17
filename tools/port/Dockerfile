@@ -77,6 +77,18 @@ RUN emcmake cmake -S /opt/sdl3/src -B /tmp/sdl3-web -G Ninja \
 ENV SDL3_NATIVE_PREFIX=/opt/sdl3/native
 ENV SDL3_WEB_PREFIX=/opt/sdl3/web
 
+# Playwright, pinned (NFR-9), with Chromium and Firefox for the web tests
+ARG PLAYWRIGHT_VERSION=1.64.0
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
+RUN export PATH="$(dirname /opt/emsdk/node/*/bin/node):$PATH" && \
+    npm install -g @playwright/test@${PLAYWRIGHT_VERSION} && \
+    npx playwright install --with-deps chromium firefox && \
+    ln -s "$(npm root -g)" /opt/node_modules && \
+    ln -s /opt/node_modules/@playwright/test/cli.js /usr/local/bin/playwright && \
+    chmod -R a+rX /opt/ms-playwright && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+ENV NODE_PATH=/opt/node_modules
+
 # Writable by any uid so tools/port/docker_run.sh can run as the host user
 RUN chmod -R a+rwX /opt/emsdk/upstream/emscripten/cache /dw/.venv
 

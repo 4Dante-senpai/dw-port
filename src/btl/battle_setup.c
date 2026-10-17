@@ -24,7 +24,11 @@ void entityLookAtTile(Entity *entity, int32_t tileX, int32_t tileY);
 void getModelTile(VECTOR *pos, int16_t *outTileX, int16_t *outTileY);
 void partnerTickCollision(void);
 void startBattleIdleAnimation(DigimonEntity *entity, Stats *stats, int32_t flags);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t playSound(int32_t soundId, uint32_t flag);
+#else
 void playSound(int32_t soundId, uint32_t flag);
+#endif
 void clearTamerWaypoints(void);
 
 int16_t BTL_CARDINAL_ROTATIONS[4] = { 0, 1024, 2048, 3072 };

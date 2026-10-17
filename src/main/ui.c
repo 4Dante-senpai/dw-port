@@ -13,7 +13,11 @@ void renderUIBoxAnimated(int32_t instanceId);
 void renderUIBoxAnim(int32_t instanceId, int16_t frame);
 void renderUIBoxBorder(RECT *rect, int32_t layer);
 
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t playSound(int32_t soundId, uint32_t flag);
+#else
 void playSound(int32_t soundId, uint32_t flag);
+#endif
 void drawLine3P(int32_t color, int32_t x0, int32_t y0,
 		int32_t x1, int32_t y1, int32_t x2, int32_t y2,
 		int32_t layer, int32_t blend);

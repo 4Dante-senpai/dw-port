@@ -1,0 +1,14 @@
+[0/2] Re-checking globbed directories...
+ninja: no work to do.
+      Start 38: fnptr_inventory
+38/38 Test #38: fnptr_inventory ..................   Passed    9.77 sec
+
+100% tests passed, 0 tests failed out of 38
+
+Total Test time (real) = 155.29 sec
+
+The following tests did not run:
+	 33 - pack_disc (Skipped)
+	 34 - gte_tables_disc (Skipped)
+	 35 - scene_title (Skipped)
+	 36 - dw1_overlay (Skipped)

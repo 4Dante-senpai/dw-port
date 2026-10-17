@@ -25,7 +25,11 @@ void renderNumber(int32_t a, int32_t x, int32_t y, int32_t digits, int32_t value
 void setEntityTextDigit(POLY_FT4 *poly, int32_t x, int32_t y);
 void setPosDataPolyFT4(POLY_FT4 *prim, int32_t x, int32_t y, int32_t w, int32_t h);
 void setUVDataPolyFT4(POLY_FT4 *p, int32_t u, int32_t v, int32_t w, int32_t h);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t worldPosToScreenPos(TrainingSpot *item, SVECTOR *out);
+#else
 void worldPosToScreenPos(TrainingSpot *item, SVECTOR *out);
+#endif
 void TRN_tickPostTrainingStatsBox();
 void TRN_renderPostTrainingStatsBox(int16_t depth);
 int32_t TRN_getTrainingSpotScreenPos(int32_t key, int32_t sub, SVECTOR *out);

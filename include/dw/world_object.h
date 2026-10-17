@@ -20,7 +20,11 @@ extern WorldObject WORLD_OBJECTS[];
 void initializeWorldObjects(void);
 int32_t addObject(int32_t objectId, int32_t instanceId, TickFunction tick,
 		  RenderFunction render);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t removeObject(int32_t objectId, int32_t instanceId);
+#else
 int32_t removeObject(/* int32_t objectId, int32_t instanceId */);
+#endif
 void tickObjects(void);
 void renderObjects(void);
 

@@ -149,12 +149,29 @@ void DOOA_spawnShardWave(long wireIndex);
 void addScreenPolyFT3(void *prim, SVECTOR *v0, SVECTOR *v1, SVECTOR *v2);
 int32_t addScreenPolyFT4(POLY_FT4 *poly, SVECTOR *v0, SVECTOR *v1, SVECTOR *v2, SVECTOR *v3);
 void tickCameraMovement(int32_t mode);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t setEFEFlashOffset(int32_t instance, int32_t x, int32_t y);
+#else
 void setEFEFlashOffset(int32_t instance, int32_t x, int32_t y);
+#endif
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t waitForDeathMapLoading(int32_t mode);
+#else
 void waitForDeathMapLoading(int32_t mode);
+#endif
 void changeToDeathMap(void);
 void downloadCLUT1(int16_t *clut);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void fadeoutCLUT1(long a, int16_t *b);
+#define fadeoutCLUT1(p0, p1, p2) fadeoutCLUT1(p0, p1)
+#else
 void fadeoutCLUT1(int32_t alpha, int16_t *clut, int32_t mode);
+#endif
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int16_t DOOA_storeDigimonY(void);
+#else
 void DOOA_storeDigimonY(void);
+#endif
 void renderParticleFlash(ParticleFlashData *params);
 
 static void *dooa_functions[] = {

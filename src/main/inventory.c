@@ -30,7 +30,11 @@ void renderString(int32_t color, int32_t x, int32_t y, int32_t w, int32_t h,
                   int32_t u, int32_t v, int32_t layer, int32_t shadow);
 void renderSelectionCursor(int32_t x, int32_t y, int16_t w, int16_t h, int32_t layer);
 void swapByte(uint8_t *a, uint8_t *b);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t playSound(int32_t vabId, uint32_t note);
+#else
 void playSound(int32_t vabId, uint32_t note);
+#endif
 void sortItems(int16_t mode);
 void sortItemsById(uint8_t *data, long count);
 void renderItemSprite(int32_t type, int32_t x, int32_t y, int32_t layer);

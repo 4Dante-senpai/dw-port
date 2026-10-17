@@ -1,0 +1,6 @@
+[0/2] Re-checking globbed directories...
+[1/5] Building C object CMakeFiles/dw1_runtime.dir/port/psyq/crt.c.o
+[2/5] Linking C static library libdw1_runtime.a
+[3/5] Generating generated/psyq_stubs.c
+psyq: used=199 implemented=187 host_libc=12 stubs=0 gte_stubs=0
+[4/4] Linking C executable dw1.js

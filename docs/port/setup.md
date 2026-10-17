@@ -236,3 +236,70 @@ No se agregó a la imagen. Evaluación:
 
 Se resuelve como historia propia de M3 (diff de frames contra referencia), en una imagen
 separada para no engordar `dw-port`.
+
+
+## Web: hilo del juego y presentación (Historia 4.1)
+
+Dentro del contenedor, con el entorno de emsdk cargado:
+
+```sh
+cmake --preset web
+cmake --build --preset web -j8
+ctest --preset web
+python3 port/web/dev/serve.py --build build/port/web --port 8080
+```
+
+Abrir `http://localhost:8080/?frames=1`; `&pattern=1` sustituye el display por un
+patrón RGB15 para comprobar colores, orientación y tamaño. El servidor agrega COOP
+`same-origin` y COEP `require-corp`. `/isolated-off/` omite ambos: la página muestra
+`cross-origin isolation required` antes de solicitar el runtime. Este servidor es
+exclusivamente de desarrollo y escucha en loopback.
+
+El ejecutable `dw1.js` enlaza todo el juego, con pthreads, excepciones WASM y
+`SUPPORT_LONGJMP=wasm`. La memoria queda fija en 64 MiB, sin crecimiento; se conserva
+`-fsigned-char`, sin LTO. El hilo principal devuelve el control al navegador; el
+hilo del juego usa la pila estática de 4 MiB y comprueba la dirección de una variable
+local dentro de la ventana OT de 16 MiB. El canvas se transfiere a ese mismo hilo.
+`plat_present` sube el display software como textura RGBA a WebGL2, con filtro nearest.
+
+`web_boot` usa Playwright 1.64.0 instalado en `/opt/node_modules` y los navegadores
+de `/opt/ms-playwright`. Chromium usa SwiftShader; Firefox corre con Xvfb (el modo
+headless de este contenedor no creó un contexto WebGL2). No se toman capturas de
+pantalla: `glReadPixels` compara cada píxel y comunica cantidad y primer índice
+diferente; Playwright verifica el DOM y esos valores. Los tiempos de presentación
+se guardan en `build/port/web/present-timing.json`, sin umbral de aceptación y sin
+incluir el readback de validación. El primer tiempo incluye la creación del contexto.
+
+`fnptr_inventory` analiza los 119 TU con el frontend Emscripten fijado (también
+al correr desde presets nativos), inventaría casts, argumentos de callback y
+llamadas sin prototipo o con aridad distinta. Compara el resultado con
+`tools/port/metrics/fnptr_casts.tsv` y rechaza drift o resoluciones vacías. En web
+recompila además las declaraciones originales con `DW1_ABI_AUDIT` y compara
+los diagnósticos de firmas de wasm-ld. El enlace de producción trata las
+advertencias como errores. Para actualizarlo tras revisar un cambio intencional:
+
+```sh
+python3 tools/port/fnptr/inventory.py build/port/web --update
+```
+
+Las llamadas indirectas se resuelven con `-sEMULATE_FUNCTION_POINTER_CASTS=1`;
+no hay adaptadores de callbacks en `src/`. La emulación agrega código y coste de
+despacho, sin presupuesto de rendimiento en esta historia. `native-asan` mantiene
+`-fno-sanitize=function`. Los cambios `DW1_PORT` corrigen solamente las ABI directas
+rechazadas por el linker, conservando los parámetros consumidos. Los stubs PsyQ se
+generan desde prototipos reales y fallan si falta uno o si una firma variádica
+requiere implementación explícita.
+
+El patrón cambia con el frame: R5=(x+f)&31, G5=(y+2f)&31,
+B5=(x+y+3f)&31; cada canal se expande con `(v<<3)|(v>>2)`. Usar
+`?frames=3&pattern=1&validate=1` para validar varias presentaciones. Solo
+`--validate` (`validate=1`) habilita `glReadPixels`, `preserveDrawingBuffer` y
+`Module.presentations`; las pruebas contrastan cada píxel con un oráculo RGB15
+independiente en JavaScript. Las corridas normales no acumulan muestras.
+El build deja `dw1.html`, `dw1.js` y `dw1.wasm` en `build/port/web`.
+
+Limitación pendiente: `script_interp.c` llama al `setActiveAnim` original con un
+solo argumento aunque su implementación consume dos. El port conserva el no-op
+cuando no existe un NPC con scriptId 12 y aborta si ese NPC existe; no inventa una
+animación. Esto no afecta el frame 0 probado, pero la fidelidad de esa ruta de
+scripts queda incompleta hasta reconstruir el valor de a1 del binario original.

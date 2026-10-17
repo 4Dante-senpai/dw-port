@@ -46,7 +46,11 @@ uint8_t* getScriptSection(uint8_t* ptr, int32_t section);
 int32_t isXPressedAfterDialogue(void);
 int32_t isKeyDown(int32_t);
 void triggerBoxCloseFlag(int32_t);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t playSound(int16_t, int16_t);
+#else
 void playSound(int16_t, int16_t);
+#endif
 
 void renderString(int32_t colorId,
 		  int32_t posX, int32_t posY,
@@ -278,7 +282,11 @@ void buildScheduleEntries(void)
 	++textBox->writeCount;
 }
 
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+extern uint16_t showTextboxReady(uint8_t, uint8_t);
+#else
 extern void showTextboxReady(int32_t, int32_t);
+#endif
 
 GARBAGE_ARRAY(initTournamentInfo, DGET_BUFFER, 3, 9);
 

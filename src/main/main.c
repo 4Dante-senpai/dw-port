@@ -74,7 +74,12 @@ extern int32_t CONDITION_BUBBLE_TIMER;
 
 void GsSetNearClip(long clip);
 #if VERSION_IS(JP_TRIAL) || VERSION_IS(JP_BOMBOM)
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void checkFishingMap(uint32_t a);
+#define checkFishingMap(p0, p1) checkFishingMap(p0)
+#else
 void checkFishingMap(int32_t mapId, int32_t arg1);
+#endif
 int32_t isUIBoxAvailable(int32_t id);
 void renderString(uint8_t color, int16_t x, int16_t y, int16_t w, int16_t h,
 		  uint8_t u, uint8_t v, long layer, int32_t shadow);
@@ -125,16 +130,32 @@ void initializeHealingParticles(void);
 
 void BTL_buffStats(Entity *entity, int32_t entityId, int32_t amount,
 		   int16_t* valuePtr, uint8_t color, uint8_t icon);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t BTL_addBuffDiskEffect(Entity *entity);
+#else
 void BTL_addBuffDiskEffect(Entity *entity);
+#endif
 
 void SsInit(void);
 void PadInit(int32_t mode);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void MemCardInit(long val);
+#else
 long MemCardInit(long val);
+#endif
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void MemCardStart(void);
+#else
 long MemCardStart(void);
+#endif
 void initializeGsTMDMap(void);
 void initializeScripts(void);
 void initializeStatusObjects(void);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t initializeMusic(void);
+#else
 void initializeMusic(void);
+#endif
 void finalizeMusic(void);
 void playMovie(int32_t movieId, int32_t shouldPlay);
 void loadStackedTIMFile(char *path);
@@ -3792,7 +3813,11 @@ void setImmortalHour(void);
 extern int8_t PREV_TILE_X;
 extern int8_t PREV_TILE_Y;
 void uploadMapTileImages(MapTileData *tiles, int32_t index);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void *memcpy(void *dst, const void *src, unsigned int size);
+#else
 void memcpy(uint8_t *dst, uint8_t *src, uint32_t size);
+#endif
 
 void initializeLoadedMap(void)
 {

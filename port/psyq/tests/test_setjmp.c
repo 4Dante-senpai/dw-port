@@ -13,9 +13,16 @@ int main(void)
 {
 	memset(guarded.canary, 0xA5, sizeof guarded.canary);
 	volatile int passes = 0;
-	if (setjmp(guarded.buf) == 0) {
+	switch (setjmp(guarded.buf)) {
+	case 0:
 		passes++;
 		longjmp(guarded.buf, 7);
+		return 1; /* longjmp must not return to its caller. */
+	case 7:
+		break;
+	default:
+		printf("test_setjmp: FAIL (unexpected longjmp value)\n");
+		return 1;
 	}
 	passes++;
 	int ok = sizeof(jmp_buf) == 48 && passes == 2;

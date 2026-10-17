@@ -18,7 +18,12 @@
 #include <dw/world_object.h>
 #include <text/main/battle_ui.h>
 
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void BTL_tickBattleEndText(void);
+#define BTL_tickBattleEndText(id) BTL_tickBattleEndText()
+#else
 void BTL_tickBattleEndText();
+#endif
 void renderNumber(int32_t a, int32_t x, int32_t y, int32_t digits,
 		  int32_t value, int32_t layer);
 void renderString(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e,

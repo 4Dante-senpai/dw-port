@@ -124,7 +124,11 @@ int16_t instanceId;
 			 * overlay. The function only takes two parameters so
 			 * the parameter is unused.
 			 */
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+			removeObject(0xfaf, instanceId);
+#else
 			removeObject(0xfaf, instanceId, TRN_tickMpTraining, NULL);
+#endif
 			TRAINING_COMPLETE = 1;
 		}
 		break;

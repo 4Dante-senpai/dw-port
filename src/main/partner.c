@@ -74,7 +74,11 @@ void tickConditionBoundaries();
 void unsetCameraFollowPlayer();
 void tickPartnerWaypoints();
 void entityLookAtLocation(Entity *entity, VECTOR *pos);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t playSound(int32_t vabId, uint32_t note);
+#else
 void playSound(int32_t vabId, uint32_t note);
+#endif
 void partnerTickCollision();
 void tickConditions();
 void tickPoopingMechanic();
@@ -82,10 +86,18 @@ void tickPoopDetection();
 void sleepRegen();
 void handleSleeping();
 void setCameraFollowPlayer();
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t handleSpecialEvolutions(int32_t mode, Entity* partner);
+#else
 void handleSpecialEvolutions(int32_t mode, Entity* partner);
+#endif
 void startGameTime();
 void updateTimeOfDay();
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void handlePraiseScold(int32_t state);
+#else
 void handlePraiseScold();
+#endif
 int32_t partnerWillRefuseItem();
 void removeOneSelectedItem();
 void partnerHandleFoodFeed(int32_t type);
@@ -98,8 +110,16 @@ void deinitializeFishing();
 void removeTriangleMenu();
 void closeInventoryBoxes();
 void removeUIBox1();
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t loadMapSounds2(int32_t mapSound);
+#else
 void loadMapSounds2(int32_t mapSound);
+#endif
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t isSoundLoaded(int32_t isAsync, int32_t soundId);
+#else
 void isSoundLoaded(int32_t isAsync, int32_t soundId);
+#endif
 void setFishingEnabled();
 void setFishingDisabled();
 void handleEatingPoop();
@@ -110,7 +130,11 @@ void writePStat(int32_t id, int32_t value);
 uint8_t readPStat(int32_t id);
 void addTamerLevel(int32_t chance, int32_t amount);
 int32_t getMapSoundId(int32_t mapId);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t loadMapSounds(int32_t soundId);
+#else
 void loadMapSounds(int32_t soundId);
+#endif
 void checkShopMap(int32_t mapId);
 void checkArenaMap(int32_t mapId);
 void readMapTFS(int32_t mapId);
@@ -397,7 +421,7 @@ void partnerTickPraiseScold(int32_t partnerState)
 		break;
 	case 2:
 		if (TAMER_ENTITY.entity.anim.animId == 0) {
-#if !VERSION_IS(US)
+#if !VERSION_IS(US) || (defined(DW1_PORT) && !defined(DW1_ABI_AUDIT))
 			handlePraiseScold(partnerState);
 #else
 			handlePraiseScold();

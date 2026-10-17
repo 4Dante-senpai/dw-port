@@ -13,6 +13,7 @@
 - M0 Entorno: **completo** (modo sin compilador matching).
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
+- M4 Web: **en curso** (4.1: Juego en wasm hasta frame 0 con presentación WebGL2).
 
 ## Hecho
 
@@ -173,9 +174,25 @@
   tardía, salida por overlay, errores de E/S); diferida la traza del reloj distinta entre
   presets. Evidencia: `docs/implementation-artifacts/evidence/story-2-15.log`.
 
+- Historia 4.1 (el Juego en wasm con su propio hilo y presentación): preset `web` linkea `dw1.wasm`
+  (`-pthread -sSUPPORT_LONGJMP=wasm -fwasm-exceptions`, 64 MiB fijos, sin crecimiento); el Juego
+  corre en un pthread con el stack estático de `crt.c` (respetado por Emscripten, `PORT_ASSERT` del
+  stack efectivo en `[0, 16 MB)`; no hizo falta `-sPROXY_TO_PTHREAD`) y presenta por WebGL2 en un
+  `OffscreenCanvas` transferido (`plat_present`). Playwright 1.64.0 (Chromium y Firefox, en la
+  imagen `dw-port`): frame 0, patrón RGB15 de 3 frames con oráculo independiente, corrida normal
+  leyendo el canvas, aislamiento COOP/COEP; 0 píxeles distintos. Presentación medida (frame 0 incluye
+  inicialización): Chromium ~1,2 ms, Firefox ~1,8 ms por frame. Inventario automático de firmas
+  (`tools/port/metrics/fnptr_casts.tsv`): indirectas por `-sEMULATE_FUNCTION_POINTER_CASTS`, directas
+  con bloques `DW1_PORT` mínimos verificados contra el asm; stubs PsyQ con prototipo; `setjmp` probado
+  en wasm. Revisión (2 iteraciones, 3 capas Codex): la iteración 0 con adaptadores manuales en 52
+  archivos se revirtió por descartar argumentos usados. Diferidos: argumento residual de
+  `setActiveAnim(0xc)` (trap si existe el NPC) y anomalía del título con `-fsanitize=function`.
+  Suites web/nativo/ASan, clase B con disco y `make compare` verdes. Evidencia:
+  `docs/implementation-artifacts/evidence/story-4-1/`.
+
 ## En curso
 
-- Fase 5: Épica 2 (M2) cerrada con la historia 2.15. Próxima: historia 4.1 (el Juego en wasm), según el orden de dependencias del contexto de la Épica 2.
+- Fase 5: Épica 4 (M4) en curso; historia 4.1 cerrada. Próxima: historia 4.2 (worker de E/S y título en el navegador).
 
 ## Bloqueos
 
@@ -191,17 +208,15 @@
 | Funciones PsyQ usadas / cubiertas por DW2-PC | 202 / 81 |
 | Archivos C del juego que compilan a wasm32 en el preset `web` | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
-| Bloques `DW1_PORT` en `src/`/`include/` | 14 (`docs/port/src-changes.md`) |
+| Bloques `DW1_PORT` en `src/`/`include/` | 79 apariciones del guard (`docs/port/src-changes.md`) |
 | Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (52 mínimas M2) / 0 / 12 (de 199) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
 | Escenas que funcionan (nativo) | 1 (título, sin referencia) |
-| Escenas que funcionan (web) | 0 |
+| Escenas que funcionan (web) | 0 (frame 0 sin Pack en Chromium y Firefox) |
+| Llamadas con firma distinta inventariadas / sin resolver | 1031 / 0 (`fnptr_casts.tsv`) |
 
 ## Notas
-
-- Pregunta abierta (memlog): llamadas por puntero con tipo distinto en el Juego; en wasm abortan. Se
-  resuelven en la Historia 4.1.
 
 - Pregunta abierta (memlog de la arquitectura): el VBlank del reloj usa 59,94 Hz (NFR-1); psx-spx da
   ~59,83 Hz para NTSC no entrelazado. Se mide en la Historia 3.10 contra el Emulador de referencia.

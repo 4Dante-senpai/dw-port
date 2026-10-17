@@ -39,7 +39,12 @@ int abs(int x);
 int32_t addObject(int32_t objectId, int16_t instanceId, void (*tick)(int32_t), void (*render)(int32_t));
 void checkArenaMap(uint8_t mapId);
 void checkCurlingMap(int32_t mapId);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void checkFishingMap(uint32_t a);
+#define checkFishingMap(p0, p1) checkFishingMap(p0)
+#else
 void checkFishingMap(int32_t mapId, int32_t arg1);
+#endif
 int32_t checkMapCollisionX(Entity *entity, int32_t direction);
 int32_t checkMapCollisionZ(Entity *entity, int32_t direction);
 void checkShopMap(uint8_t mapId);
@@ -153,7 +158,11 @@ void tickCameraFollowPlayer(void);
 void tickCameraMovement(int32_t instanceId);
 void tickDaytimeTransition(int32_t instanceId);
 void tickMeramonShake(int32_t arg0);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t tickCameraMoveTo(int32_t x, int32_t z, int32_t arg2);
+#else
 void tickCameraMoveTo(int32_t x, int32_t z, int32_t arg2);
+#endif
 int32_t tickCameraMoveToEntity(int32_t scriptId, int32_t speed);
 void partnerTickCollision(void);
 void tickPartnerWaypoints(void);
@@ -5097,7 +5106,11 @@ out:
 }
 
 // clang-format off
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t tickCameraMoveTo(x, z, arg2)
+#else
 void tickCameraMoveTo(x, z, arg2)
+#endif
 	int16_t x;
 	int16_t z;
 	int16_t arg2;
@@ -5107,7 +5120,11 @@ void tickCameraMoveTo(x, z, arg2)
 	CAMERA_TARGET.vy = TAMER_ENTITY.entity.posData->location.vy;
 	CAMERA_TARGET.vz = z;
 
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+	return checkCameraMovement(arg2);
+#else
 	checkCameraMovement(arg2);
+#endif
 }
 
 // clang-format off

@@ -1,0 +1,78 @@
+{
+  "chromium": {
+    "game": [
+      {
+        "frame": 0,
+        "width": 320,
+        "height": 240,
+        "different": 0,
+        "first": -1,
+        "ms": 22.179931640625
+      }
+    ],
+    "pattern": [
+      {
+        "frame": 0,
+        "width": 320,
+        "height": 240,
+        "different": 0,
+        "first": -1,
+        "ms": 19.89501953125
+      },
+      {
+        "frame": 1,
+        "width": 320,
+        "height": 240,
+        "different": 0,
+        "first": -1,
+        "ms": 1.28515625
+      },
+      {
+        "frame": 2,
+        "width": 320,
+        "height": 240,
+        "different": 0,
+        "first": -1,
+        "ms": 1.175048828125
+      }
+    ]
+  },
+  "firefox": {
+    "game": [
+      {
+        "frame": 0,
+        "width": 320,
+        "height": 240,
+        "different": 0,
+        "first": -1,
+        "ms": 41.380126953125
+      }
+    ],
+    "pattern": [
+      {
+        "frame": 0,
+        "width": 320,
+        "height": 240,
+        "different": 0,
+        "first": -1,
+        "ms": 32.099853515625
+      },
+      {
+        "frame": 1,
+        "width": 320,
+        "height": 240,
+        "different": 0,
+        "first": -1,
+        "ms": 2
+      },
+      {
+        "frame": 2,
+        "width": 320,
+        "height": 240,
+        "different": 0,
+        "first": -1,
+        "ms": 1.780029296875
+      }
+    ]
+  }
+}

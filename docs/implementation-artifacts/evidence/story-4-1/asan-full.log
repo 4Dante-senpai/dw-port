@@ -1,0 +1,85 @@
+Test project /dw/build/port/native-asan
+      Start  1: gpu
+ 1/37 Test  #1: gpu ..............................   Passed    2.61 sec
+      Start  2: libgs
+ 2/37 Test  #2: libgs ............................   Passed    0.03 sec
+      Start  3: libgpu
+ 3/37 Test  #3: libgpu ...........................   Passed    0.06 sec
+      Start  4: gte_tables
+ 4/37 Test  #4: gte_tables .......................   Passed    0.08 sec
+      Start 26: pack
+ 5/37 Test #26: pack .............................   Passed    0.07 sec
+      Start  5: libgte
+ 6/37 Test  #5: libgte ...........................   Passed    0.02 sec
+      Start  6: pre_commit
+ 7/37 Test  #6: pre_commit .......................   Passed    0.06 sec
+      Start  7: rts_info
+ 8/37 Test  #7: rts_info .........................   Passed    0.09 sec
+      Start  8: ovl_starts
+ 9/37 Test  #8: ovl_starts .......................   Passed    0.06 sec
+      Start  9: tu_list
+10/37 Test  #9: tu_list ..........................   Passed    0.17 sec
+      Start 10: gen_stubs
+11/37 Test #10: gen_stubs ........................   Passed    0.34 sec
+      Start 11: inventory
+12/37 Test #11: inventory ........................   Passed   11.39 sec
+      Start 12: preproc_check
+13/37 Test #12: preproc_check ....................   Passed   26.39 sec
+      Start 13: test_preproc_check
+14/37 Test #13: test_preproc_check ...............   Passed  167.82 sec
+      Start 14: ps1_ram_addr_range
+15/37 Test #14: ps1_ram_addr_range ...............   Passed    0.04 sec
+      Start 15: ps1mem
+16/37 Test #15: ps1mem ...........................   Passed    0.06 sec
+      Start 16: setjmp
+17/37 Test #16: setjmp ...........................   Passed    0.01 sec
+      Start 17: clock
+18/37 Test #17: clock ............................   Passed    0.07 sec
+      Start 18: libc_heap_pad
+19/37 Test #18: libc_heap_pad ....................   Passed    0.03 sec
+      Start 19: gte
+20/37 Test #19: gte ..............................   Passed    0.03 sec
+      Start 20: psyq_prototypes
+21/37 Test #20: psyq_prototypes ..................   Passed    0.04 sec
+      Start 21: overlay_O0
+22/37 Test #21: overlay_O0 .......................   Passed    0.02 sec
+      Start 22: overlay_O2
+23/37 Test #22: overlay_O2 .......................   Passed    0.01 sec
+      Start 23: frame0
+24/37 Test #23: frame0 ...........................   Passed    0.11 sec
+      Start 24: dw1_bad_args
+25/37 Test #24: dw1_bad_args .....................   Passed    0.04 sec
+      Start 25: watchdog
+26/37 Test #25: watchdog .........................   Passed   12.05 sec
+      Start 27: av_stubs
+27/37 Test #27: av_stubs .........................   Passed    0.03 sec
+      Start 28: libcd
+28/37 Test #28: libcd ............................   Passed    0.03 sec
+      Start 29: libgte_host
+29/37 Test #29: libgte_host ......................   Passed    0.08 sec
+      Start 30: dw1_foreign_pack
+30/37 Test #30: dw1_foreign_pack .................   Passed    0.03 sec
+      Start 31: scene_runner
+31/37 Test #31: scene_runner .....................   Passed    0.11 sec
+      Start 32: scene_flags
+32/37 Test #32: scene_flags ......................   Passed    0.43 sec
+      Start 33: pack_disc
+33/37 Test #33: pack_disc ........................***Skipped   0.00 sec
+      Start 34: gte_tables_disc
+34/37 Test #34: gte_tables_disc ..................***Skipped   0.00 sec
+      Start 35: scene_title
+35/37 Test #35: scene_title ......................***Skipped   0.00 sec
+      Start 36: dw1_overlay
+36/37 Test #36: dw1_overlay ......................***Skipped   0.00 sec
+      Start 37: fnptr_inventory
+37/37 Test #37: fnptr_inventory ..................   Passed   12.60 sec
+
+100% tests passed, 0 tests failed out of 37
+
+Total Test time (real) = 235.04 sec
+
+The following tests did not run:
+	 33 - pack_disc (Skipped)
+	 34 - gte_tables_disc (Skipped)
+	 35 - scene_title (Skipped)
+	 36 - dw1_overlay (Skipped)

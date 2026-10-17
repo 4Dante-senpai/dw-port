@@ -1,0 +1,1032 @@
+kind	file	line	column	expression	resolution
+callback	src/btl/battle_effect.c	2142	22	(TickFunction)BTL_tickEFEEngine, (RenderFunction)BTL_renderEFEEngine);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/btl/battle_effect.c	2142	55	(RenderFunction)BTL_renderEFEEngine);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/btl/battle_effect.c	5472	44	(RenderFunction)BTL_renderPoisonEffect);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/btl/battle_hud.c	585	28	(RenderFunction)BTL_renderBattleStartText);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/btl/battle_hud.c	732	28	(RenderFunction)BTL_renderBattleStartTextBurst);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/btl/battle_hud.c	978	22	(TickFunction)BTL_tickPartnerStatusBars, (RenderFunction)BTL_renderPartnerStatusBars);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/btl/battle_hud.c	978	63	(RenderFunction)BTL_renderPartnerStatusBars);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/btl/command_menu.c	185	22	(TickFunction)BTL_tickCommandMenu, BTL_renderCommandMenu);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/btl/command_menu.c	399	22	(TickFunction)BTL_tickFinisherChargeup, (RenderFunction)BTL_renderFinisherChargeup);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/btl/command_menu.c	399	62	(RenderFunction)BTL_renderFinisherChargeup);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/btl/command_menu.c	511	22	(TickFunction)BTL_tickDeathCountdown, (RenderFunction)BTL_renderDeathCountdown);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/btl/command_menu.c	511	60	(RenderFunction)BTL_renderDeathCountdown);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/btl/command_shout.c	104	28	(RenderFunction)BTL_renderCommandShout);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/doo2/doo2.c	733	22	(TickFunction)DOO2_tickEggBox,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/doo2/doo2.c	734	22	(RenderFunction)DOO2_renderEggIcons);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/dooa/dooa.c	684	22	(TickFunction)DOOA_updateShards, (RenderFunction)DOOA_renderShards);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/dooa/dooa.c	684	55	(RenderFunction)DOOA_renderShards);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/eab/eab.c	663	23	(TickFunction)EAB_tickBuildup, (RenderFunction)EAB_renderBuildup);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/eab/eab.c	663	54	(RenderFunction)EAB_renderBuildup);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/eab/eab.c	691	38	(RenderFunction)EAB_renderSpawn);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/evl/evl.c	1343	50	(RenderFunction)EVL_renderEvoSequence);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/fish/fish.c	1383	22	(TickFunction)FISH_tickBaitMenu, (RenderFunction)FISH_renderBaitMenu);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/fish/fish.c	1537	20	(TickFunction)FISH_tickTextBox, (RenderFunction)FISH_renderTextBox);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/battle_ui.c	294	65	(RenderFunction)renderBitBox);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/battle_ui.c	544	8	(RenderFunction)renderPostBattleStatsBox);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/buff_model.c	92	5	(RenderFunction)renderBuffModel);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/game_menu.c	1330	22	(void (*)(int32_t))tickTriangleMenu, NULL);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/game_menu.c	1705	23	(TickFunction)tick, (RenderFunction)render);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/game_menu.c	1705	43	(RenderFunction)render);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/game_menu.c	2016	9	(RenderFunction)renderEvoChartDetail);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/game_menu.c	2090	7	(RenderFunction)renderCardImage);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/game_menu.c	2093	13	(RenderFunction)renderCardCount);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/inventory.c	303	23	(TickFunction)tickItemOption,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/inventory.c	304	23	(RenderFunction)renderItemOption);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/inventory.c	518	23	(TickFunction)tickInventoryTop, (RenderFunction)renderInventoryTop);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/inventory.c	518	55	(RenderFunction)renderInventoryTop);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/inventory.c	533	29	(RenderFunction)renderInventoryBottom);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/inventory.c	720	23	(TickFunction)tickSortOption,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/inventory.c	721	23	(RenderFunction)renderSortOption);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/inventory.c	791	23	(TickFunction)tickDropItemConfirmBox,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/inventory.c	792	23	(RenderFunction)renderDropItemConfirmBox);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1933	2	(ItemFunction)handleHPHealingItem,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1934	2	(ItemFunction)handleHPHealingItem,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1935	2	(ItemFunction)handleHPHealingItem,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1936	2	(ItemFunction)handleHPHealingItem,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1937	2	(ItemFunction)handleMPHealingItem,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1938	2	(ItemFunction)handleMPHealingItem,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1939	2	(ItemFunction)handleMPHealingItem,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1940	2	(ItemFunction)handleDoubleFloppy,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1941	2	(ItemFunction)handleStatusItems,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1942	2	(ItemFunction)handleStatusItems,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1943	2	(ItemFunction)handleStatusItems,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1946	2	(ItemFunction)handleStatusItems,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1947	2	(ItemFunction)handleStatusItems,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1948	2	(ItemFunction)handleBuffDisks,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1949	2	(ItemFunction)handleBuffDisks,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1950	2	(ItemFunction)handleBuffDisks,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1951	2	(ItemFunction)handleBuffDisks,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1952	2	(ItemFunction)handleBuffDisks,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1953	2	(ItemFunction)handleBuffDisks,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/item.c	1954	2	(ItemFunction)handleBuffDisks,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/main.c	3627	28	(RenderFunction)renderPressStartToContinue);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/main.c	3724	23	(TickFunction)tickMainMenu, (RenderFunction)renderMainMenu);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/main.c	3724	51	(RenderFunction)renderMainMenu);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/main.c	3725	28	(RenderFunction)renderMainMenuBackground);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/main_menu.c	4197	30	(RenderFunction)renderMainMenuBackground);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/main_menu.c	4198	25	(TickFunction)tickMainMenu,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/main_menu.c	4199	7	(RenderFunction)renderMainMenu);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/tamer.c	358	35	(TickFunction)tamerTick);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/utils2.c	395	12	(FileRequestCallback)callback, param);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/murd/murd.c	448	67	(TickFunction)MURD_tickLivesBox, (RenderFunction)MURD_renderLivesBox);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/murd/murd.c	784	39	(RenderFunction)MURD_renderScene);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_effect.c	1254	22	(TickFunction)STD_tickChampionScene, (RenderFunction)STD_renderChampionScene);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_effect.c	1254	59	(RenderFunction)STD_renderChampionScene);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_effect.c	1382	28	(RenderFunction)STD_renderPodium);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_effect.c	1420	22	(TickFunction)STD_tickLoseScene, (RenderFunction)STD_renderLoseScene);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_effect.c	1420	55	(RenderFunction)STD_renderLoseScene);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_effect.c	1543	22	(TickFunction)STD_tickWinScene, (RenderFunction)STD_renderWinScene);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_effect.c	1543	54	(RenderFunction)STD_renderWinScene);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_effect.c	2247	22	(TickFunction)STD_tickEFEEngine, (RenderFunction)STD_renderEFEEngine);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_effect.c	2247	55	(RenderFunction)STD_renderEFEEngine);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_effect.c	5666	44	(RenderFunction)STD_renderPoisonEffect);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_hud.c	1174	22	(TickFunction)STD_tickVersusModelScene, (RenderFunction)STD_renderVersusModelScene);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_hud.c	1174	62	(RenderFunction)STD_renderVersusModelScene);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_hud.c	453	22	(TickFunction)STD_tickFinisherChargeup, (RenderFunction)STD_renderFinisherChargeup);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_hud.c	453	62	(RenderFunction)STD_renderFinisherChargeup);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_hud.c	623	28	(RenderFunction)STD_renderBattleStartText);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_hud.c	770	28	(RenderFunction)STD_renderBattleStartTextBurst);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	2452	22	(TickFunction)STD_tickVSPhase, NULL);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	2740	22	(TickFunction)STD_tickCameraChase, NULL);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	2806	22	(TickFunction)STD_tickCameraIntro, NULL);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	2920	23	(TickFunction)STD_tickFighterCounter, (RenderFunction)STD_renderFighterCounter);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	2920	61	(RenderFunction)STD_renderFighterCounter);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	3555	22	(TickFunction)STD_tickBracket, (RenderFunction)STD_renderBracket);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	3555	53	(RenderFunction)STD_renderBracket);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	3688	22	(TickFunction)STD_tickBracketIntro, (RenderFunction)STD_renderBracketIntro);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	3688	58	(RenderFunction)STD_renderBracketIntro);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	4652	28	(RenderFunction)STD_renderTimeoutText);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	5483	25	(RenderFunction)STD_renderPlayerMarker);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	5484	25	(RenderFunction)STD_renderPlayerMarker);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	7542	26	(TickFunction)STD_tickCommandMenu, (RenderFunction)STD_renderCommandMenu);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_main.c	7542	61	(RenderFunction)STD_renderCommandMenu);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_setup.c	686	40	(RenderFunction)STD_renderArena0);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/std/std_setup.c	689	40	(RenderFunction)STD_renderArena1);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/trn/trn_hud.c	203	83	(RenderFunction)TRN_renderPostTrainingStatsBox);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/trn/trn_mp.c	170	23	(TickFunction)TRN_tickMpTraining, NULL);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/trn/trn_slots.c	383	22	(TickFunction)TRN_tickSlotSession, (RenderFunction)TRN_renderSlotSession);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/trn/trn_slots.c	383	57	(RenderFunction)TRN_renderSlotSession);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/trn/trn_slots.c	420	60	(TickFunction)TRN_tickSlotMachine, (RenderFunction)TRN_renderSlotMachine);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/trn/trn_slots.c	420	95	(RenderFunction)TRN_renderSlotMachine);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/trn2/trn2_hud.c	406	84	(RenderFunction)TRN2_renderPostTrainingStatsBox);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/trn2/trn2_slots.c	383	22	(TickFunction)TRN2_tickSlotSession, (RenderFunction)TRN2_renderSlotSession);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/trn2/trn2_slots.c	383	58	(RenderFunction)TRN2_renderSlotSession);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/trn2/trn2_slots.c	420	61	(TickFunction)TRN2_tickSlotMachine, (RenderFunction)TRN2_renderSlotMachine);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/trn2/trn2_slots.c	420	97	(RenderFunction)TRN2_renderSlotMachine);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_camera.c	311	22	(TickFunction)VS_tickVSPhase, NULL);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_camera.c	640	22	(TickFunction)VS_tickCameraChase, NULL);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_camera.c	702	22	(TickFunction)VS_tickCameraIntro, NULL);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_camera.c	823	23	(TickFunction)VS_tickFighterCounter, (RenderFunction)VS_renderFighterCounter);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_camera.c	823	60	(RenderFunction)VS_renderFighterCounter);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_combat.c	1436	28	(RenderFunction)VS__renderTimeoutText);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_effect.c	1878	22	(TickFunction)VS_tickEFEEngine, (RenderFunction)VS_renderEFEEngine);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_effect.c	1878	54	(RenderFunction)VS_renderEFEEngine);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_effect.c	5251	43	(RenderFunction)VS_renderPoisonEffect);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_scene.c	1190	22	(TickFunction)VS__tickVSInput, NULL);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_scene.c	1191	22	(TickFunction)VS__tickVSInput, NULL);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_scene.c	1194	22	(TickFunction)VS_tickPlaytime, NULL);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_scene.c	1591	22	(TickFunction)VS_tickVersusIntro, (RenderFunction)VS_renderVersusIntro);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_scene.c	1591	56	(RenderFunction)VS_renderVersusIntro);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_scene.c	1710	29	(RenderFunction)VS_renderArenaViewLeft);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_scene.c	1713	29	(RenderFunction)VS_renderArenaViewRight);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/vs/vs_scene.c	1716	29	(RenderFunction)VS_renderArenaViewFull);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+non-prototype	src/btl/battle_effect.c	2154	14	(0x500, 0);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	4883	100	(pc[1] + (int32_t)EFE_CURRENT_DATA_SEGMENT);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/battle_effect.c	4885	100	(pc[1] + EFE_SCRIPT_HEAD);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/battle_effect.c	5397	15	(0x805, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	5484	15	(0x808, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	5493	15	(0x808, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	5497	15	(0x805, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	5577	15	(0x806, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	5713	15	(0x810, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	5748	15	(0x810, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	5814	15	(0x80f, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	5825	15	(0x80f, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	5864	15	(0x80d, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	6038	14	(0x80d, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	6062	15	(0x179, (int16_t)id);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	6084	14	(0x179, (int16_t)id);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	6188	16	(0x179, (int16_t)i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	6235	15	(0x818, idx);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	6327	15	(0x818, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	6454	14	(0x816, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	6568	14	(0x815, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	6589	15	(0x814, idx);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_effect.c	6751	15	(0x814, i);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_hud.c	1080	14	(0x19c, 0);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_hud.c	467	43	(c));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/battle_hud.c	468	16	(glyph, BATTLE_END_PEN_X, BATTLE_END_PEN_Y);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/battle_hud.c	726	14	(0x1a6, 0);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_hud.c	845	14	(0x1a6, 0);	DW1_PORT direct ABI correction
+non-prototype	src/btl/battle_main.c	2263	14	(stat, value, 0x3e7);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/battle_setup.c	241	19	(&npc->digimonEntity.entity, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/battle_setup.c	261	16	(&TAMER_ENTITY.entity, 3);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/battle_setup.c	288	18	(ENTITY_TABLE[0], 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/battle_setup.c	315	17	(ENTITY_TABLE[0], 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/command_menu.c	324	15	(0x198, 0);	DW1_PORT direct ABI correction
+non-prototype	src/btl/command_menu.c	352	13	(MOVE_NAMES[tech], 0, 0xd8);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/command_menu.c	354	13	(BTL_COMMAND_NAMES[cmd - 1], 0, 0xd8);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/command_menu.c	449	15	(0x19a, 0);	DW1_PORT direct ABI correction
+non-prototype	src/btl/command_menu.c	581	15	(0x197, 0);	DW1_PORT direct ABI correction
+non-prototype	src/btl/command_shout.c	110	15	(0x199, 0);	DW1_PORT direct ABI correction
+non-prototype	src/btl/command_shout.c	72	13	(MOVE_NAMES[tech], 0, 204);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/command_shout.c	73	18	(MOVE_NAMES[tech]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/command_shout.c	75	13	(BTL_SHOUTS[(int32_t)command - 1], 0, 204);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/btl/command_shout.c	76	18	(BTL_SHOUTS[(int32_t)command - 1]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/dget/dget.c	248	22	(grade);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/dget/dget.c	471	12	"(""Tournament"", 0, (uint32_t)uvY);"	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/doo2/doo2.c	225	14	(0x609, slot);	DW1_PORT direct ABI correction
+non-prototype	src/dooa/dooa.c	1150	18	((Entity *)&PARTNER_ENTITY, 0x1c);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/dooa/dooa.c	1183	17	((Entity *)&PARTNER_ENTITY, 0xb);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/dooa/dooa.c	1190	15	(0x80c, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/dooa/dooa.c	1247	14	(0x608, 0);	DW1_PORT direct ABI correction
+non-prototype	src/dooa/dooa.c	1758	17	(&PARTNER_ENTITY.digimonEntity.entity, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/dooa/dooa.c	361	17	((Entity *)&PARTNER_ENTITY, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/dooa/dooa.c	423	18	((Entity *)&PARTNER_ENTITY, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/dooa/dooa.c	425	18	((Entity *)&PARTNER_ENTITY, 0x2c);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/dooa/dooa.c	466	19	((Entity *)&PARTNER_ENTITY, 0xc);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/dooa/dooa.c	523	18	(entity, 0x21);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/dooa/dooa.c	599	15	(0x80b, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/eab/eab.c	251	15	(0x60d, id);	DW1_PORT direct ABI correction
+non-prototype	src/eab/eab.c	308	15	(0x60d, id);	DW1_PORT direct ABI correction
+non-prototype	src/eab/eab.c	340	16	(0x60d, i);	DW1_PORT direct ABI correction
+non-prototype	src/eab/eab.c	370	17	(entity, 0x33);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/eab/eab.c	384	17	(entity, 0x21);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/eab/eab.c	388	15	(0x60b, 0);	DW1_PORT direct ABI correction
+non-prototype	src/eab/eab.c	396	18	(entity, 0x33);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/eab/eab.c	457	15	(0x60c, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/eab/eab.c	588	16	(0x607, i);	DW1_PORT direct ABI correction
+non-prototype	src/eab/eab.c	601	15	(0x607, id);	DW1_PORT direct ABI correction
+non-prototype	src/endi/endi.c	214	15	(0x812, objectId);	DW1_PORT direct ABI correction
+non-prototype	src/endi/endi.c	352	14	(0x813, 0);	DW1_PORT direct ABI correction
+non-prototype	src/evl/evl.c	1183	15	(0x607, id);	DW1_PORT direct ABI correction
+non-prototype	src/evl/evl.c	1284	15	(0x605, id);	DW1_PORT direct ABI correction
+non-prototype	src/evl/evl.c	393	17	(&PARTNER_ENTITY.digimonEntity.entity, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/evl/evl.c	432	17	(&PARTNER_ENTITY.digimonEntity.entity, 0xc);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/evl/evl.c	556	18	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/evl/evl.c	588	17	(&PARTNER_ENTITY.digimonEntity.entity, 0xb);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/evl/evl.c	596	16	(0x80a, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/evl/evl.c	876	16	(0x607, i);	DW1_PORT direct ABI correction
+non-prototype	src/evl/evl.c	889	15	(0x604, id);	DW1_PORT direct ABI correction
+non-prototype	src/fish/fish.c	1241	15	(ITEM_NAME(item), rect.x, rect.y);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/fish/fish.c	1524	14	(view->lines[i], 0, i * 0xc);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/fish/fish.c	3764	16	(&TAMER_ENTITY.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/fish/fish.c	3797	16	(&TAMER_ENTITY.entity, 0x1b);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/fish/fish.c	3820	16	(&TAMER_ENTITY.entity, 0x1c);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/fish/fish.c	3862	16	(&TAMER_ENTITY.entity, 0x1d);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/fish/fish.c	3891	16	(&TAMER_ENTITY.entity, 0x1e);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/fish/fish.c	3969	18	(&TAMER_ENTITY.entity, 0x20);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/fish/fish.c	4012	17	(&TAMER_ENTITY.entity, 0x1f);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/fish/fish.c	4117	18	(&TAMER_ENTITY.entity, 0x22);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/fish/fish.c	4150	18	(&TAMER_ENTITY.entity, 0x21);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/fish/fish.c	4312	16	(&TAMER_ENTITY.entity, 0x1c);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/fish/fish.c	4574	17	(&TAMER_ENTITY.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/fish/fish.c	4643	14	(0x3001, 0);	DW1_PORT direct ABI correction
+non-prototype	src/kar/kar.c	1953	17	(ENTITY_TABLE[0], 0x23);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	1955	17	(ENTITY_TABLE[MAIN_D_80135248], 0x1c);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	2024	17	(ENTITY_TABLE[0], 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	2026	17	(ENTITY_TABLE[MAIN_D_80135248], 0x1d);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	2028	17	(ENTITY_TABLE[MAIN_D_80135248], 0x1f);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	2042	13	(strs.text[MAIN_D_80135250], 0, (MAIN_D_80135250 * 13) + 0xdd);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	2247	24	(MAP_TILE_DATA.tiles, MAP_TILE_X + (MAP_TILE_Y * (int16_t)MAP_TILE_DATA.width));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	2476	12	(strs.text[offs.start[idx] + n], 0, (n * 13) + 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	2510	12	(strs.text[offs.start[idx] + n], 0, (n * 13) + 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	2782	17	(ENTITY_TABLE[0], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	2783	17	(ENTITY_TABLE[MAIN_D_80135248], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	2963	23	(MAP_TILE_DATA.tiles, MAP_TILE_X + (MAP_TILE_Y * (int16_t)MAP_TILE_DATA.width));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	2979	19	(ENTITY_TABLE[0], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	2981	19	(ENTITY_TABLE[MAIN_D_80135248], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	3006	18	(ENTITY_TABLE[0], 0x25);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	3008	18	(ENTITY_TABLE[MAIN_D_80135248], 0x1E);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	3010	18	(ENTITY_TABLE[MAIN_D_80135248], 0x20);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	3067	23	(MAP_TILE_DATA.tiles, MAP_TILE_X + (MAP_TILE_Y * (int16_t)MAP_TILE_DATA.width));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	3079	18	(ENTITY_TABLE[0], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	3080	18	(ENTITY_TABLE[MAIN_D_80135248], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	3089	25	(MAP_TILE_DATA.tiles, MAP_TILE_X + (MAP_TILE_Y * (int16_t)MAP_TILE_DATA.width));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	3128	23	(MAP_TILE_DATA.tiles, MAP_TILE_X + (MAP_TILE_Y * (int16_t)MAP_TILE_DATA.width));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	955	16	(ENTITY_TABLE[0], 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	956	16	(ENTITY_TABLE[1], 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	957	16	(ENTITY_TABLE[MAIN_D_80135248], 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/kar/kar.c	959	14	(0x1388, 0xf);	DW1_PORT direct ABI correction
+non-prototype	src/main/battle_tick.c	130	18	(ENTITY_TABLE[0], 0xe);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/battle_tick.c	166	18	(ENTITY_TABLE[0], 3);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/battle_tick.c	268	22	(tamer, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/battle_tick.c	271	21	(tamer, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/battle_tick.c	274	20	(tamer, 0xa);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/battle_tick.c	293	17	(ENTITY_TABLE[0], 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/battle_ui.c	296	12	(STR_BITS, 0, 72);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/battle_ui.c	428	24	(instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/main/battle_ui.c	522	14	(MAIN_D_80124C0C[i * 2], 0, i * 12 * 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/battle_ui.c	523	14	(MAIN_D_80124C0C[i * 2 + 1], 0, (i * 2 + 1) * 12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/battle_ui.c	530	14	(MAIN_D_80124C54, 0, 240);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/btl.c	198	14	(0x196, id);	DW1_PORT direct ABI correction
+non-prototype	src/main/btl.c	218	16	(&entity->entity, (uint8_t)anim);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/btl.c	396	16	(&TAMER_ENTITY.entity, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/btl.c	400	18	(&e->entity, 0x21);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/btl.c	406	17	(ENTITY_TABLE[1], 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/bubble.c	664	15	(0x802, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/main/buff_model.c	97	21	(0x501, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/butterfly.c	138	15	(0x80e, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/main/efe.c	1044	20	(EFE_LOADED_MOVE_DATA, -1, 0x11, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/efe.c	363	20	(&PARTICLE_FX_DATA[0].state, -1, 4, 0x34);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/efe.c	538	15	(0x600, id);	DW1_PORT direct ABI correction
+non-prototype	src/main/efe.c	641	20	(&ENTITY_PARTICLE_FX_DATA[0].timer, -1, 0x14, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/efe.c	700	14	(0x502, id);	DW1_PORT direct ABI correction
+non-prototype	src/main/efe.c	705	20	(&CLOUD_FX_DATA[0].state, -1, 0x3C, 6);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/efe.c	715	16	(0x601, i);	DW1_PORT direct ABI correction
+non-prototype	src/main/efe.c	747	15	(0x601, id);	DW1_PORT direct ABI correction
+non-prototype	src/main/efe.c	900	15	(0x602, id);	DW1_PORT direct ABI correction
+non-prototype	src/main/entity_text.c	251	15	(0x192, id);	DW1_PORT direct ABI correction
+non-prototype	src/main/evl.c	115	16	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/evl.c	117	16	(18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/evl.c	118	15	(0, 8);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/evl.c	119	11	(data->digimonId, GENERAL_BUFFER_PTR);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/evl.c	58	18	(&PARTNER_ENTITY.digimonEntity.entity, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/evl.c	64	16	(0x809, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/main/font.c	1745	34	(*str);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	1355	15	(0xfa4, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/game_menu.c	1413	14	(0xfa4, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/game_menu.c	1479	14	(3, -0x3c, -0x49, 0x24, 0xc, 0, 0xe7, 6, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	1480	14	(3, 6, -0x49, 0x1c, 0xc, 0x24, 0xe7, 6, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	1845	14	(tabs.tab[0], -0x8a, -0x65, 0x3c, 0xc, 0, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	1846	14	(tabs.tab[1], -0x3f, -0x65, 0x30, 0xc, 0x3c, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2162	14	(tabs.tab[0], -0x89, -0x65, 0x3c, 0xc, 0, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2163	14	(tabs.tab[1], -0x3e, -0x65, 0x3c, 0xc, 0x3c, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2164	14	(tabs.tab[2], 0xd, -0x65, 0x24, 0xc, 0x78, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2165	14	(tabs.tab[3], 0x40, -0x65, 0x24, 0xc, 0x9c, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2239	15	(0xfa4, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/game_menu.c	2403	14	(0, 0x6b, 0x4c, 0xc, 0xc, 0xd8, 0xc, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2436	16	(3, sr->posX, sr->posY + 1, sr->uvWidth, 0xc, sr->uvX, sr->uvY, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2443	15	(0, -0x6d, -0x42, 0x48, 0xc, 0, 0x3c, 5, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2454	15	(0, -0x6c, -0x32, w, 0xc, 0, 0x48, 5, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2536	16	(0, 0x55, -0x33, 0x30, 0xc, 0xcc, 0x30, 5, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2539	16	(0, 0x55, -0x33, 0x30, 0xc, RAISE_DATA[PARTNER_ENTITY.digimonEntity.entity.type].sleepCycle * 0x30, 0x18, 5, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2775	15	(3, -0x8e, -0x57, 0x3c, 0xc, 0, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2780	17	(0, -0x7c, j * 0xf - 0x42, 0x78, 0xc, 0, j * 0xc + 0x18, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2788	18	(0, 0x65, j * 0xf - 0x42, 0xc, 0xc,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2808	15	(3, -0x8e, -0xf, 0x24, 0xc, 0x3c, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2820	16	(3, -0x8e, -0xf, 0x24, 0xc, 0x3c, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2821	16	(0, -0x7c, 1, 0x84, 0xc, 0, 0x3c, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2823	16	(0, 0x65, 1, 0xc, 0xc,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2837	15	(0xf, -0x82, 0x19, 0xc, 0xc, 0, 0x54, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2838	15	(0, -0x76, 0x19, 0xa8, 0xc, 0xc, 0x54, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2839	15	(0, -0x76, 0x27, 0x84, 0xc, 0xc, 0x60, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2840	15	(7, -0x82, 0x27, 0xc, 0xc, 0, 0x60, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2842	15	(0, 0xe, 0x27, 0x18, 0xc, 0x90, 0x60, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2859	15	(3, -0x8e, -0xf, 0x3c, 0xc, 0x60, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2870	15	(0, -0x87, 0x20, 0x30, 0xc, 0x3c, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2871	15	(0, -0x81, 0x2e, 0x24, 0xc, 0, 0x6c, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2876	15	(0xc, -0x74, 0x4c, 0x18, 0xc, 0x30, 0x6c, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2917	15	(3, -0x8e, -0x52, 0xa0, 0xc, 0, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2919	15	(0xe, -0x72, -0x32, 0xc, 0xc, 0xcc, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2920	15	(0xe, 6, -0x21, 0xc, 0xc, 0xcc, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2921	15	(0xe, -0x2a, -0x13, 0xc, 0xc, 0xcc, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2924	16	(0, sr->posX,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2930	15	(0, 0x42, 0x33, 0x3c, 0xc, 0x78, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2931	15	(0, 0x42, 0x43, 0x3c, 0xc, 0x84, 0x54, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3006	16	(3 - ((i / 7) * 3), e->posX, e->posY + 1, e->uvWidth, 0xc, e->uvX,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3010	15	(0, -0x54, -0x50, 0x48, 0xc, 0, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3019	15	(0, 0x28, -0x24, 0x64, 0xc, 0, (TAMER_ENTITY.tamerLevel * 12) + 0x40, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3022	15	(0, (n * 12) + 0x28, -0x25, 0x30, 0xc, 0xb4, 0x18, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3030	15	(0, 0x32, 0x16, 0x4c, 0xc, 0, 0xe4, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3155	15	(0, (panel * 0x9d) - 0x8a, 9, 0x78, 0xc, 0, 0x84, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3158	15	(0, (panel * 0xcb) - 0x64, 0x3e, 0x24, 0xc, (move->range - 1) * 0x24, 0x78, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3171	16	(0, (panel * 0xcb) - 0x64, 0x4f, 0x1a, 0xc, 0x84, 0x6c, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3174	16	(0, (panel * 0xcb) - 0x64, 0x4f, 0x1c, 0xc, 0xa0, 0x6c, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3177	16	(0, (panel * 0xcb) - 0x64, 0x4f, 0x20, 0xc, 0xbc, 0x6c, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3180	16	(0, (panel * 0xcb) - 0x64, 0x4f, 0x1e, 0xc, 0xdb, 0x6c, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3362	14	(0xfa4, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/game_menu.c	3440	15	(0xf, -0x1a, 0x54, 0xc, 0xc, 0, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3442	15	(0, -0xe, 0x54, 0x3c, 0xc, 0xc, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3446	15	(7, 0x3a, 0x54, 0xc, 0xc, 0x48, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3448	15	(0, 0x46, 0x54, 0x3c, 0xc, 0x54, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3638	14	(3, -0x14, -0x4f, 0x24, 0xc, 0, 0x18, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3641	15	(0, -0x5b, 0x3a, 0x2e, 0xc, 0x24, 0x18, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3644	15	(0, -0x63, 0x3a, 0x3e, 0xc, 0x52, 0x18, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3647	15	(0, -0x5b, 0x3a, 0x2f, 0xc, 0, 0x24, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3650	15	(0, -0x64, 0x3a, 0x41, 0xc, 0x2f, 0x24, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3653	15	(0, -0x64, 0x3a, 0x41, 0xc, 0, 0x3c, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3660	14	(0, -0x5c - ((len - 4) * 6), 0x4d, 0x78, 0xc, 0, 0x30, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3693	15	(3, -0x36, -0x51, 0x6c, 0xc, 0, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3705	19	(0, -0x5d, 0x17, 0xac, 0xc, 0, 0x18, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3708	20	(0, -0x7e, j * 13 + 0x27, 0xfc, 0xc, 0,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3741	15	(FOOTER_GLYPH1_COLOR, -0x23, 0x55, 0xc, 0xc, 0x6c, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3742	15	(0, -0x17, 0x55, 0x18, 0xc, 0x84, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3743	15	(0, 1, 0x55, 0x24, 0xc, 0x9c, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3744	15	(FOOTER_GLYPH2_COLOR, 0x2b, 0x55, 0xc, 0xc, 0x78, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3749	15	(0, 0x37, 0x55, 0x30, 0xc, 0xc0, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3791	15	(3, -0x24, -0x50, 0x48, 0xc, 0, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3798	15	(FOOTER_GLYPH1_COLOR, -0x23, 0x53, 0xc, 0xc, 0x48, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3799	15	(0, -0x17, 0x53, 0x3c, 0xc, 0x54, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3800	15	(FOOTER_GLYPH2_COLOR, 0x2b, 0x53, 0xc, 0xc, 0x90, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3801	15	(0, 0x37, 0x53, 0x3c, 0xc, 0x9c, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3997	19	(entityId, 0, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	4023	19	(entityId, savedRot.vx, savedRot.vy, savedRot.vz);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/inventory.c	268	13	(ITEM_MENU_LABELS[i], 0xc0, i * 12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/inventory.c	315	14	(ITEM_NAME(INVENTORY.types.array[startSlot + i]),	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/inventory.c	385	19	(&tam->entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/inventory.c	394	19	(&(&TAMER_ENTITY)->entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/inventory.c	479	15	(0x1a5, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/inventory.c	711	13	(STR_BATTLE, 0xc0, 0x30);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/inventory.c	712	13	(STR_RAISE, 0xc0, 0x3c);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/inventory.c	713	13	(STR_BASIC, 0xc0, 0x48);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/inventory.c	782	13	(STR_YES, 0xc5, 0x54);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/inventory.c	783	13	(STR_NO, 0xc0, 0x60);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/inventory.c	784	13	(STR_ARE_YOU_SURE, 0, 0xc0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/inventory.c	846	12	(ITEM_DESCS[INVENTORY.types.array[INVENTORY_POINTER]], 0, 0xb4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/item.c	2326	17	(ENTITY_TABLE[1], 0x2c);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/item.c	2460	14	(0x195, itemId);	DW1_PORT direct ABI correction
+non-prototype	src/main/item.c	2680	15	(0x194, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/item.c	3066	13	(buf, 0, 0x78);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main.c	3709	14	(0xfa3, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/main.c	3747	16	(0x1388, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/main.c	3751	14	(0xfa3, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/main.c	3849	16	(ENTITY_TABLE[0], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main.c	3850	16	(ENTITY_TABLE[1], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main.c	3884	18	(ENTITY_TABLE[0], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main.c	3885	18	(ENTITY_TABLE[1], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main.c	4270	16	(ENTITY_TABLE[0], 6);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2890	13	(TITLE_MENU_ITEMS[0], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2891	13	(TITLE_MENU_ITEMS[1], 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2893	13	(TITLE_MENU_ITEMS[2], 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2894	13	(TITLE_MENU_ITEMS[3], 0, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2897	13	(SLOT_ACTION_TITLES[0], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2899	13	(SLOT_ACTION_TITLES[0], 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2900	13	(STR_2, 0x76, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2902	13	(SLOT_ACTION_TITLES[3], 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2905	13	(SLOT_ACTION_TITLES[1], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2907	13	(SLOT_ACTION_TITLES[1], 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2908	13	(STR_2, 0x9A, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2912	13	(SLOT_ACTION_TITLES[2], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2914	13	(SLOT_ACTION_TITLES[2], 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2915	13	(STR_2, 0x76, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2919	13	(MEMORY_CARD_OPERATION_MESSAGES[MEMORY_CARD_OPERATION], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2921	13	(MAIN_D_80131278, 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2923	13	(MAIN_D_80131290, 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2926	13	(SLOT_ACTION_TITLES[3], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2928	13	(MAIN_D_801312A0, 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2930	13	(MAIN_D_801312B8, 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2932	13	(MAIN_D_801312D0, 0, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2934	13	(MAIN_D_801312E4, 0, 0x30);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2936	13	(STR_YES_NO, 0, 0xF0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2939	13	(SLOT_ACTION_TITLES[MAIN_MENU_ACTION], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2945	16	(STR_2, 0x9A, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2948	16	(STR_2, 0x76, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2957	13	(MAIN_D_801312FC, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2960	14	(STR_2, 0x76, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2963	13	(MAIN_D_80131318, 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2965	13	(MAIN_D_80131328, 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2967	13	(STR_YES_NO_SPACED, 0, 0xF0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2970	13	(SLOT_ACTION_TITLES[MAIN_MENU_ACTION], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2975	16	(STR_2, 0x9A, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2978	16	(STR_2, 0x76, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2983	13	(MAIN_D_80131340, 0x90, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2985	13	(SAVEGAME_ID_LABEL[MEMORY_CARD_SLOT + 1], 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2987	13	(SAVEGAME_SLOT_INFO[MEMORY_CARD_SLOT].playerName, 0x18, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2989	13	(SAVEGAME_SLOT_INFO[MEMORY_CARD_SLOT].digimonName, 0x6C, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2991	13	(SAVEGAME_SLOT_INFO[MEMORY_CARD_SLOT].location, 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2993	13	(SAVEGAME_ID_LABEL[MEMORY_CARD_SLOT + 1], 0, 0x30);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2995	13	(SLOT_ACTION_QUESTIONS[MAIN_MENU_ACTION], 0x18, 0x30);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	2997	13	(STR_YES_NO_SPACED, 0, 0xF0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3003	13	(MAIN_D_8013134C, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3006	14	(MAIN_D_80134674, 0x30, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3009	14	(MAIN_D_80134678, 0x3C, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3012	14	(MAIN_D_8013467C, 0x9C, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3015	14	(MAIN_D_80134680, 0x9C, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3018	13	(MEMORY_CARD_ERROR_MESSAGES[MEMORY_CARD_ERROR], 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3021	13	(MAIN_D_8013136C, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3022	13	(MAIN_D_80131378, 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3025	13	(MAIN_D_80131390, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3027	13	(MAIN_D_801313B0, 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3030	14	(MAIN_D_801313D0, 0, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3033	15	(&STR_EMPTY, 0x30, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3036	15	(&STR_EMPTY, 0x3C, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3039	15	(&STR_EMPTY, 0x9C, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3042	15	(&STR_EMPTY, 0x9C, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3045	14	(MEMORY_CARD_ERROR_MESSAGES[MEMORY_CARD_ERROR], 0, 0x30);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3048	13	(STR_YES_NO, 0, 0xF0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3051	13	(SLOT_ACTION_TITLES[5], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3053	13	(MAIN_D_801313E4, 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3055	13	(MAIN_D_80131400, 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3057	13	(MAIN_D_8013141C, 0, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3059	13	(STR_YES_NO, 0, 0xF0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3061	14	(STR_2, 0x76, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3062	14	(STR_2, 0xB4, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3066	13	(SLOT_ACTION_TITLES[6], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3068	13	(MAIN_D_80134684, 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3069	13	(PARTNER_ENTITY.name, 0x64, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3071	13	(MAIN_D_8013468C, 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3072	13	(DIGIMON_NAME(PARTNER_ENTITY.digimonEntity.entity.type), 0x64, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3074	13	(MAIN_D_80134694, 0, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3075	13	(formatInteger(PARTNER_ENTITY.digimonEntity.stats.base.hp, buf, 4), 0x64, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3077	13	(MAIN_D_80134698, 0, 0x30);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3078	13	(formatInteger(PARTNER_ENTITY.digimonEntity.stats.base.mp, buf, 4), 0x64, 0x30);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3080	13	(MAIN_D_8013469C, 0, 0x3C);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3081	13	(formatInteger(PARTNER_ENTITY.digimonEntity.stats.base.off, buf, 3), 0x64, 0x3C);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3083	13	(MAIN_D_801346A4, 0, 0x48);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3084	13	(formatInteger(PARTNER_ENTITY.digimonEntity.stats.base.def, buf, 3), 0x64, 0x48);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3086	13	(MAIN_D_8013143C, 0, 0x54);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3089	13	(MAIN_D_80131448, 0, 0x60);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3092	13	(MAIN_D_80131454, 0, 0x6C);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3095	13	(MAIN_D_80131460, 0, 0x78);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3096	13	(MAIN_D_801346AC, 0, 0x84);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3097	13	(MAIN_D_801346B0, 0, 0x90);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3100	13	(SLOT_ACTION_TITLES[6], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3103	13	(MAIN_D_8013147C, 0, 0x84);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3106	13	(SLOT_ACTION_TITLES[6], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3109	13	(buf, 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3112	13	(buf, 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3114	13	(&SAVEGAME_ID_LABEL[(BATTLE_REGISTRATION_SLOT + 1) / 10][2], 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3116	13	(&SAVEGAME_ID_LABEL[(BATTLE_REGISTRATION_SLOT + 1) % 10][2], 0xC, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3118	13	(MAIN_D_801346AC, 0, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3120	13	(MAIN_D_801346B0, 0, 0x30);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3122	13	(MAIN_D_801314B0, 0, 0x3C);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3124	13	(MAIN_D_801314C8, 0, 0x48);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3125	13	(MAIN_D_801314E4, 0, 0x54);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3128	13	(MAIN_D_80131500, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3130	13	(MAIN_D_8013151C, 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3132	13	(MAIN_D_80131538, 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3133	13	(MAIN_D_8013154C, 0, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3136	13	(MAIN_D_80131568, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3138	13	(STR_YES_NO_SPACED, 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3145	13	(buf, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3147	13	(MAIN_D_80131580, 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3149	13	(MAIN_D_801315A0, 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3152	13	(BATTLE_MODE_ITEMS[0], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3154	13	(BATTLE_MODE_ITEMS[1], 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3156	13	(BATTLE_MODE_ITEMS[2], 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3157	13	(BATTLE_MODE_ITEMS[3], 0, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3160	13	(MAIN_D_801315C0, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3162	13	(MAIN_D_801315D0, 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3164	13	(MAIN_D_801315EC, 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3166	13	(STR_YES_NO, 0, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3193	13	(SAVEGAME_ID_LABEL[slot + 1], 0, row + 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3194	13	(SAVEGAME_SLOT_INFO[slot].playerName, 0x18, row + 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3196	13	(SAVEGAME_SLOT_INFO[slot].digimonName, 0x6C, row + 0xC);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3198	13	(SAVEGAME_SLOT_INFO[slot].location, 0x18, row + 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3240	14	(MOVE_NAMES[move], color, pos);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3262	13	(&SAVEGAME_ID_LABEL[(currentSlot + 1) / 10][2], 0, y);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3263	13	(&SAVEGAME_ID_LABEL[(currentSlot + 1) % 10][2], GLYPH_WIDTH, y);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3269	14	(SAVE_FILE.saves[0].battleRegistrationData[currentSlot].name, 0x1e, y);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3270	14	(DIGIMON_NAME(type), 0x6C, y);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	3279	14	(MAIN_D_801346C0[0], 0x1E, y);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main_menu.c	4192	16	(0x1388, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/main_menu.c	4193	16	(0xFA3, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/map.c	5344	12	(MAP_NAME_PTR[MAP_ENTRIES[mapId].loadingName], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/map.c	5449	17	(MAP_NAME_PTR[MAP_ENTRIES[mapId].loadingName]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/map_object.c	919	14	(0xfa9, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/map_object.c	920	14	(0xfb7, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/map_object.c	921	14	(0xfb3, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/map_object.c	922	14	(0xfb4, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/map_object.c	923	14	(0xfb6, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/map_object.c	924	14	(0xfbd, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/map_object.c	925	14	(0xfbc, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/map_object.c	926	14	(0xfbe, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/map_object.c	927	14	(0xfbf, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/model.c	2877	16	(entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/model.c	2949	14	((int16_t)objectId, (int16_t)entityId);	DW1_PORT direct ABI correction
+non-prototype	src/main/new_game.c	34	20	(2, 0, 0x71, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/new_game.c	36	17	(ENTITY_TABLE[2], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/new_game.c	56	19	(2, 0, 0x400, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/new_game.c	58	16	(ENTITY_TABLE[2], 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1106	19	(slot + 2, MAP_DIGIMON_TABLE[slot].rotX,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1110	16	(ENTITY_TABLE[slot + 2],	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1347	19	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1405	17	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1439	17	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1476	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1559	17	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1582	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1591	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1618	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1679	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1701	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1746	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1814	18	((Entity *)npc, animId);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1911	16	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	828	15	(0xfba, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/particle.c	111	21	(0x817, instance);	DW1_PORT direct ABI correction
+non-prototype	src/main/partner.c	1033	16	(ENTITY_TABLE[1], (uint8_t)PARTNER_ANIMATION);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	1106	17	(&PARTNER_ENTITY.digimonEntity.entity,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	1160	16	(&PARTNER_ENTITY.digimonEntity.entity, (uint8_t)animId);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	1205	18	(&TAMER_ENTITY.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	1209	18	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	1223	18	(&TAMER_ENTITY.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	1227	18	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	309	18	(&PARTNER_ENTITY.digimonEntity.entity, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	322	18	(&TAMER_ENTITY.entity, 8);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	323	18	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	330	18	(&PARTNER_ENTITY.digimonEntity.entity, 11);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	337	18	(&PARTNER_ENTITY.digimonEntity.entity, 9);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	371	16	(5000, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/partner.c	373	18	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	399	18	(&PARTNER_ENTITY.digimonEntity.entity, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	411	18	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	464	17	(&PARTNER_ENTITY.digimonEntity.entity, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	489	17	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	497	19	(&PARTNER_ENTITY.digimonEntity.entity, 8);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	501	19	(&PARTNER_ENTITY.digimonEntity.entity, 13);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	509	16	(0xfa7, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/partner.c	512	18	(&TAMER_ENTITY.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	540	16	(0xfa7, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/partner.c	541	18	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	579	17	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	584	23	(0xfc, 0xff, TOILET_TARGET_POS1.vx,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	591	23	(0xfc, 0xff, TOILET_TARGET_POS2.vx,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	593	18	(&PARTNER_ENTITY.digimonEntity.entity, 10);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	602	18	(&PARTNER_ENTITY.digimonEntity.entity, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	608	23	(0xfc, 0xff, TOILET_TARGET_POS1.vx,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	624	17	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	635	18	(ENTITY_TABLE[1], 10);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	646	18	(ENTITY_TABLE[1], 12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	674	17	(&PARTNER_ENTITY.digimonEntity.entity, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	730	17	(ENTITY_TABLE[1], 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	737	23	(0xfc, 0xff, target.vx, target.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	738	18	(ENTITY_TABLE[1], 8);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	747	18	(ENTITY_TABLE[1], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	760	17	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	779	17	(&PARTNER_ENTITY.digimonEntity.entity, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	883	19	(&PARTNER_ENTITY.digimonEntity.entity,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner.c	968	17	(&PARTNER_ENTITY.digimonEntity.entity,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner_impl.c	1641	18	(&PARTNER_ENTITY.digimonEntity.entity, 0xb);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner_impl.c	1901	13	(PARTNER_ENTITY.name, 0, 120);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner_impl.c	1902	22	(PARTNER_ENTITY.name) / 2;	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner_impl.c	1904	13	(MAIN_D_801225A0, nameLength * GLYPH_WIDTH, 120);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner_impl.c	460	19	(1, rotX, rotY, rotZ);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner_impl.c	462	16	(ENTITY_TABLE[1], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner_impl.c	569	14	((int16_t)type, 1);	DW1_PORT direct ABI correction
+non-prototype	src/main/partner_impl.c	577	19	(1, rotX, rotY, rotZ);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner_impl.c	580	16	(ENTITY_TABLE[1], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner_impl.c	762	14	((int16_t)type, 1);	DW1_PORT direct ABI correction
+non-prototype	src/main/partner_impl.c	769	19	(1, rotX, rotY, rotZ);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner_impl.c	771	16	(ENTITY_TABLE[1], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner_impl.c	856	19	(1, PARTNER_ENTITY.digimonEntity.entity.posData->rotation.vx,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/partner_impl.c	861	16	(ENTITY_TABLE[1], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_common.c	1034	15	(ITEM_NAME(SHOP_ITEM_TYPE));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_common.c	1038	15	(DIGIMON_NAME(id));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_common.c	1599	14	(ITEM_NAME(item));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_common.c	1613	14	(ITEM_NAME(item));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_common.c	2210	14	(ITEM_DESCS[item]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_common.c	2594	15	(ITEM_NAME(type));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_common.c	2699	15	(DIGIMON_NAME(id));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_common.c	2749	14	(BGM_TRACK_NAMES[type]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_common.c	2782	14	(MAP_NAME_PTR[nameId]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_common.c	3053	15	(0x1b1, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/script_interp.c	2163	15	(0xfb6, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/script_interp.c	2337	26	(movement->entityId, 0xff,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_interp.c	2342	26	(movement->entityId, movement->target,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_interp.c	2346	26	(movement->entityId, 0xff,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_interp.c	2351	26	(movement->entityId, movement->target,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_interp.c	2363	30	(movement->entityId,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_interp.c	2369	30	(movement->entityId,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	1128	19	(DIGIMON_NAME(ctrl));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	1138	19	(MOVE_NAMES[ctrl]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	1148	19	(ITEM_NAME(ctrl));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	1182	19	(BGM_TRACK_NAMES[ctrl]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	1192	19	(TOURNAMENT_NAMES[ctrl]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	774	45	(ch));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	796	20	(glyph, x + pos, y2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_value.c	77	16	(PARTNER_ENTITY.name);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_value.c	89	15	(SPECIAL_SPEAKERS[speakerId]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_value.c	94	15	(DIGIMON_NAME(speakerId));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/sjis.c	107	14	(src);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1395	16	(0xfa1, TARGET_MAP);	DW1_PORT direct ABI correction
+non-prototype	src/main/tamer.c	1429	17	(ENTITY_TABLE[0], 0xc);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1432	13	(DIGIMON_NAME(0), 0, 0xc);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1433	13	(ITEM_NAME(DROPPED_ITEMS[PICKED_UP_DROP_ID].worldItem.type),	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1435	13	(MAIN_D_801341FC, 0, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1465	15	(MAIN_D_80122D68, 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1522	17	(ENTITY_TABLE[0], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1528	13	(DIGIMON_NAME(0), 0, 0xc);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1530	14	(ITEM_NAME(CHEST_ARRAY[INTERACTED_CHEST].item),	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1532	14	(MAIN_D_801341FC, 0, 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1535	14	(MAIN_D_80122D80, 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1573	15	(MAIN_D_80122D68, 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1617	17	(&TAMER_ENTITY.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1626	17	(&TAMER_ENTITY.entity, 10);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1649	19	(&TAMER_ENTITY.entity, 0x26);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1651	19	(&TAMER_ENTITY.entity, 0x27);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1653	18	(&PARTNER_ENTITY.digimonEntity.entity,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1659	18	(&TAMER_ENTITY.entity, 7);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1661	19	(&PARTNER_ENTITY.digimonEntity.entity,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1664	19	(&PARTNER_ENTITY.digimonEntity.entity,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1775	17	(&TAMER_ENTITY.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1784	15	(MAIN_D_80122D94, 0, 0x78);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1787	15	(MAIN_D_80122DAC, 0, 0x78);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1798	13	(MAIN_D_80122DC8, 0, 0x78);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1802	13	(MAIN_D_80122DDC, 0, 0x84);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	1806	13	(MAIN_D_80122DF4, 0, 0x90);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	360	19	(0, rotX, rotY, rotZ);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	367	16	(ENTITY_TABLE[0], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	430	19	(0, TAMER_ENTITY.entity.posData->rotation.vx, rotationY,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	433	16	(ENTITY_TABLE[0], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	468	24	(instanceId);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	542	17	(&TAMER_ENTITY.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	560	19	(&TAMER_ENTITY.entity, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	563	18	(&TAMER_ENTITY.entity, 3);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	567	17	(&TAMER_ENTITY.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/tamer.c	999	16	(&TAMER_ENTITY.entity, animId);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/ui.c	217	14	(0x1a4, id);	DW1_PORT direct ABI correction
+non-prototype	src/main/utils2.c	457	13	(MAIN_D_80134430, 0x78, 0xF0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/murd/murd.c	313	15	(0x60a, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/murd/murd.c	329	15	(0x60a, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/shop/script_menu.c	2760	32	(NAMING_BUFFER) >> 1;	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	2954	14	(NAMING_TITLE);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	2959	14	(NAMING_BUTTONS);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	2970	16	(table[j]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	2973	16	(table[j + 1]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	2976	16	(table[j + 2]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	2999	15	(NAMING_PROMPT_TAMER);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	3005	15	((int32_t)MAIN_D_801345F4 + 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	3011	14	(NAMING_BUFFER);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_effect.c	1298	18	(ENTITY_TABLE[1], 0x21);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_effect.c	1328	18	(ENTITY_TABLE[1], 0x2a);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_effect.c	1375	14	(0x19d, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	1398	14	(0x1ae, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	1513	14	(0x19d, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	1599	14	(0x19d, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	2259	14	(0x500, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	5072	100	(pc[1] + (int32_t)EFE_CURRENT_DATA_SEGMENT);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_effect.c	5074	100	(pc[1] + EFE_SCRIPT_HEAD);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_effect.c	5591	15	(0x805, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	5678	15	(0x808, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	5687	15	(0x808, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	5691	15	(0x805, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	5771	15	(0x806, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	5907	15	(0x810, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	5942	15	(0x810, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	6008	15	(0x80f, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	6019	15	(0x80f, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	6058	15	(0x80d, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	6232	14	(0x80d, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	6256	15	(0x179, (int16_t)id);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	6278	14	(0x179, (int16_t)id);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_effect.c	6382	16	(0x179, (int16_t)i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_hud.c	1106	14	(0x19c, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_hud.c	1228	14	(0x19d, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_hud.c	1382	16	(ENTITY_TABLE[1], 0x21);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_hud.c	503	15	(0x19a, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_hud.c	764	14	(0x1a6, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_hud.c	883	14	(0x1a6, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	1583	19	(1, 0, 0x400, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	1610	19	(id, 0, 0xc00, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	1619	12	(STD_STR_HP, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	1620	12	(STD_STR_MP, 0, 12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	1623	13	(MAIN_D_80124C0C[i], 0, i * 12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	1627	12	(MAIN_D_80124C54, 0, 0xf0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	1668	14	(DIGIMON_NAME(entity->type)) / 2;	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	1704	14	(0x1ab, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	1714	15	(0x1a9, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	1939	14	(0x1aa, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	1968	14	(0x1aa, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	2074	14	(DIGIMON_NAME(ENTITY_TABLE[id]->type)) / 2;	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	2116	20	(DIGIMON_NAME(ENTITY_TABLE[id]->type)) / 2;	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	2459	14	(0x1a8, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	2855	14	(0x1ad, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	2949	15	(0x1ac, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	3234	15	(DIGIMON_NAME(PARTICIPANT_TYPES[i])) / 2;	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	3402	14	(0x1b0, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	3407	14	(0x1af, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	3575	14	(0x1ae, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	3738	14	(0x1a1, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	4606	14	(0x1a3, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	4607	14	(0x1a3, 1);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	4710	12	(STD_STR_DEALT, 6, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	4711	12	(STD_STR_DAMAGE, 0, 12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	4712	12	(PARTNER_ENTITY.name, (120 - strlen(PARTNER_ENTITY.name) * 6) / 2, 24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	4712	47	(PARTNER_ENTITY.name) * 6) / 2, 24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	4713	12	(DIGIMON_NAME(ENTITY_TABLE[COMBAT_DATA_PTR->player.entityIds[1]]->type), (120 - strlen(DIGIMON_NAME(ENTITY_TABLE[COMBAT_DATA_PTR->player.entityIds[1]]->type)) * 6) / 2, 36);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	4713	98	(DIGIMON_NAME(ENTITY_TABLE[COMBAT_DATA_PTR->player.entityIds[1]]->type)) * 6) / 2, 36);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	4715	14	(0x1a2, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_main.c	5821	20	(0, 2, &attack.position, entity, 0x11);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	6177	14	(stat, value, 0x3e7);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	6187	18	(MOVE_DATA[tech].special, 1, &attack->position, entity, MOVE_DATA[tech].iframes + 0x10);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	7485	13	(MOVE_NAMES[tech], 0, (i * 12) + 0xd8);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	7487	13	(STD_COMMAND_NAMES[cmd - 1], 0, (i * 12) + 0xd8);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_main.c	7560	14	(0x198, i);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_setup.c	278	24	(arena);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/std/std_setup.c	478	14	(0xfa2, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_setup.c	479	14	(0xfa0, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_setup.c	483	14	(0xfa8, 0);	DW1_PORT direct ABI correction
+non-prototype	src/std/std_setup.c	772	14	(0x1a7, 0);	DW1_PORT direct ABI correction
+non-prototype	src/trn/trn_brain.c	102	19	(&TAMER_ENTITY.entity, 9);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	103	19	(&PARTNER_ENTITY.digimonEntity.entity, 0x16);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	109	19	(ENTITY_TABLE[1], 0x16);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	110	19	(ENTITY_TABLE[2], 0x1e);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	123	19	(ENTITY_TABLE[0], 9);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	129	19	(&NPC_ENTITIES[0].digimonEntity.entity, 0x1e);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	136	18	(ENTITY_TABLE[1], 0x16);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	144	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	146	18	(&NPC_ENTITIES[0].digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	174	16	(0xfb0, instanceId, TRN_tickBrainsTraining, NULL);	DW1_PORT direct ABI correction
+non-prototype	src/trn/trn_brain.c	80	17	(&TAMER_ENTITY.entity, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	82	17	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	90	23	(0xfd, 0xff, TRN_D_8008F358.vx, TRN_D_8008F358.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	91	18	(ENTITY_TABLE[0], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	93	18	(ENTITY_TABLE[1], 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_brain.c	98	23	(0xfc, 0xff, TRN_D_8008F320.vx, TRN_D_8008F320.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	111	25	(TRN_D_8008F368, TRN_D_8008F388, MAIN_D_8013536C, MAIN_D_8013536E);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	115	17	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	123	23	(0xfc, 0xff, TRN_D_8008F320.vx, TRN_D_8008F320.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	125	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x25);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	154	17	(&PARTNER_ENTITY.digimonEntity.entity, 0x25);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	171	17	(&PARTNER_ENTITY.digimonEntity.entity, 0x25);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	228	25	(TRN_D_8008F368, TRN_D_8008F388, MAIN_D_8013536C, MAIN_D_8013536E);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	229	18	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	237	23	(0xfc, 0xff, TRN_D_8008F320.vx, TRN_D_8008F320.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	244	19	(&PARTNER_ENTITY.digimonEntity.entity, 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	251	19	(&PARTNER_ENTITY.digimonEntity.entity, 0x25);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	266	18	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	271	23	(0xfc, 0xfd, 0, 0, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	274	25	(TRN_D_8008F368, TRN_D_8008F388, MAIN_D_8013536C, MAIN_D_8013536E);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_def.c	283	16	(0xfae, instanceId, TRN_tickDefenseTraining, NULL);	DW1_PORT direct ABI correction
+non-prototype	src/trn/trn_hp.c	100	18	(ENTITY_TABLE[1], 0x1b);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hp.c	113	27	(MAIN_D_8013536C, MAIN_D_8013536E, 1, -2, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hp.c	116	27	(MAIN_D_8013536C, MAIN_D_8013536E, 2, 0, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hp.c	118	27	(MAIN_D_8013536C, MAIN_D_8013536E, -2, 0, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hp.c	136	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hp.c	150	18	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hp.c	157	27	(MAIN_D_8013536C, MAIN_D_8013536E, -1, 2, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hp.c	159	26	(0xfc, 0xfd, 0, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hp.c	164	25	(TRN_D_8008F368, TRN_D_8008F388, MAIN_D_8013536C, MAIN_D_8013536E);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hp.c	172	16	(0xfab, instanceId, TRN_tickHpTraining, NULL);	DW1_PORT direct ABI correction
+non-prototype	src/trn/trn_hp.c	87	25	(TRN_D_8008F368, TRN_D_8008F388, MAIN_D_8013536C, MAIN_D_8013536E);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hp.c	90	17	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hp.c	99	23	(0xfc, 0xff, TRN_D_8008F320.vx, TRN_D_8008F320.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hud.c	186	14	(MAIN_D_80124C0C[i * 2], 0, (i * 12) * 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hud.c	187	14	(MAIN_D_80124C0C[(i * 2) + 1], 0, ((i * 2) + 1) * 12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hud.c	190	14	(MAIN_D_80134BC0, 0, 84);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hud.c	191	14	(MAIN_D_80124C54, 0, 240);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_hud.c	368	16	(0xfdc, 0);	DW1_PORT direct ABI correction
+non-prototype	src/trn/trn_mp.c	112	25	(TRN_D_8008F368, TRN_D_8008F388, MAIN_D_8013536C, MAIN_D_8013536E);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_mp.c	114	18	(&PARTNER_ENTITY.digimonEntity.entity, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_mp.c	121	23	(0xfc, 0xff, TRN_D_8008F330.vx, TRN_D_8008F330.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_mp.c	122	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_mp.c	144	16	(0xfaf, instanceId, TRN_tickMpTraining, NULL);	DW1_PORT direct ABI correction
+non-prototype	src/trn/trn_mp.c	69	25	(TRN_D_8008F368, TRN_D_8008F388, MAIN_D_8013536C, MAIN_D_8013536E);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_mp.c	72	17	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_mp.c	80	23	(0xfc, 0xff, TRN_D_8008F330.vx, TRN_D_8008F330.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_mp.c	85	23	(0xfc, 0xff, TRN_D_8008F320.vx, TRN_D_8008F320.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_mp.c	94	18	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_off.c	104	25	(TRN_D_8008F368, TRN_D_8008F388, MAIN_D_8013536C, MAIN_D_8013536E);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_off.c	108	17	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_off.c	117	23	(0xfc, 0xff, TRN_D_8008F320.vx, TRN_D_8008F320.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_off.c	118	18	(ENTITY_TABLE[1], TRN_TRAINING_ANIM_IDS[PARTNER_ENTITY.digimonEntity.entity.type][0]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_off.c	160	18	(ENTITY_TABLE[1], TRN_TRAINING_ANIM_IDS[PARTNER_ENTITY.digimonEntity.entity.type][0]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_off.c	169	18	(ENTITY_TABLE[1], 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_off.c	170	25	(TRN_D_8008F368, TRN_D_8008F388, MAIN_D_8013536C, MAIN_D_8013536E);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_off.c	185	18	(&PARTNER_ENTITY.digimonEntity.entity, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_off.c	190	23	(0xfc, 0xfd, 0, 0, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_off.c	201	16	(0xfac, instanceId, TRN_tickOffenseTraining, NULL);	DW1_PORT direct ABI correction
+non-prototype	src/trn/trn_off.c	227	18	(ENTITY_TABLE[1], TRN_TRAINING_ANIM_IDS[PARTNER_ENTITY.digimonEntity.entity.type][0]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_off.c	239	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_reward.c	124	18	(ENTITY_TABLE[1], 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_reward.c	558	13	(TRN_D_8008F0D8, 0, 0x78);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_reward.c	564	13	(TRN_D_8008F0F0, 0, 0x78);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_reward.c	570	13	(TRN_D_8008F100, 0, 0x78);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_reward.c	571	13	(TRN_D_8008F10C, 0, 0x84);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_reward.c	578	13	(TRN_D_8008F11C, 0, 0x78);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_reward.c	584	13	(TRN_D_8008F12C, 0, 0x78);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_reward.c	590	13	(TRN_D_8008F140, 0, y);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_reward.c	870	13	(MOVE_NAMES[move], 0, 0x78);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_reward.c	871	27	(MOVE_NAMES[move]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_reward.c	872	13	(TRN_D_8008F19C, 0, 0x84);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_speed.c	101	18	(ENTITY_TABLE[1], 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_speed.c	103	18	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_speed.c	111	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_speed.c	127	18	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_speed.c	132	23	(0xfc, 0xfd, 0, 0, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_speed.c	142	16	(0xfad, instanceId, TRN_tickSpeedTraining, NULL);	DW1_PORT direct ABI correction
+non-prototype	src/trn/trn_speed.c	71	17	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_speed.c	80	23	(0xfc, 0xff, TRN_D_8008F320.vx, TRN_D_8008F320.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn/trn_speed.c	86	18	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map108.c	100	23	(0xfc, 0xff, TRN2_D_8008DC1C.vx, TRN2_D_8008DC1C.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map108.c	116	18	(ENTITY_TABLE[1], 0x25);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map108.c	144	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map108.c	160	18	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map108.c	165	23	(0xfc, 0xfd, 0, 0, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map108.c	168	25	(TRN2_D_8008DC54, TRN2_D_8008DC74, MAIN_D_801353B4, MAIN_D_801353B6);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map108.c	174	16	(0xfae, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/trn2/trn2_def_map108.c	93	17	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map99.c	111	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map99.c	129	18	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map99.c	134	23	(0xfc, 0xfd, 0, 0, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map99.c	137	25	(TRN2_D_8008DC54, TRN2_D_8008DC74, MAIN_D_801353B4, MAIN_D_801353B6);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map99.c	143	16	(0xfae, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/trn2/trn2_def_map99.c	56	25	(TRN2_D_8008DC54, TRN2_D_8008DC74, MAIN_D_801353B4, MAIN_D_801353B6);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map99.c	59	17	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map99.c	67	23	(0xfc, 0xff, TRN2_D_8008DC1C.vx, TRN2_D_8008DC1C.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map99.c	69	18	(ENTITY_TABLE[1], 0x25);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map99.c	96	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x25);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_def_map99.c	97	25	(TRN2_D_8008DC54, TRN2_D_8008DC74, MAIN_D_801353B4, MAIN_D_801353B6);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map107.c	107	27	(MAIN_D_801353B4, MAIN_D_801353B6, 0, -1, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map107.c	110	27	(MAIN_D_801353B4, MAIN_D_801353B6, 2, 0, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map107.c	112	27	(MAIN_D_801353B4, MAIN_D_801353B6, -2, 0, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map107.c	126	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map107.c	141	18	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map107.c	148	27	(MAIN_D_801353B4, MAIN_D_801353B6, -1, 2, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map107.c	150	26	(0xfc, 0xfd, 0, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map107.c	155	25	(TRN2_D_8008DC54, TRN2_D_8008DC74, MAIN_D_801353B4, MAIN_D_801353B6);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map107.c	160	16	(0xfab, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/trn2/trn2_hp_map107.c	81	25	(TRN2_D_8008DC54, TRN2_D_8008DC74, MAIN_D_801353B4, MAIN_D_801353B6);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map107.c	84	17	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map107.c	93	23	(0xfc, 0xff, TRN2_D_8008DC1C.vx, TRN2_D_8008DC1C.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map107.c	94	18	(ENTITY_TABLE[1], 0x1b);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	106	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	108	21	(MAIN_D_801353B8, MAIN_D_801353BA, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	121	18	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	128	27	(MAIN_D_801353B4, MAIN_D_801353B6, 1, 1, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	130	26	(0xfc, 0xfd, 0, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	135	25	(TRN2_D_8008DC54, TRN2_D_8008DC74, MAIN_D_801353B4, MAIN_D_801353B6);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	140	16	(0xfab, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/trn2/trn2_hp_map99.c	61	25	(TRN2_D_8008DC54, TRN2_D_8008DC74, MAIN_D_801353B4, MAIN_D_801353B6);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	64	17	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	72	23	(0xfc, 0xff, TRN2_D_8008DC1C.vx, TRN2_D_8008DC1C.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	73	18	(ENTITY_TABLE[1], 0x1b);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	75	21	(MAIN_D_801353B8, MAIN_D_801353BA, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	86	27	(MAIN_D_801353B4, MAIN_D_801353B6, -1, -1, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	89	27	(MAIN_D_801353B4, MAIN_D_801353B6, 2, 0, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hp_map99.c	91	27	(MAIN_D_801353B4, MAIN_D_801353B6, -2, 0, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hud.c	389	14	(MAIN_D_80124C0C[i * 2], 0, (i * 12) * 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hud.c	390	14	(MAIN_D_80124C0C[(i * 2) + 1], 0, ((i * 2) + 1) * 12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hud.c	393	14	(MAIN_D_80134BE0, 0, 84);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hud.c	394	14	(MAIN_D_80124C54, 0, 240);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_hud.c	571	16	(0xfdc, 0);	DW1_PORT direct ABI correction
+non-prototype	src/trn2/trn2_mp.c	102	23	(0xfc, 0xff, TRN2_D_8008DC2C.vx, TRN2_D_8008DC2C.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_mp.c	103	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_mp.c	130	16	(0xfaf, instanceId, TRN_tickMpTraining, NULL);	DW1_PORT direct ABI correction
+non-prototype	src/trn2/trn2_mp.c	61	17	(&PARTNER_ENTITY.digimonEntity.entity, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_mp.c	69	23	(0xfc, 0xff, TRN2_D_8008DC2C.vx, TRN2_D_8008DC2C.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_mp.c	74	23	(0xfc, 0xff, TRN2_D_8008DC1C.vx, TRN2_D_8008DC1C.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_mp.c	76	18	(&PARTNER_ENTITY.digimonEntity.entity, 0xc);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_mp.c	87	18	(&PARTNER_ENTITY.digimonEntity.entity, 0xc);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_mp.c	96	18	(&PARTNER_ENTITY.digimonEntity.entity, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_off.c	102	25	(TRN2_D_8008DC54, TRN2_D_8008DC74, MAIN_D_801353B4, MAIN_D_801353B6);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_off.c	106	17	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_off.c	115	23	(0xfc, 0xff, TRN2_D_8008DC1C.vx, TRN2_D_8008DC1C.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_off.c	116	18	(ENTITY_TABLE[1], TRN2_TRAINING_ANIM_IDS[PARTNER_ENTITY.digimonEntity.entity.type][0]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_off.c	148	18	(ENTITY_TABLE[1], TRN2_TRAINING_ANIM_IDS[PARTNER_ENTITY.digimonEntity.entity.type][0]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_off.c	161	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_off.c	175	18	(&PARTNER_ENTITY.digimonEntity.entity, 2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_off.c	180	23	(0xfc, 0xfd, 0, 0, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_off.c	188	16	(0xfac, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/trn2/trn2_reward.c	115	18	(&PARTNER_ENTITY.digimonEntity.entity, 0x12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_reward.c	131	18	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_reward.c	136	23	(0xfc, 0xff, TRN2_D_8008DC2C.vx, TRN2_D_8008DC1C.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_reward.c	143	16	(0xfad, instanceId);	DW1_PORT direct ABI correction
+non-prototype	src/trn2/trn2_reward.c	162	18	(ENTITY_TABLE[1], 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_reward.c	80	17	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_reward.c	89	23	(0xfc, 0xff, TRN2_D_8008DC2C.vx, TRN2_D_8008DC2C.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_reward.c	96	23	(0xfc, 0xff, TRN2_D_8008DC1C.vx, TRN2_D_8008DC1C.vz, 0) == 1) {	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/trn2/trn2_reward.c	98	18	(&PARTNER_ENTITY.digimonEntity.entity, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_camera.c	353	14	(0x1a8, 0);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_camera.c	751	14	(0x1ad, 0);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_camera.c	856	15	(0x1ac, 0);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_combat.c	1122	30	((int16_t)fighterId, array);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_combat.c	1131	31	((int16_t)fighterId, array);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_combat.c	1394	14	(0x1a3, 0);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_combat.c	1395	14	(0x1a3, 1);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_combat.c	1517	12	(VS__STR_DEALT, 6, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_combat.c	1518	12	(STR_DAMAGE, 0, 12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_combat.c	1519	12	(fighter1->name, (120 - (strlen(fighter1->name) * 6)) / 2, 24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_combat.c	1519	43	(fighter1->name) * 6)) / 2, 24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_combat.c	1520	12	(fighter2->name, (120 - (strlen(fighter2->name) * 6)) / 2, 36);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_combat.c	1520	43	(fighter2->name) * 6)) / 2, 36);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_combat.c	1522	14	(0x1a2, 0);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_combat.c	1901	24	(fighterId, tech);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_effect.c	1890	14	(0x500, 0);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	4657	99	(pc[1] + (int32_t)EFE_CURRENT_DATA_SEGMENT);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_effect.c	4659	99	(pc[1] + EFE_SCRIPT_HEAD);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_effect.c	5176	15	(0x805, i);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	5263	15	(0x808, i);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	5272	15	(0x808, i);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	5276	15	(0x805, i);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	5356	15	(0x806, i);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	5491	15	(0x810, i);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	5526	15	(0x810, i);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	5592	15	(0x80f, i);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	5603	15	(0x80f, i);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	5642	15	(0x80d, i);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	5816	14	(0x80d, i);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	5840	15	(0x179, (int16_t)id);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	5862	14	(0x179, (int16_t)id);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_effect.c	5966	16	(0x179, (int16_t)i);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_intro.c	161	19	(1, 0, 0x400, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_intro.c	162	16	(ENTITY_TABLE[1], 33);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_intro.c	179	19	(2, 0, 0xc00, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_intro.c	180	16	(ENTITY_TABLE[2], 33);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_intro.c	188	12	(VS__STR_HP, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_intro.c	189	12	(VS__STR_MP, 0, 12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_intro.c	192	13	(MAIN_D_80124C0C[i], 0, i * 12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_intro.c	196	12	(MAIN_D_80124C54, 0, 0xf0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_intro.c	237	14	(DIGIMON_NAME(entity->type)) / 2;	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_intro.c	263	17	(entity, 0x21);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_intro.c	273	14	(0x1ab, id);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_intro.c	283	15	(0x1a9, id);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_intro.c	410	14	(0x1aa, 0);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_intro.c	435	14	(0x1aa, 0);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_intro.c	546	14	(DIGIMON_NAME(ENTITY_TABLE[id]->type)) / 2;	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_intro.c	553	18	(ENTITY_TABLE[id], 0x23);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_intro.c	588	20	(DIGIMON_NAME(ENTITY_TABLE[id]->type)) / 2;	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_main.c	1820	13	(MOVE_NAMES[tech], 0, (i * 12) + 0xd8);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_main.c	1822	13	(VS_COMMAND_NAMES[cmd - 1], 0, (i * 12) + 0xd8);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_main.c	549	14	(stat, value, 0x3e7);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_main.c	559	18	(0, 1, &attack->position, entity, 0x11);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_main.c	658	20	(0, 2, &attack.position, entity, 0x11);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_main.c	817	22	((int16_t)((&digimon->entity == ENTITY_TABLE[1]) ? 0 : 1), tech);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_scene.c	1278	14	(0xfb9, 0);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_scene.c	1280	14	(0x1b2, 0);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_scene.c	1281	14	(0x1b2, 1);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_scene.c	1371	18	((char *)name) / 2;	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_scene.c	1567	12	(VS_STR_WIN, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_scene.c	1568	12	(VS_STR_LOSE, 0, 0xc);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_scene.c	1569	12	(MAIN_D_80124C54, 0, 0xf0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_scene.c	1598	14	(0x19d, 0);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_scene.c	1812	14	(0x1a7, 0);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_select.c	359	14	(0x1a0, 0);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_select.c	360	14	(0x1a0, 1);	DW1_PORT direct ABI correction
+non-prototype	src/vs/vs_select.c	414	13	(VS__STR_PRESS_START, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_select.c	415	13	(VS__STR_TO_BEGIN, 0, 12);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_select.c	812	19	((char *)text) / 2;	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/vs/vs_select.c	847	20	((char *)text) / 2;	C default argument promotions; direct ABI checked by wasm-ld
+wasm-ld	BTL_addAuraProjectile	0	0	(i32) -> void / (i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	BTL_addBuffDiskEffect	0	0	(i32) -> void / (i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	BTL_addBuffRingsEffect	0	0	(i32, i32) -> void / (i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	BTL_initializeFinisherChargeup	0	0	(i32) -> void / () -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	BTL_tickBattleEndText	0	0	(i32) -> void / () -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	DOOA_storeDigimonY	0	0	() -> void / () -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	MemCardInit	0	0	(i32) -> i32 / (i32) -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	MemCardStart	0	0	() -> i32 / () -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	STD_addWinScene	0	0	(i32) -> void / () -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	activateMedalTexture	0	0	(i32, i32) -> void / (i32) -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	addObject	0	0	(i32, i32, i32, i32) -> void / (i32, i32, i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	bzero	0	0	(i32, i32) -> i32 / (i32, i32) -> void	port/psyq/include/memory.h: host bzero returns void
+wasm-ld	checkFishingMap	0	0	(i32, i32) -> void / (i32) -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	createMenuBox	0	0	(i32, i32, i32, i32, i32, i32, i32, i32) -> void / (i32, i32, i32, i32, i32, i32, i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	fadeoutCLUT1	0	0	(i32, i32, i32) -> void / (i32, i32) -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	fadeoutCLUT2	0	0	(i32, i32, i32) -> void / (i32, i32) -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	getEntityScreenPos	0	0	(i32, i32, i32) -> i32 / (i32, i32, i32) -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	handlePraiseScold	0	0	() -> void / (i32) -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	handleSpecialEvolutions	0	0	(i32, i32) -> void / (i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	initializeBuffModelObject	0	0	() -> void / () -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	initializeMusic	0	0	() -> void / () -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	isSoundLoaded	0	0	(i32, i32) -> void / (i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	loadMapSounds	0	0	(i32) -> void / (i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	loadMapSounds2	0	0	(i32) -> void / (i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	loadVLALL	0	0	(i32, i32) -> void / (i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	memcpy	0	0	(i32, i32, i32) -> void / (i32, i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	playSound	0	0	(i32, i32) -> void / (i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	readFile	0	0	(i32, i32) -> void / (i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	removeBuffModelObject	0	0	() -> void / () -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	removeObject	0	0	(i32, i32) -> void / (i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	removeObject	0	0	(i32, i32, i32, i32) -> i32 / (i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	scriptSetDigimon	0	0	(i32, i32, i32) -> void / (i32, i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	setActiveAnim	0	0	(i32) -> void / (i32, i32) -> void	DW1_PORT guarded missing animation argument; gameplay fidelity pending
+wasm-ld	setEFEFlashOffset	0	0	(i32, i32, i32) -> void / (i32, i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	setupMap	0	0	(i32, i32) -> void / () -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	showTextboxReady	0	0	(i32, i32) -> void / (i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	tickCameraMoveTo	0	0	(i32, i32, i32) -> i32 / (i32, i32, i32) -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	triggerSeadramonCutscene	0	0	(i32) -> void / () -> void	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	waitForDeathMapLoading	0	0	(i32) -> void / (i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)
+wasm-ld	worldPosToScreenPos	0	0	(i32, i32) -> void / (i32, i32) -> i32	DW1_PORT direct ABI correction (preserves consumed arguments)

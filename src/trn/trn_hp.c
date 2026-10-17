@@ -166,7 +166,11 @@ int16_t instanceId;
 			removeAllCloudFX();
 			MAIN_D_8013537A = 0;
 			TRAINING_STATE = 0;
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+			removeObject(0xfab, instanceId);
+#else
 			removeObject(0xfab, instanceId, TRN_tickHpTraining, NULL);
+#endif
 			TRAINING_COMPLETE = 1;
 		}
 		break;

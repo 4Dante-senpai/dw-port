@@ -44,8 +44,16 @@ extern int8_t PARTNER_WAYPOINT_Y[];
 extern uint8_t BTL_COMMAND_ICON_UVS[8][2];
 extern uint8_t BTL_SPECIAL_ICON_UVS[8][2];
 
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t removeObject(int32_t objectId, int32_t instanceId);
+#else
 void removeObject(int32_t objectId, int32_t instanceId);
+#endif
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t addObject(int32_t objectId, int32_t instanceId, void *tick, void *render);
+#else
 void addObject(int32_t objectId, int32_t instanceId, void *tick, void *render);
+#endif
 void getEntityTile(Entity *entity, int8_t *outTileX, int8_t *outTileY);
 void startBattleIdleAnimation(DigimonEntity *entity, Stats *stats, int32_t flags);
 void tickObjects(void);
@@ -77,7 +85,12 @@ void BTL_selectPartnerMove(DigimonEntity *digimon, FighterData *fighter, int16_t
 void BTL_tickChargeState(DigimonEntity *digimon, DigimonEntity *target, FighterData *fighter);
 void BTL_tickAttackHits(void);
 void BTL_tickConfusedState(DigimonEntity *digimon, DigimonEntity *target, FighterData *fighter, int32_t arg3);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void BTL_initializeFinisherChargeup(void);
+#define BTL_initializeFinisherChargeup(p0) BTL_initializeFinisherChargeup()
+#else
 void BTL_initializeFinisherChargeup(int16_t tech);
+#endif
 int32_t BTL_addFinisherAura(Entity *entity, int32_t arg1);
 void BTL_setupMoveExecution(DigimonEntity *digimon, DigimonEntity *target, FighterData *fighter);
 int16_t BTL_calculateHitChance(DigimonEntity *attacker, DigimonEntity *defender, FighterData *fighter, int16_t move);
@@ -85,7 +98,11 @@ void BTL_applyMoveStatus(DigimonEntity *digimon, FighterData *fighter, int32_t m
 int32_t BTL_battleMain(void);
 void BTL_getWeakestEnemy(Entity *self, FighterData *fighter, int16_t *outScore, int16_t *outIndex);
 int16_t BTL_calculateTargetScore(DigimonEntity *self, DigimonEntity *other);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t BTL_addBuffRingsEffect(int16_t kind, Entity *entity);
+#else
 void BTL_addBuffRingsEffect(int16_t kind, Entity *entity);
+#endif
 void BTL_healStatusEffect(int32_t arg0);
 int16_t BTL_getNearestEnemy(Entity *self, int16_t *flags);
 void BTL_tickAttackState(Entity *entity, DigimonEntity *target, int32_t id);
@@ -116,7 +133,11 @@ void setPartnerWaypoint(int16_t index, int8_t x, int8_t y);
 void initializePartnerWaypoint(void);
 void BTL_removeFinisherAura(int32_t arg0);
 int32_t isFiveTileWidePathBlocked(int32_t x1, int32_t y1, int32_t x2, int32_t y2);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t BTL_addAuraProjectile(Entity *entity);
+#else
 void BTL_addAuraProjectile(Entity *entity);
+#endif
 void BTL_handleHitReaction(Entity *entity, FighterData *fighter, AttackObject *attack, int16_t index);
 void BTL_retargetAfterHit(DigimonEntity *digimon, FighterData *fighter, AttackObject attack);
 void BTL_applyFlattenScale(VECTOR *scale, int32_t t);
@@ -183,7 +204,11 @@ int32_t BTL_isMoveUsable(DigimonEntity *digimon, FighterData *fighter, int16_t s
 void BTL_tickCooldownState(DigimonEntity *digimon, DigimonEntity *target, FighterData *fighter);
 void BTL_clearStun(DigimonEntity *digimon, FighterData *fighter);
 void BTL_backAwayFromTarget(DigimonEntity *digimon, DigimonEntity *target, FighterData *fighter);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t removeBuffModelObject(void);
+#else
 void removeBuffModelObject(void);
+#endif
 void BTL_getHighestScoredMove(int16_t *values, int16_t *marks, int16_t *out, int16_t count);
 void BTL_getLowestScoredMove(int16_t *values, int16_t *marks, int16_t *out, int16_t count);
 void BTL_selectConfusedMove(DigimonEntity *digimon, FighterData *fighter, long index);

@@ -1,0 +1,274 @@
+Start testing: Oct 17 00:05 UTC
+----------------------------------------------------------
+1/14 Testing: gte_tables
+1/14 Test: gte_tables
+Command: "/dw/.venv/bin/python3" "-I" "-B" "tools/port/psyq/test_gte_tables.py"
+Directory: /dw
+"gte_tables" start time: Oct 17 00:05 UTC
+Output:
+----------------------------------------------------------
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.005s
+
+OK
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"gte_tables" end time: Oct 17 00:05 UTC
+"gte_tables" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/14 Testing: pre_commit
+2/14 Test: pre_commit
+Command: "/usr/bin/sh" "tools/port/hooks/test_pre_commit.sh" "/dw"
+Directory: /dw
+"pre_commit" start time: Oct 17 00:05 UTC
+Output:
+----------------------------------------------------------
+test_pre_commit: OK
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"pre_commit" end time: Oct 17 00:05 UTC
+"pre_commit" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/14 Testing: rts_info
+3/14 Test: rts_info
+Command: "/dw/.venv/bin/python3" "-I" "-B" "tools/port/units/test_rts_info.py"
+Directory: /dw
+"rts_info" start time: Oct 17 00:05 UTC
+Output:
+----------------------------------------------------------
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.005s
+
+OK
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"rts_info" end time: Oct 17 00:05 UTC
+"rts_info" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/14 Testing: ovl_starts
+4/14 Test: ovl_starts
+Command: "/dw/.venv/bin/python3" "-I" "-B" "tools/port/units/test_ovl_starts.py"
+Directory: /dw
+"ovl_starts" start time: Oct 17 00:05 UTC
+Output:
+----------------------------------------------------------
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+OK
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"ovl_starts" end time: Oct 17 00:05 UTC
+"ovl_starts" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/14 Testing: tu_list
+5/14 Test: tu_list
+Command: "/dw/.venv/bin/python3" "-I" "-B" "tools/port/units/test_tu_list.py"
+Directory: /dw
+"tu_list" start time: Oct 17 00:05 UTC
+Output:
+----------------------------------------------------------
+.........
+----------------------------------------------------------------------
+Ran 9 tests in 0.095s
+
+OK
+<end of output>
+Test time =   0.16 sec
+----------------------------------------------------------
+Test Passed.
+"tu_list" end time: Oct 17 00:05 UTC
+"tu_list" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/14 Testing: gen_stubs
+6/14 Test: gen_stubs
+Command: "/dw/.venv/bin/python3" "-I" "-B" "tools/port/psyq/test_gen_stubs.py"
+Directory: /dw
+"gen_stubs" start time: Oct 17 00:05 UTC
+Output:
+----------------------------------------------------------
+test_gen_stubs: OK
+test_gen_stubs: typed definitions match native and wasm prototypes
+<end of output>
+Test time =   0.31 sec
+----------------------------------------------------------
+Test Passed.
+"gen_stubs" end time: Oct 17 00:05 UTC
+"gen_stubs" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/14 Testing: inventory
+7/14 Test: inventory
+Command: "/dw/.venv/bin/python3" "-I" "-B" "tools/port/metrics/test_inventory.py"
+Directory: /dw
+"inventory" start time: Oct 17 00:05 UTC
+Output:
+----------------------------------------------------------
+................
+----------------------------------------------------------------------
+Ran 16 tests in 10.512s
+
+OK
+<end of output>
+Test time =  10.59 sec
+----------------------------------------------------------
+Test Passed.
+"inventory" end time: Oct 17 00:05 UTC
+"inventory" time elapsed: 00:00:10
+----------------------------------------------------------
+
+8/14 Testing: preproc_check
+8/14 Test: preproc_check
+Command: "/usr/bin/sh" "tools/port/ci/preproc_check.sh"
+Directory: /dw
+"preproc_check" start time: Oct 17 00:05 UTC
+Output:
+----------------------------------------------------------
+preproc_check: tus=120 configs=gcc,mwcc differ=0 base=09c174c012365cafd219dff54813dd1ccb9c87ce
+ps1_literals: rows=85 pending=0
+isr_spins: rows=67 pending=0
+<end of output>
+Test time =  25.37 sec
+----------------------------------------------------------
+Test Passed.
+"preproc_check" end time: Oct 17 00:06 UTC
+"preproc_check" time elapsed: 00:00:25
+----------------------------------------------------------
+
+9/14 Testing: test_preproc_check
+9/14 Test: test_preproc_check
+Command: "/usr/bin/sh" "tools/port/ci/test_preproc_check.sh"
+Directory: /dw
+"test_preproc_check" start time: Oct 17 00:06 UTC
+Output:
+----------------------------------------------------------
+test_preproc_check: OK
+<end of output>
+Test time = 125.92 sec
+----------------------------------------------------------
+Test Passed.
+"test_preproc_check" end time: Oct 17 00:08 UTC
+"test_preproc_check" time elapsed: 00:02:05
+----------------------------------------------------------
+
+10/14 Testing: ps1_ram_addr_range
+10/14 Test: ps1_ram_addr_range
+Command: "/opt/emsdk/upstream/emscripten/emcc" "-fsyntax-only" "-I/dw/port/psyq/include" "/dw/port/psyq/tests/bad_ps1_ram_addr.c"
+Directory: /dw/build/port/web
+"ps1_ram_addr_range" start time: Oct 17 00:08 UTC
+Output:
+----------------------------------------------------------
+/dw/port/psyq/tests/bad_ps1_ram_addr.c:4:13: error: array size is negative
+    4 | void *bad = PS1_RAM_ADDR(0x80200000u);
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~
+/dw/port/psyq/include/port_game.h:18:28: note: expanded from macro 'PS1_RAM_ADDR'
+   18 |                   0 * sizeof(char[((addr) & 0xFFE00000u) == 0x80000000u ? 1 : -1])))
+      |                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1 error generated.
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"ps1_ram_addr_range" end time: Oct 17 00:08 UTC
+"ps1_ram_addr_range" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/14 Testing: psyq_prototypes
+11/14 Test: psyq_prototypes
+Command: "/opt/emsdk/upstream/emscripten/emcc" "-fsyntax-only" "-w" "-I/dw/external/psyq_headers/mw_lib41/include" "/dw/port/psyq/tests/psyq_prototypes.c"
+Directory: /dw/build/port/web
+"psyq_prototypes" start time: Oct 17 00:08 UTC
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"psyq_prototypes" end time: Oct 17 00:08 UTC
+"psyq_prototypes" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/14 Testing: fnptr_scanner
+12/14 Test: fnptr_scanner
+Command: "/dw/.venv/bin/python3" "-I" "-B" "/dw/tools/port/fnptr/test_inventory.py"
+Directory: /dw/build/port/web
+"fnptr_scanner" start time: Oct 17 00:08 UTC
+Output:
+----------------------------------------------------------
+fnptr scanner: callback cast and missing consumed argument detected
+<end of output>
+Test time =   0.16 sec
+----------------------------------------------------------
+Test Passed.
+"fnptr_scanner" end time: Oct 17 00:08 UTC
+"fnptr_scanner" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/14 Testing: fnptr_inventory
+13/14 Test: fnptr_inventory
+Command: "/dw/.venv/bin/python3" "-I" "-B" "/dw/tools/port/fnptr/inventory.py" "/dw/build/port/web"
+Directory: /dw/build/port/web
+"fnptr_inventory" start time: Oct 17 00:08 UTC
+Output:
+----------------------------------------------------------
+fnptr_inventory: 991 resolved casts, 119 TUs, zero unresolved direct arity diagnostics
+<end of output>
+Test time =  17.33 sec
+----------------------------------------------------------
+Test Passed.
+"fnptr_inventory" end time: Oct 17 00:08 UTC
+"fnptr_inventory" time elapsed: 00:00:17
+----------------------------------------------------------
+
+14/14 Testing: web_boot
+14/14 Test: web_boot
+Command: "/dw/.venv/bin/python3" "-I" "-B" "/dw/port/web/tests/run.py" "/dw/build/port/web"
+Directory: /dw/build/port/web
+"web_boot" start time: Oct 17 00:08 UTC
+Output:
+----------------------------------------------------------
+
+Running 8 tests using 1 worker
+
+(node:50191) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/8] [chromium] › ../../../port/web/tests/boot.spec.cjs:5:3 › game frame zero
+[2/8] [chromium] › ../../../port/web/tests/boot.spec.cjs:5:3 › synthetic RGB15 display
+[3/8] [chromium] › ../../../port/web/tests/boot.spec.cjs:44:1 › requires isolation before loading the runtime
+[4/8] [chromium] › ../../../port/web/tests/boot.spec.cjs:54:1 › normal run keeps validation readback disabled
+(node:50351) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[5/8] [firefox] › ../../../port/web/tests/boot.spec.cjs:5:3 › game frame zero
+[6/8] [firefox] › ../../../port/web/tests/boot.spec.cjs:5:3 › synthetic RGB15 display
+[7/8] [firefox] › ../../../port/web/tests/boot.spec.cjs:44:1 › requires isolation before loading the runtime
+[8/8] [firefox] › ../../../port/web/tests/boot.spec.cjs:54:1 › normal run keeps validation readback disabled
+  8 passed (17.0s)
+<end of output>
+Test time =  18.15 sec
+----------------------------------------------------------
+Test Passed.
+"web_boot" end time: Oct 17 00:09 UTC
+"web_boot" time elapsed: 00:00:18
+----------------------------------------------------------
+
+End testing: Oct 17 00:09 UTC

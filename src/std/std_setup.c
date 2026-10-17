@@ -74,7 +74,11 @@ void STD_runIntro(int32_t arg);
 int32_t STD_combatMain(Entity *entity, Entity *other);
 void STD_removeCameraIntro(void);
 void GsGetTimInfo(unsigned long *tim, GsIMAGE *img);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t readFile(char *path, void *dest);
+#else
 void readFile(char *path, void *dest);
+#endif
 void STD_loadArenaTIMToVRAM(char *path, int32_t count);
 void STD_initializeLighting();
 int32_t STD_isBracketFinished(void);

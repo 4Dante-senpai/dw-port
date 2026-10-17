@@ -104,6 +104,7 @@ add_compile_options(-std=gnu99 -ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 # Native: no PIE, so addresses (and traces) are the same in every run. The OT window starts at
 # the data segment (port/psyq/ps1mem.h, AD-5).
 if(NOT EMSCRIPTEN)
+  set(DW1_ABI_CHECK_FLAGS -m32)
   add_compile_options(-fno-pie)
   add_link_options(-no-pie)
   # native-asan links the shared ASan runtime: point the executables at the compiler's copy.
@@ -112,6 +113,10 @@ if(NOT EMSCRIPTEN)
       OUTPUT_VARIABLE DW1_CLANG_RT_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
     add_link_options(-Wl,-rpath,${DW1_CLANG_RT_DIR})
   endif()
+endif()
+if(EMSCRIPTEN)
+  add_compile_options(-pthread -fwasm-exceptions)
+  add_link_options(-pthread -fwasm-exceptions -sSUPPORT_LONGJMP=wasm)
 endif()
 find_package(Threads REQUIRED)
 
@@ -125,7 +130,7 @@ target_compile_definitions(dw1_game_objs PRIVATE
 set_source_files_properties(${CMAKE_SOURCE_DIR}/src/main/main.c PROPERTIES
   COMPILE_DEFINITIONS main=dw1_game_main)
 target_compile_options(dw1_game_objs PRIVATE
-  -fsigned-char -fwrapv -fno-strict-aliasing -fno-common -w
+  -fno-lto -fsigned-char -fwrapv -fno-strict-aliasing -fno-common -w
   -include ${CMAKE_SOURCE_DIR}/port/psyq/include/port_game.h)
 
 # Hardware models (CD over the Pack and GTE).
@@ -188,22 +193,35 @@ add_test(NAME test_preproc_check COMMAND sh tools/port/ci/test_preproc_check.sh
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 # PS1_RAM_ADDR must refuse an address outside KSEG0 RAM at compile time.
-add_test(NAME ps1_ram_addr_range COMMAND ${CMAKE_C_COMPILER} -m32 -fsyntax-only
+add_test(NAME ps1_ram_addr_range COMMAND ${CMAKE_C_COMPILER} ${DW1_ABI_CHECK_FLAGS} -fsyntax-only
   -I${CMAKE_SOURCE_DIR}/port/psyq/include ${CMAKE_SOURCE_DIR}/port/psyq/tests/bad_ps1_ram_addr.c)
 set_tests_properties(ps1_ram_addr_range PROPERTIES WILL_FAIL TRUE)
 
-# L1 tests of the PS1 memory model and the overlay reset.
-add_executable(test_ps1mem port/psyq/tests/test_ps1mem.c)
-target_compile_options(test_ps1mem PRIVATE -Wall -Wextra -Werror)
-target_link_libraries(test_ps1mem dw1_psyq Threads::Threads)
-add_test(NAME ps1mem COMMAND test_ps1mem)
+# The port's PsyQ prototypes must match the mw_lib41 headers the game compiles against.
+add_test(NAME psyq_prototypes COMMAND ${CMAKE_C_COMPILER} ${DW1_ABI_CHECK_FLAGS} -fsyntax-only -w
+  -I${CMAKE_SOURCE_DIR}/external/psyq_headers/mw_lib41/include
+  ${CMAKE_SOURCE_DIR}/port/psyq/tests/psyq_prototypes.c)
+
 
 # The setjmp mapping of port_game.h fits PsyQ's 48-byte jmp_buf.
 add_executable(test_setjmp port/psyq/tests/test_setjmp.c)
 target_include_directories(test_setjmp PRIVATE external/psyq_headers/mw_lib41/include)
 target_compile_definitions(test_setjmp PRIVATE LANGUAGE_C)
 target_compile_options(test_setjmp PRIVATE -w -include ${CMAKE_SOURCE_DIR}/port/psyq/include/port_game.h)
-add_test(NAME setjmp COMMAND test_setjmp)
+if(EMSCRIPTEN)
+  # Inherits the game's pthread, wasm exceptions and SUPPORT_LONGJMP=wasm flags.
+  find_program(DW1_NODE_EXECUTABLE node REQUIRED)
+  add_test(NAME setjmp COMMAND ${DW1_NODE_EXECUTABLE} $<TARGET_FILE:test_setjmp>)
+else()
+  add_test(NAME setjmp COMMAND test_setjmp)
+endif()
+
+if(NOT EMSCRIPTEN)
+# L1 tests of the PS1 memory model and the overlay reset.
+add_executable(test_ps1mem port/psyq/tests/test_ps1mem.c)
+target_compile_options(test_ps1mem PRIVATE -Wall -Wextra -Werror)
+target_link_libraries(test_ps1mem dw1_psyq Threads::Threads)
+add_test(NAME ps1mem COMMAND test_ps1mem)
 
 add_executable(test_clock port/psyq/tests/test_clock.c)
 target_compile_options(test_clock PRIVATE -Wall -Wextra -Werror)
@@ -222,10 +240,6 @@ if(NOT EMSCRIPTEN)
   add_test(NAME gte COMMAND test_gte)
 endif()
 
-# The port's PsyQ prototypes must match the mw_lib41 headers the game compiles against.
-add_test(NAME psyq_prototypes COMMAND ${CMAKE_C_COMPILER} -m32 -fsyntax-only -w
-  -I${CMAKE_SOURCE_DIR}/external/psyq_headers/mw_lib41/include
-  ${CMAKE_SOURCE_DIR}/port/psyq/tests/psyq_prototypes.c)
 
 dw1_overlay_wrapper(${CMAKE_SOURCE_DIR}/port/psyq/tests/ovl_unit.c btl DW1_TEST_OVL_A)
 dw1_overlay_wrapper(${CMAKE_SOURCE_DIR}/port/psyq/tests/ovl_unit_btl2.c btl DW1_TEST_OVL_B)
@@ -257,6 +271,8 @@ add_test(NAME overlay_objects COMMAND python3 -I -B tools/port/units/check_ovl_o
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
 
+endif()
+
 # Runtime start and PsyQ data the game references (linked only into the game).
 add_library(dw1_runtime STATIC port/psyq/crt.c port/psyq/libgs_data.c
   ${DW1_RTS_INFO_H})
@@ -265,6 +281,8 @@ target_compile_options(dw1_runtime PRIVATE -Wall -Wextra -Werror)
 target_link_libraries(dw1_runtime PUBLIC dw1_psyq)
 
 # A stub for every PsyQ function the game calls that the port does not implement yet.
+file(GLOB_RECURSE DW1_PSYQ_HEADERS CONFIGURE_DEPENDS
+  ${CMAKE_SOURCE_DIR}/external/psyq_headers/mw_lib41/include/*.h)
 set(DW1_PSYQ_STUBS ${CMAKE_BINARY_DIR}/generated/psyq_stubs.c)
 add_custom_command(OUTPUT ${DW1_PSYQ_STUBS}
   COMMAND python3 -I -B tools/port/psyq/gen_stubs.py ${CMAKE_NM} tools/port/psyq/psyq_functions.tsv
@@ -273,6 +291,7 @@ add_custom_command(OUTPUT ${DW1_PSYQ_STUBS}
   DEPENDS dw1_psyq dw1_runtime dw1_backend dw1_game_objs $<TARGET_OBJECTS:dw1_game_objs>
     ${CMAKE_SOURCE_DIR}/tools/port/psyq/gen_stubs.py ${CMAKE_SOURCE_DIR}/tools/port/psyq/psyq_functions.tsv
     ${CMAKE_SOURCE_DIR}/tools/port/psyq/stub_returns.tsv
+    ${CMAKE_SOURCE_DIR}/port/psyq/tests/psyq_prototypes.c ${DW1_PSYQ_HEADERS}
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
   COMMAND_EXPAND_LISTS VERBATIM)
 set_source_files_properties(${DW1_PSYQ_STUBS} PROPERTIES COMPILE_OPTIONS "-w")
@@ -378,4 +397,22 @@ if(NOT EMSCRIPTEN)
     $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   set_tests_properties(dw1_overlay PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600
     FIXTURES_REQUIRED disc_pack)
+endif()
+
+add_test(NAME fnptr_scanner COMMAND python3 -I -B
+  ${CMAKE_SOURCE_DIR}/tools/port/fnptr/test_inventory.py)
+add_test(NAME fnptr_inventory COMMAND python3 -I -B
+  ${CMAKE_SOURCE_DIR}/tools/port/fnptr/inventory.py ${CMAKE_BINARY_DIR})
+if(EMSCRIPTEN)
+  configure_file(port/web/dev/index.html ${CMAKE_BINARY_DIR}/dw1.html COPYONLY)
+  add_executable(dw1 port/host/web/main.c port/host/web/present_gl.c
+    ${DW1_PSYQ_STUBS} $<TARGET_OBJECTS:dw1_game_objs>)
+  target_link_libraries(dw1 dw1_runtime)
+  target_compile_options(dw1 PRIVATE -Wall -Wextra -Werror)
+  target_link_options(dw1 PRIVATE -Wl,--fatal-warnings -sINITIAL_MEMORY=67108864 -sALLOW_MEMORY_GROWTH=0
+    -sEMULATE_FUNCTION_POINTER_CASTS=1 -sOFFSCREENCANVAS_SUPPORT=1 -sPTHREAD_POOL_SIZE=1 -sEXIT_RUNTIME=0
+    -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sGL_ASSERTIONS=1)
+  add_test(NAME web_boot COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR})
+  set_tests_properties(web_boot PROPERTIES TIMEOUT 180)
 endif()
