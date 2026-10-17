@@ -2,7 +2,7 @@
 # with the port toolchain: Clang/LLD, CMake, Ninja, emsdk and SDL3 (native + Emscripten).
 # Build with tools/port/docker_build.sh.
 ARG BASE_IMAGE=dw-build:latest
-FROM ${BASE_IMAGE}
+FROM ${BASE_IMAGE} AS toolchain
 
 ARG EMSDK_VERSION=6.0.10
 ARG SDL3_VERSION=3.4.16
@@ -18,6 +18,9 @@ RUN apt-get update && \
     lld \
     ninja-build \
     p7zip-full \
+    xvfb xauth libgl1-mesa-dri \
+    libcapstone4 libavcodec60 libavformat60 libavutil58 libswresample4 \
+    libcurl4t64 libuv1t64 libfreetype6 \
     pkg-config \
     xz-utils \
     libasound2-dev \
@@ -88,6 +91,34 @@ RUN export PATH="$(dirname /opt/emsdk/node/*/bin/node):$PATH" && \
     chmod -R a+rX /opt/ms-playwright && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 ENV NODE_PATH=/opt/node_modules
+
+# PCSX-Redux reference emulator (story 3.1), built against the toolchain stage's SDL3.
+FROM toolchain AS pcsx-redux
+ARG PCSX_REDUX_SHA=2068784a552b598940191e8431585b7f96408b3f
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential pkg-config cmake ninja-build ca-certificates \
+    libcapstone-dev libfreetype-dev libavcodec-dev libavformat-dev libavutil-dev \
+    libswresample-dev libcurl4-openssl-dev libuv1-dev zlib1g-dev libgl-dev \
+    gcc-mipsel-linux-gnu g++-mipsel-linux-gnu && \
+    rm -rf /var/lib/apt/lists/*
+RUN git init /tmp/pcsx && cd /tmp/pcsx && \
+    git remote add origin https://github.com/grumpycoders/pcsx-redux.git && \
+    git fetch --depth 1 origin ${PCSX_REDUX_SHA} && git checkout --detach FETCH_HEAD && \
+    SUBMODULE_RETRY_ATTEMPTS=3 bash .github/scripts/update-submodules.sh && \
+    PKG_CONFIG_PATH=/opt/sdl3/native/lib/pkgconfig make -j2 CPPFLAGS_Release="-O1 -g0" && \
+    make -C src/mips/openbios -j4 PREFIX=mipsel-linux-gnu FORMAT=elf32-tradlittlemips && \
+    strip pcsx-redux && mkdir -p /out/libexec /out/share/pcsx-redux/resources && \
+    cp pcsx-redux /out/libexec/ && cp src/mips/openbios/openbios.bin /out/share/pcsx-redux/ && \
+    cp LICENSE LICENSES.md /out/share/pcsx-redux/ && \
+    cp src/mips/LICENSE /out/share/pcsx-redux/OpenBIOS-LICENSE && \
+    printf '{"version":"dw1-reference","changeset":"%s","timestamp":%s}\n' \
+        "${PCSX_REDUX_SHA}" "$(git show -s --format=%ct HEAD)" > /out/share/pcsx-redux/resources/version.json
+
+FROM toolchain
+# Only runtime artifacts cross the emulator build-stage boundary.
+COPY --from=pcsx-redux /out/ /usr/local/
+RUN ln -s /usr/local/libexec/pcsx-redux /usr/local/bin/pcsx-redux && ldconfig && \
+    xvfb-run -a pcsx-redux -version
 
 # Writable by any uid so tools/port/docker_run.sh can run as the host user
 RUN chmod -R a+rwX /opt/emsdk/upstream/emscripten/cache /dw/.venv

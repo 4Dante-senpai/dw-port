@@ -62,7 +62,8 @@ native-disc:
   script:
     - cmake --preset native-headless
     - cmake --build --preset native-headless
-    - ctest --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc"
+    - xvfb-run -a pcsx-redux -version > /dev/null   # reference_title must run, not skip (77)
+    - ctest --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|reference_title"
 
 matching:
   extends: .class_b

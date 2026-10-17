@@ -449,3 +449,12 @@ if(EMSCRIPTEN)
   set_tests_properties(web_scene_title PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600
     FIXTURES_REQUIRED "disc_pack;native_title")
 endif()
+
+# Reference captures: class A uses synthetic data, class B needs the private disc.
+add_test(NAME reference_capture_unit COMMAND python3 -I -B
+  ${CMAKE_SOURCE_DIR}/tools/port/reference/test_capture.py)
+if(NOT EMSCRIPTEN)
+  add_test(NAME reference_title COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py title)
+  set_tests_properties(reference_title PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1250)
+endif()
