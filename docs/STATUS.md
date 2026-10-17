@@ -205,7 +205,7 @@
 
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Próxima: Épica 3, historia 3.1 (emulador de referencia y captura automática), según el orden de `docs/planning-artifacts/epics.md`; el resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Próxima: historia 8.5 (entorno de testing en el homelab, agregada a pedido del dueño), luego Épica 3, historia 3.1 (emulador de referencia y captura automática), según el orden de `docs/planning-artifacts/epics.md`; el resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 

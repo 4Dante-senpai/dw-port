@@ -1038,6 +1038,39 @@ para no proponer a upstream código sin objdiff (reglas 2 y 4).
 **Then** falla si una función de `src/` que no está en `upstream/main` falta en `docs/port/non-matching.md`
 **And** cuando `DW1_MWCC_DIR` existe, el job L0b corre `make` y `make compare`, y falla si el binario no es idéntico
 
+### Story 8.5: Entorno de testing en el homelab
+
+Como dueño del proyecto,
+quiero que cada push a `main` deje el build web desplegado en un host de mi LAN junto con el Pack,
+para probar el port en el navegador a medida que avanzan las historias, sin túneles ni consola.
+
+Agregada el 2026-10-17 a pedido del dueño; se hace antes de la Historia 3.1. No reemplaza a las
+Historias 7.1/7.2: esa imagen sirve solo archivos del programa, esta sirve también el Pack y es
+exclusivamente de desarrollo en la LAN.
+
+**Criterios de aceptación:**
+
+**Given** un push a `main` en el GitLab propio
+**When** corre el pipeline
+**Then** un job de clase B en el runner `dw1-data` compila el preset `web`, arma el Pack desde `/private/disc` con `dw1-pack`, construye una imagen nginx (`port/web/testing/`) con COOP `same-origin`, COEP `require-corp`, MIME de wasm y la página de desarrollo, la publica en el registry del proyecto y la despliega en el host de deploy usando `DOCKER_HOST=$DW1_TESTING_DOCKER_HOST` (mismo patrón que el template del dueño: `skopeo copy` a `docker-archive`, `docker load`, compose con healthcheck y rollback manual a la imagen anterior, `resource_group`)
+**And** la imagen no contiene bytes del disco (verificado en el job: ningún archivo de la imagen tiene el header del Pack ni coincide con un hash del Manifest) y el log del job no imprime bytes del disco
+
+**Given** el Pack armado en el job
+**When** se despliega
+**Then** se transfiere a un volumen Docker con nombre en el host de deploy mediante un contenedor auxiliar (sin SSH ni rutas del host), solo si su SHA-256 difiere del guardado en el volumen, y el contenedor lo monta de solo lectura y lo sirve en una ruta fija
+
+**Given** la página del entorno de testing abierta en un navegador con el origen marcado como seguro (flag `unsafely-treat-insecure-origin-as-secure` en Chromium, `dom.securecontext.allowlist` en Firefox)
+**When** el usuario pulsa "Cargar Pack"
+**Then** la página copia el Pack a OPFS (`dw1/us.pack`) por streaming si falta o si su SHA-256 difiere del servido, muestra el commit desplegado y arranca el Juego con `?pack=1`; sin aislamiento de origen muestra el mismo error que el host de desarrollo
+
+**Given** el despliegue terminado
+**When** el job corre Playwright (Chromium con el origen marcado como seguro) contra la URL desplegada
+**Then** la Escena `title` da el mismo SHA-256 que `native-headless`, y si falla el healthcheck o esta prueba el job restaura la imagen anterior
+
+**Given** que el repo de GitHub es público
+**When** se revisan `.gitlab-ci.yml` y `docs/port/testing-env.md`
+**Then** el host y el puerto llegan por variables de CI y los docs usan marcadores (`<deploy-host>`); los valores reales quedan solo en `docs/port/local-infra.md`
+
 ## Validación final (paso 4)
 
 - Cobertura: los 17 FR y los 10 NFR tienen al menos una historia (mapa de cobertura arriba).
@@ -1048,4 +1081,5 @@ para no proponer a upstream código sin objdiff (reglas 2 y 4).
   dueño corra L4 en el hardware de referencia; la 7.3 es un punto de control humano.
 - Orden de ejecución (kickoff, Fase 5): Épica 2 completa, luego 4.1 y 4.2 (título en el
   navegador), luego la Épica 3 y el resto de la 4. La Épica 8 se intercala cuando se desbloquea.
-- 57 historias: Épica 2 (15), 3 (11), 4 (10), 5 (6), 6 (8), 7 (3), 8 (4).
+- 58 historias: Épica 2 (15), 3 (11), 4 (10), 5 (6), 6 (8), 7 (3), 8 (5). La 8.5 se agregó el
+  2026-10-17 y va antes de la Historia 3.1.
