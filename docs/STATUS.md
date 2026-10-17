@@ -220,7 +220,7 @@
   Seis corridas dieron el mismo SHA-256 `56132366…260d` (320×240, 256 colores), fijado en
   `title.toml`. Referencia **provisional** (OpenBIOS); la repetición con el BIOS del dueño queda en
   `deferred-work.md`. Para 3.2: el port difiere en 10.674 píxeles (caja x 1..128, y 0..217, rayos
-  animados). CTest con disco 42/42 (`reference_title` incluido). Revisión (3 capas Codex): 2
+  animados). CTest con disco 42/42 (`reference_title` incluido); en CI, pipeline 92 verde con `reference_title` real en `native-disc` (imagen del job `images` 305, timeout de 3 h, runner con 12 GB). Revisión (3 capas Codex): 2
   patches, 1 diferido (test de inputs del Lua, para 3.3) y 6 rechazados. Uso en `docs/port/reference.md`.
   Evidencia: `docs/implementation-artifacts/evidence/story-3-1.log`.
 

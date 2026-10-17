@@ -59,7 +59,7 @@ context:
 - [x] `tools/port/reference/capture.lua` -- breakpoints Exec en el primer `VSync` (y su `ra`) y en la marca; contador de VBlanks; aplica `inputs` del `.toml` en el latch de cada VBlank; vuelca display (raw 16/24 bpp, ancho, alto) a archivo y sale del emulador -- puntos idénticos al port.
 - [x] `tools/port/reference/capture.py` -- lee `.toml` y símbolos, lanza `xvfb-run pcsx-redux` dos veces con timeout, convierte a PPM, compara, `--update`, `--bios`, `--out`; códigos según la matriz.
 - [x] `tools/port/reference/test_capture.py` -- L1 sin datos: conversión 5→8 contra `gpu_read_display` con vectores calculados aparte, 24 bpp, resolución de símbolos, salida 77 sin disco/emulador, detección de corridas distintas y hash fijado (emulador falso).
-- [x] `CMakeLists.txt` -- tests `reference_capture_unit` (A) y `reference_title` (B, skip 77); `.gitlab-ci.yml` -- `reference_title` en `native-disc`, digests nuevos tras el job `images` (pendiente: requiere push de la rama).
+- [x] `CMakeLists.txt` -- tests `reference_capture_unit` (A) y `reference_title` (B, skip 77); `.gitlab-ci.yml` -- `reference_title` en `native-disc`, digests nuevos tras el job `images` (job 305; pipeline 92 verde).
 - [x] `tools/port/scenes/title.toml` -- `reference_sha256` producido por `--update`.
 - [x] `docs/port/reference.md` -- SHA de PCSX-Redux, uso, hipótesis de API Lua verificadas, referencia *provisional* (OpenBIOS) y procedimiento con BIOS real; `docs/port/setup.md` -- reemplazar "Emulador de referencia (pendiente)".
 

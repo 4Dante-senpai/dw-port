@@ -47,3 +47,10 @@ reference: before frame 0 at VBlank 0
 reference: frame 0 at VBlank 822 
 reference: mark at VBlank 8642 
 reference: captured at VBlank 8702 
+## CI (GitLab)
+images job 305 (pipeline 91 retry, runner CT at 12 GB RAM, timeout 3h): success
+  dw-build@sha256:6ad8c939a6aec8e0bac71d61a93755788df4cfcde831fc6375bb0feba5e7cd09
+  dw-port@sha256:3c8d129bb4d30135112ceaa17c1d131463221ac93e65433c0250ab45ccec4345
+  (jobs 295 and 300 stalled: 1 h job timeout, then runner memory exhaustion at -j3)
+pipeline 92 (4e7d6f4648d39d4811f0659c37eab6fb9a406597): native, web-objects, native-disc, matching success
+native-disc job 310: pack_disc, gte_tables_disc, dw1_overlay Passed; reference_title Passed 354.28 sec
