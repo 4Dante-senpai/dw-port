@@ -7,7 +7,12 @@
 #include <dw/utils.h>
 #include <dw/world_object.h>
 
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void triggerSeadramonCutscene(void);
+#define triggerSeadramonCutscene(p0) triggerSeadramonCutscene()
+#else
 void triggerSeadramonCutscene(VECTOR *v);
+#endif
 int32_t isTriggerSet(uint16_t trigger);
 
 extern int32_t FISHING_MAP_COUNT;

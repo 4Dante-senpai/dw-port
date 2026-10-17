@@ -41,7 +41,11 @@ extern char TAMER_MODEL_BUFFER[];
 extern int8_t MAP_COLLISION_DATA[];
 
 void GsGetTimInfo(unsigned long *tim, GsIMAGE *img);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t readFile(char *path, void *dest);
+#else
 void readFile(char *path, void *dest);
+#endif
 void setPosDataPolyFT4(POLY_FT4 *prim, int32_t posX, int32_t posY, int32_t width, int32_t height);
 void setUVDataPolyFT4(POLY_FT4 *prim, int32_t uvX, int32_t uvY, int32_t width, int32_t height);
 void VS__tickVSInput(void);

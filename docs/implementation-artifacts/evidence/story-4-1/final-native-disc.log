@@ -1,0 +1,12 @@
+    Start 35: pack_disc
+1/4 Test #35: pack_disc ........................   Passed   33.77 sec
+    Start 36: gte_tables_disc
+2/4 Test #36: gte_tables_disc ..................   Passed    0.10 sec
+    Start 37: scene_title
+3/4 Test #37: scene_title ......................   Passed    1.67 sec
+    Start 38: dw1_overlay
+4/4 Test #38: dw1_overlay ......................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =  35.56 sec

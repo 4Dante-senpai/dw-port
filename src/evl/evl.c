@@ -78,8 +78,18 @@ extern VECTOR EVL_D_80068908;
 int32_t getMapSoundId(int32_t mapId);
 void EFECreateFlash(void);
 void forceUpdateBGM(void);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void fadeoutCLUT1(long a, int16_t *b);
+#define fadeoutCLUT1(p0, p1, p2) fadeoutCLUT1(p0, p1)
+#else
 void fadeoutCLUT1(int32_t level, int16_t *src, int32_t unused);
+#endif
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void fadeoutCLUT2(long a, int16_t *b);
+#define fadeoutCLUT2(p0, p1, p2) fadeoutCLUT2(p0, (int16_t *)p1)
+#else
 void fadeoutCLUT2(int32_t fade, char *src, int32_t unused);
+#endif
 void setMapLayerEnabled(int32_t enabled);
 
 void initializeEvolvedPartner(int32_t type, int32_t posX, int32_t posY, int32_t posZ,

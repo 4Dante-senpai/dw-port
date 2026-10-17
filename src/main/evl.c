@@ -13,9 +13,21 @@
 
 void stopBGM(void);
 void stopSound(void);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t loadMapSounds2();
+#else
 void loadMapSounds2();
+#endif
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t isSoundLoaded();
+#else
 void isSoundLoaded();
+#endif
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t loadVLALL();
+#else
 void loadVLALL();
+#endif
 
 int8_t IS_LOAD_EVL_COMPLETE;
 

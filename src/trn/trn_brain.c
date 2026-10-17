@@ -168,7 +168,11 @@ void TRN_tickBrainsTraining(int32_t instanceId)
 			partnerSetState(1);
 			MAIN_D_8013537A = 0;
 			TRAINING_STATE = 0;
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+			removeObject(0xfb0, instanceId);
+#else
 			removeObject(0xfb0, instanceId, TRN_tickBrainsTraining, NULL);
+#endif
 			TRAINING_COMPLETE = 1;
 		}
 		break;

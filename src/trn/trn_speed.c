@@ -136,7 +136,11 @@ void TRN_tickSpeedTraining(int32_t instanceId)
 			setCameraFollowPlayer();
 			MAIN_D_8013537A = 0;
 			TRAINING_STATE = 0;
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+			removeObject(0xfad, instanceId);
+#else
 			removeObject(0xfad, instanceId, TRN_tickSpeedTraining, NULL);
+#endif
 			TRAINING_COMPLETE = 1;
 		}
 		break;

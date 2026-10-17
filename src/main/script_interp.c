@@ -43,7 +43,21 @@ int32_t scriptTickMainMenu(void);
 int32_t isTrainingComplete(void);
 void setCameraFollowPlayer(void);
 void setFoodTimer(int32_t type);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+/* The original call supplies only a0=12; a1 is a caller-saved residue.
+ * Do not fabricate the missing animation when an NPC with that script id exists. */
+static void port_unverified_active_anim(int state)
+{
+    for (int i = 0; i < 8; i++) {
+        if (ENTITY_TABLE[i + 2] && NPC_ENTITIES[i].scriptId == state) {
+            __builtin_trap();
+        }
+    }
+}
+#define setActiveAnim port_unverified_active_anim
+#else
 void setActiveAnim(int32_t state);
+#endif
 int32_t hasMove(int32_t moveId);
 void learnMove(int32_t moveId);
 void unloadDigimonModel(int32_t digimonType);
@@ -53,7 +67,11 @@ void updateBGM(void);
 void forceUpdateBGM(void);
 void pollNextScriptTwoUShort(uint16_t *out1, uint16_t *out2);
 void skipHours(int32_t hours);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t scriptSetDigimon(int32_t a0, int32_t a1, int32_t a2);
+#else
 void scriptSetDigimon(int32_t a0, int32_t a1, int32_t a2);
+#endif
 void scriptUnloadEntity(int32_t a0);
 void resetEntityOrigin(int32_t a0);
 void setMapObjectsFlag(int32_t start, int32_t count, int32_t flag);
@@ -77,7 +95,12 @@ int32_t tickMoveObjectTo(uint8_t objectIndex, uint8_t moveIndex, int8_t steps,
 void initializeScripts(void);
 void initializeLoadedNPCModels(void);
 void runMapHeadScript(int32_t section);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void setupMap(void);
+#define setupMap(p0, p1) setupMap()
+#else
 void setupMap(int32_t param_1, int32_t param_2);
+#endif
 void loadMap(uint16_t mapId);
 uint8_t *getScriptSection(uint8_t *script, int32_t section);
 int32_t addFileReadRequestPath(char *path, int32_t buffer, uint8_t *isRunning,

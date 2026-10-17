@@ -1,0 +1,89 @@
+Test project /dw/build/port/native-headless
+      Start  1: gpu
+ 1/39 Test  #1: gpu ..............................   Passed    0.44 sec
+      Start  2: libgs
+ 2/39 Test  #2: libgs ............................   Passed    0.01 sec
+      Start  3: libgpu
+ 3/39 Test  #3: libgpu ...........................   Passed    0.02 sec
+      Start  4: gte_tables
+ 4/39 Test  #4: gte_tables .......................   Passed    0.09 sec
+      Start 28: pack
+ 5/39 Test #28: pack .............................   Passed    0.01 sec
+      Start  5: libgte
+ 6/39 Test  #5: libgte ...........................   Passed    0.00 sec
+      Start  6: pre_commit
+ 7/39 Test  #6: pre_commit .......................   Passed    0.07 sec
+      Start  7: rts_info
+ 8/39 Test  #7: rts_info .........................   Passed    0.08 sec
+      Start  8: ovl_starts
+ 9/39 Test  #8: ovl_starts .......................   Passed    0.06 sec
+      Start  9: tu_list
+10/39 Test  #9: tu_list ..........................   Passed    0.18 sec
+      Start 10: gen_stubs
+11/39 Test #10: gen_stubs ........................   Passed    0.39 sec
+      Start 11: inventory
+12/39 Test #11: inventory ........................   Passed   11.41 sec
+      Start 12: preproc_check
+13/39 Test #12: preproc_check ....................   Passed   26.47 sec
+      Start 13: test_preproc_check
+14/39 Test #13: test_preproc_check ...............   Passed  167.43 sec
+      Start 14: ps1_ram_addr_range
+15/39 Test #14: ps1_ram_addr_range ...............   Passed    0.03 sec
+      Start 15: ps1mem
+16/39 Test #15: ps1mem ...........................   Passed    0.01 sec
+      Start 16: setjmp
+17/39 Test #16: setjmp ...........................   Passed    0.00 sec
+      Start 17: clock
+18/39 Test #17: clock ............................   Passed    0.02 sec
+      Start 18: libc_heap_pad
+19/39 Test #18: libc_heap_pad ....................   Passed    0.01 sec
+      Start 19: gte
+20/39 Test #19: gte ..............................   Passed    0.01 sec
+      Start 20: psyq_prototypes
+21/39 Test #20: psyq_prototypes ..................   Passed    0.05 sec
+      Start 21: overlay_O0
+22/39 Test #21: overlay_O0 .......................   Passed    0.01 sec
+      Start 22: overlay_O2
+23/39 Test #22: overlay_O2 .......................   Passed    0.00 sec
+      Start 23: overlay_sections
+24/39 Test #23: overlay_sections .................   Passed    0.00 sec
+      Start 24: overlay_objects
+25/39 Test #24: overlay_objects ..................   Passed    1.75 sec
+      Start 25: frame0
+26/39 Test #25: frame0 ...........................   Passed    0.02 sec
+      Start 26: dw1_bad_args
+27/39 Test #26: dw1_bad_args .....................   Passed    0.00 sec
+      Start 27: watchdog
+28/39 Test #27: watchdog .........................   Passed    1.75 sec
+      Start 29: av_stubs
+29/39 Test #29: av_stubs .........................   Passed    0.01 sec
+      Start 30: libcd
+30/39 Test #30: libcd ............................   Passed    0.01 sec
+      Start 31: libgte_host
+31/39 Test #31: libgte_host ......................   Passed    0.07 sec
+      Start 32: dw1_foreign_pack
+32/39 Test #32: dw1_foreign_pack .................   Passed    0.00 sec
+      Start 33: scene_runner
+33/39 Test #33: scene_runner .....................   Passed    0.16 sec
+      Start 34: scene_flags
+34/39 Test #34: scene_flags ......................   Passed    0.06 sec
+      Start 35: pack_disc
+35/39 Test #35: pack_disc ........................***Skipped   0.00 sec
+      Start 36: gte_tables_disc
+36/39 Test #36: gte_tables_disc ..................***Skipped   0.00 sec
+      Start 37: scene_title
+37/39 Test #37: scene_title ......................***Skipped   0.00 sec
+      Start 38: dw1_overlay
+38/39 Test #38: dw1_overlay ......................***Skipped   0.00 sec
+      Start 39: fnptr_inventory
+39/39 Test #39: fnptr_inventory ..................   Passed   12.21 sec
+
+100% tests passed, 0 tests failed out of 39
+
+Total Test time (real) = 222.87 sec
+
+The following tests did not run:
+	 35 - pack_disc (Skipped)
+	 36 - gte_tables_disc (Skipped)
+	 37 - scene_title (Skipped)
+	 38 - dw1_overlay (Skipped)

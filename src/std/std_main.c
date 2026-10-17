@@ -117,7 +117,12 @@ void STD_removeIntroText(int32_t i);
 void STD_setViewpointRotationFromEntity(void);
 void STD_applyViewpoint(void);
 void STD_startCameraIntro(Entity *target, Entity *entity);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void STD_addWinScene(void);
+#define STD_addWinScene(p0) STD_addWinScene()
+#else
 void STD_addWinScene(int32_t a);
+#endif
 void STD_addLoseScene(void);
 void STD_removeFinisherChargeup(void);
 void STD_removeFinisherAura(int32_t id);

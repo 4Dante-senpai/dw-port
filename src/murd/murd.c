@@ -41,10 +41,19 @@ void renderParticleFlash(ParticleFlashData *params);
 void renderDropShadow(Entity *entity);
 
 void setDeathMap(int32_t message, int32_t value);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t waitForDeathMapLoading(int32_t value);
+#else
 void waitForDeathMapLoading(int32_t value);
+#endif
 void changeToDeathMap(void);
 void downloadCLUT1(uint32_t *buffer);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void fadeoutCLUT1(long a, int16_t *b);
+#define fadeoutCLUT1(p0, p1, p2) fadeoutCLUT1(p0, p1)
+#else
 void fadeoutCLUT1(int32_t level, int16_t *src, int32_t unused);
+#endif
 
 void MURD_tickScene(int32_t instanceId);
 void MURD_renderScene(void);

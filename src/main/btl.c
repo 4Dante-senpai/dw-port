@@ -57,7 +57,11 @@ void tickPartnerWaypoints(void);
 void partnerTickCollision(void);
 int32_t entityGetTechFromAnim(Entity *entity, int32_t anim);
 void initializeBuffModel(TMDModel *model);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t initializeBuffModelObject(void);
+#else
 void initializeBuffModelObject(void);
+#endif
 void BTL_initializeBattleItemParticles(void);
 void BTL_initializeUnk2(void);
 void BTL_initializeUnk3(void);

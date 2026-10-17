@@ -24,7 +24,11 @@ void tickConditionBoundaries(void);
 void createCloudFX(SVECTOR *pos);
 int32_t hasMove(int32_t moveId);
 void learnMove(int32_t moveId);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t createMenuBox(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f, void (*tick)(void), void (*render)(void));
+#else
 void createMenuBox(int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, int32_t f, void (*tick)(void), void (*render)(void));
+#endif
 void TRN_func_800888A0(int8_t arg);
 int16_t TRN_calculateTrainingMultiplier(int32_t type, int16_t mode, int16_t flag);
 void TRN_advanceTrainingTime(int16_t tiredGain, int16_t energyLoss, int16_t happyLoss);

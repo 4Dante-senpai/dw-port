@@ -11,8 +11,8 @@
   summary: Stubs que devuelven NULL para funciones que reservan memoria o devuelven punteros (`malloc3`, `CdSearchFile`).
   evidence: el Juego recibe NULL sin aviso; se resuelve con `malloc3` real (2.9) y stubs con comportamiento definido (2.14).
 - source_spec: `docs/implementation-artifacts/spec-2-6-linkeo-y-frame-0.md`
-  summary: Inventario de llamadas por puntero con tipo distinto antes del build web.
-  evidence: UBSan `-fsanitize=function` en `world_object.c:101`; wasm `call_indirect` aborta. Historia 4.1.
+  summary: Inventario de llamadas por puntero con tipo distinto antes del build web (resuelto en 4.1).
+  evidence: `tools/port/metrics/fnptr_casts.tsv` + CTest `fnptr_inventory`; web usa `EMULATE_FUNCTION_POINTER_CASTS`. Native-asan conserva `-fno-sanitize=function`.
 
 - source_spec: `docs/implementation-artifacts/spec-2-7-manifest-y-herramienta-nativa-del-pack.md`
   summary: Test del hook pre-commit y del `.gitignore` para todos los patrones prohibidos (incluidos `*.pack` y `*.pack.tmp`).
@@ -38,3 +38,9 @@
 - source_spec: `docs/implementation-artifacts/spec-2-15-pantalla-de-titulo-en-nativo-headless.md`
   summary: La traza de eventos del reloj de la Escena `title` difiere entre `native-headless` y `native-asan` (SHA-256 `1dec875a…` frente a `befd2a43…`), aunque la captura coincide.
   evidence: cada preset es determinista consigo mismo, pero el tiempo virtual no debería depender del build; candidatos: costos de `DrawSync` que dependen del contenido de paquetes con stack sin inicializar (`DRAWENV` de `MOV_playMovie`) o del layout de memoria. Se resuelve comparando las dos trazas hasta el primer evento distinto (antes de la Historia 3.10, calibración del reloj).
+- source_spec: `docs/implementation-artifacts/spec-4-1-el-juego-en-wasm-con-su-propio-hilo-y-presentacion.md`
+  summary: `scriptStartAnimation`/`scriptSetEntityWalking` llaman `setActiveAnim(0xc)` con un solo argumento, pero la definición consume `animId`; el port hace trap si existe un NPC con `scriptId` 12.
+  evidence: asm `scriptStartAnimation` (0x80105540) no carga `a1` antes de `jal setActiveAnim`; `a1` es el residuo de `scriptNPCStartAnimation` (igual a `animationId` si ningún NPC coincide, residuo de `startAnimation` si coincide). Severidad medium sin verificar; se resuelve trazando `a1` en el emulador de referencia (épica 3) o con el compilador matching.
+- source_spec: `docs/implementation-artifacts/spec-4-1-el-juego-en-wasm-con-su-propio-hilo-y-presentacion.md`
+  summary: con `-fsanitize=function` en `native-asan`, la escena del título (clase B) produjo un solo color en lugar de 256, sin diagnóstico de ASan/UBSan.
+  evidence: observado en la iteración 0 de la historia 4.1 (adaptadores manuales, luego revertidos); el control con `-fno-sanitize=function` dio 256 colores. Causa no aislada (maybe-false, medium si es real): repetir con el árbol final y `-fsanitize=function` para ver si persiste; la hipótesis previa es `DRAWENV` sin inicializar en `MOV_playMovie`.

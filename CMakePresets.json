@@ -25,7 +25,7 @@
     },
     {
       "name": "web",
-      "displayName": "WebAssembly game objects, PsyQ and Backend (no link)",
+      "displayName": "WebAssembly game on a pthread with WebGL2 presentation",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/port/web",
       "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
@@ -38,8 +38,7 @@
   "buildPresets": [
     {
       "name": "web",
-      "configurePreset": "web",
-      "targets": ["dw1_game_objs", "dw1_backend", "dw1_psyq"]
+      "configurePreset": "web"
     },
     {
       "name": "native-headless",
@@ -66,6 +65,13 @@
       },
       "environment": {
         "ASAN_OPTIONS": "detect_stack_use_after_return=0"
+      }
+    },
+    {
+      "name": "web",
+      "configurePreset": "web",
+      "output": {
+        "outputOnFailure": true
       }
     }
   ]

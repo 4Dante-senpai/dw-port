@@ -187,7 +187,11 @@ void renderString(int32_t, int32_t, int32_t, int32_t, int32_t, int32_t,
 void renderUIBox(int32_t id);
 void setMapLayerEnabled(int32_t enabled);
 int32_t isSoundLoaded(int32_t isAsync, int32_t soundId);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+int32_t playSound(int32_t vabId, uint32_t note);
+#else
 void playSound(int32_t vabId, uint32_t note);
+#endif
 void setCameraFollowPlayer(void);
 void unsetCameraFollowPlayer(void);
 int32_t entityCheckCollision(Entity *a, Entity *b, int32_t c, int32_t d);
@@ -221,7 +225,11 @@ void loadMapDigimon(uint8_t *data, int16_t a);
 void tamerTickBattle(int32_t instanceId);
 void tickConditionBoundaries(void);
 void handlePostBattleTiredness(void);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void getEntityScreenPos(Entity *entity, int32_t flag, DVECTOR *outPos);
+#else
 int32_t getEntityScreenPos(Entity *entity, int32_t flag, DVECTOR *outPos);
+#endif
 int32_t isUIBoxAvailable(int32_t id);
 void playBGM(int16_t bgmId);
 void readMapTFS(int32_t mapId);
@@ -230,7 +238,11 @@ int32_t handleBattleStart(int32_t instanceId);
 void loadBattleData(int32_t a, int32_t b);
 int32_t BTL_battleMain(void);
 int32_t isKeyDown(uint32_t key);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+void *memcpy(void *dst, const void *src, unsigned int size);
+#else
 void memcpy(uint8_t *dst, uint8_t *src, uint32_t size);
+#endif
 int32_t strlen(char *s);
 void setupPartnerOnWarp(int32_t x, int32_t y, int32_t z, int32_t rotationY);
 extern int32_t DRAWING_OFFSET_X;

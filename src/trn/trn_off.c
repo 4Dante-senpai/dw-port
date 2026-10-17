@@ -195,7 +195,11 @@ void TRN_tickOffenseTraining(int32_t instanceId)
 			setCameraFollowPlayer();
 			MAIN_D_8013537A = 0;
 			TRAINING_STATE = 0;
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+			removeObject(0xfac, instanceId);
+#else
 			removeObject(0xfac, instanceId, TRN_tickOffenseTraining, NULL);
+#endif
 			TRAINING_COMPLETE = 1;
 		}
 		break;
