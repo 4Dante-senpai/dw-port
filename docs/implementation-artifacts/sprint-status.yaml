@@ -106,10 +106,10 @@ development_status:
   7-3-publicación-pública: backlog
   epic-7-retrospective: optional
 
-  epic-8: backlog
+  epic-8: in-progress
   8-1-métricas-automáticas-en-status-md: backlog
   8-2-pipeline-de-gitlab-ci-con-clases-a-y-b: backlog
   8-3-merge-periódico-de-upstream-main: backlog
   8-4-registro-de-funciones-no-verificadas-y-make-compare: backlog
-  8-5-entorno-de-testing-en-el-homelab: backlog
+  8-5-entorno-de-testing-en-el-homelab: review
   epic-8-retrospective: optional

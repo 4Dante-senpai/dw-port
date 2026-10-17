@@ -6,7 +6,17 @@ for (const poison of [false, true]) {
   test('title capture matches native' + (poison ? ' with storage poisoned' : ''), async ({page}, info) => {
     test.setTimeout(180000);
     const failures = errors(page);
-    await seed(page, 'us.pack');
+    if (poison) {
+      await seed(page, 'us.pack');
+    } else {
+      await page.goto('/');
+      if (process.env.DW1_WEB_EXPECTED_COMMIT)
+        await expect(page.locator('#version')).toHaveText(process.env.DW1_WEB_EXPECTED_COMMIT);
+      await expect(page.locator('#load-pack')).toBeEnabled();
+      await page.locator('#load-pack').click();
+      await expect(page.locator('#pack-status')).toHaveText('Pack disponible', {timeout:120000});
+      await expect(page.locator('#play')).toBeEnabled();
+    }
     await page.goto('/?pack=1&frames=10000&capture-mark=runLandingScreen&capture-vblank=60' +
                     (poison ? '&poison=1' : ''));
     await expect.poll(() => page.evaluate(() => Module.finished), {timeout:120000}).toBe(0);

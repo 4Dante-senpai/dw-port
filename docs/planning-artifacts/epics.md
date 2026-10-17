@@ -1052,7 +1052,7 @@ exclusivamente de desarrollo en la LAN.
 
 **Given** un push a `main` en el GitLab propio
 **When** corre el pipeline
-**Then** un job de clase B en el runner `dw1-data` compila el preset `web`, arma el Pack desde `/private/disc` con `dw1-pack`, construye una imagen nginx (`port/web/testing/`) con COOP `same-origin`, COEP `require-corp`, MIME de wasm y la página de desarrollo, la publica en el registry del proyecto y la despliega en el host de deploy usando `DOCKER_HOST=$DW1_TESTING_DOCKER_HOST` (mismo patrón que el template del dueño: `skopeo copy` a `docker-archive`, `docker load`, compose con healthcheck y rollback manual a la imagen anterior, `resource_group`)
+**Then** un job de clase B en el runner `dw1-data` compila el preset `web`, arma el Pack desde `/private/disc` con `dw1-pack`, construye una imagen nginx (`port/web/testing/`) con COOP `same-origin`, COEP `require-corp`, MIME de wasm y la página de desarrollo directamente en el daemon del host de deploy (`DOCKER_HOST=$HUB_DOCKER_HOST`, sin registry) y la despliega con healthcheck, rollback manual a la imagen anterior y `resource_group`
 **And** la imagen no contiene bytes del disco (verificado en el job: ningún archivo de la imagen tiene el header del Pack ni coincide con un hash del Manifest) y el log del job no imprime bytes del disco
 
 **Given** el Pack armado en el job

@@ -427,6 +427,13 @@ if(EMSCRIPTEN)
   add_test(NAME web_boot COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR})
   set_tests_properties(web_boot PROPERTIES TIMEOUT 180)
+  add_test(NAME web_launcher COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} launcher)
+  set_tests_properties(web_launcher PROPERTIES TIMEOUT 180)
+  add_test(NAME testing_deploy COMMAND python3 -B
+    ${CMAKE_SOURCE_DIR}/tools/port/testing/test_deploy.py)
+  add_test(NAME testing_context COMMAND python3 -B
+    ${CMAKE_SOURCE_DIR}/tools/port/testing/test_context.py)
   add_test(NAME web_io COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} io)
   set_tests_properties(web_io PROPERTIES TIMEOUT 180)

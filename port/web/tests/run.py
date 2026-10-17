@@ -14,10 +14,10 @@ import importlib.util
 root = Path(__file__).resolve().parents[3]
 build = Path(sys.argv[1]).resolve()
 suite = sys.argv[2] if len(sys.argv) > 2 else 'boot'
-if suite == 'title' and not os.environ.get('DW1_DISC_DIR'):
+if suite == 'title' and not (os.environ.get('DW1_DISC_DIR') or os.environ.get('DW1_WEB_URL')):
     print('web_scene_title: DW1_DISC_DIR not set; skipped')
     sys.exit(77)
-if suite == 'io':
+if suite in ('io', 'launcher'):
     # Same sector/byte formula as pack/tests/test_pack.c; no disc bytes.
     data = bytes(((22 + i // 2048) * 31 + (24 + i % 2048) * 7) & 255 for i in range(5000))
     header = struct.pack('<8sII32sII8x', b'DW1PACK\0', 1, 1, bytes(32), 64, 2048)
@@ -32,15 +32,19 @@ if suite == 'io':
     corrupt[64 + 80] ^= 1
     (build / 'bad-index.pack').write_bytes(corrupt)
 
-spec = importlib.util.spec_from_file_location('serve', root / 'port/web/dev/serve.py')
-serve = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(serve)
-server = serve.http.server.ThreadingHTTPServer(('127.0.0.1', 0),
-    functools.partial(serve.Handler, directory=str(build)))
-thread = threading.Thread(target=server.serve_forever, daemon=True)
-thread.start()
-env = dict(os.environ, DW1_WEB_SUITE=suite, DW1_WEB_BUILD=str(build),
-           DW1_WEB_URL=f'http://127.0.0.1:{server.server_port}')
+env = dict(os.environ, DW1_WEB_SUITE=suite, DW1_WEB_BUILD=str(build))
+server = None
+if suite == 'title' and not env.get('DW1_WEB_URL'):
+    with (build / 'us.pack').open('rb') as pack_file:
+        (build / 'us.pack.sha256').write_text(hashlib.file_digest(pack_file, 'sha256').hexdigest() + '\n')
+if not env.get('DW1_WEB_URL'):
+    spec = importlib.util.spec_from_file_location('serve', root / 'port/web/dev/serve.py')
+    serve = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(serve)
+    server = serve.http.server.ThreadingHTTPServer(('127.0.0.1', 0),
+        functools.partial(serve.Handler, directory=str(build)))
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    env['DW1_WEB_URL'] = f'http://127.0.0.1:{server.server_port}'
 if suite == 'title':
     native = root / 'build/port/native-headless/scenes/title/run-1.ppm'
     env['DW1_NATIVE_TITLE_SHA'] = hashlib.sha256(native.read_bytes()).hexdigest()
@@ -57,5 +61,6 @@ try:
         (build / 'present-timing.json').write_text(json.dumps(timings, indent=2) + '\n')
     sys.exit(result.returncode)
 finally:
-    server.shutdown()
-    server.server_close()
+    if server:
+        server.shutdown()
+        server.server_close()
