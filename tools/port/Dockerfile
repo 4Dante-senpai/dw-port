@@ -105,7 +105,7 @@ RUN git init /tmp/pcsx && cd /tmp/pcsx && \
     git remote add origin https://github.com/grumpycoders/pcsx-redux.git && \
     git fetch --depth 1 origin ${PCSX_REDUX_SHA} && git checkout --detach FETCH_HEAD && \
     SUBMODULE_RETRY_ATTEMPTS=3 bash .github/scripts/update-submodules.sh && \
-    PKG_CONFIG_PATH=/opt/sdl3/native/lib/pkgconfig make -j2 CPPFLAGS_Release="-O1 -g0" && \
+    PKG_CONFIG_PATH=/opt/sdl3/native/lib/pkgconfig make -j3 CPPFLAGS_Release="-O1 -g0" && \
     make -C src/mips/openbios -j4 PREFIX=mipsel-linux-gnu FORMAT=elf32-tradlittlemips && \
     strip pcsx-redux && mkdir -p /out/libexec /out/share/pcsx-redux/resources && \
     cp pcsx-redux /out/libexec/ && cp src/mips/openbios/openbios.bin /out/share/pcsx-redux/ && \

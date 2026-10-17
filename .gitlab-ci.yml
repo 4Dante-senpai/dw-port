@@ -25,6 +25,7 @@ default:
 # Runs when a Dockerfile changes, or by hand; then pin the printed digests below.
 images:
   image: docker:27.3.1-cli
+  timeout: 3h                          # a cold PCSX-Redux build (story 3.1) exceeds the 1 h default
   variables:
     GIT_SUBMODULE_STRATEGY: none
   before_script: []
