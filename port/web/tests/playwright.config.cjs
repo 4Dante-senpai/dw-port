@@ -1,8 +1,8 @@
 const { defineConfig } = require('/opt/node_modules/@playwright/test');
 module.exports = defineConfig({
   testDir: __dirname,
-  testMatch: 'boot.spec.cjs',
-  outputDir: process.env.DW1_WEB_BUILD + '/playwright-results',
+  testMatch: (process.env.DW1_WEB_SUITE || 'boot') + '.spec.cjs',
+  outputDir: process.env.DW1_WEB_BUILD + '/playwright-results-' + (process.env.DW1_WEB_SUITE || 'boot'),
   reporter: 'line',
   timeout: 60000,
   workers: 1,

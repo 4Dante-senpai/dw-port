@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-11-2026 12:35
-last_updated: 2026-10-16
+last_updated: 2026-10-17
 project: dw-port
 project_key: NOKEY
 tracking_system: file-system
@@ -69,7 +69,7 @@ development_status:
 
   epic-4: in-progress
   4-1-el-juego-en-wasm-con-su-propio-hilo-y-presentación: done
-  4-2-worker-de-e-s-y-pantalla-de-título-en-el-navegador: backlog
+  4-2-worker-de-e-s-y-pantalla-de-título-en-el-navegador: done
   4-3-selección-del-disco-validación-y-pack-en-el-navegador: backlog
   4-4-pantallas-de-la-shell-web-y-capacidades: backlog
   4-5-teclado-y-gamepad: backlog

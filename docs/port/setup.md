@@ -303,3 +303,45 @@ solo argumento aunque su implementación consume dos. El port conserva el no-op
 cuando no existe un NPC con scriptId 12 y aborta si ese NPC existe; no inventa una
 animación. Esto no afecta el frame 0 probado, pero la fidelidad de esa ruta de
 scripts queda incompleta hasta reconstruir el valor de a1 del binario original.
+
+### Worker de E/S y título web (historia 4.2)
+
+El host de desarrollo admite `?pack=1`: antes del arranque, un worker dedicado
+abre `dw1/us.pack` en OPFS y recibe la memoria wasm compartida. El juego solicita
+rangos por un buzón y duerme con `Atomics.wait`. Nunca se carga el Pack completo
+en la memoria wasm de 64 MiB. El formato y el SHA del Manifest los comprueba el
+mismo `pack_open` que usa el ejecutable nativo. Un Pack ausente o inválido deja
+el error en `#status` y no ejecuta el juego.
+
+Dentro del contenedor con el toolchain instalado:
+
+```sh
+cmake --preset web
+cmake --build --preset web
+ctest --preset web
+```
+
+`web_io` es clase A: genera bytes sintéticos con la fórmula de `test_pack.c`,
+comprueba cuatro lectores concurrentes, errores de rango, esperas acotadas con
+respuestas demoradas, Pack ausente, header corrupto, Manifest ajeno e índice
+corrupto. `web_boot` conserva sus pruebas existentes. Sin `DW1_DISC_DIR`, los
+fixtures privados y `web_scene_title` salen con 77.
+
+Para clase B, primero compilar el preset `native-headless`; sus herramientas
+preparan el Pack y `tools/port/scenes/run.py title` produce dos capturas nativas
+idénticas como fixture de CTest:
+
+```sh
+cmake --preset native-headless
+cmake --build --preset native-headless
+DW1_DISC_DIR=/dw/game_rom/extracted ctest --test-dir build/port/web -R web_scene_title --output-on-failure
+```
+
+Playwright copia el Pack a OPFS por streaming desde el servidor local de pruebas,
+cierra el escritor y luego arranca el worker lector. Chromium y Firefox comparan
+el SHA-256 del PPM con la captura nativa, con y sin `?poison=1`. Este modo instala
+un getter que falla ante cualquier acceso a `navigator.storage` en los pthreads.
+`?capture-mark=runLandingScreen&capture-vblank=60&frames=10000&pack=1` publica el
+PPM en `Module.capture` y el resultado final en `Module.finished` (0 éxito).
+Los PPM y Packs solo quedan en `build/`; los JSON del título contienen hashes,
+modo de prueba y conteos. No hay selector ni constructor de Pack en el navegador.

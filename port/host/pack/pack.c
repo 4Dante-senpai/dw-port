@@ -13,6 +13,9 @@
 
 #include "../../psyq/port.h"
 #include "sha256.h"
+#ifdef __EMSCRIPTEN__
+#include "../web/io_mailbox.h"
+#endif
 
 #define RAW 2352u
 #define DATA 2048u
@@ -845,8 +848,21 @@ out:
 
 struct Pack {
 	FILE *f;
+	uint64_t size;
 	List l;
 };
+
+/* One positional seam for both validation and data; native has a single reader. */
+static int read_at(Pack *p, uint64_t offset, void *buf, uint32_t n)
+{
+	if (offset > p->size || n > p->size - offset) return -1;
+#ifdef __EMSCRIPTEN__
+	return io_read(offset, buf, n);
+#else
+	return fseeko(p->f, (off_t)offset, SEEK_SET) == 0 &&
+	       fread(buf, 1, n, p->f) == n ? 0 : -1;
+#endif
+}
 
 static void entry_decode(const uint8_t b[PACK_ENTRY_SIZE], Entry *e)
 {
@@ -874,12 +890,22 @@ Pack *pack_open(const char *pack, const char *manifest_sha256, char *err, size_t
 		fail(&c, "out of memory");
 		return NULL;
 	}
+#ifdef __EMSCRIPTEN__
+	p->size = io_size();
+	if (strcmp(pack, "dw1/us.pack") || !p->size) {
+		fail(&c, "cannot open %s", pack);
+		goto bad;
+	}
+#else
 	p->f = fopen(pack, "rb");
 	if (p->f == NULL) {
 		fail(&c, "cannot open %s", pack);
 		goto bad;
 	}
-	if (fread(h, 1, PACK_HEADER_SIZE, p->f) != PACK_HEADER_SIZE || memcmp(h, PACK_MAGIC, sizeof(PACK_MAGIC)) != 0 ||
+	if (fseeko(p->f, 0, SEEK_END) || ftello(p->f) < 0) goto corrupt;
+	p->size = (uint64_t)ftello(p->f);
+#endif
+	if (read_at(p, 0, h, PACK_HEADER_SIZE) != 0 || memcmp(h, PACK_MAGIC, sizeof(PACK_MAGIC)) != 0 ||
 	    rd32(h + 8) != PACK_FORMAT_VERSION) {
 		fail(&c, "%s is not a Pack of format version %u: build it from your disc with dw1-pack build", pack,
 		     PACK_FORMAT_VERSION);
@@ -903,7 +929,7 @@ Pack *pack_open(const char *pack, const char *manifest_sha256, char *err, size_t
 	for (i = 0; i < count; i++) {
 		Entry e;
 
-		if (fread(b, 1, PACK_ENTRY_SIZE, p->f) != PACK_ENTRY_SIZE) {
+		if (read_at(p, PACK_HEADER_SIZE + (uint64_t)i * PACK_ENTRY_SIZE, b, PACK_ENTRY_SIZE) != 0) {
 			goto corrupt;
 		}
 		entry_decode(b, &e);
@@ -917,7 +943,7 @@ Pack *pack_open(const char *pack, const char *manifest_sha256, char *err, size_t
 			goto bad;
 		}
 	}
-	if (fseeko(p->f, 0, SEEK_END) != 0 || ftello(p->f) != (off_t)pos) {
+	if (p->size != pos) {
 		goto corrupt;
 	}
 	return p;
@@ -969,5 +995,5 @@ int pack_read(Pack *p, const PackEntry *e, uint32_t offset, void *buf, uint32_t 
 	if (offset > e->size || n > e->size - offset) {
 		return -1;
 	}
-	return fseeko(p->f, (off_t)e->offset + offset, SEEK_SET) == 0 && fread(buf, 1, n, p->f) == n ? 0 : -1;
+	return read_at(p, (uint64_t)e->offset + offset, buf, n);
 }

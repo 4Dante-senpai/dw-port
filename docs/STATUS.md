@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-16
+Última actualización: 2026-10-17
 
 ## Modo de operación
 
@@ -13,7 +13,7 @@
 - M0 Entorno: **completo** (modo sin compilador matching).
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
-- M4 Web: **en curso** (4.1: Juego en wasm hasta frame 0 con presentación WebGL2).
+- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo).
 
 ## Hecho
 
@@ -190,9 +190,22 @@
   Suites web/nativo/ASan, clase B con disco y `make compare` verdes. Evidencia:
   `docs/implementation-artifacts/evidence/story-4-1/`.
 
+- Historia 4.2 (worker de E/S y título en el navegador): `port/web/io_worker.js` abre el handle
+  síncrono de OPFS (`dw1/us.pack`) antes del arranque y sirve lecturas posicionales por un buzón en
+  memoria wasm compartida (`port/host/web/io_mailbox.c`, un slot con mutex entre lectores); el hilo
+  del juego espera con `emscripten_futex_wait` y nunca toca OPFS. `pack.c` tiene una única costura
+  de lectura posicional (nativo `FILE*`, web buzón) con la misma validación. Escena `title` en web:
+  Chromium y Firefox dan el mismo SHA-256 que `native-headless`
+  (`14d5bb08…30e7e7`), también con `navigator.storage` envenenado en los pthreads (0 accesos
+  medidos; control positivo: 1 por lector). Clase A: 4 lectores concurrentes, 96 pedidos con bytes
+  verificados y espera acotada con respuestas demoradas; Pack ausente/corrupto y rangos inválidos.
+  Revisión (3 capas Codex): eliminado un mutex nativo especulativo y agregado el conteo real de
+  accesos al guard. Suites web (19), nativo, ASan y clase B con disco verdes. Evidencia:
+  `docs/implementation-artifacts/evidence/story-4-2/`.
+
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historia 4.1 cerrada. Próxima: historia 4.2 (worker de E/S y título en el navegador).
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Próxima: historia 4.3 (selección del disco, validación y Pack en el navegador).
 
 ## Bloqueos
 
@@ -213,7 +226,7 @@
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
 | Escenas que funcionan (nativo) | 1 (título, sin referencia) |
-| Escenas que funcionan (web) | 0 (frame 0 sin Pack en Chromium y Firefox) |
+| Escenas que funcionan (web) | 1 (título, igual a nativo, Chromium y Firefox) |
 | Llamadas con firma distinta inventariadas / sin resolver | 1031 / 0 (`fnptr_casts.tsv`) |
 
 ## Notas

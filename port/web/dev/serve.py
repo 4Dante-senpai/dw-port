@@ -15,6 +15,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
     def translate_path(self, path):
+        requested = urlsplit(path).path
+        if requested.startswith('/__fixture/'):
+            name = requested.removeprefix('/__fixture/')
+            if name in ('synthetic.pack', 'corrupt.pack', 'bad-index.pack', 'us.pack'):
+                return str(Path(self.directory) / name)
         if urlsplit(path).path in ('/', '/index.html', '/isolated-off/'):
             return str(Path(self.directory) / 'dw1.html')
         return super().translate_path(path)
