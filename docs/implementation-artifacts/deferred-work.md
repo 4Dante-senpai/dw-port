@@ -89,3 +89,7 @@
 - source_spec: `docs/implementation-artifacts/spec-e3-semilla-de-rand-del-bios-real.md`
   summary: Paridad de píxeles de New Game: `scene_newgame_state` solo informa el diff de imagen; el port difiere de la referencia en 402 píxeles (caja 87..217, 46..121) también con la semilla nueva.
   evidence: Revisión de E3 (blind-hunter y verification-gap). `run.py --state` captura el `ValueError` de imagen y sigue; con OpenBIOS parcheado la referencia ya coincide con SCPH-1001 (`48322f1c…e508`), así que una vez cerrado el diff podría exigirse el frame.
+
+- source_spec: `docs/implementation-artifacts/spec-e3-capturas-de-referencia-mas-rapidas.md`
+  summary: Incluir el SHA-256 del binario de PCSX-Redux en `state_fingerprint` para que `--reuse` no acepte referencias de otro emulador.
+  evidence: Con `reference_newgame_state --reuse`, reconstruir la imagen local con otro PCSX-Redux mantiene la huella (escena, scripts, símbolos, OpenBIOS) y reutiliza la referencia vieja; en CI lo cubre la clave de caché por `.gitlab-ci.yml`. Requiere cambiar la huella, que la historia excluía.

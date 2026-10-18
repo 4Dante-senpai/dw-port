@@ -24,10 +24,17 @@ Dentro de la imagen `dw-port`:
 DW1_DISC_DIR=/private/disc python3 -I -B tools/port/reference/capture.py title
 # Fijar o reemplazar el hash; solo con dos corridas idénticas:
 DW1_DISC_DIR=/private/disc python3 -I -B tools/port/reference/capture.py title --update
+# Reutilizar una referencia de estado válida:
+DW1_DISC_DIR=/private/disc python3 -I -B tools/port/reference/capture.py newgame \
+  --state --reuse --max-vblanks 40000 --timeout 1800
 python3 -I -B tools/port/reference/test_capture.py
 ```
 
-Cada corrida dura unos 2-3 minutos con el intérprete. Sin `.cue`, emulador o Xvfb, el script
+Las dos pasadas se ejecutan en paralelo, cada una con su directorio portable y Xvfb.
+Los displays iniciales son 199 y 299, con búsqueda automática si están ocupados. Se
+conservan intérprete y debugger; el timeout sigue siendo por pasada. Si una falla,
+se espera a la otra antes de salir y el error identifica su log; no queda sello válido.
+Cada corrida del título dura unos 2-3 minutos con el intérprete. Sin `.cue`, emulador o Xvfb, el script
 sale con 77 (`skipped`); ante un error o una diferencia, con 1. Las capturas `run-N.ppm`, los logs
 y `work-N/` (display crudo, progreso, configuración portable y tarjetas vacías) quedan en
 `build/reference/<id>/`, o bajo `DW1_REFERENCE_DIR` si se lo define fuera del repo (`--out`).
@@ -106,6 +113,30 @@ contar ejecuciones ajenas. Estas APIs se comprobaron en las fuentes del SHA fija
 (`src/core/pcsxffi.lua`, `pcsxlua.cc`, `pad.cc`) y mediante sondas en ejecución.
 
 ## Estado y semilla de rand
+
+`--reuse` exige `--state` y rechaza `--update`. Después de comprobar disco, emulador,
+Xvfb y BIOS, compara `state.sha256` con la huella actual y exige `run-1.state`,
+`run-2.state` y `run-1.ppm`. Si hay `reference_sha256`, comprueba además el SHA-256
+de esa PPM. Si todo coincide, imprime `reference_<id>: cached` y termina sin lanzar
+el emulador ni borrar archivos. Una huella distinta, archivos faltantes o un pin
+distinto provocan una captura completa; el sello se escribe solo tras validar
+determinismo, trazas y pin. Sin `--reuse`, se recaptura siempre.
+
+El fixture CTest `reference_newgame_state` usa `--reuse`. En CI, únicamente
+`native-disc` y `native-asan-disc` guardan `build/reference/` en la caché local del
+runner privado `dw1-data`, con `when: always` y clave derivada de `.gitlab-ci.yml`.
+Esa clave incluye el digest de la imagen que fija PCSX-Redux/OpenBIOS; la huella
+determina la validez de cada captura. Las referencias no se publican como artifacts.
+Una caché parcial sin sello válido se recaptura.
+
+Verificación local (2026-10-18): New Game pasa de 1560,271 s secuenciales (26 min)
+a 871,147 s en paralelo (14 min 31 s), un 44,2 % menos de espera bajo la carga de
+esta ejecución. Las dos trazas, ambos frames y el sello coinciden byte a byte con
+la captura secuencial; el frame conserva `48322f1c…e508`. Con la referencia válida, CTest
+`reference_newgame_state` termina en 0,13 s e imprime `reference_newgame: cached`,
+sin modificar los logs del emulador. Las mediciones usan este contenedor y el disco
+del dueño; los detalles y la comparación de tiempos están en Implementation Notes
+de `docs/implementation-artifacts/spec-e3-capturas-de-referencia-mas-rapidas.md`.
 
 `capture.py <id> --state` genera dos `run-N.state`, con lecturas después del despacho
 de cada VBlank y antes de volver al juego en modo legado; con `checkpoints`, en cada

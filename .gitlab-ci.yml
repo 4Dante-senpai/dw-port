@@ -58,6 +58,11 @@ web-objects:
 
 native-disc:
   extends: .class_b
+  cache:
+    key:
+      files: [.gitlab-ci.yml]
+    paths: [build/reference/]
+    when: always
   variables:
     DW1_DISC_DIR: /private/disc
   script:
@@ -69,6 +74,11 @@ native-disc:
 # Class B: the whole suite under ASan/UBSan, including the title scene (story 2.15).
 native-asan-disc:
   extends: .class_b
+  cache:
+    key:
+      files: [.gitlab-ci.yml]
+    paths: [build/reference/]
+    when: always
   variables:
     DW1_DISC_DIR: /private/disc
   script:
