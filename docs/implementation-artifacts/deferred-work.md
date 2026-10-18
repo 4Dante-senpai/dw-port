@@ -51,7 +51,7 @@
 
 - source_spec: `docs/implementation-artifacts/spec-3-1-emulador-de-referencia-y-captura-automatica.md`
   summary: Repetir la captura de referencia de `title` con el BIOS real del dueño (`capture.py title --bios <ruta>`, fuera del repo) y registrar en `docs/port/reference.md` si coincide con OpenBIOS o qué difiere (pregunta abierta 3 del PRD).
-  evidence: Decisión del dueño (2026-10-17, opción 1B): la historia 3.1 cierra con la referencia OpenBIOS marcada provisional; la corrida con BIOS real depende del dueño.
+  evidence: Decisión del dueño (2026-10-17, opción 1B): la historia 3.1 cierra con la referencia OpenBIOS marcada provisional; la corrida con BIOS real depende del dueño. Resuelto el 2026-10-18 con SCPH-1001: `title` coincide; en `newgame` coincide el estado, pero la semilla de `rand` del BIOS real es `0x24040001`, no 0 (`docs/port/reference.md`, "Resultado"). Queda abierta la decisión sobre `BIOS_RAND_SEED`.
 
 - source_spec: `docs/implementation-artifacts/spec-3-1-emulador-de-referencia-y-captura-automatica.md`
   summary: Verificar en `tools/port/reference/capture.lua` el efecto real de los inputs por VBlank (pulsación, mantenimiento y liberación en el latch previsto) con una secuencia no vacía.
