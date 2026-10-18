@@ -1,0 +1,13 @@
+ 1/12 Test #29: pack .............................   Passed    0.06 sec
+ 2/12 Test #34: scene_runner .....................   Passed    0.19 sec
+ 3/12 Test #35: scene_flags ......................   Passed    0.44 sec
+ 4/12 Test #36: scene_state_unit .................   Passed    0.55 sec
+ 5/12 Test #37: pack_disc ........................   Passed  193.67 sec
+ 6/12 Test #38: gte_tables_disc ..................   Passed    0.54 sec
+ 7/12 Test #39: scene_title ......................   Passed    7.47 sec
+ 8/12 Test #47: reference_title ..................   Passed  342.89 sec
+ 9/12 Test #40: scene_title_compare ..............   Passed    7.62 sec
+10/12 Test #41: reference_newgame_state ..........   Passed  1241.41 sec
+11/12 Test #42: scene_newgame_state ..............   Passed  512.44 sec
+12/12 Test #43: dw1_overlay ......................   Passed    0.47 sec
+100% tests passed, 0 tests failed out of 12
