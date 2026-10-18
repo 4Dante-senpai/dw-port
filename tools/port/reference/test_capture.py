@@ -247,7 +247,9 @@ class RunnerTests(unittest.TestCase):
         self.bin = Path(self.temp.name) / "bin"
         self.bin.mkdir()
         xvfb = self.bin / "xvfb-run"
-        xvfb.write_text('#!/bin/sh\nshift\nexec "$@"\n')
+        xvfb.write_text('#!/bin/sh\n[ "$1" = -a ] && [ "$2" = -n ] || exit 2\n'
+                        'case "$3:$PWD" in 199:*/work-1|299:*/work-2) ;; *) exit 2 ;; esac\n'
+                        'shift 3\nexec "$@"\n')
         xvfb.chmod(0o755)
         emulator = self.bin / "pcsx-redux"
         emulator.write_text('''#!/usr/bin/python3
@@ -258,6 +260,21 @@ mode = os.environ.get("FAKE_MODE", "ok")
 (work / "progress.txt").write_text("frame 0")
 if mode == "timeout": time.sleep(30)
 if mode == "fail": sys.exit(1)
+if mode in ("overlap", "fail-first", "fail-second", "timeout-second"):
+    (work / "started").touch()
+    other = work.parent / ("work-2" if work.name == "work-1" else "work-1")
+    deadline = time.monotonic() + 3
+    while not (other / "started").exists():
+        if time.monotonic() > deadline:
+            print("other pass did not start", flush=True)
+            sys.exit(2)
+        time.sleep(0.01)
+    if mode in ("fail-first", "fail-second", "timeout-second"):
+        failing = "work-1" if mode == "fail-first" else "work-2"
+        if work.name == failing:
+            if mode == "timeout-second": time.sleep(30)
+            sys.exit(1)
+        time.sleep(0.1)
 pixels = bytes(range(96))
 if mode == "different" and work.name == "work-2": pixels = pixels[::-1]
 if mode == "black": pixels = bytes(96)
@@ -394,6 +411,114 @@ if "--state" not in sys.argv:
         self.assertIn('["type"]="s16"', script)
         self.assertIn('["rand"]=2147500032', script)
         self.assertNotIn("reference_sha256", self.scene.read_text())
+
+    def test_passes_overlap(self):
+        self.state_fixture()
+        os.environ["FAKE_MODE"] = "overlap"
+        self.assertEqual(self.run_capture("--state"), 0)
+
+    def test_failed_pass_waits_for_other_without_stamp(self):
+        self.state_fixture()
+        for mode, failed, code in (("fail-first", 1, "1"), ("fail-second", 2, "1"),
+                                   ("timeout-second", 2, "wall timeout")):
+            with self.subTest(mode=mode):
+                self.assertEqual(self.run_capture("--state"), 0)
+                os.environ["FAKE_MODE"] = mode
+                with self.assertRaisesRegex(ValueError, f"run {failed}: {code};.*run-{failed}.log"):
+                    self.run_capture("--state", "--timeout", "1")
+                output = self.root / "build/reference/title"
+                other = 3 - failed
+                self.assertTrue((output / f"run-{other}.state").is_file())
+                self.assertTrue((output / f"run-{other}.ppm").is_file())
+                self.assertTrue((output / f"run-{failed}.log").is_file())
+                self.assertFalse((output / "state.sha256").exists())
+                os.environ["FAKE_MODE"] = "ok"
+
+    def test_reuse_hit_without_emulator_launch(self):
+        self.state_fixture()
+        self.assertEqual(self.run_capture("--state"), 0)
+        os.environ["FAKE_MODE"] = "fail"
+        self.assertEqual(self.run_capture("--state", "--reuse"), 0)
+        self.assertIn("reference_title: cached", self.stdout._new_target.getvalue())
+        with self.assertRaisesRegex(ValueError, "run 1: 1"):
+            self.run_capture("--state")
+
+    def test_reuse_changed_dependencies_recapture(self):
+        self.state_fixture()
+        for path, replacement in ((self.scene, lambda text: text.replace("capture_vblank = 60", "capture_vblank = 59")),
+                                  (self.bios, lambda text: text + "changed BIOS"),
+                                  (self.scene.parent / "run.py", lambda text: text + "\n# changed runner")):
+            with self.subTest(path=path):
+                self.assertEqual(self.run_capture("--state"), 0)
+                original = path.read_text()
+                path.write_text(replacement(original))
+                os.environ["FAKE_MODE"] = "fail"
+                with self.assertRaisesRegex(ValueError, "run 1: 1"):
+                    self.run_capture("--state", "--reuse")
+                self.assertFalse((self.root / "build/reference/title/state.sha256").exists())
+                os.environ["FAKE_MODE"] = "ok"
+                path.write_text(original)
+
+    def test_reuse_missing_files_recapture(self):
+        self.state_fixture()
+        for name in ("state.sha256", "run-1.state", "run-2.state", "run-1.ppm"):
+            with self.subTest(name=name):
+                self.assertEqual(self.run_capture("--state"), 0)
+                (self.root / "build/reference/title" / name).unlink()
+                os.environ["FAKE_MODE"] = "fail"
+                with self.assertRaisesRegex(ValueError, "run 1: 1"):
+                    self.run_capture("--state", "--reuse")
+                os.environ["FAKE_MODE"] = "ok"
+
+    def test_reuse_changed_pin_recaptures_and_validates(self):
+        self.state_fixture()
+        self.assertEqual(self.run_capture("--state"), 0)
+        self.scene.write_text(self.scene.read_text() + 'reference_sha256 = "' + '0' * 64 + '"\n')
+        os.environ["FAKE_MODE"] = "fail"
+        with self.assertRaisesRegex(ValueError, "run 1: 1"):
+            self.run_capture("--state", "--reuse")
+        os.environ["FAKE_MODE"] = "ok"
+        with self.assertRaisesRegex(ValueError, "reference hash mismatch"):
+            self.run_capture("--state", "--reuse")
+        self.assertFalse((self.root / "build/reference/title/state.sha256").exists())
+
+    def test_reuse_matching_pin(self):
+        self.state_fixture()
+        self.assertEqual(self.run_capture("--state"), 0)
+        ppm = self.root / "build/reference/title/run-1.ppm"
+        digest = hashlib.sha256(ppm.read_bytes()).hexdigest()
+        self.scene.write_text(self.scene.read_text() + f'reference_sha256 = "{digest}"\n')
+        os.environ["FAKE_MODE"] = "fail"
+        self.assertEqual(self.run_capture("--state", "--reuse"), 0)
+        ppm.write_bytes(b"damaged capture")
+        with self.assertRaisesRegex(ValueError, "run 1: 1"):
+            self.run_capture("--state", "--reuse")
+
+    def test_reuse_invalid_usage(self):
+        for args in (("--reuse",), ("--reuse", "--state", "--update")):
+            with self.assertRaisesRegex(ValueError, "--reuse requires --state.*--update"):
+                self.run_capture(*args)
+
+    def test_reuse_preflight_still_requires_disc_emulator_and_bios(self):
+        self.state_fixture()
+        self.assertEqual(self.run_capture("--state"), 0)
+        os.environ.pop("DW1_DISC_DIR")
+        self.assertEqual(self.run_capture("--state", "--reuse"), 77)
+        os.environ["DW1_DISC_DIR"] = str(self.disc)
+        self.bios.unlink()
+        with self.assertRaisesRegex(ValueError, "OpenBIOS missing"):
+            self.run_capture("--state", "--reuse")
+        (self.bin / "pcsx-redux").unlink()
+        self.assertEqual(self.run_capture("--state", "--reuse"), 77)
+
+    def test_reuse_owner_bios_identity(self):
+        self.state_fixture()
+        self.assertEqual(self.run_capture("--state", "--bios", str(self.bios)), 0)
+        os.environ["FAKE_MODE"] = "fail"
+        self.assertEqual(self.run_capture("--state", "--reuse", "--bios", str(self.bios)), 0)
+        # The OpenBIOS pin does not apply to owner BIOS captures, reused or not.
+        self.scene.write_text(self.scene.read_text() + 'reference_sha256 = "' + '0' * 64 + '"\n')
+        self.assertEqual(self.run_capture("--state", "--reuse", "--bios", str(self.bios)), 0)
 
     def test_state_failure_preserves_traces_and_invalidates_cache(self):
         self.state_fixture()
