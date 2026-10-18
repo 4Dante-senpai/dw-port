@@ -233,6 +233,9 @@ typedef struct {
 #endif
 #ifndef _LIBSPU_H_
 #define SPU_OFF 0
+#define SPU_ON 1
+#define SPU_OFF_ENV_ON 2
+#define SPU_ON_ENV_OFF 3
 typedef struct { short left, right; } SpuVolume;
 typedef struct {
     unsigned long mask;
@@ -306,6 +309,7 @@ void DecDCTout(unsigned long *buf, int size);
 /* Port internals. */
 extern int Vcount;
 void psyq_raise_irq(int irq); /* runs the InterruptCallback of line irq */
+void psyq_libspu_reset(void);
 void psyq_libetc_reset(void);
 void psyq_libapi_reset(void);
 void psyq_libc_reset(void);

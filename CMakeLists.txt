@@ -134,7 +134,7 @@ target_compile_options(dw1_game_objs PRIVATE
   -include ${CMAKE_SOURCE_DIR}/port/psyq/include/port_game.h)
 
 # Hardware models (CD over the Pack and GTE).
-add_library(dw1_backend STATIC port/backend/cdrom.c port/backend/gte.c
+add_library(dw1_backend STATIC port/backend/cdrom.c port/backend/gte.c port/backend/spu.c
   port/backend/gpu_soft/gpu_soft.c)
 target_link_libraries(dw1_backend PUBLIC dw1_pack_lib)
 target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
@@ -149,6 +149,27 @@ target_link_libraries(dw1_psyq PUBLIC Threads::Threads dw1_backend)
 target_compile_options(dw1_psyq PRIVATE -Wall -Wextra -Werror -fno-strict-aliasing)
 
 enable_testing()
+# SPU L1 runs the identical C implementation on native, sanitizers and Node/WASM.
+add_test(NAME spu_vectors COMMAND python3 -I -B
+  ${CMAKE_SOURCE_DIR}/tools/port/audio/spu_vectors.py --check)
+foreach(suite spu libspu)
+  if(suite STREQUAL "spu")
+    set(test_source port/backend/tests/test_spu.c)
+  else()
+    set(test_source port/psyq/tests/test_libspu.c)
+  endif()
+  add_executable(test_${suite} ${test_source})
+  target_compile_options(test_${suite} PRIVATE -Wall -Wextra -Werror)
+  target_link_libraries(test_${suite} dw1_psyq)
+  if(EMSCRIPTEN)
+    find_program(DW1_NODE_EXECUTABLE node REQUIRED)
+    add_test(NAME ${suite} COMMAND ${DW1_NODE_EXECUTABLE} $<TARGET_FILE:test_${suite}>)
+  else()
+    add_test(NAME ${suite} COMMAND test_${suite})
+  endif()
+  set_tests_properties(${suite} PROPERTIES TIMEOUT 180)
+endforeach()
+
 if(NOT EMSCRIPTEN)
   add_executable(test_gpu port/backend/tests/test_gpu.c)
   target_link_libraries(test_gpu dw1_backend)

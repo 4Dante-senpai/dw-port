@@ -6,6 +6,8 @@
 #include <string.h>
 
 #include "../backend/gpu.h"
+#include "../backend/spu.h"
+#include "psyq.h"
 #include "../host/plat.h"
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -65,6 +67,7 @@ static void trace_event(uint64_t cycle, int kind, void *arg)
 
 static void capture_vblank(void)
 {
+	spu_sync();
 	if (!marked || (uint32_t)(clock_vblanks() - mark_vblank) < capture_config.vblank)
 		return;
 	static uint32_t pixels[640 * 480];
@@ -179,6 +182,7 @@ int port_run_game(long frame_count, int until_overlay, const PortCapture *config
 	if (config)
 		capture_config = *config;
 	clock_reset();
+	psyq_libspu_reset();
 	port_overlay_snapshot_all();
 	/* Every object an OT can point to must be in the 16 MB window (AD-5); fatal in any build. */
 	if (!ps1_in_window(game_stack) || !ps1_in_window(game_stack + GAME_STACK_SIZE - 1) ||
