@@ -104,7 +104,9 @@ lado. Las dos ejecuciones de cada lado deben seguir siendo deterministas.
 
 La referencia de estado se genera automáticamente si falta o cambia la huella
 de la escena, variables, símbolos, adaptador o runner, con identidad del BIOS
-(`openbios` o SHA-256 del BIOS externo). El sello se escribe tras validar toda
+(SHA-256 de `openbios.bin` o del BIOS externo; fallback `openbios` si falta
+el archivo por defecto). Cambiar el binario de OpenBIOS invalida las referencias
+cacheadas. El sello se escribe tras validar toda
 la captura, incluido el hash fijado de imagen. Las dos trazas de referencia deben
 ser idénticas byte a byte, incluidos sus VBlanks. Los errores conservan las trazas
 y nombran la primera variable/VBlank o el índice de llamada a `rand` distinto.
@@ -118,6 +120,8 @@ selectores de nombre → diálogos de introducción → primer mapa. Start confi
 nombres y Cross avanza los diálogos; los inputs de cada tramo parten de su propio
 punto de control. `randomLimit#17` termina la captura antes de la siguiente llamada
 a `rand`, después de 16 llamadas naturales desde la marca.
+
+### Evidencia anterior al cambio de semilla (OpenBIOS sin parche, semilla 0)
 
 La corrida nativa directa alcanza ese punto en marca+13518. Las primeras salidas
 son `14136, 3074, 29727, 27909`; la decimosexta es `28128`. La inicialización del
@@ -151,3 +155,14 @@ generadas. Se verificaron además el título con ASan, `gte_tables_disc` y
 por build coinciden en estado y `rand`. Evidencia: `build/ctest-scenes-final.log`,
 `build/scene-newgame-asan-verified.log`, `build/reference-newgame-renewed.log`,
 `build/ctest-native-complete.log` y `build/ctest-asan-complete.log`.
+
+### Semilla de SCPH-1001 (2026-10-18)
+
+El port adopta `0x24040001` y la imagen parchea OpenBIOS con el mismo valor,
+sin cambiar LCG, conteo de llamadas ni trazas. Las primeras salidas naturales
+esperadas de New Game son `11315, 12212, 7201, 23373`, medidas con SCPH-1001.
+Los hashes y tiempos de la sección anterior son evidencia histórica de la semilla 0.
+Con OpenBIOS parcheado, la referencia regenerada coincide con SCPH-1001 en estado,
+`rand` y frame (`48322f1c…e508`); los runners nativo y ASan pasan contra ella
+(`reference.md`, "Verificación con OpenBIOS parcheado"). No se fija ese hash en el TOML:
+la escena sigue comparando estado y `rand`.

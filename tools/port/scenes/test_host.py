@@ -64,7 +64,7 @@ if len(sys.argv) > 4:
             assert process.returncode == 0, (process.returncode, process.stdout, process.stderr)
             rows = trace.read_text().splitlines()
             assert len(rows) == 30, rows  # 5 VBlanks * 5 variables + 5 rand calls
-            assert rows[0] == "0 rand 0 0", rows
+            assert rows[0] == "0 rand 0 20346", rows
             for k in range(1, 6):
                 assert f"{k} state TEST_VALUES[0] -32768" in rows
                 assert f"{k} state TEST_VALUES[1] 32767" in rows

@@ -284,6 +284,9 @@ if "--state" not in sys.argv:
         self.bios_patch = patch.object(capture, "OPENBIOS", self.bios)
         self.bios_patch.start()
         self.addCleanup(self.bios_patch.stop)
+        runner_bios_patch = patch.object(capture._runner, "OPENBIOS", self.bios)
+        runner_bios_patch.start()
+        self.addCleanup(runner_bios_patch.stop)
         self.root_patch = patch.object(capture, "ROOT", self.root)
         self.root_patch.start()
         self.addCleanup(self.root_patch.stop)
@@ -414,13 +417,35 @@ if "--state" not in sys.argv:
         self.state_fixture()
         scene = capture.tomllib.loads(self.scene.read_text())
         baseline = capture._runner.state_fingerprint(scene)
-        self.assertEqual(self.run_capture("--state", "--bios", str(self.bios)), 0)
+        owner_bios = Path(self.temp.name) / "owner-bios.bin"
+        owner_bios.write_bytes(b"different owner BIOS fixture")
+        self.assertEqual(self.run_capture("--state", "--bios", str(owner_bios)), 0)
         stamp = self.root / "build/reference/title/state.sha256"
         self.assertNotEqual(stamp.read_text().strip(), baseline)
         self.assertEqual(stamp.read_text().strip(), capture._runner.state_fingerprint(
-            scene, hashlib.sha256(self.bios.read_bytes()).hexdigest()))
+            scene, hashlib.sha256(owner_bios.read_bytes()).hexdigest()))
         (self.scene.parent / "run.py").write_text('# changed runner')
         self.assertNotEqual(capture._runner.state_fingerprint(scene), baseline)
+
+    def test_openbios_binary_invalidates_state_cache(self):
+        self.state_fixture()
+        scene = capture.tomllib.loads(self.scene.read_text())
+        identity = hashlib.sha256(self.bios.read_bytes()).hexdigest()
+        baseline = capture._runner.state_fingerprint(scene)
+        self.assertEqual(baseline, capture._runner.state_fingerprint(scene, identity))
+        self.assertNotEqual(baseline, capture._runner.state_fingerprint(scene, "openbios"))
+        self.assertEqual(self.run_capture("--state"), 0)
+        stamp = self.root / "build/reference/title/state.sha256"
+        self.assertEqual(stamp.read_text().strip(), baseline)
+        self.bios.write_bytes(b"patched OpenBIOS seed")
+        changed = capture._runner.state_fingerprint(scene)
+        self.assertNotEqual(changed, baseline)
+        self.assertEqual(self.run_capture("--state"), 0)
+        self.assertEqual(stamp.read_text().strip(), changed)
+        self.bios.unlink()
+        self.assertEqual(capture._runner.bios_fingerprint(), "openbios")
+        self.assertEqual(capture._runner.state_fingerprint(scene),
+                         capture._runner.state_fingerprint(scene, "openbios"))
 
     def test_state_preflight_without_disc(self):
         self.state_fixture()

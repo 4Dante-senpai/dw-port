@@ -1,0 +1,50 @@
+ 1/49 Test  #1: spu_vectors ......................   Passed    0.77 sec
+ 2/49 Test  #2: spu ..............................   Passed    0.59 sec
+ 3/49 Test  #3: libspu ...........................   Passed    0.01 sec
+ 4/49 Test  #4: gpu ..............................   Passed    0.45 sec
+ 5/49 Test  #5: libgs ............................   Passed    0.01 sec
+ 6/49 Test  #6: libgpu ...........................   Passed    0.02 sec
+ 7/49 Test  #7: gte_tables .......................   Passed    0.11 sec
+ 8/49 Test #31: pack .............................   Passed    0.01 sec
+ 9/49 Test  #8: libgte ...........................   Passed    0.00 sec
+10/49 Test  #9: pre_commit .......................   Passed    0.08 sec
+11/49 Test #10: rts_info .........................   Passed    0.08 sec
+12/49 Test #11: ovl_starts .......................   Passed    0.06 sec
+13/49 Test #12: tu_list ..........................   Passed    0.18 sec
+14/49 Test #13: gen_stubs ........................   Passed    0.80 sec
+15/49 Test #14: inventory ........................   Passed   11.33 sec
+16/49 Test #15: preproc_check ....................   Passed   22.81 sec
+17/49 Test #16: test_preproc_check ...............   Passed  109.46 sec
+18/49 Test #17: ps1_ram_addr_range ...............   Passed    0.04 sec
+19/49 Test #18: psyq_prototypes ..................   Passed    0.36 sec
+20/49 Test #19: setjmp ...........................   Passed    0.01 sec
+21/49 Test #20: ps1mem ...........................   Passed    0.01 sec
+22/49 Test #21: clock ............................   Passed    0.01 sec
+23/49 Test #22: libc_heap_pad ....................   Passed    0.00 sec
+24/49 Test #23: gte ..............................   Passed    0.01 sec
+25/49 Test #24: overlay_O0 .......................   Passed    0.00 sec
+26/49 Test #25: overlay_O2 .......................   Passed    0.00 sec
+27/49 Test #26: overlay_sections .................   Passed    0.02 sec
+28/49 Test #27: overlay_objects ..................   Passed    1.34 sec
+29/49 Test #28: frame0 ...........................   Passed    0.28 sec
+30/49 Test #29: dw1_bad_args .....................   Passed    0.00 sec
+31/49 Test #30: watchdog .........................   Passed    3.26 sec
+32/49 Test #32: av_stubs .........................   Passed    0.17 sec
+33/49 Test #33: libcd ............................   Passed    0.04 sec
+34/49 Test #34: libgte_host ......................   Passed    0.09 sec
+35/49 Test #35: dw1_foreign_pack .................   Passed    0.00 sec
+36/49 Test #36: scene_runner .....................   Passed    0.32 sec
+37/49 Test #37: scene_flags ......................   Passed    0.08 sec
+38/49 Test #38: scene_state_unit .................   Passed    0.11 sec
+39/49 Test #39: pack_disc ........................   Passed   37.95 sec
+40/49 Test #40: gte_tables_disc ..................   Passed    0.81 sec
+41/49 Test #41: scene_title ......................   Passed    2.05 sec
+42/49 Test #49: reference_title ..................   Passed  357.07 sec
+43/49 Test #42: scene_title_compare ..............   Passed    4.17 sec
+44/49 Test #43: reference_newgame_state ..........   Passed  1437.33 sec
+45/49 Test #44: scene_newgame_state ..............   Passed  124.78 sec
+46/49 Test #45: dw1_overlay ......................   Passed    0.24 sec
+47/49 Test #46: fnptr_scanner ....................   Passed    0.35 sec
+48/49 Test #47: fnptr_inventory ..................   Passed   13.75 sec
+49/49 Test #48: reference_capture_unit ...........   Passed    7.65 sec
+100% tests passed, 0 tests failed out of 49
