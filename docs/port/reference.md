@@ -8,9 +8,12 @@ solo pasan el ejecutable (`/usr/local/libexec/pcsx-redux`, enlazado en `/usr/loc
 `openbios.bin`, las licencias y `version.json`. La imagen final suma Xvfb y las bibliotecas
 de runtime. El build termina con `xvfb-run -a pcsx-redux -version`.
 
-La referencia con **OpenBIOS es provisional** hasta compararla con el BIOS real del dueño
-(`docs/implementation-artifacts/deferred-work.md`). No hay BIOS de Sony ni datos del disco en la
-imagen ni en el repositorio. PCSX-Redux es GPL-2.0-or-later y se distribuye como ejecutable
+La comparación local con SCPH-1001 del dueño derivó la semilla de arranque `0x24040001`.
+El port la adopta y el Dockerfile parchea OpenBIOS con ese valor en una capa posterior
+al build del emulador, recompilando solo OpenBIOS. El build falla con un mensaje explícito
+si no queda la declaración esperada de `s_currentSeed`. Con ese parche, OpenBIOS reproduce el
+estado, los `rand` y el frame de New Game de SCPH-1001 (ver "Resultado"). No hay BIOS de Sony ni
+datos del disco en la imagen ni en el repositorio. PCSX-Redux es GPL-2.0-or-later y se distribuye como ejecutable
 separado del port; OpenBIOS es MIT.
 
 ## Uso
@@ -113,14 +116,15 @@ distinta. NULL se escribe `0`; globales `símbolo+offset`; el resto de RAM se no
 a `0x80000000 | offset`. El breakpoint en `rand` (`0x8009127c`) registra cada salida
 al alcanzar su `ra`, junto al VBlank relativo a la marca.
 
-OpenBIOS inicializa `s_currentSeed` a **0** (`src/mips/openbios/kernel/libcmisc.c`,
+OpenBIOS upstream inicializa `s_currentSeed` a **0** (`src/mips/openbios/kernel/libcmisc.c`,
 submódulo nugget `361f3f6a…`). Una sonda aislada al primer `VSync` llamó al `rand`
 original 16 veces y observó:
 `0, 21468, 9988, 22117, 3498, 16927, 16045, 19741, 12122, 8410, 12261, 27052,
 5659, 9758, 21087, 25875` (`build/reference/seed-probe/run.log`). Son las salidas del
 LCG `seed = seed * 0x41c64e6d + 0x3039`, `(seed >> 16) & 0x7fff`, con aritmética de
-32 bits. El port adopta esa semilla; sigue siendo provisional respecto al BIOS del
-dueño. La sonda cambia el PC solo en el emulador de referencia: no sustituye la
+32 bits. Esta medición corresponde al OpenBIOS sin parche; el port ahora adopta
+`0x24040001`, con primeras salidas `20346, 17442, 3669, 9391, 11839`. El LCG y el
+conteo de llamadas se conservan. La sonda cambia el PC solo en el emulador de referencia: no sustituye la
 exigencia de 16 llamadas producidas por la escena con inputs.
 
 La captura nueva no requiere hash fijado de imagen; compara determinismo de ambas
@@ -182,8 +186,30 @@ LCG. Invirtiendo el LCG, la semilla queda exactamente **206 llamadas** antes de 
 salida natural (la misma cantidad que con OpenBIOS, cuyas salidas son contiguas desde la
 semilla 0 en la posición 206). Esa semilla es `0x24040001`. El bit 31 no influye en las
 salidas, así que `0xA4040001` es equivalente. Con SCPH-1001 el juego no arranca con semilla 0:
-la hipótesis `BIOS_RAND_SEED 0u` (`port/psyq/libc.c:9`) es correcta para OpenBIOS, pero no para
-el BIOS real.
+la semilla 0 era correcta para OpenBIOS sin parche, pero no para el BIOS real.
+
+**Decisión adoptada (2026-10-18):** semilla del BIOS real en el port y OpenBIOS
+parcheado, sin depender del BIOS propietario al publicar. La identidad por defecto
+del sello de estado es el SHA-256 de `/usr/local/share/pcsx-redux/openbios.bin`
+(fallback `openbios` solo si falta el archivo). Así, reconstruir OpenBIOS invalida
+las referencias viejas, incluso si la definición de la escena no cambió.
+
+**Verificación con OpenBIOS parcheado (2026-10-18):** imagen local reconstruida, `openbios.bin`
+SHA-256 `4ddea14132380f1aa6c303e45b417e1ead628d5c8c78ad678dcf2f9404832189`.
+
+- `title`: `56132366…260d`, sin cambios.
+- `newgame --state`: dos corridas idénticas byte a byte. Ignorando solo la columna de VBlank,
+  la traza es idéntica a la de SCPH-1001 (`build/reference-owner/newgame/run-1.state`): 15
+  variables en los 9 puntos y los 16 `rand` (`11315, 12212, 7201, 23373, …`). El frame también
+  coincide: `48322f1c…e508`, igual que con el BIOS del dueño. Los VBlanks siguen difiriendo
+  (arranque y tiempos de CD del BIOS real); no se comparan.
+- Suites con disco: `native-headless` 49/49 y `native-asan` 47/47 sin omisiones;
+  `ctest_no_skip.sh` con el filtro de `native-disc` 12/12 en ambos presets. `make compare` OK.
+
+Logs locales (no versionados): `build/e3-reference-title.log`, `build/e3-reference-newgame.log`,
+`build/e3-ctest-native-headless-disc.log`, `build/e3-ctest-native-asan-disc.log` y
+`build/e3-ctest-*-noskip.log`. En CI, la imagen se publica con el job `images` de la rama de la
+historia y su digest se fija en `.gitlab-ci.yml`.
 
 Sin verificar con el BIOS real: el contenido de RAM[0] que usa la búsqueda de Jijimon
 (`src-changes.md`, historia 3.3).

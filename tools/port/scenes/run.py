@@ -11,6 +11,7 @@ import sys
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[3]
+OPENBIOS = Path("/usr/local/share/pcsx-redux/openbios.bin")
 
 
 def read_ppm(path):
@@ -209,7 +210,16 @@ def state_variables(path, symbols_path, binary=None):
     return variables
 
 
-def state_fingerprint(scene, bios_identity="openbios"):
+def bios_fingerprint(path=None):
+    try:
+        return hashlib.sha256((OPENBIOS if path is None else path).read_bytes()).hexdigest()
+    except FileNotFoundError:
+        return "openbios"
+
+
+def state_fingerprint(scene, bios_identity=None):
+    if bios_identity is None:
+        bios_identity = bios_fingerprint()
     definition = {key: scene.get(key) for key in ("mark", "capture_vblank", "inputs", "inputs_from", "expect_rand", "checkpoints", "window")}
     content = json.dumps([definition, bios_identity], sort_keys=True).encode()
     for name in ("tools/port/scenes/state_vars.txt", "config/us/symbols.txt",

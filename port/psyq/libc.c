@@ -3,10 +3,10 @@
 
 #include "psyq.h"
 
-/* OpenBIOS nugget 361f3f6a: kernel/libcmisc.c zero-initializes s_currentSeed.
- * Provisional until the owner BIOS comparison. Verified return trace: docs/port/reference.md. */
+/* SCPH-1001 startup seed, derived 206 calls before the natural New Game trace.
+ * Derivation and matching OpenBIOS patch: docs/port/reference.md. */
 __attribute__((weak)) void port_rand_trace(int value);
-#define BIOS_RAND_SEED 0u
+#define BIOS_RAND_SEED 0x24040001u
 static uint32_t rand_state = BIOS_RAND_SEED;
 
 /* asm:asm/us/main/psyq/libc.s:rand -- BIOS A(2Fh). Unsigned arithmetic wraps at 32 bits. */
@@ -25,7 +25,7 @@ void srand(unsigned int seed)
 	rand_state = seed;
 }
 
-/* asm: BIOS startup state for A(2Fh), using the provisional OpenBIOS seed above. */
+/* asm: BIOS startup state for A(2Fh), using the measured SCPH-1001 seed above. */
 void psyq_libc_reset(void)
 {
 	rand_state = BIOS_RAND_SEED;
