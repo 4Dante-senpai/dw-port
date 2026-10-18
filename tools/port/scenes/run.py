@@ -2,6 +2,7 @@
 """Run a native scene twice; optionally compare RGB555 against its pinned reference."""
 import argparse
 import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -102,39 +103,305 @@ def compare_capture(capture, scene, scene_id, frame):
     return 0
 
 
+def validate_scene(scene):
+    if type(scene.get("capture_vblank")) is not int or not 0 < scene["capture_vblank"] <= 0xffffffff:
+        raise ValueError("capture_vblank must be a positive integer")
+    if scene.get("inputs_from", "frame0") not in ("frame0", "mark"):
+        raise ValueError("inputs_from must be frame0 or mark")
+    if type(scene.get("expect_rand", False)) is not bool:
+        raise ValueError("expect_rand must be boolean")
+    if not isinstance(scene.get("inputs", []), list):
+        raise ValueError("inputs must be an array of tables")
+    checkpoints = scene.get("checkpoints", [])
+    if not isinstance(checkpoints, list) or any(not isinstance(cp, str) or not re.fullmatch(
+            r"[A-Za-z_][\w.$]*(?:#[1-9][0-9]*)?", cp) for cp in checkpoints) or len(set(checkpoints)) != len(checkpoints):
+        raise ValueError("checkpoints must be unique symbol or symbol#n strings")
+    if "checkpoints" in scene and not checkpoints:
+        raise ValueError("empty checkpoints")
+    if type(scene.get("window", 0)) is not int or not 0 <= scene.get("window", 0) <= 0xffffffff:
+        raise ValueError("window must be a nonnegative integer")
+    if any("#" in cp and int(cp.rsplit("#", 1)[1]) > 0xffffffff for cp in checkpoints):
+        raise ValueError("checkpoint occurrence exceeds uint32")
+    previous = (-1, -1)
+    for event in scene.get("inputs", []):
+        keys = {"after", "vblank", "buttons"} if checkpoints else {"vblank", "buttons"}
+        if (not isinstance(event, dict) or set(event) != keys
+                or type(event["vblank"]) is not int or not 0 <= event["vblank"] <= 0xffffffff
+                or not isinstance(event["buttons"], list)
+                or any(type(b) is not int or not 0 <= b <= 15 for b in event["buttons"])):
+            raise ValueError("inputs require increasing vblank and buttons (PS1 bit indices 0..15)")
+        if checkpoints and event["after"] not in checkpoints:
+            raise ValueError(f"unknown input checkpoint: {event['after']}")
+        position = (checkpoints.index(event["after"]) if checkpoints else 0, event["vblank"])
+        if position <= previous:
+            raise ValueError("inputs must increase in checkpoint and vblank order")
+        previous = position
+
+
+def checkpoint_symbols(scene, path, binary=None):
+    if not scene.get("checkpoints"):
+        return []
+    source = path.read_text()
+    symbols = {name: int(address, 16) for name, address in re.findall(
+        r"^([\w.$]+)\s*=\s*(0x[0-9a-fA-F]+);", source, re.M)}
+    native = None
+    if binary is not None:
+        result = subprocess.run(["nm", "-D", "--defined-only", str(binary)], check=True,
+                                capture_output=True, text=True)
+        native = set(re.findall(r"^[0-9a-fA-F]+\s+[Tt]\s+(\S+)$", result.stdout, re.M))
+    result = []
+    for label in scene.get("checkpoints", []):
+        name, _, occurrence = label.partition("#")
+        if name not in symbols:
+            raise ValueError(f"missing reference checkpoint symbol: {name}")
+        if native is not None and name not in native:
+            raise ValueError(f"missing native checkpoint symbol: {name}")
+        if native is not None:
+            assembly = subprocess.run(["objdump", "-d", "--disassemble=" + name, str(binary)],
+                                      check=True, capture_output=True, text=True).stdout
+            if not re.search(r"\bcall\w*\s+[^\n]*<__cyg_profile_func_enter>", assembly):
+                raise ValueError(f"native checkpoint function is not instrumented: {name}")
+        result.append(dict(label=label, address=symbols[name], occurrence=int(occurrence or 1),
+                           window=scene.get("window", 0)))
+    return result
+
+
+def state_variables(path, symbols_path, binary=None):
+    symbols = {name: int(address, 16) for name, address in re.findall(
+        r"^([\w.$]+)\s*=\s*(0x[0-9a-fA-F]+);", symbols_path.read_text(), re.M)}
+    native = None
+    if binary is not None:
+        result = subprocess.run(["nm", "-D", "-S", "--defined-only", str(binary)], check=True,
+                                capture_output=True, text=True)
+        native = {m[2]: (int(m[0], 16), int(m[1], 16)) for m in re.findall(
+            r"^([0-9a-fA-F]+)\s+([0-9a-fA-F]+)\s+[A-Za-z]\s+(\S+)$", result.stdout, re.M)}
+    variables = []
+    seen = set()
+    for line in path.read_text().splitlines():
+        line = line.split("#", 1)[0].strip()
+        if not line:
+            continue
+        match = re.fullmatch(r"([\w.$]+)\s+(u8|s8|u16|s16|u32|s32|ptr)(?:\[([0-9]+)\])?", line)
+        if not match:
+            raise ValueError(f"invalid state variable declaration: {line}")
+        name, kind, count = match.groups()
+        count = int(count or 1)
+        width = 4 if kind == "ptr" else int(kind[1:]) // 8
+        if count <= 0:
+            raise ValueError(f"invalid state variable count: {name}")
+        if name in seen:
+            raise ValueError(f"duplicate state variable: {name}")
+        seen.add(name)
+        if name not in symbols:
+            raise ValueError(f"missing reference symbol: {name}")
+        if not 0x80010000 <= symbols[name] < 0x80200000:
+            raise ValueError(f"state variable is not game RAM: {name}")
+        if symbols[name] + count * width > 0x80200000:
+            raise ValueError(f"state variable exceeds game RAM: {name}")
+        if native is not None:
+            if name not in native:
+                raise ValueError(f"missing native symbol: {name}")
+            if count * width > native[name][1]:
+                raise ValueError(f"state variable exceeds native symbol: {name}")
+        variables.append(dict(name=name, type=kind, count=count, address=symbols[name], width=width))
+    if not variables:
+        raise ValueError("empty state vars")
+    return variables
+
+
+def state_fingerprint(scene, bios_identity="openbios"):
+    definition = {key: scene.get(key) for key in ("mark", "capture_vblank", "inputs", "inputs_from", "expect_rand", "checkpoints", "window")}
+    content = json.dumps([definition, bios_identity], sort_keys=True).encode()
+    for name in ("tools/port/scenes/state_vars.txt", "config/us/symbols.txt",
+                 "tools/port/reference/capture.lua", "tools/port/reference/capture.py",
+                 "tools/port/scenes/run.py"):
+        content += (ROOT / name).read_bytes()
+    return hashlib.sha256(content).hexdigest()
+
+
+def read_state(path, variables, checkpoint, checkpoints=None, window=0):
+    if checkpoints:
+        return read_checkpoint_state(path, variables, checkpoints, window)
+    records = []
+    expected = [f"{v['name']}[{i}]" for v in variables for i in range(v['count'])]
+    types = {f"{v['name']}[{i}]": v["type"] for v in variables for i in range(v["count"])}
+    samples = {}
+    rand_index = 0
+    previous = 0
+    for line in path.read_text().splitlines():
+        fields = line.split()
+        if len(fields) != 4 or not fields[0].isdigit():
+            raise ValueError(f"invalid state trace: {path}: {line}")
+        k, kind, name, value = int(fields[0]), *fields[1:]
+        if not previous <= k <= checkpoint:
+            raise ValueError(f"invalid VBlank in state trace: {path}: {k}")
+        previous = k
+        if kind == "state":
+            if name not in types:
+                raise ValueError(f"unknown variable in state trace: {name}")
+            kind_type = types[name]
+            if kind_type == "ptr":
+                if not re.fullmatch(r"0|0x80[0-1][0-9a-f]{5}|[\w.$]+\+[0-9]+", value):
+                    raise ValueError(f"invalid normalized pointer: {value}")
+            else:
+                width = int(kind_type[1:])
+                low = -(1 << (width - 1)) if kind_type[0] == "s" else 0
+                high = (1 << (width - (kind_type[0] == "s"))) - 1
+                if not re.fullmatch(r"-?[0-9]+", value) or not low <= int(value) <= high:
+                    raise ValueError(f"invalid {kind_type} value: {value}")
+            samples.setdefault(k, []).append(name)
+        elif kind == "rand" and name == str(rand_index) and value.isdigit() and 0 <= int(value) <= 32767:
+            rand_index += 1
+        else:
+            raise ValueError(f"invalid state trace record: {line}")
+        records.append((k, kind, name, value))
+    if set(samples) != set(range(1, checkpoint + 1)) or any(names != expected for names in samples.values()):
+        raise ValueError(f"incomplete state trace: {path}")
+    return records
+
+
+def read_checkpoint_state(path, variables, checkpoints, window):
+    # Reuse the legacy value/type validator on each complete sample, including offset zero.
+    rows = path.read_text().splitlines()
+    samples, calls, origins = {}, [], {}
+    last_time = -1
+    current_order = -1
+    for line in rows:
+        fields = line.split()
+        if len(fields) == 4 and fields[1] == "rand":
+            k, _, index, value = fields
+            if (not k.isdigit() or int(k) < last_time or index != str(len(calls))
+                    or not value.isdigit() or not 0 <= int(value) <= 32767):
+                raise ValueError(f"invalid rand record: {line}")
+            last_time = int(k)
+            calls.append((int(k), "rand", index, value))
+            continue
+        if (len(fields) != 6 or fields[0] not in checkpoints or fields[3] != "state"
+                or not fields[1].isdigit() or not fields[2].isdigit()):
+            raise ValueError(f"invalid checkpoint state trace: {line}")
+        label, relative, absolute, _, name, value = fields
+        relative, absolute = int(relative), int(absolute)
+        if not 0 <= relative <= window or absolute < last_time or absolute < relative:
+            raise ValueError(f"invalid checkpoint VBlank: {line}")
+        if label not in origins:
+            if relative or checkpoints.index(label) != current_order + 1:
+                raise ValueError(f"checkpoint out of order: {label}")
+            current_order += 1
+            origins[label] = absolute
+        if origins[label] != absolute - relative:
+            raise ValueError(f"inconsistent checkpoint origin: {label}")
+        last_time = absolute
+        samples.setdefault((label, relative), []).append((name, value, absolute))
+    expected = [(f"{v['name']}[{i}]", v['type']) for v in variables for i in range(v['count'])]
+    if set(samples) != {(cp, k) for cp in checkpoints for k in range(window + 1)}:
+        raise ValueError(f"incomplete checkpoint state trace: {path}")
+    records = []
+    for cp in checkpoints:
+        for k in range(window + 1):
+            sample = samples[cp, k]
+            if [v[0] for v in sample] != [v[0] for v in expected]:
+                raise ValueError(f"incomplete checkpoint variables: {cp}+{k}")
+            for (name, value, absolute), (_, kind) in zip(sample, expected):
+                if kind == "ptr":
+                    valid = re.fullmatch(r"0|0x80[0-1][0-9a-f]{5}|[\w.$]+\+[0-9]+", value)
+                else:
+                    bits = int(kind[1:]); signed = kind[0] == "s"
+                    valid = re.fullmatch(r"-?[0-9]+", value) and (-(1 << (bits-1)) if signed else 0) <= int(value) < (1 << (bits-signed))
+                if not valid:
+                    raise ValueError(f"invalid {kind} value: {value}")
+                records.append((absolute, "state", (cp, k, name), value))
+    return records + calls
+
+
+def compare_state(port, reference, variables, checkpoint, expect_rand=False, checkpoints=None, window=0):
+    left = read_state(port, variables, checkpoint, checkpoints, window)
+    right = read_state(reference, variables, checkpoint, checkpoints, window)
+    from itertools import zip_longest
+    differences = []
+    states = [{(name if checkpoints else (k, name)): (k, value) for k, kind, name, value in records if kind == "state"}
+              for records in (left, right)]
+    for key, (k, value) in states[0].items():
+        other_k, other = states[1][key]
+        if value != other:
+            if checkpoints:
+                cp, relative, name = key
+                details = f"checkpoint {cp}+{relative}: {name} (port VBlank {k}, reference VBlank {other_k})"
+            else:
+                _, details = key
+            differences.append((k, details, value, other))
+    calls_by_side = [[item for item in records if item[1] == "rand"] for records in (left, right)]
+    for index, (a, b) in enumerate(zip_longest(*calls_by_side)):
+        if a is None or b is None or a[3] != b[3]:
+            k = min(x[0] for x in (a, b) if x)
+            details = f"rand call {index}"
+            details += f" (port VBlank {a[0] if a else '<missing>'}, reference VBlank {b[0] if b else '<missing>'})"
+            differences.append((k, details, a[3] if a else "<missing>", b[3] if b else "<missing>"))
+    if differences:
+        k, name, value, other = min(differences, key=lambda item: item[0])
+        raise ValueError(f"first divergence at VBlank {k}: {name} port={value} reference={other}")
+    calls = sum(item[1] == "rand" for item in left)
+    if expect_rand and calls < 16:
+        raise ValueError(f"expect_rand requires at least 16 rand calls, got {calls}")
+    scope = f"{len(checkpoints)} checkpoints, window {window}" if checkpoints else f"{checkpoint} VBlanks"
+    print(f"state match: {scope}, {len(variables)} variables, {calls} rand calls")
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("id", choices=["title"])
+    parser.add_argument("id", choices=sorted(p.stem for p in (ROOT / "tools/port/scenes").glob("*.toml")))
     parser.add_argument("--build", required=True, choices=["native-headless", "native-asan"])
     parser.add_argument("--pack", type=Path)
     parser.add_argument("--compare", action="store_true")
+    parser.add_argument("--state", action="store_true")
     args = parser.parse_args()
     build = ROOT / "build/port" / args.build
     output = build / "scenes" / args.id
     if args.compare:
         (output / "diff.ppm").unlink(missing_ok=True)
     scene = tomllib.loads((ROOT / "tools/port/scenes" / f"{args.id}.toml").read_text())
+    validate_scene(scene)
     frame = validate_comparison(scene, args.id) if args.compare else None
+    vars_path = ROOT / "tools/port/scenes/state_vars.txt"
+    checkpoints = checkpoint_symbols(scene, ROOT / "config/us/symbols.txt", build / "dw1")
+    variables = state_variables(vars_path, ROOT / "config/us/symbols.txt", build / "dw1") if args.state else []
+    reference_state = reference_path(args.id).with_suffix(".state")
+    stamp = reference_state.parent / "state.sha256"
+    if args.state and (not reference_state.is_file() or not stamp.is_file() or
+                       stamp.read_text().strip() != state_fingerprint(scene)):
+        command = [sys.executable, "-I", "-B", str(ROOT / "tools/port/reference/capture.py"), args.id,
+                   "--state", "--max-vblanks", str(max(40000, scene["capture_vblank"] + 9000))]
+        if checkpoints:
+            command += ["--timeout", "1800"]
+        status = subprocess.run(command).returncode
+        if status: return status
     pack = args.pack.resolve() if args.pack else build / "us.pack"
     if not pack.is_file():
         if args.pack is not None:
             raise ValueError(f"Pack file does not exist: {pack}")
         disc = os.environ.get("DW1_DISC_DIR")
         if not disc:
-            print("scene_title: no Pack or DW1_DISC_DIR; skipped")
+            print(f"scene {args.id}: no Pack or DW1_DISC_DIR; skipped")
             return 77
         cues = sorted(Path(disc).glob("*.cue"))
         if not cues:
-            raise ValueError(f"no .cue in {disc}")
+            print(f"scene {args.id}: no .cue in {disc}; skipped")
+            return 77
         subprocess.run([str(build / "dw1-pack"), "build", str(cues[0]),
                         str(ROOT / "tools/port/manifest/us.tsv"), str(pack)], check=True)
     output.mkdir(parents=True, exist_ok=True)
+    inputs = output / "inputs.txt"
+    inputs.write_text("".join((e['after'] + " " if checkpoints else "") + f"{e['vblank']} {sum(1 << b for b in set(e['buttons'])):04x}\n" for e in scene.get("inputs", [])))
+    checkpoint_file = output / "checkpoints.txt"
+    if checkpoints:
+        checkpoint_file.write_text("".join(f"{cp['label']} {cp['window']}\n" for cp in checkpoints))
     results = []
     for index in (1, 2):
         capture = output / f"run-{index}.ppm"
         trace = output / f"run-{index}.trace"
         clock = output / f"run-{index}.clock"
-        for path in (capture, trace, clock):
+        state = output / f"run-{index}.state"
+        for path in (capture, trace, clock, state):
             path.unlink(missing_ok=True)
         env = dict(os.environ, DW1_TRACE=str(trace))
         if args.build == "native-asan":
@@ -145,6 +412,11 @@ def main():
                    "--frames", "10000", "--capture-mark", scene["mark"],
                    "--capture-vblank", str(scene["capture_vblank"]),
                    "--capture", str(capture), "--clock-trace", str(clock)]
+        command += ["--inputs", str(inputs), "--inputs-from", scene.get("inputs_from", "frame0")]
+        if checkpoints:
+            command += ["--checkpoints", str(checkpoint_file)]
+        if args.state:
+            command += ["--state-vars", str(vars_path), "--state-trace", str(state)]
         run = subprocess.run(command, cwd=build, env=env, capture_output=True, timeout=600)
         log = run.stdout + run.stderr
         (output / f"run-{index}.log").write_bytes(log)
@@ -153,19 +425,29 @@ def main():
         if not re.search(rf"^\d+ mark {re.escape(scene['mark'])}$", trace.read_text(), re.M):
             raise ValueError(f"run {index}: missing scene mark")
         colors = ppm_colors(capture)
-        if colors <= 16:
+        if colors <= 16 and not args.state:
             raise ValueError(f"run {index}: only {colors} colors")
-        hashes = tuple(hashlib.sha256(path.read_bytes()).hexdigest() for path in (capture, clock))
+        hashes = tuple(hashlib.sha256(path.read_bytes()).hexdigest() for path in ((capture, clock, state) if args.state else (capture, clock)))
         if not clock.stat().st_size:
             raise ValueError("empty clock trace")
         results.append(hashes)
         print(f"{capture}: sha256={hashes[0]} colors={colors}")
         print(f"{clock}: sha256={hashes[1]}")
     if results[0] != results[1]:
-        raise ValueError("capture or clock trace differs between runs")
+        raise ValueError("capture, clock or state trace differs between runs")
+    if args.state:
+        ref = reference_path(args.id)
+        if ref.is_file():
+            print("informative frame comparison:")
+            try:
+                compare_capture(output / "run-1.ppm", dict(scene, reference_sha256=hashlib.sha256(ref.read_bytes()).hexdigest()), args.id, read_ppm(ref))
+            except ValueError as error:
+                print(error)
+        compare_state(output / "run-1.state", reference_state, variables,
+                      scene["capture_vblank"], scene.get("expect_rand", False), scene.get("checkpoints"), scene.get("window", 0))
     if args.compare and compare_capture(output / "run-1.ppm", scene, args.id, frame):
         return 1
-    print(f"scene_title: {args.build}: OK (two identical captures and clock traces)")
+    print(f"scene_{args.id}: {args.build}: OK (two identical captures and clock traces)")
     return 0
 
 
@@ -173,5 +455,5 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except (OSError, ValueError, subprocess.SubprocessError) as error:
-        print(f"scene_title: {error}", file=sys.stderr)
+        print(f"scene: {error}", file=sys.stderr)
         sys.exit(1)

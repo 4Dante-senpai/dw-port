@@ -1,0 +1,22 @@
+Historia 3.3 — verificación del orquestador en la imagen dw-port, 2026-10-18 (tras los parches de revisión)
+
+cmake --build --preset native-headless / native-asan / web: OK
+ctest --preset native-headless: 100% tests passed, 0 tests failed out of 49
+ctest --preset native-asan: 100% tests passed, 0 tests failed out of 47
+ctest --preset web: 100% tests passed, 0 tests failed out of 26
+python3 -I -B tools/port/scenes/test_runner.py: OK
+python3 -I -B tools/port/reference/test_capture.py: OK
+DW1_DISC_DIR=/dw/game_rom/extracted ctest --preset native-headless -R 'pack_disc|dw1_overlay|gte_tables_disc|scene_|reference_':
+100% tests passed, 0 tests failed out of 13 (sin omisiones)
+  reference_newgame_state  Passed 1231.24 sec (dos repeticiones idénticas byte a byte)
+  scene_newgame_state      Passed  118.13 sec
+DW1_DISC_DIR=/dw/game_rom/extracted python3 -I -B tools/port/scenes/run.py newgame --build native-asan --state:
+  run-1.ppm = run-2.ppm sha256=b4118ec55b68fcc8610a5323aa467563921cc0e091dcf48231fbaed78c416daf
+  run-1.clock = run-2.clock sha256=2bf32a4a6f3092bc11c3e02750c7796be19cdc03b953c329cc509fbc2fc59aab
+  informative frame comparison: 403 pixels differ, box 87..217 46..121
+  state match: 9 checkpoints, window 0, 15 variables, 16 rand calls
+python3 -I -B tools/port/scenes/run.py title --build native-asan --compare:
+  run-2.ppm sha256=561323665a33d833c89339030f6a8c60e4a395add2cff467d1d47e92dd46260d
+  scene title: RGB555 reference match (0 excepted pixels)
+make -j8 (dw-build) exit 0; make compare: Compiled binaries match with target binaries
+Sin imágenes en esta evidencia; PPM y trazas quedan en el build ignorado.

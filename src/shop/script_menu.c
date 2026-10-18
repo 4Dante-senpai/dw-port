@@ -466,10 +466,18 @@ char **NAMING_CHAR_PAGES[6] = {
 	CHAR_PAGE3_RIGHT,
 };
 
+#ifdef DW1_PORT
+/* renderNamingBox reads two trailing shorts from NAMING_ROLLOVER_CHARS on PS1. */
+int16_t NAMING_CTRL_BOXES[12] = {
+	0x000e, 0x0006, 0x0030, 0x000e, 0x005a, 0x0030, 0x000e, 0x0076,
+	0x0018, 0x0000, -32768, -32768,
+};
+#else
 int16_t NAMING_CTRL_BOXES[10] = {
 	0x000e, 0x0006, 0x0030, 0x000e, 0x005a, 0x0030, 0x000e, 0x0076,
 	0x0018, 0x0000,
 };
+#endif
 
 uint16_t NAMING_ROLLOVER_CHARS[10] = {
 	0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
@@ -2668,6 +2676,10 @@ void setupNewGameDialogueBox(void)
 	DRAW_STRING2_IS_FIXED_WIDTH = 0;
 #endif
 	for (i = 2; i < 10; i++) {
+#ifdef DW1_PORT
+		/* PS1 NULL reads Entity.type == 0 (OpenBIOS frame-0 probe). */
+		if (ENTITY_TABLE[i] == NULL) continue;
+#endif
 		if (ENTITY_TABLE[i]->type == 0x75) {
 			getEntityScreenPos(ENTITY_TABLE[i], 1, &screenPos);
 		}
@@ -2717,6 +2729,10 @@ void setupNameSelectorBox(void)
 	}
 
 	for (i = 2; i < 10; i++) {
+#ifdef DW1_PORT
+		/* PS1 NULL reads Entity.type == 0 (OpenBIOS frame-0 probe). */
+		if (ENTITY_TABLE[i] == NULL) continue;
+#endif
 		if (ENTITY_TABLE[i]->type == 0x75) {
 			getEntityScreenPos(ENTITY_TABLE[i], 1, &screenPos);
 		}
@@ -2747,6 +2763,10 @@ void setupNameDisplayBox(void)
 	}
 
 	for (i = 2; i < 10; i++) {
+#ifdef DW1_PORT
+		/* PS1 NULL reads Entity.type == 0 (OpenBIOS frame-0 probe). */
+		if (ENTITY_TABLE[i] == NULL) continue;
+#endif
 		if (ENTITY_TABLE[i]->type == 0x75) {
 			getEntityScreenPos(ENTITY_TABLE[i], 1, &screenPos);
 		}

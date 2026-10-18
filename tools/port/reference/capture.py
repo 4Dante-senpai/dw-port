@@ -68,16 +68,23 @@ def safe_output(path):
     raise ValueError("output must be in build/ or external DW1_REFERENCE_DIR")
 
 
-def validate_scene(scene):
-    if type(scene.get("capture_vblank")) is not int or scene["capture_vblank"] < 0:
-        raise ValueError("capture_vblank must be a nonnegative integer")
-    previous = -1
-    for event in scene.get("inputs", []):
-        if (set(event) != {"vblank", "buttons"} or type(event["vblank"]) is not int
-                or event["vblank"] <= previous or not isinstance(event["buttons"], list)
-                or any(type(b) is not int or not 0 <= b <= 15 for b in event["buttons"])):
-            raise ValueError("inputs require increasing vblank and buttons (PS1 bit indices 0..15)")
-        previous = event["vblank"]
+validate_scene = _runner.validate_scene
+
+
+def pointer_symbols(source):
+    entries = []
+    for name, address, comment in re.findall(
+            r"^([\w.$]+)\s*=\s*(0x[0-9a-fA-F]+);([^\n]*)", source, re.M):
+        size = re.search(r"\bsize:(0x[0-9a-fA-F]+)", comment)
+        entries.append((name, int(address, 16), int(size[1], 16) if size else None,
+                        "type:func" in comment))
+    entries.sort(key=lambda entry: entry[1])
+    result = []
+    for i, (name, address, size, function) in enumerate(entries):
+        if 0x80100000 <= address < 0x80200000 and not function:
+            next_address = next((entry[1] for entry in entries[i + 1:] if entry[1] > address), address + 1)
+            result.append(dict(name=name, address=address, size=size or next_address - address))
+    return result
 
 
 def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vblanks):
@@ -91,7 +98,11 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
     config = dict(symbols, capture_vblank=scene["capture_vblank"],
                   inputs=scene.get("inputs", []), max_vblanks=max_vblanks,
                   raw=str(work / "display.raw"), meta=str(work / "display.json"),
-                  progress=str(work / "progress.txt"))
+                  progress=str(work / "progress.txt"), inputs_from=scene.get("inputs_from", "frame0"))
+    config["checkpoints"] = scene.get("resolved_checkpoints", [])
+    if scene.get("state_vars"):
+        config.update(state_vars=scene["state_vars"], state_symbols=scene["state_symbols"],
+                      state_trace=str(output / f"run-{index}.state"))
     script = work / "capture.lua"
     script.write_text("DW1_CAPTURE = " + lua_literal(config) + "\n" +
                       (ROOT / "tools/port/reference/capture.lua").read_text())
@@ -118,7 +129,7 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
     capture = output / f"run-{index}.ppm"
     capture.write_bytes(to_ppm((work / "display.raw").read_bytes(), **meta))
     colors = ppm_colors(capture)
-    if colors <= 16:
+    if colors <= 16 and not scene.get("state_vars"):
         raise ValueError(f"run {index}: only {colors} colors; log: {log}")
     digest = hashlib.sha256(capture.read_bytes()).hexdigest()
     print(f"{capture}: {meta['width']}x{meta['height']} colors={colors} sha256={digest}")
@@ -127,8 +138,9 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("id", choices=["title"])
+    parser.add_argument("id", choices=sorted(p.stem for p in (ROOT / "tools/port/scenes").glob("*.toml")))
     parser.add_argument("--update", action="store_true")
+    parser.add_argument("--state", action="store_true")
     parser.add_argument("--bios", type=Path)
     parser.add_argument("--out", type=Path)
     parser.add_argument("--timeout", type=float, default=600)
@@ -141,31 +153,51 @@ def main(argv=None):
     bios = args.bios.resolve() if args.bios else OPENBIOS
     if args.bios and (not bios.is_file() or bios.is_relative_to(ROOT)):
         raise ValueError("--bios must be an existing file outside the repository")
-    disc = os.environ.get("DW1_DISC_DIR")
-    cues = sorted(Path(disc).glob("*.cue")) if disc else []
-    if not cues:
-        print("reference_title: no disc (.cue) in DW1_DISC_DIR; skipped")
-        return 77
-    emulator = shutil.which("pcsx-redux")
-    if not emulator or not shutil.which("xvfb-run"):
-        print("reference_title: pcsx-redux or xvfb-run absent from PATH; skipped")
-        return 77
-    if not bios.is_file():
-        raise ValueError(f"OpenBIOS missing: {bios}")
     scene_path = ROOT / "tools/port/scenes" / f"{args.id}.toml"
     scene = tomllib.loads(scene_path.read_text())
     validate_scene(scene)
+    scene["resolved_checkpoints"] = _runner.checkpoint_symbols(scene, ROOT / "config/us/symbols.txt")
     symbols = resolve_symbols(ROOT / "config/us/symbols.txt", scene["mark"])
+    if args.state:
+        scene["state_vars"] = _runner.state_variables(ROOT / "tools/port/scenes/state_vars.txt", ROOT / "config/us/symbols.txt")
+        source = (ROOT / "config/us/symbols.txt").read_text()
+        scene["state_symbols"] = pointer_symbols(source)
+        rand = re.search(r"^rand\s*=\s*(0x[0-9a-fA-F]+)", source, re.M)
+        if not rand:
+            raise ValueError("missing reference symbol: rand")
+        symbols["rand"] = int(rand[1], 16)
+    disc = os.environ.get("DW1_DISC_DIR")
+    cues = sorted(Path(disc).glob("*.cue")) if disc else []
+    if not cues:
+        print(f"reference {args.id}: no disc (.cue) in DW1_DISC_DIR; skipped")
+        return 77
+    emulator = shutil.which("pcsx-redux")
+    if not emulator or not shutil.which("xvfb-run"):
+        print(f"reference {args.id}: pcsx-redux or xvfb-run absent from PATH; skipped")
+        return 77
+    if not bios.is_file():
+        raise ValueError(f"OpenBIOS missing: {bios}")
     output = safe_output(args.out or Path(os.environ.get(
         "DW1_REFERENCE_DIR", str(ROOT / "build/reference"))) / args.id)
     output.mkdir(parents=True, exist_ok=True)
     # Remove stale captures before either run (failed invocations cannot reuse evidence).
+    (output / "state.sha256").unlink(missing_ok=True)
     for index in (1, 2):
         (output / f"run-{index}.ppm").unlink(missing_ok=True)
+        (output / f"run-{index}.state").unlink(missing_ok=True)
     hashes = [run_once(emulator, cues[0].resolve(), bios, scene, symbols, output,
                        index, args.timeout, args.max_vblanks) for index in (1, 2)]
     if hashes[0] != hashes[1]:
         raise ValueError(f"non-deterministic captures: {hashes[0]} != {hashes[1]}")
+    if args.state:
+        first, second = output / "run-1.state", output / "run-2.state"
+        if first.read_bytes() != second.read_bytes():
+            raise ValueError(f"non-deterministic state traces: {first} != {second}")
+        records = _runner.read_state(first, scene["state_vars"], scene["capture_vblank"],
+                                     scene.get("checkpoints"), scene.get("window", 0))
+        calls = sum(row[1] == "rand" for row in records)
+        if scene.get("expect_rand") and calls < 16:
+            raise ValueError(f"expected at least 16 rand calls, got {calls}")
     expected = scene.get("reference_sha256")
     if args.update:
         source = scene_path.read_text()
@@ -176,6 +208,9 @@ def main(argv=None):
         raise ValueError(f"reference hash mismatch: actual={hashes[0]} expected={expected}")
     if args.bios:
         print(f"owner BIOS: OpenBIOS hash={expected or 'unset'}; captured={hashes[0]}")
+    if args.state:
+        identity = hashlib.sha256(bios.read_bytes()).hexdigest() if args.bios else "openbios"
+        (output / "state.sha256").write_text(_runner.state_fingerprint(scene, identity) + "\n")
     print(f"reference_{args.id}: OK sha256={hashes[0]}" + (" (unpinned)" if not expected and not args.update else ""))
     return 0
 
@@ -184,5 +219,5 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except (OSError, ValueError, subprocess.SubprocessError) as error:
-        print(f"reference_title: {error}", file=sys.stderr)
+        print(f"reference: {error}", file=sys.stderr)
         sys.exit(1)

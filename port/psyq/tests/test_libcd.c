@@ -136,6 +136,7 @@ static void search(void)
 	CHECK(f.name[15] == 0);
 	CHECK(CdSearchFile(&f, "\\SLUS_010.32;1") == &f);
 	CHECK(CdPosToInt(&f.pos) == 22 && f.size == 5000 && !strcmp(f.name, "SLUS_010.32;1"));
+	CHECK(CdSearchFile(&f, "\\\\MOVIE\\OP1.STR;1") == &f); /* readFileSection prepends a root */
 	CHECK(CdSearchFile(&f, "\\MOVIE\\OP2.STR;1") == NULL);
 	CHECK(CdSearchFile(&f, "\\MOVIE\\OP1.STR") == NULL); /* exact path only */
 	CHECK(CdSearchFile(&f, "MOVIE\\OP1.STR;1") == NULL); /* must start with '\' */

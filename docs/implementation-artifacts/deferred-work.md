@@ -78,3 +78,10 @@
 - source_spec: `docs/implementation-artifacts/spec-3-2-runner-de-escenas-y-pantalla-de-titulo-exacta.md`
   summary: Verificar contra el Emulador de referencia la regla UV de `scan_uv` (`port/backend/gpu_soft/gpu_soft.c`) en primitivas inclinadas, UV decrecientes, winding inverso, recorte y V fraccionario.
   evidence: Revisión de 3.2 (maybe-false, medium sin verificar): la regla se infirió solo del quad del título y se aplica a todos los triángulos texturados; los SHA de VRAM existentes no cambian, pero no tienen referencia de consola. Se resuelve con escenas de prueba renderizadas en PCSX-Redux (parte de la paridad general en sala limpia).
+
+- source_spec: `docs/implementation-artifacts/spec-3-3-inputs-por-vblank-y-comparacion-de-estado.md`
+  summary: Validar en `state_vars.txt` que la lectura declarada no exceda el objeto PS1 original (hoy solo se controla el tamaño nativo y los límites de RAM).
+  evidence: Revisión de 3.3, hallazgo #4: `config/us/symbols.txt` no registra tamaños; habría que derivarlos de la dirección del símbolo siguiente. Las 15 variables actuales se revisaron a mano.
+- source_spec: `docs/implementation-artifacts/spec-3-3-inputs-por-vblank-y-comparacion-de-estado.md`
+  summary: Canonicalizar los punteros al área fusionada `TAMER_MODEL_BUFFER` + `MAIN_D_801A8B98` (en nativo se ven como `TAMER_MODEL_BUFFER+0x7800...` y en PS1 como `MAIN_D_801A8B98+...`).
+  evidence: Revisión de 3.3, hallazgo #6: ninguna variable actual apunta a esas áreas. Resolverlo cuando una Escena compare un puntero a ellas.

@@ -207,7 +207,12 @@ u_long *MOV_readFrame(MovieEnv *env, MovieEntry *movie)
 int32_t MOV_playMovie(int32_t movieId)
 {
 	DISPENV disp;
+#ifdef DW1_PORT
+	/* The original passes an uninitialized environment to PutDrawEnv. */
+	DRAWENV draw = {0};
+#else
 	DRAWENV draw;
+#endif
 	int32_t dispFrame;
 	CdlFILE file;
 	CdlLOC loc;

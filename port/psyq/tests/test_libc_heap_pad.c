@@ -36,8 +36,8 @@ python3 -c 'from itertools import accumulate as a; from functools import reduce;
 	};
 	uint64_t before = clock_now();
 	/* Check static initialization before calling either srand or the reset hook. */
-	CHECK(rand() == 20346);
-	CHECK(rand() == 17442);
+	CHECK(rand() == 0);
+	CHECK(rand() == 21468);
 	for (size_t s = 0; s < sizeof golden / sizeof golden[0]; s++) {
 		srand(golden[s].seed);
 		uint32_t digest = 0;
@@ -51,8 +51,8 @@ python3 -c 'from itertools import accumulate as a; from functools import reduce;
 		CHECK(digest == golden[s].digest);
 	}
 	psyq_libc_reset();
-	CHECK(rand() == 20346);
-	CHECK(rand() == 17442);
+	CHECK(rand() == 0);
+	CHECK(rand() == 21468);
 	CHECK(clock_now() == before);
 }
 
@@ -154,6 +154,8 @@ static int invalid_heap_aborts(uint32_t addr)
 static int callback_count;
 static void callback(void) { callback_count++; }
 
+extern void port_pad_latch(uint16_t wire_buttons);
+
 static void pad_state(void)
 {
 	psyq_libapi_reset();
@@ -167,7 +169,12 @@ static void pad_state(void)
 	before = clock_now();
 	CHECK(PadRead(0) == 0);
 	CHECK(clock_now() == before + CLOCK_PSYQ_ENTRY_CYCLES);
-	CHECK(PadRead(1) == 0);
+	for (unsigned bit = 0; bit < 16; bit++) {
+        port_pad_latch((uint16_t)(1u << bit));
+        CHECK(PadRead(0) == (1u << (bit ^ 8)));
+    }
+    port_pad_latch(0);
+    CHECK(PadRead(1) == 0);
 	CHECK(PadRead(-1) == 0);
 	CHECK(ResetCallback() == 0); /* PadInit already started interrupts */
 	VSyncCallback(callback);
