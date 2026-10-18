@@ -232,6 +232,10 @@
   (test de alcanzabilidad; los terminales `nop2`/`sys_nop` quedan en `deferred-work.md` para
   3.2/3.10) y CI corre `scene_title` en `native-disc` y la suite `native-asan` con disco
   (`native-asan-disc`), fallando si un test se saltea. Pipeline 96 verde.
+- Resto de la retro: A4 (diferidos F4/F6/F7 en `deferred-work.md`), A5 (`epics.md` reconciliado en
+  2.3, 2.6, 2.9 y 2.11) y A6 (tabla de desvíos del asm en `docs/port/build.md`) cerradas. A3: la
+  historia 8.2 pasa a `in-progress` (pipeline A/B hecho en la Épica 2); le falta probar que un MR
+  desde un fork no dispara la clase B.
 
 ## En curso
 

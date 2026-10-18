@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-11-2026 12:35
-last_updated: 10-17-2026 20:57
+last_updated: 10-17-2026 21:02
 project: dw-port
 project_key: NOKEY
 tracking_system: file-system
@@ -108,7 +108,7 @@ development_status:
 
   epic-8: in-progress
   8-1-métricas-automáticas-en-status-md: backlog
-  8-2-pipeline-de-gitlab-ci-con-clases-a-y-b: backlog
+  8-2-pipeline-de-gitlab-ci-con-clases-a-y-b: in-progress
   8-3-merge-periódico-de-upstream-main: backlog
   8-4-registro-de-funciones-no-verificadas-y-make-compare: backlog
   8-5-entorno-de-testing-en-el-homelab: done
@@ -133,21 +133,21 @@ action_items:
     action: "Move story 8.2 to in-progress and close only what is missing: A2 and
       the fork-MR class B check (F3)"
     owner: "Demian"
-    status: open
+    status: in-progress
     ref: "docs/implementation-artifacts/epic-2-retro-2026-10-17.md"
   - id: "epic-2-retro-item-4-record-in-deferred-work-md-the-2-8-last"
     epic: 2
     action: "Record in deferred-work.md the 2.8 last-sector deviation (F4), root counters
       without IRQ (F6) and the DrawOTag PORT_ASSERT (F7)"
     owner: "dev"
-    status: open
+    status: done
     ref: "docs/implementation-artifacts/epic-2-retro-2026-10-17.md"
   - id: "epic-2-retro-item-5-reconcile-epics-md-acceptance-criteria-o"
     epic: 2
     action: "Reconcile epics.md acceptance criteria of 2.3, 2.6, 2.9 and 2.11 with
       the deviations accepted in their specs (F5)"
     owner: "Demian"
-    status: open
+    status: done
     ref: "docs/implementation-artifacts/epic-2-retro-2026-10-17.md"
   - id: "epic-2-retro-item-6-process-document-asm-deviations-in-share"
     epic: 2
@@ -155,5 +155,5 @@ action_items:
       grep their consumers in later stories, and test observable properties instead
       of raw translated values (F1, F6)"
     owner: "dev"
-    status: open
+    status: done
     ref: "docs/implementation-artifacts/epic-2-retro-2026-10-17.md"

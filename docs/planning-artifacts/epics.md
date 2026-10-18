@@ -228,6 +228,7 @@ para que el Juego use direcciones PS1 y que cada recarga de overlay empiece con 
 **When** corre el test L1 de reinicio (derivado de `tools/port/env_check/overlay_sections/`)
 **Then** al llamar `port_overlay_loaded(ovl)` todas las variables globales, `static` de archivo y `static` locales del overlay vuelven a su valor inicial, en `-O0` y `-O2`
 **And** las secciones de los 16 overlays existen en el binario con sus símbolos `__start_`/`__stop_`
+*(Reconciliado en la retro de la Épica 2: USA tiene 15 secciones, porque `SHOP_REL` no tiene segmento propio; spec 2.3.)*
 
 ### Story 2.4: Traducción de direcciones PS1 en `src/` e `include/`
 
@@ -282,6 +283,7 @@ para que el Juego arranque y se vea qué función PsyQ necesita a continuación.
 **Then** llega al retorno del primer `VSync` desde `main` (frame 0 de AD-15) y sale con código 0
 **And** `port_trace.log` lista, en orden, los stubs llamados antes del frame 0
 **And** el contador `PsyQ implementadas/202` sale del comentario de fuente (`dw2-pc:` o `asm:`) de cada función en `port/psyq/` y se imprime en el log del build
+*(Reconciliado en la retro de la Épica 2: los objetos del port usan 199 funciones, no 202, y el contador sale de `nm` sobre `dw1_psyq` en `gen_stubs.py`, no del comentario de fuente; spec 2.6.)*
 
 ### Story 2.7: Manifest y herramienta nativa del Pack
 
@@ -329,6 +331,7 @@ para que el Juego tome las mismas decisiones que en la consola.
 **Given** las implementaciones traducidas de `asm/us/main/psyq/libc.s`, `libapi.s` y `libetc.s`
 **When** corren los tests L1
 **Then** la secuencia de los primeros 10.000 valores de `rand` tras `srand` con semillas de prueba coincide con la del algoritmo traducido del asm, y el heap de `malloc3` devuelve las mismas direcciones PS1 para una secuencia de pedidos de prueba
+*(Reconciliado en la retro de la Épica 2: cadenas, `mem*`, `bzero`, `printf`/`sprintf` y `setjmp`/`longjmp` siguen en la libc del host, como hipótesis a validar en la Épica 3; spec 2.9.)*
 **And** cada función tiene el comentario `asm:` con su fuente y el contador de la Historia 2.6 sube en consecuencia
 
 ### Story 2.10: Modelo GTE y macros inline
@@ -347,7 +350,7 @@ para que la geometría 3D del Juego se calcule con la aritmética de la PS1.
 ### Story 2.11: `libgte` y tablas leídas del exe en el Pack
 
 Como desarrollador del port,
-quiero las 56 funciones de `libgte` que llama el Juego y las tablas `rcossin_tbl`/`ratan_tbl` cargadas desde `SLUS_010.32` en el Pack,
+quiero las 56 funciones de `libgte` que llama el Juego (29 de `libgte`; las otras 27 son las `GsTMD*` de la Historia 2.13, según la reconciliación de la retro de la Épica 2) y las tablas `rcossin_tbl`/`ratan_tbl` cargadas desde `SLUS_010.32` en el Pack,
 para que las matrices y los ángulos coincidan con la consola sin embeber datos de Sony.
 
 **Criterios de aceptación:**

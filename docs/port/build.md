@@ -86,3 +86,20 @@ DOCKER_CONTEXT=default tools/port/docker_run.sh sh tools/port/ci/preproc_check.s
   - Al regenerar, el script avisa si un estado asignado a mano se pierde porque su fila cambió.
   - Para regenerar, correr el script sin `--check`; los estados de filas existentes se conservan y
     las nuevas quedan `pendiente`. `--no-pending` falla si queda alguna.
+
+## Desvíos del asm en estructuras compartidas
+
+Lección de la retro de la Épica 2 (F1): la 2.12 omitió los paquetes terminales de `ClearOTagR` y
+la 2.13 tradujo `GsSortOt`, que dependía de ellos; ninguna de las dos sesiones vio el otro lado.
+
+- Cuando una función de `port/psyq/` se aparta del asm en una estructura que otras leen (OT,
+  paquetes, cabeceras, tablas), el comentario de la función lo dice y la estructura se agrega a la
+  tabla de abajo.
+- La spec de cada historia que traduce un consumidor de esas estructuras busca (`grep`) sus
+  productores en esta tabla.
+- Los tests de una traducción comprueban propiedades observables (alcanzabilidad, valores del
+  hardware o de la referencia), no el valor crudo que produce el algoritmo traducido.
+
+| Estructura | Desvío | Productor | Consumidores adaptados |
+|---|---|---|---|
+| Fin de la OT | Sin los terminales `nop2` → `sys_nop`: `ot[0]` termina en `PS1_LINK_END` | `ClearOTagR` (`port/psyq/libgpu.c`) | `GsSortOt` (`port/psyq/libgs.c`), `DrawOTag` |

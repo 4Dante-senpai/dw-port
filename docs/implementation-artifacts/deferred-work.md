@@ -60,3 +60,13 @@
 - source_spec: `docs/implementation-artifacts/spec-e2-retro-a1-gssortot-sin-terminales.md`
   summary: Decidir contra el Emulador de referencia si `ClearOTagR` debe restaurar los paquetes terminales `nop2` → `sys_nop` del original (GP0 `0x80` con `0x80000000, 0, 0, 0x00000002` y cuatro NOP al final de cada OT).
   evidence: `asm/us/main/psyq/libgpu.s` `ClearOTagR` y `asm/us/main/data/psyq/libgpu.data.s:66-84`; el port los omite (`port/psyq/libgpu.c`, comentario de `ClearOTagR`), así que `DrawOTag` no ejecuta esa copia de VRAM ni su costo en `DrawSync`. Puede afectar al bit de máscara y al ritmo; se resuelve en la 3.2 (diff de píxeles) o en la 3.10 (costos).
+
+- source_spec: `docs/implementation-artifacts/spec-2-8-libcd-y-modelo-del-cd-sobre-el-pack.md`
+  summary: En el último sector de un archivo, el port copia solo los bytes del archivo; la PS1 copia el sector entero de 2048 B (registrado en la retro de la Épica 2, F4).
+  evidence: spec 2.8:135-140 (aprobado en su checkpoint porque el sector entero desborda `MAPHEAD_SCRIPT_BUFFER` en nativo). En la consola ese desborde escribe sobre la memoria vecina, así que el estado del port puede divergir. Se resuelve en la 3.10/3.11: identificar con el Emulador de referencia qué queda después del buffer y si el Juego depende de esos bytes.
+- source_spec: `docs/implementation-artifacts/spec-2-5-reloj-virtual.md`
+  summary: Los root counters sin IRQ no se reinician al llegar al target con reset-at-target; `GetRCnt` devuelve la cuenta acumulada con wrap de 16 bits (retro de la Épica 2, F6).
+  evidence: `port/psyq/libapi.c` (`counter_value` solo hace `& 0xFFFF`; `arm` programa reinicios solo con `mode & 0x10`); `port/psyq/tests/test_clock.c` espera `12500 & 0xFFFF` con target 1000. Hoy `src/` no llama `GetRCnt`. Se corrige con el test cuando la 3.5 (`libsnd`) use los root counters.
+- source_spec: `docs/implementation-artifacts/spec-2-12-renderer-software-y-libgpu.md`
+  summary: `DrawOTag` con una OT que no termina imprime un aviso y retorna en lugar de usar `PORT_ASSERT` en debug (retro de la Épica 2, F7).
+  evidence: `port/psyq/libgpu.c` `DrawOTag` (corte tras 0x100000 paquetes); la convención de invariantes es `PORT_ASSERT` (`port/psyq/port.h`). Agregar el assert y un test de abort la próxima vez que se toque `libgpu`.
