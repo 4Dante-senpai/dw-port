@@ -75,7 +75,7 @@ con el BIOS del dueño.
 - [x] `tools/port/scenes/run.py`, `tools/port/reference/capture.py`, `tools/port/reference/test_capture.py` -- identidad del BIOS por defecto = SHA-256 de `openbios.bin` (fallback `openbios` si falta el archivo) -- invalida caché vieja.
 - [x] Imagen local `dw-port` reconstruida (`DOCKER_CONTEXT=default tools/port/docker_build.sh`) y referencias `newgame` regeneradas -- base de la verificación.
 - [x] `docs/port/reference.md`, `docs/port/scenes.md`, `docs/STATUS.md`, `docs/implementation-artifacts/deferred-work.md` -- semilla adoptada, parche, identidad, resultado de la comparación con el dueño; cerrar la decisión pendiente.
-- [ ] `.gitlab-ci.yml` -- digest de `dw-port` nuevo, fijado en la rama tras el job `images` (decisión A).
+- [x] `.gitlab-ci.yml` -- digest de `dw-port` nuevo, fijado en la rama tras el job `images` (decisión A): `e79c381a…6f45` (job 387).
 
 **Acceptance Criteria:**
 - Given la imagen nueva, when se ejecuta `pcsx-redux` con su `openbios.bin` sobre `newgame --state`, then las dos corridas son idénticas y los 16 `rand` y las 15 variables en los 9 puntos coinciden con `build/reference-owner/newgame/run-1.state` (ignorando la columna de VBlank).
