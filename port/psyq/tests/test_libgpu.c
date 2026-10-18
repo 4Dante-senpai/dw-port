@@ -1,5 +1,7 @@
 /* ABI/packet expectations translated independently from asm/us/main/psyq/libgpu.s. */
 #include "../psyq.h"
+#define _LIBGPU_H_ /* Use the runtime ABI types while exercising the game bridge macro. */
+#include <libgpu.h>
 #include "../clock.h"
 #include "../ps1mem.h"
 #include "../../backend/gpu.h"
@@ -84,6 +86,17 @@ static void ordering(void)
     DrawOTag(&ot[3]);CHECK(gpu_vram()[8*1024+8]==31); /* bucket 0 drawn last */
     ClearOTagR(ot,1);AddPrim(ot,packets[0]);AddPrim(ot,packets[1]);AddPrim(ot,packets[2]);
     DrawOTag(ot);CHECK(gpu_vram()[8*1024+8]==31); /* last added first drawn */
+    /* The upstream macro must link packets without clobbering their lengths. */
+    ClearOTagR(ot,1);
+    for(int i=0;i<3;i++) {
+        packets[i][0]=0x03000000;
+        addPrim(ot,packets[i]);
+        CHECK((packets[i][0]>>24)==3);
+        CHECK((packets[i][0]&PS1_LINK_END)==(i?PS1_LINK(packets[i-1]):PS1_LINK_END));
+        CHECK(*ot==PS1_LINK(packets[i]));
+    }
+    gpu_fill(0,0,1024,512,0);
+    DrawOTag(ot);CHECK(gpu_vram()[8*1024+8]==31);
     static DR_LOAD load;
     RECT r={32,32,16,1};SetDrawLoad(&load,&r);
     for(int i=0;i<8;i++)load.p[i]=(unsigned long)(2*i+1)|((unsigned long)(2*i+2)<<16);

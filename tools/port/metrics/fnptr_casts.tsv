@@ -60,10 +60,10 @@ callback	src/main/item.c	1951	2	(ItemFunction)handleBuffDisks,	EMULATE_FUNCTION_
 callback	src/main/item.c	1952	2	(ItemFunction)handleBuffDisks,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
 callback	src/main/item.c	1953	2	(ItemFunction)handleBuffDisks,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
 callback	src/main/item.c	1954	2	(ItemFunction)handleBuffDisks,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
-callback	src/main/main.c	3627	28	(RenderFunction)renderPressStartToContinue);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
-callback	src/main/main.c	3724	23	(TickFunction)tickMainMenu, (RenderFunction)renderMainMenu);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
-callback	src/main/main.c	3724	51	(RenderFunction)renderMainMenu);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
-callback	src/main/main.c	3725	28	(RenderFunction)renderMainMenuBackground);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/main.c	3634	28	(RenderFunction)renderPressStartToContinue);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/main.c	3731	23	(TickFunction)tickMainMenu, (RenderFunction)renderMainMenu);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/main.c	3731	51	(RenderFunction)renderMainMenu);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/main.c	3732	28	(RenderFunction)renderMainMenuBackground);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
 callback	src/main/main_menu.c	4197	30	(RenderFunction)renderMainMenuBackground);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
 callback	src/main/main_menu.c	4198	25	(TickFunction)tickMainMenu,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
 callback	src/main/main_menu.c	4199	7	(RenderFunction)renderMainMenu);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
@@ -379,14 +379,14 @@ non-prototype	src/main/item.c	2326	17	(ENTITY_TABLE[1], 0x2c);	C default argumen
 non-prototype	src/main/item.c	2460	14	(0x195, itemId);	DW1_PORT direct ABI correction
 non-prototype	src/main/item.c	2680	15	(0x194, 0);	DW1_PORT direct ABI correction
 non-prototype	src/main/item.c	3066	13	(buf, 0, 0x78);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/main.c	3709	14	(0xfa3, 0);	DW1_PORT direct ABI correction
-non-prototype	src/main/main.c	3747	16	(0x1388, 0);	DW1_PORT direct ABI correction
-non-prototype	src/main/main.c	3751	14	(0xfa3, 0);	DW1_PORT direct ABI correction
-non-prototype	src/main/main.c	3849	16	(ENTITY_TABLE[0], 0);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/main.c	3850	16	(ENTITY_TABLE[1], 0);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/main.c	3884	18	(ENTITY_TABLE[0], 0);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/main.c	3885	18	(ENTITY_TABLE[1], 0);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/main.c	4270	16	(ENTITY_TABLE[0], 6);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main.c	3716	14	(0xfa3, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/main.c	3754	16	(0x1388, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/main.c	3758	14	(0xfa3, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/main.c	3856	16	(ENTITY_TABLE[0], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main.c	3857	16	(ENTITY_TABLE[1], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main.c	3891	18	(ENTITY_TABLE[0], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main.c	3892	18	(ENTITY_TABLE[1], 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/main.c	4277	16	(ENTITY_TABLE[0], 6);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/main_menu.c	2890	13	(TITLE_MENU_ITEMS[0], 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/main_menu.c	2891	13	(TITLE_MENU_ITEMS[1], 0, 0xC);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/main_menu.c	2893	13	(TITLE_MENU_ITEMS[2], 0, 0x18);	C default argument promotions; direct ABI checked by wasm-ld
@@ -530,22 +530,22 @@ non-prototype	src/main/new_game.c	34	20	(2, 0, 0x71, 0);	C default argument prom
 non-prototype	src/main/new_game.c	36	17	(ENTITY_TABLE[2], 0);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/new_game.c	56	19	(2, 0, 0x400, 0);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/new_game.c	58	16	(ENTITY_TABLE[2], 2);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1106	19	(slot + 2, MAP_DIGIMON_TABLE[slot].rotX,	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1110	16	(ENTITY_TABLE[slot + 2],	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1347	19	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1405	17	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1439	17	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1476	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1559	17	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1582	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1591	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1618	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1679	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1123	19	(slot + 2, MAP_DIGIMON_TABLE[slot].rotX,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1127	16	(ENTITY_TABLE[slot + 2],	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1369	19	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1427	17	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1461	17	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1498	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1581	17	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1604	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1613	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1640	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/overworld.c	1701	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1746	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1814	18	((Entity *)npc, animId);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	1911	16	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/overworld.c	828	15	(0xfba, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/overworld.c	1723	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1768	18	(entity, mapDigimon->animation);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1836	18	((Entity *)npc, animId);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	1933	16	(&PARTNER_ENTITY.digimonEntity.entity, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/overworld.c	845	15	(0xfba, 0);	DW1_PORT direct ABI correction
 non-prototype	src/main/particle.c	111	21	(0x817, instance);	DW1_PORT direct ABI correction
 non-prototype	src/main/partner.c	1033	16	(ENTITY_TABLE[1], (uint8_t)PARTNER_ANIMATION);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/partner.c	1106	17	(&PARTNER_ENTITY.digimonEntity.entity,	C default argument promotions; direct ABI checked by wasm-ld
@@ -613,13 +613,13 @@ non-prototype	src/main/script_common.c	2699	15	(DIGIMON_NAME(id));	C default arg
 non-prototype	src/main/script_common.c	2749	14	(BGM_TRACK_NAMES[type]);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/script_common.c	2782	14	(MAP_NAME_PTR[nameId]);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/script_common.c	3053	15	(0x1b1, 0);	DW1_PORT direct ABI correction
-non-prototype	src/main/script_interp.c	2163	15	(0xfb6, 0);	DW1_PORT direct ABI correction
-non-prototype	src/main/script_interp.c	2337	26	(movement->entityId, 0xff,	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/script_interp.c	2342	26	(movement->entityId, movement->target,	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/script_interp.c	2346	26	(movement->entityId, 0xff,	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/script_interp.c	2351	26	(movement->entityId, movement->target,	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/script_interp.c	2363	30	(movement->entityId,	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/script_interp.c	2369	30	(movement->entityId,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_interp.c	2183	15	(0xfb6, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/script_interp.c	2357	26	(movement->entityId, 0xff,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_interp.c	2362	26	(movement->entityId, movement->target,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_interp.c	2366	26	(movement->entityId, 0xff,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_interp.c	2371	26	(movement->entityId, movement->target,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_interp.c	2383	30	(movement->entityId,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_interp.c	2389	30	(movement->entityId,	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/script_textbox.c	1128	19	(DIGIMON_NAME(ctrl));	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/script_textbox.c	1138	19	(MOVE_NAMES[ctrl]);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/script_textbox.c	1148	19	(ITEM_NAME(ctrl));	C default argument promotions; direct ABI checked by wasm-ld
@@ -671,15 +671,15 @@ non-prototype	src/main/ui.c	217	14	(0x1a4, id);	DW1_PORT direct ABI correction
 non-prototype	src/main/utils2.c	457	13	(MAIN_D_80134430, 0x78, 0xF0);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/murd/murd.c	313	15	(0x60a, instanceId);	DW1_PORT direct ABI correction
 non-prototype	src/murd/murd.c	329	15	(0x60a, instanceId);	DW1_PORT direct ABI correction
-non-prototype	src/shop/script_menu.c	2760	32	(NAMING_BUFFER) >> 1;	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/shop/script_menu.c	2954	14	(NAMING_TITLE);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/shop/script_menu.c	2959	14	(NAMING_BUTTONS);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/shop/script_menu.c	2970	16	(table[j]);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/shop/script_menu.c	2973	16	(table[j + 1]);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/shop/script_menu.c	2976	16	(table[j + 2]);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/shop/script_menu.c	2999	15	(NAMING_PROMPT_TAMER);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/shop/script_menu.c	3005	15	((int32_t)MAIN_D_801345F4 + 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/shop/script_menu.c	3011	14	(NAMING_BUFFER);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	2780	32	(NAMING_BUFFER) >> 1;	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	2974	14	(NAMING_TITLE);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	2979	14	(NAMING_BUTTONS);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	2990	16	(table[j]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	2993	16	(table[j + 1]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	2996	16	(table[j + 2]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	3019	15	(NAMING_PROMPT_TAMER);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	3025	15	((int32_t)MAIN_D_801345F4 + 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/shop/script_menu.c	3031	14	(NAMING_BUFFER);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/std/std_effect.c	1298	18	(ENTITY_TABLE[1], 0x21);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/std/std_effect.c	1328	18	(ENTITY_TABLE[1], 0x2a);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/std/std_effect.c	1375	14	(0x19d, 0);	DW1_PORT direct ABI correction

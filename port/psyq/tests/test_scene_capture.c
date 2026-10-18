@@ -20,6 +20,7 @@ static void vblank(void)
         clock_schedule(0, paint, NULL);
     }
 }
+void target(void) {} /* Exported identity for the manually driven mark. */
 int dw1_game_main(void)
 {
     if (getenv("TEST_PACK")) {
@@ -49,7 +50,7 @@ int dw1_game_main(void)
 int main(int argc, char **argv)
 {
     if (argc != 3) return 2;
-    PortCapture config = {"target", 2, argv[1], argv[2]};
+    PortCapture config = {.mark = "target", .vblank = 2, .capture = argv[1], .clock_trace = argv[2]};
     return port_run_game(getenv("TEST_PACK") ? 3 : 0,
                          getenv("TEST_UNTIL_OVERLAY") != NULL, &config);
 }

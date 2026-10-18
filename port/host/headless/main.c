@@ -22,6 +22,9 @@ static int usage(const char *argv0)
 	                "  --frames N       exit with status 0 after N frames\n"
 	                "  --capture-mark NAME --capture-vblank K --capture FILE  capture after mark + K VBlanks\n"
 	                "  --clock-trace FILE  write deterministic clock events\n"
+	                "  --inputs FILE --inputs-from frame0|mark  latch wire button masks per VBlank\n"
+	                "  --checkpoints FILE  capture ordered symbol[#n] entries and VBlank windows\n"
+	                "  --state-vars FILE --state-trace FILE  record typed state and rand outputs\n"
 	                "  --until-overlay  exit with status 0 once the first overlay is loaded\n",
 	        argv0);
 	return 2;
@@ -45,6 +48,11 @@ int main(int argc, char **argv)
 			continue;
 		}
 		if (i + 1 < argc) {
+			if (!strcmp(argv[i], "--inputs")) { config.inputs = argv[++i]; continue; }
+			if (!strcmp(argv[i], "--checkpoints")) { config.checkpoints = argv[++i]; continue; }
+			if (!strcmp(argv[i], "--inputs-from")) { config.inputs_from = argv[++i]; continue; }
+			if (!strcmp(argv[i], "--state-vars")) { config.state_vars = argv[++i]; continue; }
+			if (!strcmp(argv[i], "--state-trace")) { config.state_trace = argv[++i]; continue; }
 			if (!strcmp(argv[i], "--capture-mark")) {
 				config.mark = argv[++i];
 				continue;
@@ -78,6 +86,10 @@ int main(int argc, char **argv)
 	}
 	if ((config.mark || config.capture || config.vblank) &&
 	    (!config.mark || !*config.mark || !config.capture || !*config.capture || !config.vblank))
+		return usage(argv[0]);
+	if ((config.inputs_from && strcmp(config.inputs_from, "mark") && strcmp(config.inputs_from, "frame0")) ||
+	    (!!config.state_vars != !!config.state_trace)) return usage(argv[0]);
+	if ((config.checkpoints || config.state_vars || (config.inputs_from && !strcmp(config.inputs_from, "mark"))) && !config.mark)
 		return usage(argv[0]);
 	if (pack) {
 		char err[1024];

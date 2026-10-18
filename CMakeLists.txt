@@ -132,6 +132,10 @@ set_source_files_properties(${CMAKE_SOURCE_DIR}/src/main/main.c PROPERTIES
 target_compile_options(dw1_game_objs PRIVATE
   -fno-lto -fsigned-char -fwrapv -fno-strict-aliasing -fno-common -w
   -include ${CMAKE_SOURCE_DIR}/port/psyq/include/port_game.h)
+if(NOT EMSCRIPTEN)
+  # Entry hooks implement scene checkpoints without adding hooks to game sources.
+  target_compile_options(dw1_game_objs PRIVATE -finstrument-functions)
+endif()
 
 # Hardware models (CD over the Pack and GTE).
 add_library(dw1_backend STATIC port/backend/cdrom.c port/backend/gte.c port/backend/spu.c
@@ -182,6 +186,8 @@ if(NOT EMSCRIPTEN)
   set_tests_properties(libgs PROPERTIES TIMEOUT 30)
   add_executable(test_libgpu port/psyq/tests/test_libgpu.c)
   target_link_libraries(test_libgpu dw1_psyq)
+  target_include_directories(test_libgpu PRIVATE port/psyq/include)
+  target_compile_options(test_libgpu PRIVATE -idirafter ${CMAKE_SOURCE_DIR}/external/psyq_headers/mw_lib41/include)
   target_compile_options(test_libgpu PRIVATE -Wall -Wextra -Werror)
   add_test(NAME libgpu COMMAND test_libgpu)
   set_tests_properties(libgpu PROPERTIES TIMEOUT 30)
@@ -295,11 +301,11 @@ endif()
 endif()
 
 # Runtime start and PsyQ data the game references (linked only into the game).
-add_library(dw1_runtime STATIC port/psyq/crt.c port/psyq/libgs_data.c
+add_library(dw1_runtime STATIC port/psyq/crt.c port/psyq/scene.c port/psyq/libgs_data.c
   ${DW1_RTS_INFO_H})
 target_include_directories(dw1_runtime PRIVATE ${CMAKE_BINARY_DIR}/generated)
 target_compile_options(dw1_runtime PRIVATE -Wall -Wextra -Werror)
-target_link_libraries(dw1_runtime PUBLIC dw1_psyq)
+target_link_libraries(dw1_runtime PUBLIC dw1_psyq ${CMAKE_DL_LIBS})
 
 # A stub for every PsyQ function the game calls that the port does not implement yet.
 file(GLOB_RECURSE DW1_PSYQ_HEADERS CONFIGURE_DEPENDS
@@ -326,7 +332,8 @@ set_source_files_properties(port/host/headless/main.c port/host/web/main.c PROPE
 
 if(NOT EMSCRIPTEN)
   add_executable(dw1 port/host/headless/main.c ${DW1_PSYQ_STUBS} $<TARGET_OBJECTS:dw1_game_objs>)
-  target_link_libraries(dw1 dw1_runtime)
+  target_link_libraries(dw1 dw1_runtime ${CMAKE_DL_LIBS})
+  target_link_options(dw1 PRIVATE -rdynamic)
   target_compile_options(dw1 PRIVATE -Wall -Wextra -Werror)
   # L1: the game boots to frame 0 (return of its first VSync) with stubs where needed.
   add_test(NAME frame0 COMMAND sh -c "rm -f frame0_trace.log && DW1_TRACE=frame0_trace.log \
@@ -403,7 +410,17 @@ if(NOT EMSCRIPTEN)
   set_tests_properties(scene_flags PROPERTIES FIXTURES_REQUIRED synthetic_pack TIMEOUT 120)
   add_executable(test_scene_capture port/psyq/tests/test_scene_capture.c)
   target_link_libraries(test_scene_capture dw1_runtime)
+  target_link_options(test_scene_capture PRIVATE -rdynamic)
   target_compile_options(test_scene_capture PRIVATE -Wall -Wextra -Werror)
+
+  add_executable(test_scene_state port/psyq/tests/test_scene_state.c)
+  target_link_libraries(test_scene_state dw1_runtime)
+  target_link_options(test_scene_state PRIVATE -rdynamic)
+  target_compile_options(test_scene_state PRIVATE -Wall -Wextra -Werror -finstrument-functions)
+  add_test(NAME scene_state_unit COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/scenes/test_host.py
+    $<TARGET_FILE:dw1> $<TARGET_FILE:test_scene_capture> ${CMAKE_BINARY_DIR} $<TARGET_FILE:test_scene_state>)
+  set_tests_properties(scene_state_unit PROPERTIES FIXTURES_REQUIRED synthetic_pack TIMEOUT 120)
 
   # Class B: need the user's disc in DW1_DISC_DIR (skipped without it). pack_disc leaves the
   # USA Pack at us.pack in the build directory for dw1_overlay.
@@ -424,6 +441,15 @@ if(NOT EMSCRIPTEN)
   set_tests_properties(scene_title_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1200
     FIXTURES_REQUIRED "disc_pack;title_reference" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
   set_tests_properties(scene_title scene_title_compare PROPERTIES RESOURCE_LOCK scene_title_capture)
+  add_test(NAME reference_newgame_state COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py newgame --state --max-vblanks 40000 --timeout 1800)
+  set_tests_properties(reference_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+    FIXTURES_SETUP newgame_reference RESOURCE_LOCK newgame_capture)
+  add_test(NAME scene_newgame_state COMMAND sh -c
+    "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py newgame --build ${DW1_SCENE_PRESET} --state")
+  set_tests_properties(scene_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1250
+    FIXTURES_REQUIRED "disc_pack;newgame_reference" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    RESOURCE_LOCK newgame_capture)
   add_test(NAME dw1_overlay COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_dw1_overlay.sh
     $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   set_tests_properties(dw1_overlay PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600

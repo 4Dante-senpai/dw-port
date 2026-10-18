@@ -262,19 +262,26 @@
   ASan 44, web 26 y disco 6/6 verdes. Sin cambios en `src/`/`include/`. Evidencia:
   `docs/implementation-artifacts/evidence/story-3-4.log`.
 
+- Historia 3.3 (inputs por VBlank y comparación de estado): `run.py --state` alinea port y
+  referencia por puntos de control (`símbolo#n`), aplica inputs relativos a cada uno y compara
+  15 variables tipadas (`state_vars.txt`, punteros normalizados) y la secuencia de `rand`. La
+  Escena `newgame` (título, menú, New Game, nombres, hasta `gameLoop`) coincide en 9 puntos de
+  control, 15 variables y 16 llamadas a `rand`, en nativo y ASan; la referencia se captura dos
+  veces y exige igualdad exacta. Cambios en `src/` bajo `DW1_PORT` (`src-changes.md`): área
+  contigua para `BOYS.MMD`, escritura de `clearMapDigimon` por la dirección 0, guardas NULL de
+  `script_menu.c`, `NAMING_CTRL_BOXES`, residuo de a1 en `setActiveAnim`, `DRAWENV` de
+  `MOV_playMovie` a cero (corrige el `av_stubs` ASan del pipeline 100) y `renderMapOverlays`.
+  Revisión (3 capas Codex): 9 parches, 2 diferidos, 1 rechazado. CTest nativo 49, ASan 47, web 26
+  y disco 13/13 verdes; `make compare` idéntico. Evidencia:
+  `docs/implementation-artifacts/evidence/story-3-3.log`.
+
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1, 3.2 y 3.4 cerradas; 3.3 en curso (ver Bloqueos). El resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1, 3.2, 3.3 y 3.4 cerradas; sigue la 3.5. El resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 
-- Historia 3.3 (inputs y estado) sin cerrar: infraestructura en la rama local `story/3-3-inputs-state`
-  (commit WIP `d8b2087`). La Escena `newgame` diverge en `CURRENT_MENU` en el VBlank 165 tras la
-  marca (cargas: costos de CD sin calibrar, 3.10), el port falla después (ASan al cargar `BOYS.MMD`
-  sobre `TAMER_MODEL_BUFFER`; SIGSEGV en `clearMapDigimon`) y la referencia no llama a `rand` en
-  3000 VBlanks. Se retoma con muestreo alineado por puntos de control (decisión del orquestador,
-  revisable) y corrección de esos dos fallos.
-- Pendiente del dueño: repetir la captura de `title` con su BIOS real (no bloquea).
+- Pendiente del dueño: repetir las capturas de `title` y `newgame` con su BIOS real (no bloquea).
 
 ## Métricas
 
@@ -289,7 +296,7 @@
 | Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (52 mínimas M2) / 0 / 12 (de 199) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
-| Escenas que funcionan (nativo) | 1 (título idéntico a referencia OpenBIOS, sin excepciones) |
+| Escenas que funcionan (nativo) | 2 (título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control) |
 | Escenas que funcionan (web) | 1 (título, igual a nativo, Chromium y Firefox) |
 | Llamadas con firma distinta inventariadas / sin resolver | 1031 / 0 (`fnptr_casts.tsv`) |
 
