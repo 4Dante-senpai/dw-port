@@ -30,14 +30,14 @@ src/main/model.c	while@concatStrings	(*src1 != '\0')	1	3309	no aplica: el loop m
 src/main/model.c	while@concatStrings	(*src2 != '\0')	1	3313	no aplica: el loop modifica su propia condición
 src/main/model.c	while@loadMMD	(NPC_MODEL_TAKEN[k] != 0 && k < 5)	1	3393	no aplica: el loop modifica su propia condición
 src/main/model.c	while@applyMMD	(NPC_MODEL_TAKEN[k] != 0 && k < 5)	1	3666	no aplica: el loop modifica su propia condición
-src/main/overworld.c	while@renderNinjamonEffect	(i < 0x29)	1	823	no aplica: el loop modifica su propia condición
+src/main/overworld.c	while@renderNinjamonEffect	(i < 0x29)	1	840	no aplica: el loop modifica su propia condición
 src/main/script_common.c	while@handleItemLoss	(k < size)	1	1342	no aplica: el loop modifica su propia condición
 src/main/script_common.c	while@handleItemLoss	(k < size)	2	1360	no aplica: el loop modifica su propia condición
 src/main/script_common.c	while@itemMenuCursorUp	(k != 0)	1	2114	no aplica: el loop modifica su propia condición
 src/main/script_common.c	while@padWithSpaces	(used != 0)	1	2926	no aplica: el loop modifica su propia condición
 src/main/script_common.c	while@padWithSpaces	(used != 0)	2	2932	no aplica: el loop modifica su propia condición
-src/main/script_interp.c	while@getScriptSection	(1)	1	701	no aplica: avanza su propio índice y sale con break/return
-src/main/script_interp.c	while@getTriggerOffset	(bit != 0)	1	2693	no aplica: el loop modifica su propia condición
+src/main/script_interp.c	while@getScriptSection	(1)	1	713	no aplica: avanza su propio índice y sale con break/return
+src/main/script_interp.c	while@getTriggerOffset	(bit != 0)	1	2713	no aplica: el loop modifica su propia condición
 src/main/script_value.c	while@intToStringSJIS	(digits != 0)	1	107	no aplica: el loop modifica su propia condición
 src/main/sound.c	while@concatStrings3	(*src1 != 0)	1	508	no aplica: el loop modifica su propia condición
 src/main/sound.c	while@concatStrings3	(*src2 != 0)	1	511	no aplica: el loop modifica su propia condición
@@ -49,7 +49,7 @@ src/main/vecmath.c	while@calculatePosition	(coord->super != NULL)	1	267	no aplic
 src/main/world_object.c	while@addObject	(1)	1	30	no aplica: avanza su propio índice y sale con break/return
 src/main/world_object.c	while@removeObject	(1)	1	61	no aplica: avanza su propio índice y sale con break/return
 src/mov/mov.c	while@MOV_waitForFlip	(env->flipPending == 0)	1	163	port_yield
-src/shop/script_menu.c	while@terminateNamingBuffer	(pos != 0)	1	3053	no aplica: el loop modifica su propia condición
+src/shop/script_menu.c	while@terminateNamingBuffer	(pos != 0)	1	3073	no aplica: el loop modifica su propia condición
 src/std/std_effect.c	while@STD_tickEFEEngine	(COMBAT_EFFECT_ITR < 0x10)	1	1624	no aplica: el loop modifica su propia condición
 src/std/std_effect.c	while@STD_setupLoadedEFEFile	(1)	1	1873	no aplica: avanza su propio índice y sale con break/return
 src/std/std_effect.c	while@STD_tickParticleEmitters	(1)	1	2025	no aplica: avanza su propio índice y sale con break/return

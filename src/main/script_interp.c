@@ -44,17 +44,29 @@ int32_t isTrainingComplete(void);
 void setCameraFollowPlayer(void);
 void setFoodTimer(int32_t type);
 #if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
-/* The original call supplies only a0=12; a1 is a caller-saved residue.
- * Do not fabricate the missing animation when an NPC with that script id exists. */
-static void port_unverified_active_anim(int state)
+/* scriptNPCStartAnimation leaves a1 unchanged when no NPC matches. startAnimation
+ * leaves zero for a missing animation, otherwise setupModelMatrix's final
+ * ScaleMatrix leaves a1 pointing to the last bone's scale (800C19E0, 8009B0C0).
+ * NPC position data lives in the PS1 heap; preserve its original address byte,
+ * not the host arena's address byte. */
+void setActiveAnim(uint8_t scriptId, int8_t animId);
+static int8_t port_script_animation_residue(uint8_t scriptId, int32_t animId)
 {
     for (int i = 0; i < 8; i++) {
-        if (ENTITY_TABLE[i + 2] && NPC_ENTITIES[i].scriptId == state) {
-            __builtin_trap();
+        if (ENTITY_TABLE[i + 2] && NPC_ENTITIES[i].scriptId == scriptId) {
+            Entity *entity = (Entity *)&NPC_ENTITIES[i];
+            if (((uint32_t *)entity->animPtr)[(uint8_t)animId] == 0)
+                return 0;
+            uint8_t bones = DIGIMON_DATA[entity->type].boneCount;
+            uintptr_t scale = (uintptr_t)&entity->posData[bones ? bones - 1 : 0].scale;
+            uintptr_t offset = scale - (uintptr_t)Ps1_Ram;
+            if (offset >= 0x200000u)
+                __builtin_trap();
+            return (int8_t)offset;
         }
     }
+    return (int8_t)animId;
 }
-#define setActiveAnim port_unverified_active_anim
 #else
 void setActiveAnim(int32_t state);
 #endif
@@ -909,7 +921,11 @@ void scriptSetEntityWalking(uint8_t actorId, int32_t animationId)
 		partnerSetState(0xc);
 	} else {
 		scriptNPCStartAnimation(actorId, (animationId + 1) << 1);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+        setActiveAnim(0xc, port_script_animation_residue(actorId, (animationId + 1) << 1));
+#else
 		setActiveAnim(0xc);
+#endif
 	}
 }
 
@@ -923,7 +939,11 @@ void scriptStartAnimation(uint8_t actorId, int32_t animationId)
 		partnerSetState(0xc);
 	} else {
 		scriptNPCStartAnimation(actorId, animationId);
+#if defined(DW1_PORT) && !defined(DW1_ABI_AUDIT)
+        setActiveAnim(0xc, port_script_animation_residue(actorId, animationId));
+#else
 		setActiveAnim(0xc);
+#endif
 	}
 }
 

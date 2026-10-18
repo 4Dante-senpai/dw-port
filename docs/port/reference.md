@@ -45,10 +45,13 @@ Las direcciones salen de `config/us/symbols.txt`.
 - **Captura**: en el listener `GPU::Vsync` (después de despachar el VBlank y antes de volver al
   juego), cuando `VBlanks − marca = capture_vblank`. `PCSX.GPU.takeScreenShot()` devuelve el
   rectángulo de display según GP1.
-- **Inputs**: `{ vblank = k, buttons = [bits 0..15] }`, con `k` contado desde el frame 0 y
+- **Inputs**: `{ vblank = k, buttons = [bits 0..15] }`, con `k` contado desde el frame 0 por defecto,
+  o desde la marca con `inputs_from = "mark"`, y
   estrictamente creciente. Cada entrada reemplaza el estado anterior. El estado se aplica en cada
   latch de VBlank con `PCSX.SIO0.slots[1].pads[1].setOverride/clearOverride`. Con `inputs = []`
-  no se presiona nada; los inputs no vacíos se validan en la historia 3.3.
+  no se presiona nada. El adaptador prueba los 16 overrides con `getButton` al arrancar,
+  y los libera antes de ejecutar el juego. Start no vacío se verificó además en el juego:
+  `FIRST_SCREEN_PRESSED_START` cambia en marca+61 tanto en referencia como en el port.
 
 Para el determinismo, la corrida usa intérprete, GPU software, RAM retail, SPU `dummy` con
 NullSync, `Speed=0` y configuración portable propia. La conversión a P6 es la misma de
@@ -57,7 +60,7 @@ RGB24 pasa tal cual. Se rechazan las capturas de 16 colores o menos. Si dos corr
 distintos, el script falla, incluso con `--update`. Si un hash fijado no coincide, también falla
 y no toca el `.toml`.
 
-No se captura audio (historia 3.5) ni RAM (3.3). La comparación del port se ejecuta con
+No se captura audio (historia 3.5). La comparación del port se ejecuta con
 `tools/port/scenes/run.py title --build native-headless --compare` (ver `scenes.md`).
 
 ## Escena `title` (OpenBIOS)
@@ -89,9 +92,48 @@ la paridad general de primitivas sigue en `deferred-work.md`.
 `PCSX.addBreakpoint(addr, 'Exec', 4, cause, fn)` (los wrappers deben retenerse),
 `PCSX.getRegisters().GPR.n.ra`, `PCSX.Events.createEventListener('GPU::Vsync', fn)` (despacha
 entre bloques de CPU), `PCSX.GPU.takeScreenShot()` (bpp 0 = 16, 1 = 24), `tostring(shot.data)`,
-`PCSX.SIO0.slots[1].pads[1].setOverride/clearOverride(bit)` y `PCSX.quit(code)`. Todas se
-probaron en ejecución real bajo Xvfb, salvo los overrides con botones durante el juego (historia
-3.3).
+`PCSX.SIO0.slots[1].pads[1].setOverride/clearOverride(bit)` y `PCSX.quit(code)` se
+probaron en ejecución real bajo Xvfb, incluidos los inputs no vacíos de la historia 3.3.
+
+`PCSX.getMemPtr()` devuelve un `uint8_t*` de RAM (dirección PS1 enmascarada con
+`0x1fffff`); sus lecturas little-endian se verificaron con las trazas reales de 15
+variables. `PCSX.getRegisters().GPR.n.v0` en el breakpoint de retorno permite leer
+`rand`; `ra` identifica ese retorno y los wrappers `:enable()`/`:disable()` evitan
+contar ejecuciones ajenas. Estas APIs se comprobaron en las fuentes del SHA fijado
+(`src/core/pcsxffi.lua`, `pcsxlua.cc`, `pad.cc`) y mediante sondas en ejecución.
+
+## Estado y semilla de rand
+
+`capture.py <id> --state` genera dos `run-N.state`, con lecturas después del despacho
+de cada VBlank y antes de volver al juego en modo legado; con `checkpoints`, en cada
+entrada a función y en los offsets 1..`window` posteriores. Las
+declaraciones y el formato están en `scenes.md`. Los símbolos globales y sus tamaños
+salen de `config/us/symbols.txt`; cuando falta tamaño se usa la siguiente dirección
+distinta. NULL se escribe `0`; globales `símbolo+offset`; el resto de RAM se normaliza
+a `0x80000000 | offset`. El breakpoint en `rand` (`0x8009127c`) registra cada salida
+al alcanzar su `ra`, junto al VBlank relativo a la marca.
+
+OpenBIOS inicializa `s_currentSeed` a **0** (`src/mips/openbios/kernel/libcmisc.c`,
+submódulo nugget `361f3f6a…`). Una sonda aislada al primer `VSync` llamó al `rand`
+original 16 veces y observó:
+`0, 21468, 9988, 22117, 3498, 16927, 16045, 19741, 12122, 8410, 12261, 27052,
+5659, 9758, 21087, 25875` (`build/reference/seed-probe/run.log`). Son las salidas del
+LCG `seed = seed * 0x41c64e6d + 0x3039`, `(seed >> 16) & 0x7fff`, con aritmética de
+32 bits. El port adopta esa semilla; sigue siendo provisional respecto al BIOS del
+dueño. La sonda cambia el PC solo en el emulador de referencia: no sustituye la
+exigencia de 16 llamadas producidas por la escena con inputs.
+
+La captura nueva no requiere hash fijado de imagen; compara determinismo de ambas
+corridas y estado. `run.py --state` informa el diff de imagen sin exigir igualdad.
+Los puntos se cuentan desde la marca, admiten `símbolo#n` y tienen un origen de
+inputs independiente en cada lado. Los VBlanks se conservan para diagnóstico; se
+comparan punto/offset y valores ordenados de `rand`. Las cargas de CD todavía
+producen tiempos distintos (3.10). Los breakpoints de entrada, ocurrencias, ventanas
+e inputs se verifican además ejecutando el adaptador Lua real con una API sintética
+en LuaJIT de PCSX-Redux. Las dos capturas completas de New Game coinciden en
+nueve puntos de control,
+15 variables y 16 llamadas naturales a `rand`; los runners nativo y ASan pasan
+dos veces contra ellas. No se leyó código de SoftGPU para implementar este soporte.
 
 ## Repetición con BIOS del dueño
 
@@ -106,3 +148,25 @@ El script hace dos corridas e imprime el hash junto al de OpenBIOS. No escribe `
 (`--bios --update` se rechaza). El resultado se registra acá: si coinciden o qué difiere.
 
 Resultado: **pendiente** (lo corre el dueño).
+
+Sonda de `clearMapDigimon` en el original: ocho pares de breakpoints en
+`800B64D0`/`800B64D4` observaron `v1=0` y RAM[0x34]=0 antes y después
+de cada escritura (`build/reference/null-write-check/run-1.log`). Confirma la
+traducción del acceso a RAM baja usada bajo `DW1_PORT`.
+
+El despachador de eventos del SHA fijado (`src/core/eventslua.cc:createListener`)
+conserva en su coroutine las tablas del registro y los resultados de cada callback.
+Una captura larga agotó esa pila en el VBlank 21819 (`clearOverride` fue la primera
+llamada C que lo detectó); desactivar JIT no cambió el fallo. El adaptador renueva
+el listener después de 4096 VBlanks, desde el breakpoint de entrada a `VSync`,
+cuando el callback anterior ya retornó. Usa `listener:remove()` y conserva el nuevo
+handle; no modifica el emulador ni cambia el punto de muestreo. La prueba del
+adaptador cruza 5000 eventos y verifica esa renovación; la prueba FFI atraviesa
+30000 eventos reales y ocho listeners, emitiendo `ExecutionFlow::Run` a través
+del mismo `createListener` para evitar emular 30000 frames. Invoca la renovación
+entre eventos, como el breakpoint del juego. Las dos capturas largas renovadas llegaron al VBlank 29323 con 16 llamadas naturales
+a `rand`, coincidentes con las dos corridas de los runners nativo y ASan.
+
+Las pruebas sin disco incluyen un programa MIPS sintético que atraviesa los
+breakpoints FFI reales de entrada/retorno de `rand` dieciséis veces, además del
+test de callbacks del adaptador y la comprobación de los dieciséis bits de pad.

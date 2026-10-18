@@ -487,6 +487,13 @@ void renderMapOverlays(LocalMapObjectInstance *instances, int16_t screenX,
 	org = ACTIVE_ORDERING_TABLE->org;
 	for (i = 0; i < 188; i++) {
 		startFrame = instances->currentFrame;
+#ifdef DW1_PORT
+        /* Skip the original's unused animSprites[-1] read. */
+        if (startFrame == -1) {
+            instances++;
+            continue;
+        }
+#endif
 		if (instances->animSprites[startFrame] == -1 || startFrame == -1) {
 			instances++;
 			continue;
@@ -527,6 +534,11 @@ void renderMapOverlays(LocalMapObjectInstance *instances, int16_t screenX,
 			if (instances->timer == instances->animTimes[startFrame]) {
 				instances->currentFrame++;
 				instances->timer = 0;
+#ifdef DW1_PORT
+                /* The asm reads index 8 before unconditionally wrapping to zero. */
+                if (instances->currentFrame >= 8)
+                    instances->currentFrame = 0;
+#endif
 				if (instances->animSprites[instances->currentFrame] == -1 ||
 				    instances->currentFrame >= 8) {
 					instances->currentFrame = 0;
@@ -537,6 +549,11 @@ void renderMapOverlays(LocalMapObjectInstance *instances, int16_t screenX,
 			if (instances->timer == instances->animTimes[startFrame]) {
 				instances->currentFrame++;
 				instances->timer = 0;
+#ifdef DW1_PORT
+                /* The asm reads index 8 before unconditionally wrapping to zero. */
+                if (instances->currentFrame >= 8)
+                    instances->currentFrame = 0;
+#endif
 				if (instances->animSprites[instances->currentFrame] == -1 ||
 				    instances->currentFrame >= 8) {
 					instances->currentFrame = 0;
@@ -1167,7 +1184,12 @@ void clearMapDigimon(void)
 		}
 		MAP_DIGIMON_TABLE[i].path.activeSection = 0;
 		ENTITY_TABLE[i + 2] = NULL;
+#ifdef DW1_PORT
+		/* asm: 800B64C4..800B64D0 stores through zero to PS1 RAM byte 0x34. */
+		((Entity *)Ps1_Ram)->isOnMap = 0;
+#else
 		ENTITY_TABLE[i + 2]->isOnMap = 0;
+#endif
 		MAP_DIGIMON_TABLE[i].typeId = -1;
 		MAP_DIGIMON_TABLE[i].waypointWaitTimer = 0;
 		MAP_DIGIMON_TABLE[i].targetAngle = MAP_DIGIMON_TABLE[i].ccDiff =
