@@ -442,7 +442,7 @@ if(NOT EMSCRIPTEN)
     FIXTURES_REQUIRED "disc_pack;title_reference" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
   set_tests_properties(scene_title scene_title_compare PROPERTIES RESOURCE_LOCK scene_title_capture)
   add_test(NAME reference_newgame_state COMMAND python3 -I -B
-    ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py newgame --state --max-vblanks 40000 --timeout 1800)
+    ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py newgame --state --reuse --max-vblanks 40000 --timeout 1800)
   set_tests_properties(reference_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
     FIXTURES_SETUP newgame_reference RESOURCE_LOCK newgame_capture)
   add_test(NAME scene_newgame_state COMMAND sh -c

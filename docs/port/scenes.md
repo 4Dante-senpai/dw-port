@@ -115,7 +115,18 @@ informativo: sus píxeles no tienen que coincidir. El título conserva su compar
 estricta. Archivos generados solo en `build/` o `$DW1_REFERENCE_DIR`.
 
 `scene_newgame_state` y su fixture `reference_newgame_state` son clase B y forman
-parte de `native-disc`. La secuencia recorre título → menú → New Game → dos
+parte de `native-disc`. El fixture usa `capture.py --state --reuse`: con sello y
+archivos válidos imprime `reference_newgame: cached` sin lanzar PCSX-Redux. Las dos
+pasadas de la referencia corren en paralelo con Xvfb independientes; las dos
+pasadas nativas de este runner siguen siendo secuenciales. Los jobs `native-disc`
+y `native-asan-disc` conservan `build/reference/` en la caché privada de GitLab,
+incluso si falla otra prueba; no se sube como artifacts. La clave depende de
+`.gitlab-ci.yml` y la validez sigue dependiendo de la huella y del pin de la PPM.
+Medición local (2026-10-18): captura fría de New Game de 1560,271 s secuenciales
+a 871,147 s en paralelo (44,2 % menos espera bajo carga);
+fixture reutilizado en 0,13 s según CTest (ver `reference.md` y las notas de la
+especificación para la comparación secuencial y los logs).
+La secuencia recorre título → menú → New Game → dos
 selectores de nombre → diálogos de introducción → primer mapa. Start confirma los
 nombres y Cross avanza los diálogos; los inputs de cada tramo parten de su propio
 punto de control. `randomLimit#17` termina la captura antes de la siguiente llamada

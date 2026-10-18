@@ -286,7 +286,24 @@
   `src/`/`include/`. Evidencia: `docs/implementation-artifacts/evidence/story-e3/` y `docs/port/reference.md`
   ("Verificación con OpenBIOS parcheado").
 
+- Capturas de referencia más rápidas (E3): `capture.py` ejecuta las dos pasadas en
+  paralelo con Xvfb independientes (displays iniciales 199/299). `--reuse` valida huella,
+  archivos y pin antes de reutilizar; `reference_newgame_state` lo usa. Los jobs
+  `native-disc` y `native-asan-disc` conservan `build/reference/` en la caché privada
+  del runner `dw1-data`, con clave por `.gitlab-ci.yml` y `when: always`, sin artifacts.
+  New Game: 1560,271 s secuenciales → 871,147 s en paralelo (44,2 % menos espera
+  bajo carga); fixture con caché: 0,13 s. Ambas trazas, frames y sello coinciden
+  byte a byte con la captura secuencial (frame `48322f1c…e508`).
+  Tests del capturador 37/37; builds y suites nativa/ASan sin fallos (49/47 pruebas,
+  con ocho omisiones de disco por preset en la ejecución sin `DW1_DISC_DIR`, cubiertas
+  después por clase B 12/12 en ambos presets vía `ctest_no_skip.sh`, sin omisiones).
+  Detalles y mediciones en
+  `docs/implementation-artifacts/spec-e3-capturas-de-referencia-mas-rapidas.md`.
+
 ## En curso
+
+- Capturas rápidas E3: pendiente comprobar restauración de caché y `cached` en dos
+  pipelines consecutivos de `main`; esta ejecución local no crea commits ni publica cambios.
 
 - Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1, 3.2, 3.3 y 3.4 cerradas; sigue la 3.5. El resto de la Épica 4 sigue después de la Épica 3.
 

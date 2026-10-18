@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Capture a scene twice with the pinned PCSX-Redux reference emulator."""
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import importlib.util
 import json
@@ -106,7 +107,7 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
     script = work / "capture.lua"
     script.write_text("DW1_CAPTURE = " + lua_literal(config) + "\n" +
                       (ROOT / "tools/port/reference/capture.lua").read_text())
-    command = ["xvfb-run", "-a", emulator, "-no-ui", "-portable", str(work),
+    command = ["xvfb-run", "-a", "-n", str(100 * index + 99), emulator, "-no-ui", "-portable", str(work),
                "-interpreter", "-softgpu", "-debugger", "-no-fastboot",
                "-2mb", "-1mbvram", "-no-trace", "-no-pcdrv", "-noupdate",
                "-no-webserver", "-no-gdb", "-iso", str(cue), "-bios", str(bios),
@@ -141,11 +142,14 @@ def main(argv=None):
     parser.add_argument("id", choices=sorted(p.stem for p in (ROOT / "tools/port/scenes").glob("*.toml")))
     parser.add_argument("--update", action="store_true")
     parser.add_argument("--state", action="store_true")
+    parser.add_argument("--reuse", action="store_true", help="reuse a valid deterministic state capture")
     parser.add_argument("--bios", type=Path)
     parser.add_argument("--out", type=Path)
     parser.add_argument("--timeout", type=float, default=600)
     parser.add_argument("--max-vblanks", type=int, default=10000)
     args = parser.parse_args(argv)
+    if args.reuse and (args.update or not args.state):
+        raise ValueError("--reuse requires --state and cannot be combined with --update")
     if args.bios and args.update:
         raise ValueError("--bios cannot be combined with --update")
     if args.timeout <= 0 or args.max_vblanks <= 0:
@@ -180,13 +184,24 @@ def main(argv=None):
     output = safe_output(args.out or Path(os.environ.get(
         "DW1_REFERENCE_DIR", str(ROOT / "build/reference"))) / args.id)
     output.mkdir(parents=True, exist_ok=True)
+    identity = _runner.bios_fingerprint(bios)
+    fingerprint = _runner.state_fingerprint(scene, identity) if args.state else None
+    stamp = output / "state.sha256"
+    expected = scene.get("reference_sha256")
+    if (args.reuse and stamp.is_file() and stamp.read_bytes().strip() == fingerprint.encode()
+            and all((output / name).is_file() for name in ("run-1.state", "run-2.state", "run-1.ppm"))
+            and (args.bios or not expected or hashlib.sha256((output / "run-1.ppm").read_bytes()).hexdigest() == expected)):
+        print(f"reference_{args.id}: cached")
+        return 0
     # Remove stale captures before either run (failed invocations cannot reuse evidence).
     (output / "state.sha256").unlink(missing_ok=True)
     for index in (1, 2):
         (output / f"run-{index}.ppm").unlink(missing_ok=True)
         (output / f"run-{index}.state").unlink(missing_ok=True)
-    hashes = [run_once(emulator, cues[0].resolve(), bios, scene, symbols, output,
-                       index, args.timeout, args.max_vblanks) for index in (1, 2)]
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        runs = [executor.submit(run_once, emulator, cues[0].resolve(), bios, scene, symbols,
+                                output, index, args.timeout, args.max_vblanks) for index in (1, 2)]
+        hashes = [run.result() for run in runs]
     if hashes[0] != hashes[1]:
         raise ValueError(f"non-deterministic captures: {hashes[0]} != {hashes[1]}")
     if args.state:
@@ -198,7 +213,6 @@ def main(argv=None):
         calls = sum(row[1] == "rand" for row in records)
         if scene.get("expect_rand") and calls < 16:
             raise ValueError(f"expected at least 16 rand calls, got {calls}")
-    expected = scene.get("reference_sha256")
     if args.update:
         source = scene_path.read_text()
         line = f'reference_sha256 = "{hashes[0]}"'
@@ -209,8 +223,7 @@ def main(argv=None):
     if args.bios:
         print(f"owner BIOS: OpenBIOS hash={expected or 'unset'}; captured={hashes[0]}")
     if args.state:
-        identity = hashlib.sha256(bios.read_bytes()).hexdigest() if args.bios else _runner.bios_fingerprint(bios)
-        (output / "state.sha256").write_text(_runner.state_fingerprint(scene, identity) + "\n")
+        stamp.write_text(fingerprint + "\n")
     print(f"reference_{args.id}: OK sha256={hashes[0]}" + (" (unpinned)" if not expected and not args.update else ""))
     return 0
 
