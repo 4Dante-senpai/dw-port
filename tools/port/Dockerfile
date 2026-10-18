@@ -114,6 +114,15 @@ RUN git init /tmp/pcsx && cd /tmp/pcsx && \
     printf '{"version":"dw1-reference","changeset":"%s","timestamp":%s}\n' \
         "${PCSX_REDUX_SHA}" "$(git show -s --format=%ct HEAD)" > /out/share/pcsx-redux/resources/version.json
 
+# Match the measured SCPH-1001 rand startup seed (206 calls before New Game).
+# Keep this after the expensive emulator layer; rebuild only OpenBIOS.
+RUN cd /tmp/pcsx && \
+    sed -i 's/^static uint32_t s_currentSeed;$/static uint32_t s_currentSeed = 0x24040001;/' src/mips/openbios/kernel/libcmisc.c && \
+    (grep -q '^static uint32_t s_currentSeed = 0x24040001;$' src/mips/openbios/kernel/libcmisc.c || \
+        { echo 'OpenBIOS rand seed patch failed: s_currentSeed declaration changed' >&2; exit 1; }) && \
+    make -C src/mips/openbios -j4 PREFIX=mipsel-linux-gnu FORMAT=elf32-tradlittlemips && \
+    cp src/mips/openbios/openbios.bin /out/share/pcsx-redux/
+
 FROM toolchain
 # Only runtime artifacts cross the emulator build-stage boundary.
 COPY --from=pcsx-redux /out/ /usr/local/

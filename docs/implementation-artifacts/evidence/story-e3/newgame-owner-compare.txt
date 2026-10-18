@@ -1,0 +1,20 @@
+# New Game: patched OpenBIOS vs SCPH-1001, VBlank column removed (diff empty = identical)
+openbios.bin sha256 4ddea14132380f1aa6c303e45b417e1ead628d5c8c78ad678dcf2f9404832189
+diff: empty
+rand calls (patched OpenBIOS):
+14398 rand 0 11315
+14704 rand 1 12212
+15010 rand 2 7201
+15316 rand 3 23373
+15724 rand 4 24690
+16132 rand 5 26014
+16540 rand 6 17151
+16897 rand 7 29738
+17356 rand 8 22660
+17764 rand 9 30724
+18313 rand 10 20202
+18811 rand 11 14579
+19258 rand 12 3483
+19603 rand 13 13776
+20050 rand 14 18202
+20497 rand 15 13577

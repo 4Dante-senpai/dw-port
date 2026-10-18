@@ -15,10 +15,10 @@ import sys
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[3]
-OPENBIOS = Path("/usr/local/share/pcsx-redux/openbios.bin")
 _spec = importlib.util.spec_from_file_location("scene_runner", ROOT / "tools/port/scenes/run.py")
 _runner = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_runner)
+OPENBIOS = _runner.OPENBIOS
 ppm_colors = _runner.ppm_colors
 
 
@@ -209,7 +209,7 @@ def main(argv=None):
     if args.bios:
         print(f"owner BIOS: OpenBIOS hash={expected or 'unset'}; captured={hashes[0]}")
     if args.state:
-        identity = hashlib.sha256(bios.read_bytes()).hexdigest() if args.bios else "openbios"
+        identity = hashlib.sha256(bios.read_bytes()).hexdigest() if args.bios else _runner.bios_fingerprint(bios)
         (output / "state.sha256").write_text(_runner.state_fingerprint(scene, identity) + "\n")
     print(f"reference_{args.id}: OK sha256={hashes[0]}" + (" (unpinned)" if not expected and not args.update else ""))
     return 0

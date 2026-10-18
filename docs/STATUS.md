@@ -275,17 +275,23 @@
   y disco 13/13 verdes; `make compare` idéntico. Evidencia:
   `docs/implementation-artifacts/evidence/story-3-3.log`.
 
+- Historia E3 (semilla de `rand` del BIOS real): el port arranca `rand` con `0x24040001`, la
+  semilla de SCPH-1001 derivada de la traza de New Game (206 llamadas antes de la primera salida
+  natural). `tools/port/Dockerfile` parchea `s_currentSeed` de OpenBIOS al mismo valor en una capa
+  propia (falla si el patrón cambia), así que CI reproduce el hardware real sin BIOS propietario. El
+  sello de las referencias de estado usa el SHA-256 de `openbios.bin`. Con OpenBIOS parcheado,
+  New Game coincide con SCPH-1001 en estado, 16 `rand` y frame (`48322f1c…e508`); título sin
+  cambios. Nativo 49/49 y ASan 47/47 con disco sin omisiones; `make compare` OK. Sin cambios en
+  `src/`/`include/`. Evidencia: `docs/implementation-artifacts/evidence/story-e3/` y `docs/port/reference.md`
+  ("Verificación con OpenBIOS parcheado").
+
 ## En curso
 
 - Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1, 3.2, 3.3 y 3.4 cerradas; sigue la 3.5. El resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 
-- Decisión del dueño (no bloquea): capturas con BIOS real SCPH-1001 hechas el 2026-10-18
-  (`docs/port/reference.md`, "Resultado"). `title` es idéntico a OpenBIOS. En `newgame`, el
-  estado de los 9 puntos coincide, pero `rand` arranca con la semilla `0x24040001` en lugar de 0.
-  Falta decidir si el port adopta la semilla del BIOS real (eso cambia la referencia de
-  `newgame`, y CI solo puede capturar con OpenBIOS) o si mantiene 0.
+- Ninguno.
 
 ## Métricas
 

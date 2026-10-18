@@ -36,8 +36,8 @@ python3 -c 'from itertools import accumulate as a; from functools import reduce;
 	};
 	uint64_t before = clock_now();
 	/* Check static initialization before calling either srand or the reset hook. */
-	CHECK(rand() == 0);
-	CHECK(rand() == 21468);
+	CHECK(rand() == 20346);
+	CHECK(rand() == 17442);
 	for (size_t s = 0; s < sizeof golden / sizeof golden[0]; s++) {
 		srand(golden[s].seed);
 		uint32_t digest = 0;
@@ -51,8 +51,8 @@ python3 -c 'from itertools import accumulate as a; from functools import reduce;
 		CHECK(digest == golden[s].digest);
 	}
 	psyq_libc_reset();
-	CHECK(rand() == 0);
-	CHECK(rand() == 21468);
+	CHECK(rand() == 20346);
+	CHECK(rand() == 17442);
 	CHECK(clock_now() == before);
 }
 
