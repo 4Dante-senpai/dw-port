@@ -281,7 +281,8 @@
   propia (falla si el patrón cambia), así que CI reproduce el hardware real sin BIOS propietario. El
   sello de las referencias de estado usa el SHA-256 de `openbios.bin`. Con OpenBIOS parcheado,
   New Game coincide con SCPH-1001 en estado, 16 `rand` y frame (`48322f1c…e508`); título sin
-  cambios. Nativo 49/49 y ASan 47/47 con disco sin omisiones; `make compare` OK. Sin cambios en
+  cambios. Nativo 49/49 y ASan 47/47 con disco sin omisiones; `make compare` OK. CI: imagen
+  `dw-port@sha256:e79c381a…6f45` (job `images` 387) y pipeline 104 verde en la rama. Sin cambios en
   `src/`/`include/`. Evidencia: `docs/implementation-artifacts/evidence/story-e3/` y `docs/port/reference.md`
   ("Verificación con OpenBIOS parcheado").
 
