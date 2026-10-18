@@ -281,7 +281,11 @@
 
 ## Bloqueos
 
-- Pendiente del dueño: repetir las capturas de `title` y `newgame` con su BIOS real (no bloquea).
+- Decisión del dueño (no bloquea): capturas con BIOS real SCPH-1001 hechas el 2026-10-18
+  (`docs/port/reference.md`, "Resultado"). `title` es idéntico a OpenBIOS. En `newgame`, el
+  estado de los 9 puntos coincide, pero `rand` arranca con la semilla `0x24040001` en lugar de 0.
+  Falta decidir si el port adopta la semilla del BIOS real (eso cambia la referencia de
+  `newgame`, y CI solo puede capturar con OpenBIOS) o si mantiene 0.
 
 ## Métricas
 

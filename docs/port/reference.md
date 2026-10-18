@@ -147,7 +147,46 @@ DW1_DISC_DIR=/private/disc python3 -I -B tools/port/reference/capture.py title \
 El script hace dos corridas e imprime el hash junto al de OpenBIOS. No escribe `title.toml`
 (`--bios --update` se rechaza). El resultado se registra acá: si coinciden o qué difiere.
 
-Resultado: **pendiente** (lo corre el dueño).
+`docker_run.sh` monta solo el repo, y `--bios` rechaza rutas dentro de él. Con el BIOS y el
+disco en `game_rom/` (ignorado por git), montar ese directorio aparte en `/private` y usar
+el daemon local (el contexto por defecto de esta máquina es remoto):
+
+```sh
+docker --context default run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp \
+  -v "$PWD":/dw -v dw_venv:/dw/.venv -v "$PWD/game_rom":/private:ro -w /dw \
+  -e DW1_DISC_DIR=/private/extracted dw-port:latest \
+  python3 -I -B tools/port/reference/capture.py newgame --state --max-vblanks 40000 \
+  --timeout 1800 --bios /private/SCPH1001.BIN --out build/reference-owner/newgame
+```
+
+`newgame` necesita los mismos `--state --max-vblanks 40000 --timeout 1800` que usa
+`run.py`: con el límite por defecto (10000 VBlanks desde el arranque) se corta, porque el
+BIOS real tarda más en arrancar (frame 0 en el VBlank 1320).
+
+### Resultado (2026-10-18, SCPH-1001)
+
+BIOS del dueño: SCPH-1001 (NTSC-U), MD5 `924e392ed05558ffdb115408c263dccf`, SHA-256
+`71af94d1e47a68c11e8fdb9f8368040601514a42a5a399cda48c7d3bff1e99d3`. Ambas escenas dieron dos
+corridas idénticas entre sí.
+
+- **`title`: coincide.** `56132366…260d`, el mismo hash que OpenBIOS y que `title.toml`.
+- **`newgame`: el estado coincide, `rand` no.** Las 15 variables de los 9 puntos de control
+  tienen los mismos valores que con OpenBIOS. Difieren:
+  - Los VBlanks de los puntos a partir de `setupNameSelectorBox#2` (−90, +120, +120, +385
+    respecto de OpenBIOS). Se conservan solo para diagnóstico y no se comparan (ver arriba).
+  - Los 16 valores de `rand` (primeros: `11315, 12212, 7201, 23373`) y, en consecuencia, el
+    frame capturado en `randomLimit#17` (`48322f1c…e508` contra `8557c88c…ba79`).
+
+**Causa: semilla inicial del BIOS.** Las 16 salidas del BIOS real son consecutivas del mismo
+LCG. Invirtiendo el LCG, la semilla queda exactamente **206 llamadas** antes de la primera
+salida natural (la misma cantidad que con OpenBIOS, cuyas salidas son contiguas desde la
+semilla 0 en la posición 206). Esa semilla es `0x24040001`. El bit 31 no influye en las
+salidas, así que `0xA4040001` es equivalente. Con SCPH-1001 el juego no arranca con semilla 0:
+la hipótesis `BIOS_RAND_SEED 0u` (`port/psyq/libc.c:9`) es correcta para OpenBIOS, pero no para
+el BIOS real.
+
+Sin verificar con el BIOS real: el contenido de RAM[0] que usa la búsqueda de Jijimon
+(`src-changes.md`, historia 3.3).
 
 Sonda de `clearMapDigimon` en el original: ocho pares de breakpoints en
 `800B64D0`/`800B64D4` observaron `v1=0` y RAM[0x34]=0 antes y después
