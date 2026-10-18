@@ -57,7 +57,8 @@ RGB24 pasa tal cual. Se rechazan las capturas de 16 colores o menos. Si dos corr
 distintos, el script falla, incluso con `--update`. Si un hash fijado no coincide, también falla
 y no toca el `.toml`.
 
-No se captura audio (historia 3.5) ni RAM (3.3), y la comparación contra el port queda para 3.2.
+No se captura audio (historia 3.5) ni RAM (3.3). La comparación del port se ejecuta con
+`tools/port/scenes/run.py title --build native-headless --compare` (ver `scenes.md`).
 
 ## Escena `title` (OpenBIOS)
 
@@ -68,9 +69,20 @@ No se captura audio (historia 3.5) ni RAM (3.3), y la comparación contra el por
 | Captura | VBlank 8702, 320×240, 256 colores |
 | SHA-256 (2 corridas) | `561323665a33d833c89339030f6a8c60e4a395add2cff467d1d47e92dd46260d` |
 
-Dato para la historia 3.2: la captura del port (`native-headless`) tiene las mismas dimensiones y
-la misma cantidad de colores, pero difiere en 10.674 píxeles, todos dentro de la caja x 1..128,
-y 0..217 (los rayos animados del lado izquierdo).
+Resultado de la historia 3.2: `native-headless` y `native-asan` producen el mismo SHA-256 de la tabla,
+con 0 píxeles RGB555 distintos y sin excepciones. Se conserva el hash de referencia original. El título web también coincide con el nativo
+en Chromium y Firefox (`web_scene_title`, 4 casos).
+
+La inferencia en sala limpia comparó numéricamente `TITLE256.TIM` con la PPM, sin leer
+SoftGPU: truncar UV daba 10.674 diferencias; redondear solo al más cercano dejaba diferencias
+en x=128. Las intersecciones de aristas calculadas en 16.16 (división truncada), seguidas de
+interpolación horizontal y redondeo UV al más cercano, reproducen también esa columna:
+el triángulo superior toma el texel 128; el inferior toma 127 salvo intersecciones exactas
+(filas múltiplos de 15). Esto incluye la fila 210, que distingue la división por fila de
+acumular pasos de arista truncados. Un test sintético verifica las 256×240 muestras con un
+oráculo por columnas, independiente de las ecuaciones del renderer. Los SHA de VRAM
+existentes siguen iguales. No se cambia el color interpolado: el título usa color constante;
+la paridad general de primitivas sigue en `deferred-work.md`.
 
 ## APIs Lua verificadas (SHA fijado)
 

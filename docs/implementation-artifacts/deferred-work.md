@@ -70,3 +70,11 @@
 - source_spec: `docs/implementation-artifacts/spec-2-12-renderer-software-y-libgpu.md`
   summary: `DrawOTag` con una OT que no termina imprime un aviso y retorna en lugar de usar `PORT_ASSERT` en debug (retro de la Épica 2, F7).
   evidence: `port/psyq/libgpu.c` `DrawOTag` (corte tras 0x100000 paquetes); la convención de invariantes es `PORT_ASSERT` (`port/psyq/port.h`). Agregar el assert y un test de abort la próxima vez que se toque `libgpu`.
+
+- source_spec: `docs/implementation-artifacts/spec-3-2-runner-de-escenas-y-pantalla-de-titulo-exacta.md`
+  summary: Paridad general del rasterizador `gpu_soft` con SoftGPU de PCSX-Redux en sala limpia (escenas de prueba renderizadas en el emulador; reglas de bordes e interpolación de color/UV para triángulos y quads arbitrarios), sin leer su código GPL.
+  evidence: Decisión del dueño (2026-10-17, opción B empezando por C): la 3.2 solo corrige la regla que hace pasar `title`; las demás Escenas (NFR-8) pueden encontrar otras diferencias del rasterizador.
+
+- source_spec: `docs/implementation-artifacts/spec-3-2-runner-de-escenas-y-pantalla-de-titulo-exacta.md`
+  summary: Verificar contra el Emulador de referencia la regla UV de `scan_uv` (`port/backend/gpu_soft/gpu_soft.c`) en primitivas inclinadas, UV decrecientes, winding inverso, recorte y V fraccionario.
+  evidence: Revisión de 3.2 (maybe-false, medium sin verificar): la regla se infirió solo del quad del título y se aplica a todos los triángulos texturados; los SHA de VRAM existentes no cambian, pero no tienen referencia de consola. Se resuelve con escenas de prueba renderizadas en PCSX-Redux (parte de la paridad general en sala limpia).

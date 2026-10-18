@@ -398,6 +398,11 @@ if(NOT EMSCRIPTEN)
     "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py title --build ${DW1_SCENE_PRESET}")
   set_tests_properties(scene_title PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1200
     FIXTURES_REQUIRED disc_pack WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+  add_test(NAME scene_title_compare COMMAND sh -c
+    "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py title --build ${DW1_SCENE_PRESET} --compare")
+  set_tests_properties(scene_title_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1200
+    FIXTURES_REQUIRED "disc_pack;title_reference" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+  set_tests_properties(scene_title scene_title_compare PROPERTIES RESOURCE_LOCK scene_title_capture)
   add_test(NAME dw1_overlay COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_dw1_overlay.sh
     $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   set_tests_properties(dw1_overlay PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600
@@ -456,5 +461,6 @@ add_test(NAME reference_capture_unit COMMAND python3 -I -B
 if(NOT EMSCRIPTEN)
   add_test(NAME reference_title COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py title)
-  set_tests_properties(reference_title PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1250)
+  set_tests_properties(reference_title PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1250
+    FIXTURES_SETUP title_reference)
 endif()

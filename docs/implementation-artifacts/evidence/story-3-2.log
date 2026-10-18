@@ -1,0 +1,36 @@
+Historia 3.2 — verificación dentro del contenedor, 2026-10-18
+
+cmake --preset native-headless && cmake --build --preset native-headless: OK
+cmake --preset native-asan && cmake --build --preset native-asan: OK
+cmake --preset web && cmake --build --preset web: OK
+python3 -I -B tools/port/scenes/test_runner.py: OK (matriz sintética + regresiones)
+python3 -I -B tools/port/reference/test_capture.py: 15 tests, OK
+ctest --preset native-headless: 0 fallos, 37 aprobadas + 6 omisiones de clase B
+ctest --preset native-asan: 0 fallos, 35 aprobadas + 6 omisiones de clase B
+ctest --preset native-headless -R '^(gpu|libgpu|libgs|scene_runner)$': 4/4
+
+Pack real disponible para ambas corridas explícitas:
+python3 -I -B tools/port/scenes/run.py title --build native-headless --compare: OK
+python3 -I -B tools/port/scenes/run.py title --build native-asan --compare: OK
+Dos capturas deterministas por preset; 0 píxeles RGB555 distintos, sin excepciones.
+SHA-256 PPM nativo / ASan / referencia:
+561323665a33d833c89339030f6a8c60e4a395add2cff467d1d47e92dd46260d
+
+DW1_DISC_DIR=/dw/game_rom/extracted ctest --preset native-headless -R '^scene_title_compare$':
+3/3 aprobadas, sin omisiones: pack_disc, reference_title (dos capturas nuevas), scene_title_compare.
+DW1_DISC_DIR=/dw/game_rom/extracted ctest --preset web -R web_scene_title:
+3/3 aprobadas; web_scene_title incluye 4 casos Chromium/Firefox contra el SHA nativo exacto.
+
+git diff --check: OK
+Sin cambios en src/, include/, tools/port/reference/ ni title.toml.
+Todos los SHA de VRAM anteriores se conservan; test nuevo del quad sintético 256x240.
+Sin lectura del código SoftGPU. Sin commits ni push; pipeline tras merge no ejecutado.
+Capturas/diffs y logs completos locales: build/story-3-2*.log, build/port/, build/reference/.
+Pendientes fuera de alcance: paridad general del rasterizador y BIOS real del dueño (referencia OpenBIOS provisional).
+
+Tras la revisión (5 parches: RESOURCE_LOCK, gradientes UV por triángulo/fila, casos negativos y
+solapamiento del runner, diff.ppm borrado antes del preflight), verificación del orquestador:
+builds native-headless, native-asan y web OK; test_runner.py OK; ctest native-headless y
+native-asan sin fallos; con disco: pack_disc, reference_title, scene_title y scene_title_compare
+4/4; run.py title --build native-asan --compare: RGB555 reference match (0 excepted pixels);
+ctest --preset web -R web_scene_title: 3/3.
