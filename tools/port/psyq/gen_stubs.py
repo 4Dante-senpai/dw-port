@@ -113,7 +113,8 @@ def main():
         out.write_text(text)
     print(f"psyq: used={len(used)} implemented={len(implemented)} host_libc={len(host_libc)} "
           f"stubs={len([s for s in stubs if s in lib_of])} gte_stubs="
-          f"{len([s for s in stubs if s.startswith('port_gte_')])}")
+          f"{len([s for s in stubs if s.startswith('port_gte_')])} "
+          f"libspu={sum(lib_of[s] == 'libspu' for s in implemented)}")
 
 
 if __name__ == "__main__":

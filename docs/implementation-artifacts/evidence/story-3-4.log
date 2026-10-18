@@ -1,0 +1,10 @@
+Historia 3.4 — verificación del orquestador en la imagen dw-port, 2026-10-18
+
+cmake --build --preset native-headless / native-asan / web: OK
+ctest --preset native-headless: 100% tests passed, 0 tests failed out of 46
+ctest --preset native-asan: 100% tests passed, 0 tests failed out of 44
+ctest --preset web: 100% tests passed, 0 tests failed out of 26
+DW1_DISC_DIR=/dw/game_rom/extracted ctest --preset native-headless -R 'pack_disc|scene_title|scene_title_compare|reference_title|dw1_overlay|gte_tables_disc':
+100% tests passed, 0 tests failed out of 6 (sin omisiones)
+Muestras en 35.964 VBlanks: 26.459.973 (test spu).
+Sin cambios en src/ ni include/. Logs completos locales: build/story-3-4-final-*.log.

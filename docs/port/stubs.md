@@ -1,6 +1,6 @@
 # Stubs M2 con comportamiento definido
 
-Estas 52 entradas sustituyen los stubs generados. Cada entrada avanza el reloj una vez.
+Estas 46 entradas sustituyen los stubs generados. Cada entrada avanza el reloj una vez.
 No implementan hardware ni paridad audiovisual; permiten continuar el arranque.
 
 | Función | Comportamiento M2 | Historia de reemplazo |
@@ -26,12 +26,6 @@ No implementan hardware ni paridad audiovisual; permiten continuar el arranque.
 | `SsUtKeyOffV` | Éxito (0) sin sonido. | 3.5 |
 | `SsUtAutoVol` | Éxito (0) sin sonido. | 3.5 |
 | `SsUtKeyOnV` | Éxito (0) sin sonido. | 3.5 |
-| `SpuClearReverbWorkArea` | Éxito (0) sin reverberación. | 3.4 |
-| `SpuGetKeyStatus` | Voz apagada (SPU_OFF). | 3.4 |
-| `SpuSetReverb` | Éxito (0) sin reverberación. | 3.4 |
-| `SpuSetReverbDepth` | Éxito (0) sin reverberación. | 3.4 |
-| `SpuSetReverbModeParam` | Éxito (0) sin reverberación. | 3.4 |
-| `SpuSetReverbVoice` | Éxito (0) sin reverberación. | 3.4 |
 | `MemCardInit` | Reinicia el comando pendiente; tarjeta ausente. | 3.8 |
 | `MemCardStart` | Tarjeta ausente; no inicia trabajo. | 3.8 |
 | `MemCardExist` | Registra McFuncExist y devuelve 1; no accede al buffer. | 3.8 |
@@ -60,7 +54,10 @@ No implementan hardware ni paridad audiovisual; permiten continuar el arranque.
 
 `libds` no tiene funciones llamadas por el Juego; no se agregan entradas.
 
-Audio: retornos verificados en `src/main/sound.c` (loadVAB, seqPlay, selección
+`libspu`: las seis entradas de la historia 3.4 usan el SPU del Backend;
+no son stubs M2. Ver `docs/port/spu.md` y las pruebas `spu`/`libspu`.
+
+Audio de `libsnd`: retornos verificados en `src/main/sound.c` (loadVAB, seqPlay, selección
 de voces) y `sound_async.c`: los VAB conservan el identificador, las transferencias
 terminan y las voces están apagadas. `SsUtGetVBaddrInSB` devuelve 0; el consumidor
 actual no usa esa dirección.
