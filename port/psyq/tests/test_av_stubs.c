@@ -30,6 +30,7 @@ static int failures;
 static void audio(void)
 {
     clock_reset();
+    psyq_libspu_reset();
     ENTRY(SsInit()); ENTRY(SsStart());
     ENTRY(SsSetTableSize(NULL, 1, 1)); ENTRY(SsSetTickMode(240)); ENTRY(SsSetMVol(127, 127));
     for (short id = 0; id < 4; id++) {
@@ -46,11 +47,16 @@ static void audio(void)
     ENTRY(CHECK(SpuGetKeyStatus(1 << 10) == SPU_OFF));
     ENTRY(CHECK(SsUtAutoVol(10, 127, 0, 6) == 0));
     ENTRY(CHECK(SsUtKeyOffV(10) == 0)); ENTRY(SsUtAllKeyOff(0));
-    ENTRY(CHECK(SpuSetReverb(1) == 0));
-    ENTRY(CHECK(SpuSetReverbDepth(NULL) == 0));
-    ENTRY(CHECK(SpuSetReverbModeParam(NULL) == 0));
-    ENTRY(CHECK(SpuClearReverbWorkArea(3) == 0));
-    ENTRY(CHECK(SpuSetReverbVoice(1, 0x7fffff) == 0));
+    ENTRY(CHECK(SpuSetReverb(1) == 1));
+    SpuReverbAttr attr = {.mask = 2, .depth = {.left = 0x1000}};
+    ENTRY(CHECK(SpuSetReverbDepth(&attr) == 0));
+    attr.mask = 1;
+    attr.mode = 3;
+    ENTRY(CHECK(SpuSetReverbModeParam(&attr) == 0));
+    uint64_t before_clear = clock_now();
+    CHECK(SpuClearReverbWorkArea(3) == 0);
+    CHECK(clock_now() - before_clear == CLOCK_PSYQ_ENTRY_CYCLES + (0x80000 - 0xf6f8 * 8) * 4);
+    ENTRY(CHECK(SpuSetReverbVoice(1, 0x7fffff) == 0x7fffff));
     ENTRY(SsSeqStop(0)); ENTRY(SsSeqClose(0)); ENTRY(SsEnd()); ENTRY(SsQuit());
 }
 

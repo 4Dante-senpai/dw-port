@@ -252,13 +252,29 @@
   comparación con disco real 3/3 (Pack, referencia nueva y port); web 3/3, 4 casos de navegador.
   Evidencia: `docs/implementation-artifacts/evidence/story-3-2.log`.
 
+- Historia 3.4 (SPU emulado y `libspu`): `port/backend/spu` adapta el SPU de DW2-PC (CC0):
+  24 voces ADPCM con interpolación gaussiana, ADSR, ruido, PMON, reverb, KON/KOFF/ENDX, DMA y
+  entrada de CD por callback; genera las muestras pendientes antes de cada acceso a registro, una
+  cada 768 ciclos (26.459.973 en 35.964 VBlanks, exacto). Las 6 entradas de `libspu` que llama el
+  Juego están traducidas del asm (ya no son `stub-m2:`). Vectores L1 calculados aparte
+  (`tools/port/audio/spu_vectors.py`). Revisión (3 capas Codex): 6 parches (DMA encadenada,
+  overflow del cursor de reverb, tests de PMON, pitch fraccionario y EON). CTest nativo 46,
+  ASan 44, web 26 y disco 6/6 verdes. Sin cambios en `src/`/`include/`. Evidencia:
+  `docs/implementation-artifacts/evidence/story-3-4.log`.
+
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 y 3.2 cerradas; próxima 3.3 (inputs por VBlank y comparación de estado). El resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1, 3.2 y 3.4 cerradas; 3.3 en curso (ver Bloqueos). El resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 
-- Ninguno. Pendiente del dueño: repetir la captura de `title` con su BIOS real (no bloquea).
+- Historia 3.3 (inputs y estado) sin cerrar: infraestructura en la rama local `story/3-3-inputs-state`
+  (commit WIP `d8b2087`). La Escena `newgame` diverge en `CURRENT_MENU` en el VBlank 165 tras la
+  marca (cargas: costos de CD sin calibrar, 3.10), el port falla después (ASan al cargar `BOYS.MMD`
+  sobre `TAMER_MODEL_BUFFER`; SIGSEGV en `clearMapDigimon`) y la referencia no llama a `rand` en
+  3000 VBlanks. Se retoma con muestreo alineado por puntos de control (decisión del orquestador,
+  revisable) y corrección de esos dos fallos.
+- Pendiente del dueño: repetir la captura de `title` con su BIOS real (no bloquea).
 
 ## Métricas
 

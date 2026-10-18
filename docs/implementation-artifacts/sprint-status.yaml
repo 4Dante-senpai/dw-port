@@ -57,7 +57,7 @@ development_status:
   3-1-emulador-de-referencia-y-captura-automática: done
   3-2-runner-de-escenas-y-pantalla-de-título-exacta: review
   3-3-inputs-por-vblank-y-comparación-de-estado: backlog
-  3-4-spu-emulado-y-libspu: backlog
+  3-4-spu-emulado-y-libspu: done
   3-5-libsnd-de-dw1-y-traza-de-audio: backlog
   3-6-xa-y-sectores-form-2: backlog
   3-7-mdec-libpress-y-videos-str: backlog
