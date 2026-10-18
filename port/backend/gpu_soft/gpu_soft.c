@@ -168,9 +168,49 @@ static int top_left(const Vtx *a, const Vtx *b) {
     return dy < 0 || (dy == 0 && dx > 0);
 }
 
+/* ref: story 3.2, black-box title PPM vs TITLE256.TIM (pinned in
+ * title.toml). A 256-wide UV 0..255 quad samples x up to column 128
+ * in its upper triangle; the lower rounds ties down except at exact
+ * diagonal intersections (Y multiples of 15). Truncated
+ * 16.16 edge intersections, followed by nearest UV sampling, explain the seam:
+ * the descending diagonal has slopes -256/240 in X and -255/240 in U.
+ * No reference renderer source was consulted. General parity is deferred. */
+typedef struct { long long left, u, v; } GpuTextureRow;
+
+static long long uv_gradient(const Vtx *a, const Vtx *b, const Vtx *c,
+                             long long area, int use_v) {
+    int av = use_v ? a->v : a->u;
+    int bv = use_v ? b->v : b->u;
+    int cv = use_v ? c->v : c->u;
+    return ((long long)(bv-av)*(c->y-a->y)
+          - (long long)(cv-av)*(b->y-a->y))*65536 / area;
+}
+
+static GpuTextureRow texture_row(const Vtx *a, const Vtx *b, const Vtx *c, int y) {
+    const Vtx *vertices[] = {a, b, c};
+    GpuTextureRow row = {0, 0, 0};
+    int found = 0;
+    for (int i = 0; i < 3; i++) {
+        const Vtx *lo = vertices[i], *hi = vertices[(i+1)%3];
+        if (lo->y > hi->y) { const Vtx *swap=lo; lo=hi; hi=swap; }
+        if (y < lo->y || y >= hi->y) continue;
+        long long edge_x = (long long)lo->x*65536
+            + (long long)(hi->x-lo->x)*65536*(y-lo->y)/(hi->y-lo->y);
+        if (!found || edge_x < row.left) {
+            row.left=edge_x;
+            row.u=(long long)lo->u*65536
+                + (long long)(hi->u-lo->u)*65536*(y-lo->y)/(hi->y-lo->y);
+            row.v=(long long)lo->v*65536
+                + (long long)(hi->v-lo->v)*65536*(y-lo->y)/(hi->y-lo->y);
+            found=1;
+        }
+    }
+    return row;
+}
+
 static void triangle(const Vtx *v0, const Vtx *v1, const Vtx *v2, int gouraud, const Tex *t, int semi, int abr) {
     int dith = st.dither && (gouraud || (t != NULL && !t->raw));
-    long long area;
+    long long area, du_dx = 0, dv_dx = 0;
     int minx, maxx, miny, maxy;
     int tl0, tl1, tl2;
     int x, y;
@@ -203,7 +243,13 @@ static void triangle(const Vtx *v0, const Vtx *v1, const Vtx *v2, int gouraud, c
     tl0 = top_left(v1, v2);
     tl1 = top_left(v2, v0);
     tl2 = top_left(v0, v1);
+    if (t != NULL) {
+        du_dx = uv_gradient(v0, v1, v2, area, 0);
+        dv_dx = uv_gradient(v0, v1, v2, area, 1);
+    }
     for (y = miny; y <= maxy; y++) {
+        GpuTextureRow row = {0, 0, 0};
+        if (t != NULL) row = texture_row(v0, v1, v2, y);
         for (x = minx; x <= maxx; x++) {
             long long w0 = edge(v1, v2, x, y);
             long long w1 = edge(v2, v0, x, y);
@@ -222,8 +268,9 @@ static void triangle(const Vtx *v0, const Vtx *v1, const Vtx *v2, int gouraud, c
                 b = (int)((v0->b * w0 + v1->b * w1 + v2->b * w2) / area);
             }
             if (t != NULL) {
-                u = (int)((v0->u * w0 + v1->u * w1 + v2->u * w2) / area);
-                v = (int)((v0->v * w0 + v1->v * w1 + v2->v * w2) / area);
+                long long offset = (long long)x*65536-row.left;
+                u = (int)((row.u + offset*du_dx/65536 + 32768) >> 16);
+                v = (int)((row.v + offset*dv_dx/65536 + 32768) >> 16);
             }
             shade(x, y, t, u, v, r, g, b, semi, abr, dith);
         }

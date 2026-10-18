@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-17
+Última actualización: 2026-10-18
 
 ## Modo de operación
 
@@ -237,9 +237,24 @@
   historia 8.2 pasa a `in-progress` (pipeline A/B hecho en la Épica 2); le falta probar que un MR
   desde un fork no dispara la clase B.
 
+- Historia 3.2 (runner de Escenas y título exacto): `run.py --compare` valida la referencia
+  fijada y compara RGB555, informa diferencias con caja y PPM local, y descuenta excepciones
+  declaradas y validadas antes del juego. Interpolación UV por intersecciones de aristas 16.16
+  inferida en sala limpia del TIM y la captura (sin leer SoftGPU); el título nativo y ASan
+  dan `56132366…260d`, idéntico a referencia, sin excepciones. Web conserva esa igualdad en
+  Chromium y Firefox (4 casos). Test sintético de las 256×240 muestras del quad y SHA de VRAM
+  existentes verdes. `scene_title_compare` requiere el fixture de referencia y entra en CI
+  clase B. Revisión (3 capas Codex): 5 parches (gradientes UV por triángulo y fila, lock entre
+  tests de título, casos negativos del runner); diferida la verificación de la regla UV en otras
+  primitivas. Sin cambios en `src/`, `include/` ni capturador de referencia. Paridad general de
+  primitivas y comparación con BIOS del dueño siguen diferidas.
+  Verificación: builds nativo/ASan/web; suites completas 37+6 omisiones y 35+6 omisiones;
+  comparación con disco real 3/3 (Pack, referencia nueva y port); web 3/3, 4 casos de navegador.
+  Evidencia: `docs/implementation-artifacts/evidence/story-3-2.log`.
+
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 cerrada; próxima 3.2 (runner de Escenas y pantalla de título exacta). El resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 y 3.2 cerradas; próxima 3.3 (inputs por VBlank y comparación de estado). El resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 
@@ -258,7 +273,7 @@
 | Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (52 mínimas M2) / 0 / 12 (de 199) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
-| Escenas que funcionan (nativo) | 1 (título; referencia capturada, todavía no idéntica: 3.2) |
+| Escenas que funcionan (nativo) | 1 (título idéntico a referencia OpenBIOS, sin excepciones) |
 | Escenas que funcionan (web) | 1 (título, igual a nativo, Chromium y Firefox) |
 | Llamadas con firma distinta inventariadas / sin resolver | 1031 / 0 (`fnptr_casts.tsv`) |
 

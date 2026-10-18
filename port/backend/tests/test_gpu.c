@@ -143,6 +143,26 @@ static void joint_interpolation(void)
         hash();
     }
 }
+/* Independent column oracle from title reference/TIM: columns before 128
+ * are unchanged; at 128 the lower triangle rounds down except at exact
+ * diagonal intersections (rows divisible by 15).
+ * Synthetic 16-bit texels identify every column without disc data. */
+static void title_columns(void)
+{
+    reset("title-columns");
+    uint16_t tex[256];
+    for(int i=0;i<256;i++) tex[i]=(uint16_t)(i+1);
+    gpu_load(512,256,256,1,tex);
+    uint32_t p[]={0x2d808080,xy(0,0),0,
+                  xy(256,0),0x011800ff,
+                  xy(0,240),0,xy(256,240),255};
+    gpu_gp0(p,9);
+    for(int y=0;y<240;y++) for(int x=0;x<256;x++) {
+        int column=x;
+        if(x>128 || (x==128 && y>=120 && y%15!=0)) column--;
+        CHECK(pixel(x,y)==column+1);
+    }
+}
 static void blending(void)
 {
     /* Background channels (10,20,30), foreground (6,12,24). */
@@ -214,7 +234,7 @@ static void clipping_and_display(void)
 }
 int main(void)
 {
-    primitives(); interpolation(); joint_interpolation(); blending(); dithering(); textures(); masks_and_transfers(); clipping_and_display();
+    title_columns(); primitives(); interpolation(); joint_interpolation(); blending(); dithering(); textures(); masks_and_transfers(); clipping_and_display();
     if(failures) fprintf(stderr,"gpu: %d failures\n",failures); else puts("gpu: exact pixels and VRAM hashes passed");
     return failures?1:0;
 }
