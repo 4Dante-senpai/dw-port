@@ -17,6 +17,7 @@
 
 #include "clock.h"
 #include "crt.h"
+#include "scene.h"
 #include "dw1_rts_info.h"
 #include "overlay.h"
 #include "port.h"
@@ -53,6 +54,7 @@ void port_scene_mark(const char *name)
 	if (!marked && capture_config.mark && !strcmp(name, capture_config.mark)) {
 		marked = 1;
 		mark_vblank = clock_vblanks();
+		port_scene_start();
 	}
 }
 
@@ -68,7 +70,9 @@ static void trace_event(uint64_t cycle, int kind, void *arg)
 static void capture_vblank(void)
 {
 	spu_sync();
-	if (!marked || (uint32_t)(clock_vblanks() - mark_vblank) < capture_config.vblank)
+	port_scene_tick();
+	if (!marked || (capture_config.checkpoints ? !port_scene_complete() :
+	    (uint32_t)(clock_vblanks() - mark_vblank) < capture_config.vblank))
 		return;
 	static uint32_t pixels[640 * 480];
 	int width, height;
@@ -94,6 +98,7 @@ static void capture_vblank(void)
 		fprintf(stderr, "port: cannot write capture or clock trace\n");
 		exit(1);
 	}
+	port_scene_finish();
 	printf("port: captured %dx%d at VBlank %u\n", width, height, clock_vblanks());
 #ifdef __EMSCRIPTEN__
     MAIN_THREAD_EM_ASM({
@@ -108,6 +113,7 @@ static void capture_vblank(void)
 /* A frame ends when VSync(0/n) returns (AD-15 frame 0 is the first one). */
 void port_frame_done(void)
 {
+	port_scene_origin();
 	plat_present(frames);
 	frames++;
 	if (frame_limit > 0 && frames >= frame_limit) {
@@ -183,6 +189,7 @@ int port_run_game(long frame_count, int until_overlay, const PortCapture *config
 		capture_config = *config;
 	clock_reset();
 	psyq_libspu_reset();
+	port_scene_prepare(&capture_config);
 	port_overlay_snapshot_all();
 	/* Every object an OT can point to must be in the 16 MB window (AD-5); fatal in any build. */
 	if (!ps1_in_window(game_stack) || !ps1_in_window(game_stack + GAME_STACK_SIZE - 1) ||

@@ -163,3 +163,185 @@ with tempfile.TemporaryDirectory() as directory:
                 else:
                     assert not (build / "scenes/title/diff.ppm").exists()
 print("scene_runner: RGB555 comparison, bounding box, exceptions, missing/stale reference, dimensions and preflight validation: OK")
+
+# Typed state declarations and complete synthetic post-VBlank/rand traces.
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    symbols, declarations = root / "symbols.txt", root / "state_vars.txt"
+    symbols.write_text("counter = 0x80101000;\npointer = 0x80101004;\nbios = 0x80000010;\n")
+    declarations.write_text("# comment\ncounter s16[2] # array\npointer ptr\n")
+    variables = runner.state_variables(declarations, symbols)
+    assert [v["count"] for v in variables] == [2, 1]
+    for line, message in (("counter float", "invalid"), ("counter u8[0]", "count"),
+                          ("counter s8[-1]", "invalid"), ("unknown u32", "reference symbol: unknown"),
+                          ("bios u32", "game RAM"), ("counter u8\ncounter u8", "duplicate")):
+        declarations.write_text(line)
+        try:
+            runner.state_variables(declarations, symbols)
+        except ValueError as error:
+            assert message in str(error), error
+        else:
+            raise AssertionError(line)
+    declarations.write_text("counter u32")
+    with patch.object(runner.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "", "")):
+        try:
+            runner.state_variables(declarations, symbols, root / "dw1")
+        except ValueError as error:
+            assert "native symbol: counter" in str(error)
+        else:
+            raise AssertionError("missing native symbol accepted")
+    left, right = root / "port.state", root / "reference.state"
+    rows = "1 state counter[0] -32768\n1 state counter[1] 32767\n1 state pointer[0] 0\n"
+    rows += "".join(f"1 rand {i} {i * 3}\n" for i in range(16))
+    rows += "2 state counter[0] 0\n2 state counter[1] 1\n2 state pointer[0] counter+2\n"
+    left.write_text(rows); right.write_text(rows)
+    assert runner.compare_state(left, right, variables, 2, True) == 0
+    for changed, message in ((rows.replace("counter[1] 32767", "counter[1] 32766"), "VBlank 1: counter[1] port=32767 reference=32766"),
+                             (rows.replace("rand 4 12", "rand 4 13"), "rand call 4 (port VBlank 1, reference VBlank 1) port=12 reference=13"),
+                             (rows.replace("2 state counter[1] 1\n", ""), "incomplete"),
+                             ("", "incomplete")):
+        right.write_text(changed)
+        try:
+            runner.compare_state(left, right, variables, 2, True)
+        except ValueError as error:
+            assert message in str(error), error
+        else:
+            raise AssertionError("invalid/divergent trace accepted")
+    no_rand = "\n".join(row for row in rows.splitlines() if " rand " not in row) + "\n"
+    left.write_text(no_rand); right.write_text(no_rand)
+    try:
+        runner.compare_state(left, right, variables, 2, True)
+    except ValueError as error:
+        assert "got 0" in str(error)
+    else:
+        raise AssertionError("expect_rand accepted zero calls")
+print("scene_runner: typed declarations, missing symbols, first variable/rand divergence, incomplete traces, expect_rand: OK")
+
+# Logical checkpoint samples remain comparable across different CD timings.
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    left, right = root / "port.state", root / "reference.state"
+    variables = [dict(name="counter", type="s16", count=1)]
+    checkpoints = ["first", "loop#2"]
+    def trace(origins):
+        rows = []
+        for cp, origin in zip(checkpoints, origins):
+            for k in range(3):
+                rows.append(f"{cp} {k} {origin+k} state counter[0] {k}\n")
+            if cp == "first":
+                rows.extend(f"{origin+2} rand {i} {i*3}\n" for i in range(16))
+        return "".join(rows)
+    left.write_text(trace([10, 20])); right.write_text(trace([30, 60]))
+    assert runner.compare_state(left, right, variables, 100, True, checkpoints, 2) == 0
+    original = right.read_text()
+    for changed, message in (
+        (original.replace("loop#2 1 61 state counter[0] 1", "loop#2 1 61 state counter[0] 9"),
+         "checkpoint loop#2+1: counter[0] (port VBlank 21, reference VBlank 61)"),
+        (original.replace("rand 4 12", "rand 4 13"), "rand call 4 (port VBlank 12, reference VBlank 32)"),
+        (original.replace("loop#2 2 62 state counter[0] 2\n", ""), "incomplete"),
+        (original.replace("loop#2 1 61", "loop#2 1 62"), "inconsistent checkpoint origin"),
+        (original.replace("first 0 30", "unknown 0 30"), "invalid checkpoint"),
+        (original.replace("counter[0] 2", "counter[0] 32768"), "invalid s16"),
+        (original.replace("rand 4 12", "rand 5 12"), "invalid rand")):
+        right.write_text(changed)
+        try:
+            runner.compare_state(left, right, variables, 100, True, checkpoints, 2)
+        except ValueError as error:
+            assert message in str(error), error
+        else:
+            raise AssertionError(message)
+    base = dict(capture_vblank=100, checkpoints=checkpoints, window=2,
+                inputs=[dict(after="first", vblank=0, buttons=[3]),
+                        dict(after="loop#2", vblank=0, buttons=[])])
+    runner.validate_scene(base)
+    for change in (dict(checkpoints=[]), dict(checkpoints=["first", "first"]),
+                   dict(checkpoints=["first#0"]), dict(checkpoints=["first#-1"]),
+                   dict(window=-1), dict(window=True),
+                   dict(inputs=[dict(after="missing", vblank=0, buttons=[])]),
+                   dict(inputs=list(reversed(base["inputs"]))),
+                   dict(inputs=[dict(vblank=0, buttons=[])])):
+        try:
+            runner.validate_scene(base | change)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(change)
+    symbols = root / "symbols"
+    symbols.write_text("first = 0x80010000;\nloop = 0x80010004;\n")
+    assert runner.checkpoint_symbols(base, symbols)[1]["occurrence"] == 2
+    for scene, native, message in ((base | dict(checkpoints=["missing"]), None, "reference"),
+                                   (base, root / "dw1", "native")):
+        with patch.object(runner.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "", "")):
+            try:
+                runner.checkpoint_symbols(scene, symbols, native)
+            except ValueError as error:
+                assert message in str(error), error
+            else:
+                raise AssertionError("missing checkpoint symbol accepted")
+print("scene_runner: checkpoint windows, independent clocks, ordered rand values, divergence diagnostics and checkpoint/input preflight: OK")
+
+# Native preflight must distinguish exported functions from instrumented functions.
+with tempfile.TemporaryDirectory() as directory:
+    symbols = Path(directory) / "symbols"
+    symbols.write_text('first = 0x80010000;\nrand = 0x80010004;\nVSync = 0x80010008;\n')
+    def inspect(command, **kwargs):
+        output = ('08010000 T first\n08010004 T rand\n08010008 T VSync\n' if command[0] == 'nm'
+                  else ('call 123 <__cyg_profile_func_enter>\n' if '--disassemble=first' in command else 'ret\n'))
+        return subprocess.CompletedProcess(command, 0, output, '')
+    with patch.object(runner.subprocess, 'run', side_effect=inspect):
+        assert runner.checkpoint_symbols(dict(checkpoints=['first']), symbols, Path(directory)/'dw1')
+        for name in ('rand', 'VSync'):
+            try:
+                runner.checkpoint_symbols(dict(checkpoints=[name]), symbols, Path(directory)/'dw1')
+            except ValueError as error:
+                assert f'not instrumented: {name}' in str(error), error
+            else:
+                raise AssertionError('uninstrumented checkpoint accepted')
+print('scene_runner: uninstrumented checkpoint preflight: OK')
+
+# Exercise real main --state cache decisions without a disc or an emulator.
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    for name in ('tools/port/scenes/title.toml', 'tools/port/scenes/state_vars.txt',
+                 'tools/port/scenes/run.py', 'config/us/symbols.txt',
+                 'tools/port/reference/capture.py', 'tools/port/reference/capture.lua'):
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('# fixture\n')
+    scene = dict(mark='target', capture_vblank=1, inputs=[])
+    (root / 'tools/port/scenes/title.toml').write_text('mark="target"\ncapture_vblank=1\ninputs=[]\n')
+    build = root / 'build/port/native-headless'
+    build.mkdir(parents=True)
+    (build / 'us.pack').touch()
+    reference = root / 'build/reference/title/run-1.state'
+    reference.parent.mkdir(parents=True)
+    stamp = reference.parent / 'state.sha256'
+    variables = [dict(name='counter', type='u8', count=1)]
+    rows = '1 state counter[0] 42\n'
+    for mode in ('valid', 'missing', 'stale'):
+        captures, hosts = [], []
+        def execute(command, **kwargs):
+            if str(root / 'tools/port/reference/capture.py') in command:
+                captures.append(command)
+                assert '--state' in command
+                reference.write_text(rows)
+                stamp.write_text(runner.state_fingerprint(scene))
+                return subprocess.CompletedProcess(command, 0)
+            hosts.append(command)
+            def flag(name): return Path(command[command.index(name)+1])
+            Path(kwargs['env']['DW1_TRACE']).write_text('1 mark target\n')
+            flag('--clock-trace').write_text('1 -1\n')
+            flag('--capture').write_bytes(b'P6\n1 1\n255\n\0\0\0')
+            flag('--state-trace').write_text(rows)
+            return subprocess.CompletedProcess(command, 0, b'', b'')
+        with patch.object(runner, 'ROOT', root), patch.dict(os.environ, {}, clear=True), \
+             patch.object(sys, 'argv', ['run.py', 'title', '--build', 'native-headless', '--state']), \
+             patch.object(runner, 'state_variables', return_value=variables), \
+             patch.object(runner.subprocess, 'run', side_effect=execute), redirect_stdout(io.StringIO()):
+            reference.write_text(rows)
+            stamp.write_text(runner.state_fingerprint(scene) if mode != 'stale' else 'obsolete')
+            if mode == 'missing': reference.unlink()
+            assert runner.main() == 0
+            assert len(captures) == (0 if mode == 'valid' else 1), mode
+            assert len(hosts) == 2, mode
+print('scene_runner: main --state valid/missing/stale cached references without disc: OK')

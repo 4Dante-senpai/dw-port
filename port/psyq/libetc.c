@@ -21,9 +21,9 @@ static void (*irq_callbacks[IRQ_COUNT])(void);
 
 /* asm: config/us/bss.yaml, libetc at 0x80135450; both words start at zero. */
 static uint32_t pad_buf;
-static int PadIdentifier __attribute__((unused)); /* Stored by PsyQ; host input is not wired yet. */
+static int PadIdentifier __attribute__((unused)); /* Stored by PsyQ. */
 
-/* asm:asm/us/main/psyq/libetc.s:PadInit -- PAD_init and ChangeClearPAD await host input. */
+/* asm:asm/us/main/psyq/libetc.s:PadInit -- the scene observer reapplies held inputs at VBlank. */
 void PadInit(int mode)
 {
 	clock_psyq_entry();
@@ -32,7 +32,13 @@ void PadInit(int mode)
 	ResetCallback();
 }
 
-/* asm:asm/us/main/psyq/libetc.s:PadRead -- PAD_dr has no effect without host input. */
+/* PCSX-Redux overrides use wire bit order; PadRead swaps the two packet bytes. */
+void port_pad_latch(uint16_t wire_buttons)
+{
+	pad_buf = ~((uint32_t)((wire_buttons << 8) | (wire_buttons >> 8)) & 0xffffu);
+}
+
+/* asm:asm/us/main/psyq/libetc.s:PadRead -- first controller, active-high PsyQ byte order. */
 unsigned long PadRead(int id)
 {
 	clock_psyq_entry();

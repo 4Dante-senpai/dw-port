@@ -245,6 +245,9 @@ CdlFILE *CdSearchFile(CdlFILE *fp, char *name)
 	clock_psyq_entry();
 	if (name[0] != '\\')
 		return NULL;
+	/* CdSearchFile (800B2440..24C4) resolves each leading empty component through
+	 * the ISO root path-table entry (parent 1, empty name). readFileSection uses two. */
+	while (name[1] == '\\') name++;
 	clock_advance(CDROM_SEEK_CYCLES + SECTOR_CYCLES_2X);
 	const PackEntry *e = cdrom_find_path(name);
 	if (e == NULL)

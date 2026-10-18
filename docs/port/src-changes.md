@@ -77,7 +77,7 @@ Las macros de aridad eliminan solo argumentos que la definición no recibe.
 | `src/main/partner.c` | `isSoundLoaded` | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
 | `src/main/partner.c` | `loadMapSounds` | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
 | `src/main/partner.c` | llamada a `handlePraiseScold` | Pasar `partnerState` consumido, verificado en asm | L0a, `make compare`, enlace WASM |
-| `src/main/script_interp.c` | `port_unverified_active_anim` | Trap si existe el NPC: segundo argumento original no determinado | L0a, `make compare`, enlace WASM fatal |
+| `src/main/script_interp.c` | `port_script_animation_residue` | Reconstruir el byte de a1 que consume `setActiveAnim` tras `scriptNPCStartAnimation` | Asm de las llamadas, `startAnimation`, `setupModelMatrix` y `ScaleMatrix`; sonda de referencia en `setActiveAnim` |
 | `src/main/script_interp.c` | `scriptSetDigimon` | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
 | `src/main/script_interp.c` | `setupMap` | Ajustar aridad a la definición; solo elimina argumentos no consumidos | L0a, `make compare`, enlace WASM fatal |
 | `src/main/tamer.c` | `playSound` | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
@@ -101,3 +101,69 @@ Las macros de aridad eliminan solo argumentos que la definición no recibe.
 | `src/vs/vs_hud.c` | `addObject` | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
 | `src/vs/vs_hud.c` | `removeObject` | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
 | `src/vs/vs_scene.c` | `readFile` | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
+
+## Historia 3.3: búsqueda de Jijimon con slots vacíos
+
+`src/shop/script_menu.c`: las tres búsquedas de `ENTITY_TABLE[i]->type == 0x75`
+comprueban NULL solo bajo `DW1_PORT`. New Game deja los slots 3..9 en NULL; el original
+lee RAM en la dirección 0 y el nativo disparaba UBSan en `setupNewGameDialogueBox`.
+La sonda del emulador fijado con OpenBIOS observó `Entity.type` en RAM[0] = 0 al primer
+`VSync` (`build/reference/null-probe/log.txt`). El build PS1 conserva la expresión original.
+La referencia sigue siendo provisional respecto del BIOS real del dueño.
+
+`NAMING_CTRL_BOXES` agrega dos shorts solo bajo `DW1_PORT` para representar la lectura
+contigua de `NAMING_ROLLOVER_CHARS[0..1]` que hace `renderNamingBox` en el original.
+ASan detectó la lectura fuera del array de 10 elementos al entrar al selector de
+nombres. Se verificaron los valores `0x8000, 0x8000` y la contigüidad en
+`asm/us/main/shop/script_menu.data.s` (`0x801307A0..A2`), y la lectura en
+`asm/us/shop/script_menu.s:renderNamingBox`. No cambia el array del build PS1.
+
+## Historia 3.3: áreas de modelos y escritura en RAM baja
+
+`src/main/main.c` conserva bajo `DW1_PORT` una única área de `0xe000` bytes para
+`TAMER_MODEL_BUFFER` y el área que comienza a `+0x7800`. `MAIN_D_801A8B98` apunta a
+esa segunda parte; `src/vs/vs_hud.c` adapta su declaración solo para el port.
+`BOYS.MMD` ocupa 57036 bytes, más que los `0x7800` del primer array. En el original,
+`config/us/symbols.txt` fija las direcciones `0x801A1398`, `0x801A8B98` y el siguiente
+objeto `MAP_COLLISION_DATA` en `0x801AF398`: ambos espacios forman un bloque contiguo.
+El layout de datos de `asm/us/main/data/` y las referencias a ambos buffers se
+conservan; los arrays del build PS1 mantienen su tamaño original.
+
+`src/main/overworld.c:clearMapDigimon` pone a cero `isOnMap` de la entidad sobre la
+arena PS1, después de borrar el slot. El asm original almacena NULL en
+`ENTITY_TABLE[i+2]` (`800B64C4`), lo vuelve a cargar (`800B64C8`) y escribe el byte
+`0x34` a través de ese cero (`800B64D0`). El cambio traduce esa escritura a la RAM
+baja del port; no accede al objeto que ocupaba antes el slot ni omite el efecto.
+La expresión original permanece en la rama PS1.
+
+`renderMapOverlays` omite primero `currentFrame == -1` bajo `DW1_PORT`.
+El asm (`800B4480..44B8`) lee antes `animSprites[-1]` y luego salta incondicionalmente
+ese objeto cuando el frame es -1. La comprobación previa evita el acceso
+fuera del array detectado por UBSan sin cambiar qué objetos se dibujan. Se adelanta
+también el wrap a cero de `currentFrame >= 8`: los dos caminos del asm
+(`800B46A8..46C8`, `800B471C..4738`) descartan esa lectura de índice 8 y siempre
+escriben cero. Las expresiones originales se conservan intactas en PS1.
+
+`script_interp.c` reconstruye el segundo argumento de `setActiveAnim`, que el
+original no prepara después de `scriptNPCStartAnimation` (`80105538..5544` y
+`801054C4..54D0`). Sin NPC coincidente, a1 conserva la animación; con offset de
+animación cero, `startAnimation` deja a1=0 (`800C1A48`). En el resto de casos,
+la última llamada a `setupModelMatrix` pasa la escala del último hueso a
+`ScaleMatrix` (`800C19E0`), cuya implementación (`8009B0C0..B1F4`) no cambia a1.
+El port usa el byte bajo de la dirección original dentro del heap PS1, traduciendo
+el puntero de la arena, y mantiene un trap para almacenamiento fuera de ella.
+Las dos llamadas y la declaración PS1 se conservan bajo la rama sin `DW1_PORT`.
+Una sonda en `setActiveAnim` del original observó a0=12, a1=0x801D9548
+(byte 72, igual al primer caso nativo), seguido de 0x801D9EB8 y 0x801D86B8
+(byte 184): `build/reference/animation-check/run-1.log`.
+
+
+`mov.c:MOV_playMovie` inicializa a cero el `DRAWENV` local solo en el port.
+El asm reserva ese objeto en sp+0x40 y lo pasa a `PutDrawEnv` en `800108A4`
+sin inicializarlo. En ASan, sus bytes indeterminados activaban `isbg` con un
+rectángulo que alcanzaba toda la VRAM, incluyendo las texturas del título.
+Un watchpoint en VRAM[0][768] localizó la primera escritura en `PutDrawEnv`
+desde esa llamada (`build/title-watch.log`). La inicialización evita ejecutar
+comandos GPU derivados de memoria indeterminada; la rama PS1 conserva la
+declaración original. `scene_title` y `scene_title_compare` pasan también en
+ASan, con cero píxeles RGB555 distintos respecto de la referencia.
