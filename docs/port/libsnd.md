@@ -5,14 +5,14 @@ Sobre el checkpoint `224e9ea` se completa `SsStart` y su callback
 `SsSeqCalledTbyT`: reproducción SEQ, voces automáticas, controles, tempo,
 bucles y fin. Las 21 entradas públicas de libsnd y las dependencias de libspu
 alcanzadas tienen implementación; no quedan marcadores M2 en libsnd.
-La paridad de trazas/PCM con `title_audio` y el cierre de la historia siguen
-pendientes de la referencia que captura el orquestador fuera del contenedor.
+El gate por contenido de las decisiones 3/4 se valida con capturas de
+referencia fuera del checkout; la paridad temporal y PCM corresponde a 3.10.
 
 El diagnóstico posterior sobre `e303346`, sus límites y la corrección de
-RCnt2 están en [audio-parity.md](audio-parity.md). La comparación clase B
-todavía falla; completar las traducciones no demuestra paridad temporal.
+RCnt2 están en [audio-parity.md](audio-parity.md), incluida la evidencia
+posterior del gate vigente. Completar las traducciones no demuestra paridad temporal.
 
-## Sonda previa de música
+## Sonda previa de música (histórica, decisión 2)
 
 Dos corridas del original USA con el PCSX-Redux fijado y los inputs de
 `newgame.toml` anteriores a `gameLoop` verificaron la ventana renegociada:
@@ -45,25 +45,38 @@ relativa, offset de registro y valor. Las dos últimas están en hexadecimal.
 La muestra se calcula como `(ciclo − ciclo inicial) / 768`, con división entera,
 también cuando el checkpoint cae entre muestras.
 
-`title_audio.toml` delimita `runLandingScreen`→entrada de
-`unloadNewGameScene` y `gameLoop`+1200 VBlanks. El intervalo intermedio queda
-fuera de ambos WAV y trazas. El runtime cierra el primer tramo antes de ejecutar
-la función final y termina automáticamente al cerrar el segundo.
+El gate vigente (decisiones 3/4 del dueño, 2026-10-19) exige la lista
+ordenada idéntica de escrituras de voz (`registro < 0x180`), incluidas las
+repetidas. `title_audio.toml` delimita dos tramos:
 
-El comparador aplica la regla B de AD-15: compara las secuencias de valores por
-registro dentro de cada VBlank, sin imponer orden entre registros. Reporta el
-desfase máximo y medio en muestras, sin umbral. Una divergencia identifica el
-primer VBlank/registro/valor distinto. Alinea cada par de WAV mediante correlación
-cruzada de ambos canales; calcula el SNR en ventanas de 5 s, incluyendo la cola,
-sin resampleo ni ajuste de ganancia. Exige ≥40 dB en cada ventana.
+- Tramo 1 completo: `runLandingScreen` → entrada de `unloadNewGameScene`.
+- Tramo 2: la primera entrada a `SsSeqPlay` después de `gameLoop` arma la
+  captura; la primera nota nueva con dirección de muestra y KON confirma
+  el origen, retrocediendo hasta la primera escritura del bundle de esa voz.
+  Se cierra antes del primer evento de juego de la lista `stop_on`, sin omitir
+  llamadas. Cada lado debe contener ≥9 s de música; se compara todo el
+  intervalo común hasta el menor final, sin seleccionar prefijos por contenido.
+
+Ambos lados deben cerrar por la misma causa (`checkpoint` o el mismo
+`event:<nombre>`). El tramo 1 exige el footer de checkpoint; un archivo
+truncado nunca satisface el gate. El WAV debe cubrir el intervalo de la traza
+con una tolerancia de una muestra estéreo (redondeo entre ciclos y muestras).
+El intervalo intermedio de película/XA queda fuera de ambos tramos.
+
+La regla B por registro/VBlank, los desfases de muestras y el SNR por ventanas
+de 5 s se calculan y reportan, pero no bloquean hasta 3.10. El alineamiento
+PCM usa correlación cruzada, sin resampleo ni ajuste de ganancia. Los comandos
+de captura y comparación están en [reference.md](reference.md).
 
 Los archivos de audio y trazas se escriben fuera del repositorio; los sellos en
 `build/reference/` y los informes en `build/port/` contienen solo hashes,
 configuración y métricas. La caché incluye hashes del adaptador, comparador,
-BIOS, ejecutable y escena, y verifica los ocho archivos de las dos corridas.
+BIOS, ejecutable, escena y direcciones resueltas de checkpoints, anclas y
+`stop_on`, y verifica los ocho archivos de las dos corridas. El runner vuelve
+a calcular esa identidad a partir del sello antes de comparar.
 Una captura fallida elimina el sello anterior.
 
-## Bloqueo de la referencia PCM
+## Bloqueo histórico del sink SDL disk (resuelto con el tap previo al sink)
 
 La sonda `/tmp/dw1-3-5-gate-v2/disk_probe.py` ejecuta dos corridas con backend
 SDL `disk`, `UseNullSync=false`, `Mute=false`, `Speed=1`, `Interp=2`,
@@ -327,3 +340,17 @@ SEQ y VAB, pero no por estado activo de la voz. Stop/Close no borran velocidad,
 programa, tono ni pan. Eliminar esas escrituras para hacer coincidir trazas
 contradiría el original. Ver la evidencia y sus límites en
 [audio-parity.md](audio-parity.md).
+
+## Revisión de límites y cobertura L1 (2026-10-19)
+
+La apertura VAB comprueba `addr <= 0x80000` y `size <= 0x80000 - addr`
+antes de modificar las direcciones de muestras. Conserva el límite inclusivo
+del asm (`0x800D2E24`–`0x800D2E30`) para entradas válidas y rechaza la suma
+que desborda 32 bits; es una defensa del port ante una dirección inválida.
+Las pruebas cubren el final exacto de RAM y direcciones que desbordan.
+
+Las pruebas L1 también cubren las 24 voces ocupadas y la selección por
+prioridad, ENVX y antigüedad de `_SsVmAlloc` (`0x800CF270`–`0x800CF310`),
+comprobando KON y las seis escrituras del reemplazo; modos de tick 3 y 5,
+el divisor por dos de tasas numéricas menores de 70; e inicialización SPU
+con DMA pendiente. No requieren datos del disco.

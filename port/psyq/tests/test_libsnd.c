@@ -74,6 +74,13 @@ static void allocator(void)
     SpuFree(0x1010);
     CHECK(SpuMalloc(16) == 0x1010);
     SpuFree(0x1010); SpuFree(0x1020);
+    /* Retail full-table partial reuse discards the unsplittable suffix. */
+    CHECK(SpuInitMalloc(2, (char *)allocation_records) == 2);
+    CHECK(SpuMalloc(32) == 0x1010 && SpuMalloc(16) == 0x1030);
+    SpuFree(0x1010);
+    CHECK(SpuMalloc(8) == 0x1010 && allocation_records[1] == 8);
+    CHECK(SpuMalloc(8) == -1);
+    SpuFree(0x1010); SpuFree(0x1030);
 }
 
 static void master_volume(void)
@@ -125,6 +132,29 @@ static void transfer(void)
     CHECK(memcmp(spu_ram + 0x7fff8, vb, 8) == 0 && memcmp(spu_ram, vb + 8, 56) == 0);
 }
 
+static void init_pending_dma(void)
+{
+    static unsigned char data[8192]; memset(data, 0x5a, sizeof(data));
+    SpuSetTransferMode(0); SpuSetTransferStartAddr(0x4000);
+    CHECK(SpuWrite(data, sizeof(data)) == sizeof(data));
+    CHECK(SpuIsTransferCompleted(0) == 0 && !spu_transfer_completed());
+    SpuInit();
+    /* _spu_init (0x800C69C4) resets software state and writes the dummy by
+     * programmed I/O. It does not erase already transferred sound RAM. */
+    CHECK(SpuIsTransferCompleted(0) == 1);
+    CHECK(!memcmp(spu_ram + 0x4000, data, sizeof(data)));
+    for (unsigned i = 0; i < 16; i++) CHECK(spu_ram[0x1000 + i] == 7);
+    CHECK(spu_read16(0x1aa) == 0xc000 && spu_read16(0x1ac) == 4);
+    CHECK(spu_read16(0x180) == 0 && spu_read16(0x182) == 0);
+    CHECK(spu_read16(4) == 0x3fff && spu_read16(6) == 0x200);
+    clock_advance(sizeof(data) * 4);
+    CHECK(spu_transfer_completed() && SpuIsTransferCompleted(0) == 1);
+    CHECK(spu_read16(0x1aa) == 0xc000); /* Old completion cannot restore DMA mode. */
+    CHECK(SpuSetTransferStartAddr(0x6000) == 0x6000);
+    CHECK(SpuWrite(vb, 64) == 64 && SpuIsTransferCompleted(0) == 0);
+    CHECK(SpuIsTransferCompleted(1) == 1 && !memcmp(spu_ram + 0x6000, vb, 64));
+}
+
 static void banks(void)
 {
     CHECK(SsVabOpenHeadSticky(NULL, 0, 0x3000) == -1);
@@ -162,6 +192,12 @@ static void banks(void)
     header(5, 0x70); vh[1] = 0; CHECK(SsVabOpenHeadSticky(vh, 0, 0x5000) == -1);
     header(5, 0x70); put16(vh + 0x12, 129); CHECK(SsVabOpenHeadSticky(vh, 0, 0x5000) == -1);
     header(5, 0x70); CHECK(SsVabOpenHeadSticky(vh, 0, 0x7fff8) == -1);
+    header(5, 0x70); CHECK(SsVabOpenHeadSticky(vh, 0, 0xfffffff8ul) == -1);
+    header(5, 0x70); CHECK(SsVabOpenHeadSticky(vh, 0, 0x80000) == -1);
+    /* An exact end at 0x80000 remains valid (80 sample bytes). */
+    header(5, 0x70); CHECK(SsVabOpenHeadSticky(vh, 0, 0x7ffb0) == 0);
+    CHECK(SsVabTransBody(vb, 0) == 0 && SsVabTransCompleted(1) == 1);
+    SsVabClose(0);
     CHECK(SsVabTransBody(vb, -1) == -1 && SsVabTransBody(vb, 16) == -1);
     CHECK(SsVabTransCompleted(0) == 1);
     /* Fill the 16 independent slots and exercise the automatic-id search. */
@@ -359,6 +395,48 @@ static void tick_clock(void)
     SsSetTickMode(0); SsStart(); SsEnd();
 }
 
+/* _SsStart: mode 3 selects target 0x89d0; mode 5 uses VBlank;
+ * numeric rates below 70 select target 0x204cc0/rate and every other IRQ
+ * (_SsSeqCalledTbyT_1per2 at 0x800CDB80). Verify the phase as well as count. */
+static void tick_modes(void)
+{
+    const int modes[] = {3, 5, 60};
+    for (unsigned mode = 0; mode < 3; mode++) {
+        SsSetTickMode(modes[mode]); SsStart();
+        FILE *trace = tmpfile(); CHECK(trace && spu_capture_begin(trace, NULL) == 0);
+        uint64_t start = clock_now();
+        uint32_t vblank = clock_vblanks();
+        if (mode == 2) {
+            long header_size = ftell(trace);
+            clock_advance((0x204cc0 / 60) * 8); /* First IRQ only flips phase. */
+            CHECK(ftell(trace) == header_size);
+            clock_advance(CLOCK_HZ - (0x204cc0 / 60) * 8);
+        } else clock_advance(CLOCK_HZ);
+        CHECK(spu_capture_end() == 0);
+        rewind(trace); char line[160]; unsigned count = 0, first = 0, second = 0;
+        while (fgets(line, sizeof(line), trace)) {
+            unsigned vb_index, sample, reg, value;
+            if (sscanf(line, "%u %u %x %x", &vb_index, &sample, &reg, &value) == 4 && reg == 0x188) {
+                if (!count) first = sample;
+                else if (count == 1) second = sample;
+                count++;
+            }
+        }
+        fclose(trace); SsEnd();
+        if (mode == 1) {
+            CHECK(count == clock_vblanks() - vblank);
+            unsigned due = (clock_vblank_cycle(vblank + 1) - start) / 768;
+            CHECK(first >= due && first <= due + 3);
+            CHECK(second - first == 735 || second - first == 736);
+        } else {
+            CHECK(count == (mode == 0 ? 120 : 60));
+            unsigned due = mode == 0 ? 367 : 735;
+            CHECK(first >= due && first <= due + 3);
+            CHECK(second - first >= due && second - first <= due + 1);
+        }
+    }
+}
+
 static uint32_t seq_words[128];
 
 static unsigned char *sequence_fixture(const unsigned char *events, size_t size, unsigned resolution)
@@ -390,6 +468,62 @@ static unsigned char *sequence_fixture(const unsigned char *events, size_t size,
 static unsigned key_register(unsigned offset)
 {
     return spu_read16(offset) | ((unsigned)spu_read16(offset + 2) << 16);
+}
+
+/* Exercise all three _SsVmAlloc tie-breaks (0x800CF270..0x800CF310)
+ * through public SEQ/ENVX state, with no free or reserved voices. */
+static void voice_stealing(void)
+{
+    for (unsigned variant = 0; variant < 3; variant++) {
+        unsigned char events[128]; unsigned length = 0;
+        events[length++] = 0xc0; events[length++] = 3; events[length++] = 0;
+        for (unsigned i = 0; i < 24; i++) {
+            events[length++] = 0x90;
+            events[length++] = variant == 0 && i == 17 ? 50 : 60;
+            events[length++] = 127; events[length++] = i == 23 ? 127 : 0;
+        }
+        events[length++] = 0x90; events[length++] = 72; events[length++] = 127; events[length++] = 127;
+        events[length++] = 0xff; events[length++] = 0x2f; events[length++] = 0;
+        unsigned char *q = sequence_fixture(events, length, 240);
+        unsigned char *p = vh + 0x20 + 3 * 16, *t = vh + 0x20 + 128 * 16;
+        p[0] = 2; memcpy(t + 32, t, 32);
+        t[6] = 51; t[32] = 1; t[32 + 7] = 50;
+        SsSeqCalledTbyT(); SsSeqCalledTbyT();
+        CHECK(key_register(0x188) == 0xffffff);
+        if (variant == 2) {
+            /* Refresh the lower index so the older tied voice comes later
+             * in the scan. Merely picking the first minimum must fail. */
+            CHECK(SsUtKeyOnV(8, 0, 3, 0, 60, 0, 127, 127) == 8);
+            SsSeqCalledTbyT(); CHECK(key_register(0x188) == (1u << 8));
+        }
+        for (unsigned i = 0; i < 24; i++) spu_write16(i * 16 + 12, 2000);
+        unsigned chosen = variant == 0 ? 17 : 13;
+        if (variant == 0) spu_write16(17 * 16 + 12, 3000); /* Priority beats ENVX. */
+        else {
+            spu_write16(13 * 16 + 12, 50);
+            if (variant == 2) spu_write16(8 * 16 + 12, 50); /* Voice 13 is now older than voice 8. */
+        }
+        put32(q + 0x90, 0); /* Dispatch the held 25th note on this tick. */
+        SsSeqCalledTbyT();
+        FILE *trace = tmpfile(); CHECK(trace && spu_capture_begin(trace, NULL) == 0);
+        SsSeqCalledTbyT(); CHECK(spu_capture_end() == 0);
+        CHECK(key_register(0x188) == (1u << chosen));
+        rewind(trace); char line[160]; unsigned writes = 0;
+        const unsigned regs[] = {4, 0, 2, 6, 8, 10};
+        const unsigned values[] = {0x2000, 16383, 16383, 0x600, 0x7f0f, 0x4000};
+        while (fgets(line, sizeof(line), trace)) {
+            unsigned vb_index, sample, reg, value;
+            if (sscanf(line, "%u %u %x %x", &vb_index, &sample, &reg, &value) == 4 && reg < 0x180) {
+                if (writes < 6 && (reg != chosen * 16 + regs[writes] || value != values[writes]))
+                    fprintf(stderr, "steal case %u write %u: %03x=%04x, expected %03x=%04x\n",
+                            variant, writes, reg, value, chosen * 16 + regs[writes], values[writes]);
+                CHECK(writes < 6 && reg == chosen * 16 + regs[writes] && value == values[writes]);
+                writes++;
+            }
+        }
+        CHECK(writes == 6); fclose(trace);
+        SsSeqStop(0); SsSeqClose(0); SsVabClose(0);
+    }
 }
 
 /* 240 PPQN, 120 BPM and 240 callbacks/s give 20 internal units/callback.
@@ -579,9 +713,9 @@ int main(void)
 {
     clock_reset(); psyq_libspu_reset(); SpuStart();
     for (unsigned i = 0; i < sizeof(vb); i++) vb[i] = i ^ 0x5a;
-    allocator(); transfer(); banks(); master_volume();
-    voice_attributes(); explicit_voices(); sequence_records(); tick_clock();
-    sequence_events(); sequence_repeats(); sequence_controllers(); sequence_restart_volume();
+    allocator(); transfer(); init_pending_dma(); banks(); master_volume();
+    voice_attributes(); explicit_voices(); sequence_records(); tick_clock(); tick_modes();
+    voice_stealing(); sequence_events(); sequence_repeats(); sequence_controllers(); sequence_restart_volume();
     puts("libsnd L1 VAB/SEQ events/voices/timer: OK");
     return 0;
 }

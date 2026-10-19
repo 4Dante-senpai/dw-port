@@ -3,6 +3,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import struct
 import wave
@@ -58,7 +59,16 @@ def fingerprint(scene, bios, emulator, root):
     files = [root / "tools/port/reference" / name for name in ("capture.py", "capture.lua", "audio.py")]
     files += [root / "tools/port/scenes/audio.py",
               root / "tools/port/reference/pcsx-redux-pcm-tap.patch", bios, Path(emulator)]
-    payload = dict(scene=scene, files=[digest(path) for path in files], settings=dict(
+    source = (root / "config/us/symbols.txt").read_text()
+    symbols = {name: int(address, 16) for name, address in re.findall(
+        r"^([\w.$]+)\s*=\s*(0x[0-9a-fA-F]+);", source, re.M)}
+    names = {"VSync", scene["mark"]}
+    names.update(label.split("#")[0] for label in scene.get("checkpoints", []))
+    for segment in scene["audio"]:
+        names.update(segment.get("stop_on", []))
+    if names - symbols.keys():
+        raise ValueError(f"missing audio reference symbols: {sorted(names - symbols.keys())}")
+    payload = dict(scene=scene, symbols={name: symbols[name] for name in sorted(names)}, files=[digest(path) for path in files], settings=dict(
         Backend="dummy", UseNullSync=True, Mute=False, Speed=1, Interp=2, KeyOnDelay=6,
         pcm_tap="DW1PCM1", audio_drain_vblanks=4))
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
@@ -111,6 +121,6 @@ def capture_audio(args, scene, symbols, emulator, cue, bios, adapter):
             raise ValueError(f"empty reference SPU trace in segment {i}")
         compare.read_pcm(output / f"run-1-{i}.wav")
     stamp.parent.mkdir(parents=True, exist_ok=True)
-    stamp.write_text(json.dumps(dict(fingerprint=identity, scene=scene, output=str(output), hashes=hashes), indent=2) + "\n")
+    stamp.write_text(json.dumps(dict(fingerprint=identity, bios=str(bios.resolve()), scene=scene, output=str(output), hashes=hashes), indent=2) + "\n")
     print(f"reference_{args.id}: two byte-identical traces and PCM segments; {stamp}")
     return 0

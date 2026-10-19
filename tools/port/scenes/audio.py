@@ -62,6 +62,12 @@ def compare_voice_content(actual, reference, music=False, stop_on=()):
     a_rows, a_end = trace_data(actual)
     b_rows, b_end = trace_data(reference)
     common = None
+    if not a_end or not b_end:
+        raise ValueError("missing segment end boundary; truncated capture")
+    if a_end["reason"] != b_end["reason"]:
+        raise ValueError(f"segment boundary end reasons differ: port={a_end['reason']} reference={b_end['reason']}")
+    if not music and a_end["reason"] != "checkpoint":
+        raise ValueError("non-music segment must end at checkpoint boundary")
     if music:
         for name, end in (("port", a_end), ("reference", b_end)):
             if not end or end["reason"] not in {f"event:{symbol}" for symbol in stop_on}:

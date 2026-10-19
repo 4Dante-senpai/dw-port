@@ -8,6 +8,7 @@ import math
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -386,6 +387,16 @@ def run_audio(args, scene, build, checkpoints, pack):
     record = json.loads(stamp.read_text())
     if record.get("scene") != dict(scene, resolved_checkpoints=checkpoints):
         raise ValueError("stale audio reference scene; run capture.py --audio")
+    identity_spec = importlib.util.spec_from_file_location("reference_audio", Path(__file__).parents[1] / "reference/audio.py")
+    reference_audio = importlib.util.module_from_spec(identity_spec)
+    identity_spec.loader.exec_module(reference_audio)
+    emulator = shutil.which("pcsx-redux")
+    try:
+        identity = reference_audio.fingerprint(record["scene"], Path(record["bios"]), emulator, ROOT) if emulator else None
+    except (KeyError, OSError):
+        identity = None
+    if not identity or identity != record.get("fingerprint"):
+        raise ValueError("stale audio reference identity (emulator/BIOS/adapter/symbols); run capture.py --audio")
     reference = audio.external_output(record["output"], ROOT)
     hashes = record.get("hashes", {})
     required = {f"run-{run}-{segment}.{suffix}" for run in (1, 2)
@@ -440,8 +451,11 @@ def run_audio(args, scene, build, checkpoints, pack):
                                    music=i == 2, stop_on=segment.get("stop_on", []))
         trace = audio.trace_diagnostics(actual, expected)
         # Decision 4 defers fidelity metrics, not evidence-format validation.
-        for wav in (output / f"run-1-{i}.wav", reference / f"run-1-{i}.wav"):
-            audio.read_pcm(wav)
+        for side, directory, trace_path in (("port", output, actual), ("reference", reference, expected)):
+            frames = len(audio.read_pcm(directory / f"run-1-{i}.wav")) // 2
+            end = audio.trace_data(trace_path)[1]
+            if not end or abs(frames - end["sample"]) > 1:
+                raise ValueError(f"segment {i}: {side} WAV frame count {frames} does not match trace interval {end}")
         pcm = audio.diagnostic(audio.compare_pcm, output / f"run-1-{i}.wav",
                                reference / f"run-1-{i}.wav", diagnostic_only=True)
         bounds = dict(port=audio.trace_data(actual)[1], reference=audio.trace_data(expected)[1])

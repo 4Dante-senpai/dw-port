@@ -7,6 +7,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 from pathlib import Path
 import struct
 import shutil
@@ -64,8 +65,11 @@ class AudioCaptureTests(unittest.TestCase):
                 path = root / name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(name)
-            scene = dict(checkpoints=["start", "finish", "music"], inputs=[],
-                         audio=[dict(start="start", finish="finish"), dict(start="music", vblanks=1200)])
+            scene = dict(mark="start", checkpoints=["start", "finish", "music"], inputs=[],
+                         audio=[dict(start="start", finish="finish"), dict(start="music", stop_on=["game_event"])])
+            symbol_file = root / "config/us/symbols.txt"
+            symbol_file.parent.mkdir(parents=True)
+            symbol_file.write_text("VSync = 0x80010000;\nstart = 0x80010004;\nfinish = 0x80010008;\nmusic = 0x8001000c;\ngame_event = 0x80010010;\n")
             args = SimpleNamespace(id="title_audio", out=output, reuse=False, timeout=1, max_vblanks=40000)
             calls = []
             changed = None
@@ -96,6 +100,13 @@ class AudioCaptureTests(unittest.TestCase):
                                    root / "tools/port/reference/capture.lua",
                                    root / "tools/port/reference/pcsx-redux-pcm-tap.patch"):
                     dependency.write_bytes(b"modified")
+                    calls.clear()
+                    self.assertEqual(run(), 0)
+                    self.assertEqual(calls, [1, 2])
+                for symbol in ("VSync", "start", "finish", "music", "game_event"):
+                    source = symbol_file.read_text()
+                    address = re.search(rf"{symbol} = (0x[0-9a-f]+);", source)[1]
+                    symbol_file.write_text(source.replace(f"{symbol} = {address};", f"{symbol} = {hex(int(address,16)+32)};"))
                     calls.clear()
                     self.assertEqual(run(), 0)
                     self.assertEqual(calls, [1, 2])

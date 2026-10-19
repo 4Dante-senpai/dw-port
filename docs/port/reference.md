@@ -379,3 +379,19 @@ hasta `fin/768 + 1` (extremo final excluido, divisiones enteras), sin añadir
 silencio, ajustar la ganancia ni resamplear. Se dejan cuatro VBlanks tras
 cerrar el último tramo para que el mixer asíncrono drene su salida; quedan
 fuera de los intervalos comparados.
+
+### Integridad de la evidencia de audio (revisión 2026-10-19)
+
+La comparación rechaza footers ausentes y causas de cierre distintas entre
+port y referencia: `checkpoint` debe coincidir con `checkpoint`, y
+`event:<nombre>` con el mismo evento. Un tramo sin música requiere su cierre
+por checkpoint. Cada WAV válido debe contener los frames del intervalo de
+su traza, con tolerancia de ±1 por redondeo; un prefijo PCM válido pero corto
+también falla.
+
+El fingerprint incluye las direcciones resueltas de `VSync`, el mark, todos
+los checkpoints/anclas y `stop_on`, además de hashes de escena, adaptador,
+comparador, parche PCM, BIOS y ejecutable Redux. El sello conserva la ruta de
+la BIOS usada. Antes de ejecutar el port, el runner recalcula esa identidad
+con la BIOS y el Redux instalados; cambios de símbolos, BIOS, emulador o
+adaptador obligan a recapturar, aunque los archivos de evidencia sigan intactos.

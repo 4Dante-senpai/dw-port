@@ -34,8 +34,8 @@ context:
 | SEQ sintético | note on/off, program change, tempo, loop, fin | escrituras SPU (KON/KOFF, pitch, vol, ADSR) en el tick esperado, calculado aparte | N/A |
 | VAB | `SsVabOpenHeadSticky` + `SsVabTransBody` | cuerpo en SPU RAM en la dirección que devuelve `SsUtGetVBaddrInSB` | VAB inválido: retorno de error del asm |
 | `SsUtKeyOnV`/`OffV`/`AutoVol`/`AllKeyOff` | voz, VAB, programa, nota | registros según el asm | voz fuera de rango: retorno del asm |
-| Traza port vs referencia | misma Escena | comparación según la regla de AD-15 vigente; primera divergencia con VBlank, registro y valores | sale ≠ 0 e imprime la divergencia |
-| PCM | dos WAV de 44,1 kHz | SNR por ventana de 5 s ≥ 40 dB tras alinear | imprime la peor ventana y su SNR |
+| Traza port vs referencia | misma Escena, decisiones 3/4 | escrituras de voz ordenadas idénticas: tramo 1 completo; tramo 2 desde primera nota nueva tras SsSeqPlay posterior a gameLoop hasta primer evento ajeno al secuenciador, ≥9 s por lado e intervalo común; mismo motivo de cierre | sale ≠ 0 e imprime la primera divergencia |
+| PCM | dos WAV de 44,1 kHz que cubren su intervalo de traza (±1 frame) | SNR por ventana de 5 s tras alinear; métrica no bloqueante hasta 3.10, igual que regla B y desfases | imprime la peor ventana y su SNR |
 | Referencia ausente | sin captura de referencia | código 77 (skip) como las demás clase B | N/A |
 
 **Decisiones del dueño (2026-10-18):**
@@ -66,14 +66,14 @@ context:
 - [ ] `port/backend/spu.{h,c}` -- traza de escrituras y salida WAV opcional.
 - [ ] `port/psyq/tests/test_libsnd.c` -- L1: tick, SEQ sintético, VAB, utilidades `SsUt*`.
 - [ ] `tools/port/reference/capture.{lua,py}` -- traza SPU y PCM de la referencia; tests en `test_capture.py`.
-- [ ] `tools/port/scenes/run.py`, `title_audio.toml`, `test_runner.py` -- `--compare-audio`, regla de traza y SNR con casos sintéticos.
+- [ ] `tools/port/scenes/run.py`, `title_audio.toml`, `test_runner.py` -- `--compare-audio`, gate por contenido de decisiones 3/4; regla B, desfases y SNR no bloqueantes hasta 3.10, con casos sintéticos.
 - [ ] `CMakeLists.txt`, `.gitlab-ci.yml` -- tests L1 en nativo/ASan/web; `reference_title_audio` y `scene_title_audio_compare` clase B.
 - [ ] `docs/port/libsnd.md`, `docs/port/stubs.md`, `docs/port/reference.md`, `gen_stubs.py` -- estado, atribución, hipótesis y medición de SNR.
-- [ ] `docs/planning-artifacts/architecture/architecture-dw-port-2026-10-11/ARCHITECTURE-SPINE.md` (AD-15, Audio) y `docs/implementation-artifacts/epic-3-context.md` -- enmendar la regla de la traza según la decisión 1, con fecha y motivo.
+- [ ] `docs/planning-artifacts/architecture/architecture-dw-port-2026-10-11/ARCHITECTURE-SPINE.md` (AD-15, Audio) y `docs/implementation-artifacts/epic-3-context.md` -- enmendar el gate según las decisiones 3/4, con fecha y motivo.
 
 **Acceptance Criteria:**
 - Given las 21 funciones traducidas, when se buscan stubs `stub-m2:` de `libsnd`/`libspu`, then no queda ninguno y `gen_stubs.py` las cuenta como implementadas.
-- Given la Escena `title_audio` con disco, when corre `run.py title_audio --build native-headless --compare-audio`, then la traza coincide con la referencia según la regla decidida y el PCM da SNR ≥ 40 dB en cada ventana de 5 s.
+- Given la Escena `title_audio` con disco, when corre `run.py title_audio --build native-headless --compare-audio`, then las escrituras de voz ordenadas coinciden según decisiones 3/4 (tramo 1 completo; tramo 2 desde primera nota nueva tras SsSeqPlay posterior a gameLoop hasta primer evento ajeno al secuenciador, ≥9 s por lado, intervalo común), con el mismo motivo de cierre; regla B, desfases y SNR se reportan sin bloquear hasta 3.10.
 - Given dos capturas de la referencia, when se comparan, then traza y PCM son idénticos (determinismo de la referencia).
 
 ## Verification
