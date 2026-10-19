@@ -540,13 +540,48 @@ static void sequence_controllers(void)
     SsSeqCalledTbyT(); SsSeqClose(0); SsVabClose(0);
 }
 
+/* Retail title_audio enters SsSeqPlay with stopped voices from an earlier
+ * song. Stop/Close retain their velocity, tone and pan; Open resets CC7.
+ * _SsVmSetSeqVol (800D1D18..800D2264) recalculates those voices even with
+ * status=0. Literal gains reproduce both observed voice-0 states without
+ * a disc, game RAM snapshots, or assumptions about the preceding song phase. */
+static void sequence_restart_volume(void)
+{
+    static const unsigned char events[] = {
+        0xc2,3,0, 0xb2,7,110,0, 0x92,70,40,127, 0x82,70,0,0, 0xff,0x2f,0
+    };
+    for (int variant = 0; variant < 2; variant++) {
+        unsigned char *q = sequence_fixture(events, sizeof(events), 240);
+        unsigned char *p = vh + 0x20 + 3 * 16, *t = vh + 0x20 + 128 * 16;
+        p[1] = variant ? 110 : 127;
+        t[2] = variant ? 127 : 90; t[3] = variant ? 64 : 20;
+        /* Map retail program/channel 5 and native program 3/channel 2 to
+         * this fixture's single program, preserving all gain inputs. */
+        ((unsigned char *)seq_words)[16 + 5] = variant ? 127 : 110;
+        ((unsigned char *)seq_words)[16 + 9] = variant ? 80 : 40;
+        SsSeqSetVol(0, 80, 80);
+        SsSeqCalledTbyT(); SsSeqCalledTbyT();
+        if (!variant) {
+            CHECK(spu_read16(0) == 233 && spu_read16(2) == 23);
+        }
+        SsSeqStop(0); SsSeqClose(0);
+        CHECK(SsSeqOpen((unsigned long *)seq_words, 0) == 0);
+        CHECK(get16(q + 0x60 + 2 * 2) == 127); /* Open restores CC7. */
+        SsSeqSetVol(0, 80, 80); SsSeqPlay(0, 1, 0);
+        SsSeqCalledTbyT(); /* Flush SetPlayMode before reading new MIDI. */
+        CHECK(spu_read16(0) == (variant ? 0x078e : 0x0143));
+        CHECK(spu_read16(2) == (variant ? 0x078e : 0x0020));
+        SsSeqStop(0); SsSeqClose(0); SsVabClose(0);
+    }
+}
+
 int main(void)
 {
     clock_reset(); psyq_libspu_reset(); SpuStart();
     for (unsigned i = 0; i < sizeof(vb); i++) vb[i] = i ^ 0x5a;
     allocator(); transfer(); banks(); master_volume();
     voice_attributes(); explicit_voices(); sequence_records(); tick_clock();
-    sequence_events(); sequence_repeats(); sequence_controllers();
+    sequence_events(); sequence_repeats(); sequence_controllers(); sequence_restart_volume();
     puts("libsnd L1 VAB/SEQ events/voices/timer: OK");
     return 0;
 }

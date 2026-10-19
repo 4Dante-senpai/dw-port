@@ -306,3 +306,24 @@ fallo de las suites nativas es `scene_title_audio_compare`, con
 del orquestador, según la instrucción de esta continuación. Las omisiones
 dependen del disco, capturas o referencia externos. No se omite ninguna
 prueba L1 de libsnd. `git diff --check` pasa. No se crean commits.
+
+
+## Investigación del reinicio de música sobre b97a378 (2026-10-19)
+
+`sequence_restart_volume` añade una prueba L1 del recálculo de voces detenidas
+al abrir/reproducir otra SEQ. Usa VH/VB/SEQ sintéticos y valores literales:
+velocidad 40, CC7 previo 110, volumen de banco/programa 127, tono 90 y pan
+20 producen `0143/0020` después de que Open restaure CC7=127 y el juego fije
+SEQ=80/80. Velocidad 80, programa 110, tono 127 y pan 64 producen
+`078e/078e`. Antes de detener la primera variante, CC7=110 da `00e9/0017`.
+Los dos casos pasan también con la implementación del checkpoint: esta prueba
+protege la fidelidad del estado retenido; no demuestra una corrección de una
+fórmula defectuosa.
+
+El comportamiento viene de `Snd_SetPlayMode` (`800CD794`, llamada a
+`_SsVmSetSeqVol` en `800CD868`) y `_SsVmSetSeqVol`
+(`800D1D18..800D2264`) en el asm USA de DW1. Este último filtra por reserva,
+SEQ y VAB, pero no por estado activo de la voz. Stop/Close no borran velocidad,
+programa, tono ni pan. Eliminar esas escrituras para hacer coincidir trazas
+contradiría el original. Ver la evidencia y sus límites en
+[audio-parity.md](audio-parity.md).

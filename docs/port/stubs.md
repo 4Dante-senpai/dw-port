@@ -5,7 +5,9 @@ avanzan el reloj una vez; las parciales pueden llamar APIs del reloj/SPU.
 Este inventario no implica paridad audiovisual.
 El diagnóstico de `title_audio` sobre `e303346` y la corrección de fase
 de RCnt2 se registran en [audio-parity.md](audio-parity.md); no cambian este
-inventario ni cierran la comparación clase B.
+inventario ni cierran la comparación clase B. La investigación sobre
+`b97a378` añade cobertura L1 del recálculo de voces conservadas entre SEQ;
+no introduce stubs ni cambia el criterio de aceptación.
 
 | Función | Comportamiento M2 | Historia de reemplazo |
 |---|---|---|

@@ -322,3 +322,172 @@ La implementación del gate está verificada, pero **3.5 sigue sin satisfacer
 la aceptación**: quedan la diferencia de contenido musical y una ventana
 válida de diez segundos antes del primer evento. No se modificaron `libsnd`,
 el reloj ni los inputs para eludir estos fallos, ni se hicieron commits.
+
+
+## Investigación de los bloqueos sobre b97a378 (2026-10-19)
+
+No se modifica la decisión 3, el comparador, la definición de evento ni los
+registros incluidos. La instrumentación temporal de libsnd se retira del
+árbol final; los probes de Redux y sus lecturas de RAM quedan fuera del
+checkout, en `/tmp/dw1-volume-probe`. No hay cambios en `src/` ni commits.
+
+### El primer volumen pertenece a una voz conservada
+
+El primer grupo tras `SsSeqPlay` contiene los volúmenes de seis voces, sin
+nuevos KON ni direcciones de muestras. `Snd_SetPlayMode` llama a
+`_SsVmSetSeqVol` (`800CD868` → `800D1D18`) antes del primer evento de la SEQ.
+El asm filtra por máscara reservada, identificador de SEQ y VAB, pero **no
+por estado activo**. `_SsVmKeyOffNow`, Stop y Close conservan programa, tono,
+velocidad y pan. Open reinicia los volúmenes de canal a 127; `seqPlay`
+(`800C5E30`) fija 80/80 mediante `SsSeqSetVol` antes de `SsSeqPlay`.
+
+Por tanto, la comparación inicial observa todavía la fase de la canción
+anterior. En nativo, la voz 0 conserva programa 3, tono 0, velocidad 80,
+índice de volumen de canal 2 y pan 64. Con banco=127, programa=110,
+tono=127/pan=64 y SEQ=80/80,
+la fórmula del asm produce `078e/078e`. La referencia escribe `0143/0020`,
+con pan asimétrico. No es una escala global de volumen: las voces 3 y 5
+conservan valores que sí coinciden en ambos lados.
+
+El segundo probe de Redux confirma directamente la estructura de voz de
+`0x36` bytes en `8014E6F8`, en `_SsVmSetSeqVol` (`800D1E6C`) durante el
+`SsSeqPlay` de VBlank 17685: velocidad=40, nota=70, SEQ=0, VAB=2,
+programa/compact=5, tono=0, índice CC7=5, pan=64 y estado=0. AutoVol y sus
+contadores/objetivos están a cero. Los punteros de banco/programas/tonos
+en `8014EE04/44/84` dan banco=127, programa=127/pan=64 y tono=90/pan=20.
+La estructura SEQ en `801484C4` contiene volumen=80/80 y CC7=127. No se
+deducen esos atributos del resultado: se leen en el original. El master
+SPU no interviene en VOLL/VOLR y no hay una rampa AutoVol pendiente.
+Con esos valores, los pasos enteros del recálculo son base=5160,
+ganancia de programa/tono=3656 y niveles L/R=2302/730 antes de elevar al
+cuadrado y dividir por 16383: 323/32 (`0143/0020`). Con los datos nativos
+son 10320, 8938 y 5630/5630: 1934/1934 (`078e/078e`). Se conservan las
+divisiones y truncamientos del asm; no hace falta cambiar signo ni shifts
+para explicar la diferencia.
+
+El primer arranque anterior de esa SEQ se observa en Redux en VBlank
+17369; el segundo llega 316 VBlanks después. En nativo los ciclos de esos
+dos arranques son 1194457197 y 1343632806: 4,404514 s entre ellos, frente
+a unos 5,27 s en el original. Ambas ejecuciones llegan al nuevo arranque
+con una fase distinta de la canción anterior. Es consistente con los
+costos de escena/CD sin calibrar documentados arriba; no demuestra por sí
+solo qué operación concreta causa toda la diferencia temporal. No se
+introduce una corrección de ganancia que contradiga estas lecturas.
+
+`sequence_restart_volume` reproduce sin disco los dos pares y la transición
+CC7=110 → Stop/Close/Open → CC7=127. La variante con velocidad=40,
+programa=127, tono=90/pan=20 produce `00e9/0017` antes de parar y
+`0143/0020` al reiniciar. Pasa con el código del checkpoint; no se presenta
+como una prueba que fallase antes de una corrección de producción. También
+impide ocultar el problema borrando metadatos de voces o descartando voces
+inactivas, comportamientos que no corresponden al original.
+
+En las trazas del probe, las primeras 42 escrituras de voz son recálculos o
+pitch bend sobre ese estado anterior. A partir del primer note-on nuevo
+(bundle `004,000,002,006,008,00a`) coinciden las 612 escrituras restantes del
+port con el prefijo correspondiente de referencia. La referencia tiene seis
+más antes del evento del juego, por su ventana más larga. Este análisis es
+**diagnóstico**: no salta escrituras ni acepta prefijos en el gate.
+
+### El final de la ventana es un evento del guion
+
+La pila nativa del primer `SsUtKeyOnV` después del ancla es:
+`gameLoop → tickScript → tickTextboxHandling → createAnimatedUIBox →
+playSound → startSound → SsUtKeyOnV`. Abre un cuadro de diálogo; no procede
+del secuenciador. Redux lo alcanza en VBlank 18257, 572 después del ancla
+17685, y nativo tras 409127 muestras (9,277256 s). Mantener izquierda desde
+el primer VBlank después del ancla deja exactamente el mismo límite nativo.
+La entrada no alarga este tramo del guion.
+
+Se explora además avanzar diálogos con Cross cada 60 VBlanks, desde +600
+hasta +6000 relativos al primer `SsSeqPlay` después de `gameLoop`. Se
+encuentran otros dos arranques nativos, en ciclos 3074921517 y 4492511592.
+Sus siguientes `SsUtKeyOnV` llegan 4,656191 s y 3,091281 s después,
+respectivamente: apertura de otro cuadro y sonido de animación del partner.
+Estos recorridos son probes externos; no sustituyen el TOML aprobado ni
+constituyen una ventana válida por sí mismos.
+
+Se repite el cuarto arranque global con la lista completa de `stop_on`
+aprobada, sin más Cross tras los diálogos: idle termina a 136325 muestras
+(3,091270 s) y mantener izquierda desde el ancla+1 termina a 118663
+(2,690771 s), ambos por `SsUtKeyOnV`. El primer arranque global tampoco
+puede ofrecer diez segundos: el siguiente `SsSeqPlay` llega en 4,404514 s
+nativos, y Stop/Close ya son eventos anteriores a ese límite superior.
+No se encontró una ventana válida en estos recorridos. Esto no es una
+enumeración exhaustiva de todas las entradas posibles del juego.
+
+### Decisión pendiente del dueño
+
+La historia no queda aceptada. No se ha demostrado un error de fórmula de
+libsnd/libspu que justifique modificar producción: los datos distintos de
+las voces retenidas explican exactamente la primera divergencia. Corregir
+el desfase completo de escena/CPU/CD requiere localizar y calibrar sus
+costos, trabajo excluido de 3.5 y reservado a 3.10 por el spec.
+
+Para el bloqueo de duración, la enmienda mínima cuantificable sería cambiar
+el mínimo de diez a nueve segundos para esta ventana (el menor límite
+medido es 9,277256 s). Requiere aprobación del dueño y **no** resuelve el
+bloqueo de contenido: quedan los recálculos de voces anteriores y seis
+escrituras finales adicionales en referencia. Otra opción es aprobar una
+escena/fixture diferente y verificar primero una ventana válida, o ampliar
+el alcance para investigar la calibración de 3.10. Ninguna de estas
+alternativas se aplica aquí; tampoco se excluyen escrituras iniciales ni
+se cruza/omite el primer evento del juego.
+
+### Verificación de esta investigación
+
+Se compilan `native-headless`, `native-asan` y `web` con CMake y se ejecutan
+sus suites sin `DW1_DISC_DIR`/`DW1_AUDIO_DIR`: nativo 44 aprobadas y 10
+omitidas; ASan 42 y 10; web 24 aprobadas, 3 omitidas y un timeout inicial
+en la aserción de arranque de `web_boot`. La repetición aislada de
+`web_boot` aprueba sus ocho casos en Chromium/Firefox, sin modificar el
+test ni su timeout. `libsnd` se repite tras el último ajuste del fixture y
+aprueba en los tres targets. No hay diagnósticos ASan/UBSan.
+Logs externos: `/tmp/dw1-volume-ctest-{native,asan,web}.log`,
+`/tmp/dw1-volume-web-boot-retry.log` y
+`/tmp/dw1-volume-libsnd-{native,asan,web}.log`.
+
+La recaptura final usa el TOML aprobado, sin instrumentación ni cambios de
+ventana:
+
+```sh
+DW1_DISC_DIR=/dw/game_rom/extracted python3 -I -B tools/port/reference/capture.py title_audio --audio --out /tmp/dw1-volume-reference --max-vblanks 40000 --timeout 3600
+```
+
+Las dos corridas producen trazas y WAV idénticos byte a byte en ambos
+tramos. SHA-256 de traza/PCM por tramo:
+
+| Tramo | Traza | WAV |
+|---|---|---|
+| 1 | `9df80fc28e8810c2dcdea63cd17a11dbf639e9190bba3b297d246afd6ae71c92` | `d3a04edc0d060ff298202b48444e5b7be20c95748a3b64e559d781376a96d842` |
+| 2 | `6a3a5f9fe35ca105c4f0becc6e1f637070c8f257af7c570e9af1c549968cbe2c` | `e47a70bc0103443f1d0a00873db97990aa24ad1882b11f823143d7a32eeb3f5e` |
+
+Redux alcanza `gameLoop` en VBlank 17560 y el ancla en 17685; el primer
+evento es `SsUtKeyOnV` en 18257. Su trailer sigue siendo
+`# end 419933 event:SsUtKeyOnV` (9,522290 s). El trailer nativo es
+`# end 409127 event:SsUtKeyOnV` (9,277256 s), VBlank relativo 556.
+
+El runner nativo se ejecuta con:
+
+```sh
+DW1_DISC_DIR=/dw/game_rom/extracted DW1_AUDIO_DIR=/tmp/dw1-volume-port python3 -I -B tools/port/scenes/run.py title_audio --build native-headless --compare-audio
+```
+
+La referencia fresca reproduce el bloqueo: tramo 1 aprobado, 744 escrituras;
+tramo 2 falla en escritura 0, port VBlank 1/muestra 59, `000=078e`, frente
+a referencia VBlank 0/muestra 108, `000=0143`. Las trazas nuevas tienen
+654 y 660 escrituras de voz respectivamente; después de las primeras 42,
+las 612 nativas coinciden exactamente con el prefijo de referencia, que
+tiene otras seis al final. Se vuelve a comprobar solo como diagnóstico,
+sin modificar la comparación bloqueante. El reporte con regla B, desfases
+y SNR sigue en `build/port/native-headless/scenes/title_audio/audio.json`;
+el log completo está en `/tmp/dw1-volume-compare-native.log`.
+
+Se repite el mismo comando con `--build native-asan`; también sale con
+código 1 por esa primera divergencia, sin diagnósticos ASan/UBSan.
+Las dos corridas de cada build son deterministas y sus cuatro hashes por
+tramo (traza/WAV, nativo/ASan) coinciden entre builds. Log:
+`/tmp/dw1-volume-compare-asan.log`; reporte:
+`build/port/native-asan/scenes/title_audio/audio.json`. Los medios y probes
+siguen fuera del checkout. Se retira la instrumentación temporal y
+`port_trace.log`, generado durante los probes.
