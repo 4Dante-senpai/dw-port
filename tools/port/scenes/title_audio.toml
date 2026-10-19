@@ -4,7 +4,8 @@ mark = "runLandingScreen"
 inputs_from = "mark"
 capture_vblank = 1200
 expect_rand = false
-checkpoints = ["runLandingScreen", "runMainMenu", "newGameScene", "newGameStateMachine", "setupNameSelectorBox", "setupNameSelectorBox#2", "unloadNewGameScene", "gameLoop"]
+checkpoints = ["runLandingScreen", "runMainMenu", "newGameScene", "newGameStateMachine", "setupNameSelectorBox", "setupNameSelectorBox#2", "unloadNewGameScene", "gameLoop", "SsSeqPlay"]
+checkpoint_after = { SsSeqPlay = "gameLoop" }
 window = 0
 # Cross advances dialogue; Start is limited to the two naming selectors.
 inputs = [
@@ -134,5 +135,6 @@ start = "runLandingScreen"
 finish = "unloadNewGameScene"
 
 [[audio]]
-start = "gameLoop"
-vblanks = 1200
+# First SsSeqPlay entry after gameLoop; stop BEFORE the next public libsnd call.
+start = "SsSeqPlay"
+stop_on = ["SsEnd", "SsInit", "SsQuit", "SsStart", "SsSeqClose", "SsSeqStop", "SsVabClose", "SsUtAllKeyOff", "SsSeqPlay", "SsSeqSetVol", "SsSetMVol", "SsSetTableSize", "SsSetTickMode", "SsSeqOpen", "SsUtKeyOffV", "SsUtAutoVol", "SsUtKeyOnV", "SsUtGetVBaddrInSB", "SsVabOpenHeadSticky", "SsVabTransBody", "SsVabTransCompleted"]

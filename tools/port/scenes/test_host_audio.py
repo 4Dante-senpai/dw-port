@@ -10,7 +10,7 @@ import wave
 with tempfile.TemporaryDirectory() as directory:
     output = Path(directory)
     checkpoints = output / "checkpoints"
-    checkpoints.write_text("AUDIO_START 0\nAUDIO_FINISH 0\nAUDIO_MUSIC 0\n")
+    checkpoints.write_text("AUDIO_START 0\nAUDIO_FINISH 0\nAUDIO_MUSIC 0 AUDIO_FINISH\n")
     segments = output / "segments"
     segments.write_text(f"AUDIO_START AUDIO_FINISH 0 {output}/1.spu {output}/1.wav\n"
                         f"AUDIO_MUSIC - 2 {output}/2.spu {output}/2.wav\n")
@@ -25,13 +25,22 @@ with tempfile.TemporaryDirectory() as directory:
     for index, values in ((1, ["1234", "2345"]), (2, ["3456", "4567"])):
         rows = (output / f"{index}.spu").read_text().splitlines()
         assert rows[0] == "# dw1-spu-trace-v1"
-        assert [row.split()[3] for row in rows[1:]] == values, rows
-        assert [row.split()[0] for row in rows[1:]] == ["0", "1"], rows
+        assert [row.split()[3] for row in rows[1:-1]] == values, rows
+        assert [row.split()[0] for row in rows[1:-1]] == ["0", "1"], rows
         assert rows[1].split()[1] == "0", rows
         with wave.open(str(output / f"{index}.wav")) as wav:
             assert (wav.getnchannels(), wav.getsampwidth(), wav.getframerate()) == (2, 2, 44100)
             assert wav.getnframes() == frames[index - 1]
     assert not list(output.glob("*.ppm"))
+    segments.write_text(f"AUDIO_START AUDIO_FINISH 0 {output}/1.spu {output}/1.wav\n"
+                        f"AUDIO_MUSIC - 0 {output}/2.spu {output}/2.wav AUDIO_STOP\n")
+    event = subprocess.run([sys.argv[1], str(checkpoints), str(segments)], env=environment,
+                           capture_output=True, text=True, timeout=30)
+    assert event.returncode == 0, (event.stdout, event.stderr)
+    event_rows = (output/"2.spu").read_text().splitlines()
+    assert event_rows[-1].endswith(" event:AUDIO_STOP"), event_rows
+    assert [row.split()[3] for row in event_rows[1:-1]] == ["3456", "4567"]
+    assert (output/"1.spu").read_text().splitlines()[-1].endswith(" checkpoint")
     # Direct CLI use must enforce the same external-evidence policy as Python.
     repo = Path(__file__).resolve().parents[3]
     alias = output / "repo"

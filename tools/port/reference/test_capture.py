@@ -221,10 +221,26 @@ quit(0)
                                      cwd=work, capture_output=True, timeout=30)
             self.assertEqual(process.returncode, 0, (process.stdout, process.stderr))
             self.assertEqual((work / "1.spu").read_text(),
-                             "# dw1-spu-trace-v1\n0 0 000 5678\n1 1 000 5678\n1 1 002 1234\n")
-            self.assertEqual((work / "2.spu").read_text(), "# dw1-spu-trace-v1\n0 1 000 5678\n")
+                             "# dw1-spu-trace-v1\n0 0 000 5678\n1 1 000 5678\n1 1 002 1234\n# end 1 checkpoint\n")
+            self.assertEqual((work / "2.spu").read_text(), "# dw1-spu-trace-v1\n0 1 000 5678\n# end 1 vblanks\n")
             self.assertEqual(json.loads((work / "1.json").read_text())["start_cycle"], 9000000000)
             self.assertEqual(json.loads((work / "2.json").read_text())["vblanks"], 2)
+            # The same address dispatches an armed anchor and a stop condition.
+            # Early calls are ignored; opening the anchor must not close it.
+            event_script = script.read_text().replace(
+                "{label='music',address=400,occurrence=1,window=0}",
+                "{label='music',address=400,occurrence=1,window=0,after='stop'}")
+            event_script = event_script.replace("{start='music',vblanks=2,trace=",
+                "{start='music',stop_addresses={{label='music',address=400},{label='game',address=500}},trace=")
+            event_script = event_script.replace("enter(300)\ncycles", "enter(400);enter(300)\ncycles")
+            event_script = event_script.replace("onVsync();onVsync()\nassert(quits", "onVsync();onVsync();enter(500)\nassert(quits")
+            script.write_text(event_script)
+            process = subprocess.run(["xvfb-run", "-a", "pcsx-redux", "-no-ui", "-portable", str(work),
+                                      "-noupdate", "-no-webserver", "-no-gdb", "-dofile", str(script)],
+                                     cwd=work, capture_output=True, timeout=30)
+            self.assertEqual(process.returncode, 0, (process.stdout, process.stderr))
+            self.assertEqual((work/"2.spu").read_text(),
+                             "# dw1-spu-trace-v1\n0 1 000 5678\n# end 1 event:game\n")
 
     @unittest.skipUnless(shutil.which("pcsx-redux") and shutil.which("xvfb-run"), "PCSX-Redux Lua runtime unavailable")
     def test_real_lua_checkpoint_callbacks_without_disc(self):

@@ -135,6 +135,8 @@ target_compile_options(dw1_game_objs PRIVATE
 if(NOT EMSCRIPTEN)
   # Entry hooks implement scene checkpoints without adding hooks to game sources.
   target_compile_options(dw1_game_objs PRIVATE -finstrument-functions)
+  # Audio anchors and public libsnd event boundaries use the same entry hook.
+  set_source_files_properties(port/psyq/libsnd.c PROPERTIES COMPILE_OPTIONS -finstrument-functions)
 endif()
 
 # Hardware models (CD over the Pack and GTE).
