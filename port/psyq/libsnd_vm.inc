@@ -218,8 +218,8 @@ static void vm_init(void)
         vm_clear_voice(i);
         vm_key_off(i);
     }
-    SpuReverbAttr a = {.mask = 0, .mode = 0, .depth = {0x3fff, 0x3fff}};
-    SpuSetReverbModeParam(&a);
+    snd_reverb.mask = 0; snd_reverb.mode = 0;
+    snd_reverb.depth.left = snd_reverb.depth.right = 0x3fff;
     vm_on = 0;
     vm_off &= 0xffff0000; /* DW1 explicitly clears only _svm_okof1. */
     vm_reverb = vm_noise = 0;

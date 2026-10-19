@@ -1,12 +1,11 @@
 # Stubs M2 con comportamiento definido
 
-Quedan 26 entradas del juego con comportamiento M2 o parcial. Las entradas M2
+Quedan 25 entradas del juego con comportamiento M2 o parcial. Las entradas M2
 avanzan el reloj una vez; las parciales pueden llamar APIs del reloj/SPU.
 Este inventario no implica paridad audiovisual.
 
 | Función | Comportamiento M2 | Historia de reemplazo |
 |---|---|---|
-| `SsStart` | Parcial: RCnt2/VSync y vaciado de voces; sin despacho de eventos SEQ. | 3.5 |
 | `MemCardInit` | Reinicia el comando pendiente; tarjeta ausente. | 3.8 |
 | `MemCardStart` | Tarjeta ausente; no inicia trabajo. | 3.8 |
 | `MemCardExist` | Registra McFuncExist y devuelve 1; no accede al buffer. | 3.8 |
@@ -38,20 +37,17 @@ Este inventario no implica paridad audiovisual.
 `libspu`: las seis entradas de la historia 3.4 usan el SPU del Backend;
 no son stubs M2. Ver `docs/port/spu.md` y las pruebas `spu`/`libspu`.
 
-Audio de `libsnd` (continuación parcial de 3.5, 2026-10-19): los seis
-cuerpos VAB/volumen del checkpoint `04fbf9d` y otros 14 cuerpos públicos se
-tradujeron del asm USA. Las voces explícitas `SsUtKeyOnV`/`SsUtKeyOffV`,
-AutoVol y AllKeyOff tienen pruebas sintéticas. Las ocho entradas restantes de
-libspu alcanzadas por esta ruta ya están traducidas, con pruebas de registros.
-
-**La música SEQ sigue pendiente.** `SsStart` conserva `stub-m2:` y su callback
-interno `SsSeqCalledTbyT` tiene otro marcador parcial, adicional a las 26
-entradas del juego de la tabla. El callback solo vacía voces. Abrir, configurar,
-parar y cerrar SEQ ya modifica los registros de estado, pero todavía no se
-consumen notas, controles, tempo, bucles ni fin de secuencia. No se considera
-cumplida la traducción transitiva de esas entradas ni la aceptación L1 SEQ.
-La lista de rutinas pendientes, atribución y riesgos está en
-[libsnd.md](libsnd.md#pendiente-exacto-de-esta-continuación).
+Audio de `libsnd` (paso 1 de 3.5, 2026-10-19): las 21 entradas públicas y
+sus dependencias alcanzadas están traducidas del asm USA de DW1.
+`SsStart`/`SsSeqCalledTbyT` ya despachan SEQ: notas, programas, controles,
+pitch, tempo, NRPN/bucles, fin y transiciones. No quedan marcadores M2 en
+libsnd. Las pruebas L1 sin disco verifican los ticks y registros SPU de
+SEQ/VAB sintéticos y las utilidades `SsUt*`; las entradas necesarias de
+libspu ya tienen implementación. Atribución, límites y la sustitución
+no verificada para los ADSR de NRPN 11..14 se detallan en
+[libsnd.md](libsnd.md#secuenciador-completado-desde-224e9ea).
+La paridad de trazas/PCM con disco depende de la referencia externa del
+orquestador y no se afirma con estas pruebas sintéticas.
 
 El inventario M2 de esta página es manual, basado en los marcadores `stub-m2:`;
 `gen_stubs.py` genera únicamente símbolos ausentes del enlace. El build vuelve

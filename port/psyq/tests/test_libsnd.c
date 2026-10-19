@@ -344,12 +344,194 @@ static void tick_clock(void)
     SsSetTickMode(0); SsStart(); SsEnd();
 }
 
+static uint32_t seq_words[128];
+
+static unsigned char *sequence_fixture(const unsigned char *events, size_t size, unsigned resolution)
+{
+    SsInit(); SsSetTickMode(0x1002); /* Manual 240 Hz, same timing as RCnt2. */
+    memset(seq_table, 0, sizeof(seq_table));
+    SsSetTableSize((char *)seq_table, 2, 2);
+    header(5, 0x70); vh[24] = 127;
+    unsigned char *p = vh + 0x20 + 3 * 16, *t = vh + 0x20 + 128 * 16;
+    p[1] = 127; p[4] = 64;
+    t[0] = 10; t[1] = 4; t[2] = 127; t[3] = 64; t[4] = 60; t[7] = 127;
+    t[12] = t[13] = 2;
+    put16(t + 16, 0x7f0f); put16(t + 18, 0x4000); put16(t + 22, 1);
+    memset(vb, 0, sizeof(vb)); vb[1] = 3; vb[17] = 3;
+    CHECK(SsVabOpenHeadSticky(vh, 0, 0x3000) == 0);
+    CHECK(SsVabTransBody(vb, 0) == 0 && SsVabTransCompleted(1) == 1);
+    memset(seq_words, 0, sizeof(seq_words));
+    unsigned char *seq = (unsigned char *)seq_words;
+    seq[0] = 'p'; seq[7] = 1; seq[8] = resolution >> 8; seq[9] = resolution;
+    seq[10] = 7; seq[11] = 0xa1; seq[12] = 0x20; /* 120 BPM. */
+    seq[13] = 4; seq[14] = 2; seq[15] = 0;
+    CHECK(size <= sizeof(seq_words) - 16);
+    memcpy(seq + 16, events, size);
+    CHECK(SsSeqOpen((unsigned long *)seq_words, 0) == 0);
+    SsSeqPlay(0, 1, 1);
+    return (unsigned char *)seq_table;
+}
+
+static unsigned key_register(unsigned offset)
+{
+    return spu_read16(offset) | ((unsigned)spu_read16(offset + 2) << 16);
+}
+
+/* 240 PPQN, 120 BPM and 240 callbacks/s give 20 internal units/callback.
+ * A delta of four is 40 units. At the equality boundary DW1 dispatches now,
+ * retains the old remainder, and flushes the new writes one callback later.
+ * The tempo event halves the interval to 10. NRPN 99=20/30 marks a loop;
+ * NRPN 98=2 supplies its repeat count. These are DW1 SEQ bytes, not SMF. */
+static void sequence_events(void)
+{
+    static const unsigned char events[] = {
+        0xc0, 3, 0,
+        0x90, 60, 127, 4,
+        60, 0, 4,                       /* Running note-off. */
+        0xff, 0x51, 15, 0x42, 0x40, 0, /* 1000000 us/quarter => 60 BPM. */
+        0xb0, 99, 20, 0, 98, 2, 0,
+        0x90, 72, 127, 4, 72, 0, 4,
+        0xb0, 99, 30, 0,
+        0xff, 0x2f, 0
+    };
+    unsigned char *q = sequence_fixture(events, sizeof(events), 240);
+    unsigned last_voice = 0;
+    for (unsigned tick_index = 1; tick_index <= 24; tick_index++) {
+        SsSeqCalledTbyT();
+        unsigned on = key_register(0x188), off = key_register(0x18c);
+        if (tick_index == 2 || tick_index == 5 || tick_index == 14) {
+            CHECK(on == 1); /* Silent ENVX permits reusing the first voice. */
+            last_voice = on;
+            CHECK(spu_read16(4) == (tick_index == 2 ? 0x1000 : 0x2000));
+            CHECK(spu_read16(0) == 16383 && spu_read16(2) == 16383);
+            CHECK(spu_read16(6) == 0x600 && spu_read16(8) == 0x7f0f && spu_read16(10) == 0x4000);
+            CHECK(spu_read16(0x198) == 1);
+        } else CHECK(on == 0);
+        if (tick_index == 3 || tick_index == 10 || tick_index == 18 || tick_index == 22) CHECK(off == last_voice);
+        else CHECK(off == 0);
+        if (tick_index == 1) CHECK(q[0x37] == 3 && get32(q + 0x90) == 20);
+        if (tick_index == 4) {
+            CHECK(get32(q + 0x94) == 60 && get32(q + 0x8c) == 120);
+            CHECK(get16(q + 0x54) == 10 && get16(q + 0x56) == 20);
+            CHECK(q[0x1d] == 2 && get32(q + 0x90) == 50);
+        }
+        if (tick_index == 13) CHECK(q[0x1d] == 1);
+        if (tick_index >= 21) {
+            CHECK(get32(q + 0x98) == 0 && q[0x14] == 0);
+            CHECK(get16(q + 0x54) == 20 && get32(q + 0x94) == 120);
+            CHECK(get32(q) == get32(q + 4)); /* Stop rewinds to start. */
+        }
+    }
+    CHECK(spu_keys() == 0);
+    SsSeqClose(0); SsVabClose(0);
+}
+
+static void sequence_repeats(void)
+{
+    static const unsigned char events[] = {0xc0, 3, 0, 0x90, 60, 127, 4, 60, 0, 4, 0xff, 0x2f, 0};
+    for (int repeat = 0; repeat <= 2; repeat++) {
+        unsigned char *q = sequence_fixture(events, sizeof(events), 240);
+        SsSeqPlay(0, 1, repeat);
+        for (int i = 1; i <= 12; i++) {
+            SsSeqCalledTbyT();
+            if (!repeat) CHECK(get32(q + 0x98) == 1 && q[0x14] == 1);
+            else if (i >= repeat * 4) CHECK(get32(q + 0x98) == 0 && q[0x14] == 0);
+            else CHECK(get32(q + 0x98) == 1);
+        }
+        SsSeqStop(0); SsSeqCalledTbyT(); SsSeqCalledTbyT();
+        CHECK(spu_keys() == 0);
+        SsSeqClose(0); SsVabClose(0);
+    }
+    /* RCnt2 drives the same dispatch without manually calling the callback. */
+    sequence_fixture(events, sizeof(events), 240);
+    SsSetTickMode(2); SsStart();
+    clock_advance(CLOCK_HZ / 240); CHECK(key_register(0x188) == 0);
+    clock_advance(CLOCK_HZ / 240); CHECK(key_register(0x188) == 1);
+    SsEnd(); SsSeqStop(0); SsSeqCalledTbyT(); SsSeqCalledTbyT();
+    SsSeqClose(0); SsVabClose(0);
+}
+
+static void sequence_controllers(void)
+{
+    static const unsigned char events[] = {
+        0xc0, 3, 0, 0x90, 60, 127, 4,
+        0xb0, 7, 64, 2, 10, 0, 2, 11, 32, 2,
+        0xe0, 42, 127, 2, /* LSB ignored, bend up two semitones. */
+        0xb0, 100, 0, 0, 101, 0, 0, 6, 12, 0,
+        0xe0, 0, 127, 2,  /* RPN 0 changed the range to an octave. */
+        0xb0, 64, 127, 0, 0x90, 72, 100, 2,
+        0xb0, 91, 64, 2, 121, 0, 2,
+        0, 1, 0, 0x90, 40, 127, 2, /* Unopened VAB: no key-on. */
+        0xb0, 0, 0, 0, 0xc0, 3, 0,
+        0x90, 60, 0, 0, 72, 0, 2, 0xff, 0x2f, 0
+    };
+    unsigned char *q = sequence_fixture(events, sizeof(events), 240);
+    unsigned char *p = vh + 0x20 + 3 * 16, *t = vh + 0x20 + 128 * 16;
+    for (int i = 1; i <= 14; i++) {
+        SsSeqCalledTbyT();
+        if (i == 2) CHECK(spu_read16(0) == 16383 && get16(q + 0x60) == 64);
+        if (i == 3) CHECK(spu_read16(0) == 4160 && spu_read16(2) == 4160 && q[0x27] == 0);
+        if (i == 4) CHECK(spu_read16(0) == 4160 && spu_read16(2) == 1 && p[1] == 32);
+        if (i == 5) CHECK(spu_read16(0) == 264 && spu_read16(2) == 0);
+        if (i == 6) CHECK(spu_read16(4) == 0x11f5 && t[12] == 12 && t[13] == 12);
+        if (i == 7) CHECK(spu_read16(4) == 0x2000);
+        if (i == 8) CHECK(key_register(0x188) == 2 && spu_read16(0x1a) == 0x4002);
+        if (i == 9) CHECK(spu_read16(0x184) == 16512 && spu_read16(0x186) == 16512);
+        if (i == 10) {
+            CHECK(!(spu_read16(0x1aa) & 0x80));
+            CHECK(q[0x37] == 0 && q[0x27] == 64 && get16(q + 0x60) == 127);
+        }
+        if (i == 11) CHECK(key_register(0x188) == 0 && q[0x26] == 0);
+    }
+    CHECK(get32(q + 0x98) == 0 && spu_keys() == 0);
+    SsSeqClose(0); SsVabClose(0);
+
+    /* Every NRPN attribute is selected by 99=tone, 98=attribute, 6=value.
+     * Two MIDI ticks between data entries isolate each VH/SPU mutation. */
+    static const unsigned char values[20] = {7, 4, 10, 100, 20, 30, 3, 4, 5, 6, 7, 8, 70, 9, 10, 7, 64, 32, 16, 32};
+    unsigned char nrpn[190] = {0xc0, 3, 0, 0xb0};
+    size_t n = 4;
+    for (unsigned attr = 0; attr < 20; attr++) {
+        nrpn[n++] = 99; nrpn[n++] = 0; nrpn[n++] = 0;
+        nrpn[n++] = 98; nrpn[n++] = attr; nrpn[n++] = 0;
+        nrpn[n++] = 6; nrpn[n++] = values[attr]; nrpn[n++] = 2;
+    }
+    nrpn[n++] = 0xff; nrpn[n++] = 0x2f; nrpn[n++] = 0;
+    sequence_fixture(nrpn, n, 240);
+    for (int i = 0; i < 20; i++) {
+        SsSeqCalledTbyT();
+        switch (i) {
+        case 0: CHECK(t[0] == 7); break;
+        case 1: CHECK(t[1] == 4 && (spu_read16(0x1aa) & 0x80)); break;
+        case 2: CHECK(t[6] == 10); break;
+        case 3: CHECK(t[7] == 100); break;
+        case 4: CHECK(get16(t + 16) == 0x140f); break;
+        case 5: CHECK(get16(t + 16) == 0x9e0f); break;
+        case 6: CHECK(get16(t + 16) == 0x9e3f); break;
+        case 7: CHECK(get16(t + 16) == 0x9e34); break;
+        case 8: CHECK(get16(t + 18) == 0x4140); break;
+        case 9: CHECK(get16(t + 18) == 0xc180); break;
+        case 10: CHECK(get16(t + 18) == 0xc187); break;
+        case 11: case 12: CHECK(get16(t + 18) == 0xc1a8); break;
+        case 13: CHECK(t[9] == 9 && get16(t + 16) == 0x9e34); break;
+        case 14: CHECK(t[10] == 10 && get16(t + 18) == 0xc1a8); break;
+        case 15: CHECK(spu_read16(0x1a2) == 0xcff8); break;
+        case 16: CHECK(spu_read16(0x184) == 16512); break;
+        case 17: CHECK(spu_read16(0x1ce) == 8321); break;
+        case 18: CHECK(spu_read16(0x1d6) == 515); break;
+        case 19: CHECK(spu_read16(0x1d6) == 1031); break;
+        }
+    }
+    SsSeqCalledTbyT(); SsSeqClose(0); SsVabClose(0);
+}
+
 int main(void)
 {
     clock_reset(); psyq_libspu_reset(); SpuStart();
     for (unsigned i = 0; i < sizeof(vb); i++) vb[i] = i ^ 0x5a;
     allocator(); transfer(); banks(); master_volume();
     voice_attributes(); explicit_voices(); sequence_records(); tick_clock();
-    puts("libsnd L1 VAB/SEQ records/voices/timer: OK (SEQ event dispatch pending)");
+    sequence_events(); sequence_repeats(); sequence_controllers();
+    puts("libsnd L1 VAB/SEQ events/voices/timer: OK");
     return 0;
 }
