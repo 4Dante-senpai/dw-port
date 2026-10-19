@@ -280,7 +280,9 @@ DW1_DISC_DIR=/dw/game_rom/extracted DW1_AUDIO_DIR=/tmp/dw1-audio-port python3 -I
 ```
 
 El primer comando exige dos capturas idénticas antes de guardar el sello; el
-segundo devuelve 77 si falta una referencia verificada. `--reuse` solo reutiliza
+segundo devuelve 77 si falta el sello de referencia. Un sello existente con
+escena obsoleta o archivos ausentes/alterados falla y exige recaptura.
+`--reuse` solo reutiliza
 una captura cuyo fingerprint siga vigente. `--out` o
 `DW1_REFERENCE_DIR` eligen el directorio externo de referencia; el valor por
 defecto para audio es `/tmp/dw1-audio-reference/title_audio`. `DW1_AUDIO_DIR`
@@ -302,7 +304,7 @@ port, antes de ejecutar su cuerpo. No se usa `playMusic` porque incluye carga
 y preparación; `seqPlay` también llama a `SsSeqSetVol` antes de `SsSeqPlay`
 (`asm/us/main/sound.s`, `0x800C5E30`).
 
-`stop_on` enumera las 21 entradas públicas de `libsnd`. La siguiente entrada
+`stop_on` enumera las 21 entradas públicas de `libsnd` usadas por el juego. La siguiente entrada
 cierra el tramo **antes** de ejecutar la llamada del juego. El tick usa rutinas
 internas (`snd_*`, `vm_*`), sin entrar por esas API públicas, por lo que no
 cierra el tramo. Si una dirección también es el origen (`SsSeqPlay`), ambos
@@ -324,6 +326,13 @@ ventanas de cinco segundos, incluso cuando falla el gate de contenido. Esas
 métricas son diagnósticas y no bloquean hasta 3.10, según AD-15 enmendado.
 Se mantienen la comprobación de dos corridas deterministas, integridad de
 archivos, límites de captura y detección de errores del proceso/sanitizadores.
+
+La recaptura del 2026-10-19 en `/tmp/dw1-decision3-reference` produjo dos
+trazas y PCM idénticos con este ancla. El gate real aprueba las 744 escrituras
+del tramo 1 y rechaza el tramo 2 desde su primera escritura (`0x000`:
+`0x078e` port, `0x0143` referencia). Ambos cierran antes de `SsUtKeyOnV`
+con menos de diez segundos: 9,277256 s y 9,522290 s. La aceptación sigue
+pendiente; los diagnósticos y comandos están en [audio-parity.md](audio-parity.md).
 
 `capture.lua` registra escrituras SH/SW a `0x1F801C00..0x1F801DFF`, tomando el
 valor de `rt` tras decodificar la instrucción y verificar su dirección efectiva.
