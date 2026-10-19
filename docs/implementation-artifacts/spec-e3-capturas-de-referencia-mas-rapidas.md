@@ -2,7 +2,7 @@
 title: 'Capturas de referencia más rápidas: pasadas en paralelo y caché en CI'
 type: 'chore'
 created: '2026-10-18'
-status: 'in-review'
+status: 'done'
 baseline_commit: '76356378345061082535757efc34952bcb158265'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -145,8 +145,13 @@ recapturan, así que una caché parcial no es peligrosa.
   de cada preset; no quedan pruebas omitidas sin ejecutar.
 - Validación local del YAML: únicamente `native-disc` y `native-asan-disc` declaran caché,
   heredan `dw1-data` y no declaran artifacts.
-- Pendiente de validación externa: restauración de caché y `cached` en dos pipelines
-  consecutivos de `main`. Esta ejecución no crea commits ni publica cambios.
+- CI, pipeline 106 (`main`, push de `381efb7`): verde. `native-disc` (job 410) sin caché
+  previa (`Cache file does not exist`); `reference_newgame_state` en frío con pasadas
+  paralelas: 941,54 s; caché `build/reference/` guardada en el volumen local del runner
+  (sin servidor compartido). El pipeline 107 se creó por API y, por las reglas de AD-16, no
+  corre clase B: el hit de caché se comprueba en el pipeline del push de cierre.
+- Revisión: parches `args.bios` en el pin de `--reuse` y comparación del sello en bytes;
+  tests del capturador 37/37 tras los parches.
 
 ## Spec Change Log
 
