@@ -31,6 +31,7 @@ typedef struct {
 } SndBank;
 static SndBank banks[16];
 static short max_programs;
+static SpuReverbAttr snd_reverb;
 
 /* asm: asm/us/main/psyq/libsnd.s: little-endian VH halfword/word accesses. */
 static uint16_t vh16(const unsigned char *p) { return p[0] | ((uint16_t)p[1] << 8); }
@@ -40,6 +41,7 @@ static void vh_put32(unsigned char *p, uint32_t v) { vh_put16(p, v); vh_put16(p 
 
 #include "libsnd_vm.inc"
 #include "libsnd_seq.inc"
+#include "libsnd_events.inc"
 
 /* asm: asm/us/main/psyq/libsnd.s: SsEnd. SsStart(0) uses the VSync slot
  * for irq=0, so the alternate SsStart2 interrupt-chain branch is unreachable. */
@@ -75,14 +77,29 @@ void SsQuit(void)
     SpuQuit();
 }
 
-/* asm: asm/us/main/psyq/libsnd.s: SsSeqCalledTbyT, voice-flush prologue.
- * stub-m2: SEQ dispatch (_SsSndPlay and MIDI/control handlers) remains pending.
- * This is an explicitly partial callback, not a finished SEQ translation. */
+/* asm: asm/us/main/psyq/libsnd.s: SsSeqCalledTbyT. */
 void SsSeqCalledTbyT(void)
 {
     if (vm_busy) return;
     vm_busy = 1;
     vm_flush();
+    for (int s = 0; s < seq_count; s++) {
+        if (!(open_mask & (1u << s))) continue;
+        for (int t = 0; t < sep_count; t++) {
+            SndSeq *q = scores[s] + t;
+            short id = s | (t << 8);
+            if (q->flags & 1) {
+                snd_play(id, q);
+                if (q->flags & 0x10) snd_fade(id, q, 0);
+                if (q->flags & 0x20) snd_fade(id, q, 1);
+                if (q->flags & 0x40) snd_tempo_fade(q);
+                if (q->flags & 0x80) snd_tempo_fade(q);
+            }
+            if (q->flags & 2) { vm_seq_key_off(id); q->state[0] = 0; q->flags &= ~2; }
+            if (q->flags & 8) { q->state[0] = 1; q->flags &= ~8; }
+            if (q->flags & 4) { snd_stop(s, t); q->flags = 0; }
+        }
+    }
     vm_busy = 0;
 }
 
@@ -93,8 +110,7 @@ static void snd_half_tick(void)
     else { tick_half_phase = 0; SsSeqCalledTbyT(); }
 }
 
-/* asm: asm/us/main/psyq/libsnd.s: SsStart -> _SsStart(0).
- * stub-m2: timer and voice flushing work, but the callback's SEQ path is pending. */
+/* asm: asm/us/main/psyq/libsnd.s: SsStart -> _SsStart(0). */
 void SsStart(void)
 {
     clock_psyq_entry();
@@ -166,8 +182,7 @@ void SsUtAllKeyOff(short id)
     }
 }
 
-/* asm: asm/us/main/psyq/libsnd.s: SsSeqPlay -> Snd_SetPlayMode. Actual
- * event playback remains pending in SsSeqCalledTbyT (marked separately). */
+/* asm: asm/us/main/psyq/libsnd.s: SsSeqPlay -> Snd_SetPlayMode. */
 void SsSeqPlay(short id, char mode, short repeat)
 {
     clock_psyq_entry();
