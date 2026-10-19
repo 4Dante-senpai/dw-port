@@ -414,7 +414,7 @@ def run_audio(args, scene, build, checkpoints, pack):
         declarations.write_text("".join(
             f"{seg['start']} {seg.get('finish', '-')} {seg.get('vblanks', 0)} "
             f"{output}/run-{index}-{i}.spu {output}/run-{index}-{i}.wav "
-            f"{','.join(seg.get('stop_on', [])) or '-'}\n"
+            f"{','.join(seg.get('stop_on', [])) or '-'} {seg.get('anchor', '-')}\n"
             for i, seg in enumerate(scene["audio"], 1)))
         paths = [output / f"run-{index}-{i}.{suffix}" for i in (1, 2) for suffix in ("spu", "wav")]
         for path in paths:
@@ -439,7 +439,7 @@ def run_audio(args, scene, build, checkpoints, pack):
         content = audio.diagnostic(audio.compare_voice_content, actual, expected,
                                    music=i == 2, stop_on=segment.get("stop_on", []))
         trace = audio.trace_diagnostics(actual, expected)
-        # Decision 3 defers fidelity metrics, not evidence-format validation.
+        # Decision 4 defers fidelity metrics, not evidence-format validation.
         for wav in (output / f"run-1-{i}.wav", reference / f"run-1-{i}.wav"):
             audio.read_pcm(wav)
         pcm = audio.diagnostic(audio.compare_pcm, output / f"run-1-{i}.wav",

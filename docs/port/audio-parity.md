@@ -491,3 +491,128 @@ tramo (traza/WAV, nativo/ASan) coinciden entre builds. Log:
 `build/port/native-asan/scenes/title_audio/audio.json`. Los medios y probes
 siguen fuera del checkout. Se retira la instrumentación temporal y
 `port_trace.log`, generado durante los probes.
+
+
+## Decisión 4 del dueño: ancla de nota nueva y ventana común
+
+2026-10-19, sobre checkpoint `440f7c6`. Esta sección sustituye el gate de
+la decisión 3 descrito en las investigaciones anteriores; no cambia sus
+hallazgos sobre el cálculo de volumen ni modifica `libsnd`, `libspu`, los
+inputs o el primer evento del juego que cierra el tramo.
+
+El TOML arma el tramo 2 en el primer `SsSeqPlay` posterior a `gameLoop` y
+selecciona `anchor = "note_on"`. El origen efectivo es la primera escritura
+del primer bundle nuevo con dirección de muestra y KON de la misma voz.
+El port y Lua acumulan un flush hasta KON alto; guardan el primer acceso y
+las direcciones escritas por voz. El primer KON no nulo que cruza esa máscara
+confirma el ancla y conserva el bundle desde su primera escritura. Si no
+confirma, KON alto limpia el candidato. Esto excluye el recálculo heredado
+sin deducir actividad de la envolvente, buscar valores coincidentes ni
+retirar escrituras después del ancla. Los dos algoritmos y el símbolo
+`SsSeqPlay = 0x800CD73C` están documentados en [reference.md](reference.md).
+
+El origen de traza y PCM se mueve al mismo ciclo/VBlank. El port recorta los
+frames provisionales del WAV mediante índices absolutos de muestra, sin
+cambiar la fase del mixer ni su callback de salida. Redux selecciona ese
+mismo intervalo del tap indexado. Un cierre sin nota nueva confirmada falla.
+`stop_on` sigue intacto: la primera entrada pública del juego cierra antes
+de ejecutar su cuerpo; el secuenciador usa rutinas internas.
+
+El tramo 1 compara todas sus escrituras de voz. El tramo 2 exige al menos
+396900 muestras (9 s) en **cada** captura y compara todas las escrituras de
+voz del intervalo común `[0, min(fin_port, fin_referencia))`, incluidas
+las duplicadas, en su orden global. El reporte incluye el límite común y
+las escrituras posteriores excluidas. Valor, registro, orden o cantidad
+diferentes dentro del intervalo bloquean con el primer índice divergente.
+Regla B, desfases y SNR siguen calculándose sobre los tramos capturados y
+reportándose sin bloquear hasta 3.10. La sincronización de escena/CD y las
+voces heredadas quedan pendientes de esa historia, según la enmienda AD-15.
+
+Las pruebas sintéticas comprueban el umbral exacto de nueve segundos, rechazo
+por debajo del umbral en cualquiera de los lados (incluido 9 s menos una
+muestra), el extremo común
+exclusivo, orden/valor/registro/cantidad y diagnósticos no bloqueantes.
+Las pruebas de integración sin disco ejecutan los detectores C y Lua:
+recálculo heredado, KON cero, dirección y KON de voces distintas, voces de
+ambas mitades de KON y bundle que cruza una muestra. Verifican el origen
+exacto, el bundle completo, el recorte del WAV y el rechazo de un cierre
+sin nota nueva. Las dos corridas de captura de audio pasan a ejecutarse en
+serie para respetar el límite de CPU del contenedor; se mantiene la exigencia
+de trazas y WAV idénticos byte a byte.
+
+
+### Recaptura y comparación de la decisión 4
+
+Se recaptura fuera del checkout, con dos pasadas secuenciales:
+
+```sh
+DW1_DISC_DIR=/dw/game_rom/extracted python3 -I -B tools/port/reference/capture.py title_audio --audio --out /tmp/dw1-decision4-reference --max-vblanks 40000 --timeout 3600
+DW1_DISC_DIR=/dw/game_rom/extracted DW1_AUDIO_DIR=/tmp/dw1-decision4-port python3 -I -B tools/port/scenes/run.py title_audio --build native-headless --compare-audio
+DW1_DISC_DIR=/dw/game_rom/extracted DW1_AUDIO_DIR=/tmp/dw1-decision4-port python3 -I -B tools/port/scenes/run.py title_audio --build native-asan --compare-audio
+```
+
+Logs externos: `/tmp/dw1-decision4-reference.log`,
+`/tmp/dw1-decision4-compare-native.log` y
+`/tmp/dw1-decision4-compare-asan.log`. Los reportes de métricas quedan en
+`build/port/{native-headless,native-asan}/scenes/title_audio/audio.json`.
+
+
+La referencia nueva produce trazas y WAV idénticos entre sus dos corridas.
+SHA-256 por tramo:
+
+| Tramo | Traza | WAV |
+|---|---|---|
+| 1 | `9df80fc28e8810c2dcdea63cd17a11dbf639e9190bba3b297d246afd6ae71c92` | `d3a04edc0d060ff298202b48444e5b7be20c95748a3b64e559d781376a96d842` |
+| 2 | `021ec2f42f9def9b4cee885b9b1cf24ef616aed4aeab05b1a16c9a0e6880999c` | `f558ca326ede0aa018310844b09c188b0e9232f26daf6b14e1a9050c98f48c8f` |
+
+El gate nativo aprueba ambos tramos:
+
+| Tramo | Escrituras idénticas | Intervalo comparado | Cierre port / referencia |
+|---|---:|---|---|
+| 1 | 744 | tramo completo | 1099910 / 1226736 muestras, `checkpoint` |
+| 2 | 612 | `[0, 398962)` muestras | 398962 / 409718 muestras, `event:SsUtKeyOnV` |
+
+La música dura 9,046757 s en el port y 9,290658 s en referencia desde la
+primera nota nueva: ambas superan nueve segundos. La referencia tiene seis
+escrituras de voz después del extremo común; el port, cero. No hay divergencia
+de contenido dentro del gate. El desfase máximo de las 612 escrituras es
+15 muestras (media 2,155229). El primer bundle de referencia empieza en
+ciclo 9989638189, con `004=0d74`, seguido de `000=08bb`, `002=08bb`,
+`006=3700`, `008=80ff`, `00a=000f`.
+
+Los diagnósticos siguen mostrando diferencias: regla B del tramo 1 en
+VBlank 0, `0x188`, escritura 1 (port cero/referencia ausente); tramo 2 en
+VBlank 0, `0x198` (port `0x002d`/referencia `0x003d`). Peor SNR por ventana:
+−3,739384 dB y 8,493601 dB, respectivamente; desfase PCM −38954 y −8
+muestras. Esto no demuestra paridad PCM ni sincronización de escena; son
+pendientes de 3.10, no relajaciones adicionales del gate aprobado.
+
+
+La comparación ASan también aprueba los dos tramos con las mismas métricas,
+sin diagnósticos ASan/UBSan. Las dos ejecuciones de cada build son
+deterministas; todos los hashes de traza/WAV del port coinciden además
+entre `native-headless` y `native-asan`. No se modifica código de juego,
+la fórmula de volumen de `libsnd` ni el backend PCM del emulador.
+
+
+### Verificación final de la decisión 4
+
+Builds `native-headless`, `native-asan` y `web` aprobados, con `-j2` como
+máximo y sin solapar builds, presets de ctest ni capturas de referencia.
+Las suites se ejecutan con `DW1_DISC_DIR` y `DW1_AUDIO_DIR` retiradas del
+entorno, una por vez:
+
+| Preset | Aprobadas | Omitidas | Fallos |
+|---|---:|---:|---:|
+| native-headless | 45 | 9 | 0 |
+| native-asan | 43 | 9 | 0 |
+| web | 25 | 3 | 0 |
+
+Las omisiones corresponden a pruebas que requieren disco explícito.
+`scene_title_audio_compare` sí se ejecuta y aprueba en native y ASan usando
+el pack existente y la referencia nueva. `web_boot` aprueba en esta pasada
+sin repetir ni modificar el timeout. Las pruebas nuevas del detector,
+configuración, mínimo de nueve segundos y ventana común aprueban en los
+presets aplicables. Logs: `/tmp/dw1-decision4-ctest-{native,asan,web}.log`;
+builds: `/tmp/dw1-decision4-build-{native,asan,web}.log`.
+`git diff --check` no informa errores. No se crean commits.

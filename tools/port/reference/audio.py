@@ -1,5 +1,4 @@
 """Pre-device Redux PCM capture. Evidence stays outside the repository."""
-from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import importlib.util
 import json
@@ -87,11 +86,10 @@ def capture_audio(args, scene, symbols, emulator, cue, bios, adapter):
             for suffix in ("spu", "wav", "json"):
                 (output / f"run-{index}-{i}.{suffix}").unlink(missing_ok=True)
         (output / f"run-{index}.pcm").unlink(missing_ok=True)
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        runs = [executor.submit(adapter.run_once, emulator, cue, bios, scene, symbols,
-                                output, index, args.timeout, args.max_vblanks) for index in (1, 2)]
-        for run in runs:
-            run.result()
+    # The capped capture container must run only one emulator at a time.
+    for index in (1, 2):
+        adapter.run_once(emulator, cue, bios, scene, symbols,
+                         output, index, args.timeout, args.max_vblanks)
     hashes = {}
     for index in (1, 2):
         log = (output / f"run-{index}.log").read_text(errors="replace")

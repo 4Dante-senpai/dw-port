@@ -5,6 +5,7 @@
 #include "spu.h"
 #include "../psyq/clock.h"
 #include <assert.h>
+#include <unistd.h>
 
 
 /* Emulated PS1 SPU (P1.8), after psx-spx "Sound Processing Unit (SPU)": SPU-ADPCM decode (5
@@ -56,6 +57,10 @@ static FILE *capture_trace, *capture_wav;
 static uint64_t capture_cycle, capture_bytes;
 static uint32_t capture_vblank;
 static int capture_error;
+typedef struct { uint64_t cycle; uint32_t vblank, off; uint16_t value; } CaptureWrite;
+static CaptureWrite capture_pending[256];
+static unsigned capture_pending_count, capture_first[24], capture_addresses;
+static int capture_wait_note;
 static void capture_pcm(const int16_t *pcm, unsigned frames);
 static uint32_t keys;
 static void render(int16_t *out, int n);
@@ -133,12 +138,87 @@ int spu_capture_begin(FILE *trace, FILE *wav)
     capture_vblank = clock_vblanks();
     capture_bytes = 0;
     capture_error = 0;
+    capture_wait_note = 0;
     return 0;
+}
+
+void spu_capture_note_anchor(void)
+{
+    capture_wait_note = 1;
+    capture_pending_count = capture_addresses = 0;
+    memset(capture_first, 0, sizeof(capture_first));
+}
+
+int spu_capture_origin(uint64_t *cycle, uint32_t *vblank)
+{
+    if (capture_wait_note || (!capture_trace && !capture_wav)) return -1;
+    *cycle = capture_cycle; *vblank = capture_vblank;
+    return 0;
+}
+
+static void capture_write(CaptureWrite row)
+{
+    if (capture_trace && fprintf(capture_trace, "%u %llu %03x %04x\n",
+            row.vblank - capture_vblank,
+            (unsigned long long)((row.cycle - capture_cycle) / 768), row.off, row.value) < 0)
+        capture_error = 1;
+}
+
+/* Same streaming detector as capture.lua: accumulate one flush through KON hi,
+ * require a sample-address write for a keyed voice, then retain that voice's
+ * entire bundle from its first write. Never infer a note from volume or pitch. */
+static void capture_note_write(CaptureWrite row)
+{
+    if (row.off < 0x180 || capture_pending_count) {
+        if (capture_pending_count == 256) { capture_error = 1; return; }
+        capture_pending[capture_pending_count++] = row;
+        if (row.off < 0x180) {
+            unsigned voice = row.off >> 4;
+            if (!capture_first[voice]) capture_first[voice] = capture_pending_count;
+            if ((row.off & 15) == 6) capture_addresses |= 1u << voice;
+        }
+    }
+    unsigned keyed = row.off == 0x188 ? row.value : row.off == 0x18a ? (unsigned)row.value << 16 : 0;
+    keyed &= capture_addresses & 0xffffff;
+    if (keyed) {
+        unsigned first = capture_pending_count;
+        for (unsigned v = 0; v < 24; v++)
+            if ((keyed & (1u << v)) && capture_first[v] - 1 < first) first = capture_first[v] - 1;
+        uint64_t cycle = capture_pending[first].cycle;
+        /* PCM before the anchor was provisional. Move the exact absolute mixer
+         * interval, preserving the existing output callback and sample phase. */
+        uint64_t skip = (cycle / 768 - capture_cycle / 768) * 4;
+        if (capture_wav) {
+            unsigned char bytes[4096];
+            if (skip > capture_bytes || fflush(capture_wav)) capture_error = 1;
+            else {
+                uint64_t kept = capture_bytes - skip;
+                for (uint64_t pos = 0; pos < kept && !capture_error;) {
+                    size_t n = kept - pos < sizeof(bytes) ? (size_t)(kept - pos) : sizeof(bytes);
+                    if (fseek(capture_wav, (long)(44 + skip + pos), SEEK_SET) ||
+                        fread(bytes, 1, n, capture_wav) != n ||
+                        fseek(capture_wav, (long)(44 + pos), SEEK_SET) ||
+                        fwrite(bytes, 1, n, capture_wav) != n) capture_error = 1;
+                    pos += n;
+                }
+                capture_bytes = kept;
+                if (fflush(capture_wav) || ftruncate(fileno(capture_wav), (off_t)(44 + kept)) ||
+                    fseek(capture_wav, (long)(44 + kept), SEEK_SET)) capture_error = 1;
+            }
+        }
+        capture_cycle = cycle; capture_vblank = capture_pending[first].vblank;
+        capture_wait_note = 0;
+        for (unsigned i = first; i < capture_pending_count; i++) capture_write(capture_pending[i]);
+    } else if (row.off == 0x18a) {
+        capture_pending_count = capture_addresses = 0;
+        memset(capture_first, 0, sizeof(capture_first));
+    }
 }
 
 int spu_capture_end(void)
 {
     if (!capture_trace && !capture_wav) return -1;
+    if (capture_wait_note) capture_error = 1;
     /* A platform reset may already have rewound the virtual clock. Preserve
      * the PCM collected so far, and report the interrupted segment as invalid. */
     if (clock_now() / 768 < generated || clock_now() < capture_cycle) capture_error = 1;
@@ -379,10 +459,11 @@ void spu_write16(uint32_t off, uint16_t v) {
     reset_state = 0;
     assert(off < 0x400 && !(off & 1));
     off &= 0x3FE;
-    if (capture_trace && fprintf(capture_trace, "%u %llu %03x %04x\n",
-            clock_vblanks() - capture_vblank,
-            (unsigned long long)((clock_now() - capture_cycle) / 768), off, v) < 0)
-        capture_error = 1;
+    if (capture_trace || capture_wav) {
+        CaptureWrite row = {clock_now(), clock_vblanks(), off, v};
+        if (capture_wait_note) capture_note_write(row);
+        else capture_write(row);
+    }
     regs[off >> 1] = v;
     if (off < 0x180) {
         int i = off >> 4;

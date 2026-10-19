@@ -87,7 +87,7 @@ class AudioCaptureTests(unittest.TestCase):
                                                      root / "bios", adapter)
             with contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(run(), 0)
-                self.assertCountEqual(calls, [1, 2])
+                self.assertEqual(calls, [1, 2])
                 args.reuse = True
                 calls.clear()
                 self.assertEqual(run(), 0)
@@ -98,7 +98,7 @@ class AudioCaptureTests(unittest.TestCase):
                     dependency.write_bytes(b"modified")
                     calls.clear()
                     self.assertEqual(run(), 0)
-                    self.assertCountEqual(calls, [1, 2])
+                    self.assertEqual(calls, [1, 2])
                 for changed in ("spu", "wav"):
                     args.reuse = False
                     with self.assertRaisesRegex(ValueError, "non-deterministic reference segment 1 " + changed):
@@ -241,6 +241,42 @@ quit(0)
             self.assertEqual(process.returncode, 0, (process.stdout, process.stderr))
             self.assertEqual((work/"2.spu").read_text(),
                              "# dw1-spu-trace-v1\n0 1 000 5678\n# end 1 event:game\n")
+            note_script = event_script.replace("{start='music',stop_addresses=",
+                                               "{start='music',anchor='note_on',stop_addresses=")
+            note_script = note_script.replace("cycles=cycles+768\nr.rawPC=0x80010000;instruction(0xa4a60000)\ncallbacks[0x1f801c00].callback(0x1f801c00,2)", r'''
+local function store(off,value)
+ r.rawPC=0x80010000;r.GPR.r[6]=value;instruction(0xa4a60000+off)
+ callbacks[0x1f801c00].callback(0x1f801c00+off,2)
+end
+cycles=cycles+768
+store(0,0xdead);store(0x188,0);store(0x18a,0)
+store(0x16,0x1234);store(0x188,1);store(0x18a,0)
+cycles=cycles+53
+store(4,0x400);cycles=cycles+800
+store(0,0x123);store(2,0x234);store(6,0x345);store(8,0x456);store(10,0x567)
+store(0x188,1);store(0x18a,0)
+''')
+            script.write_text(note_script)
+            process = subprocess.run(["xvfb-run", "-a", "pcsx-redux", "-no-ui", "-portable", str(work),
+                                      "-noupdate", "-no-webserver", "-no-gdb", "-dofile", str(script)],
+                                     cwd=work, capture_output=True, timeout=30)
+            self.assertEqual(process.returncode, 0, (process.stdout, process.stderr))
+            self.assertEqual((work/"2.spu").read_text(),
+                "# dw1-spu-trace-v1\n0 0 004 0400\n0 1 000 0123\n0 1 002 0234\n"
+                "0 1 006 0345\n0 1 008 0456\n0 1 00a 0567\n0 1 188 0001\n0 1 18a 0000\n# end 1 event:game\n")
+            self.assertEqual(json.loads((work/"2.json").read_text())["start_cycle"], 9000001689)
+            high_script = note_script.replace("store(4,0x400)", "store(0x114,0x400)").replace(
+                "store(0,0x123);store(2,0x234);store(6,0x345);store(8,0x456);store(10,0x567)",
+                "store(0x110,0x123);store(0x112,0x234);store(0x116,0x345);store(0x118,0x456);store(0x11a,0x567)").replace(
+                "store(0x188,1);store(0x18a,0)\n\nonVsync", "store(0x188,0);store(0x18a,2)\n\nonVsync")
+            script.write_text(high_script)
+            process = subprocess.run(["xvfb-run", "-a", "pcsx-redux", "-no-ui", "-portable", str(work),
+                                      "-noupdate", "-no-webserver", "-no-gdb", "-dofile", str(script)],
+                                     cwd=work, capture_output=True, timeout=30)
+            self.assertEqual(process.returncode, 0, (process.stdout, process.stderr))
+            rows = (work/"2.spu").read_text().splitlines()
+            self.assertEqual(rows[1], "0 0 114 0400")
+            self.assertEqual(rows[-2], "0 1 18a 0002")
 
     @unittest.skipUnless(shutil.which("pcsx-redux") and shutil.which("xvfb-run"), "PCSX-Redux Lua runtime unavailable")
     def test_real_lua_checkpoint_callbacks_without_disc(self):

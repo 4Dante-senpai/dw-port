@@ -26,5 +26,9 @@ void spu_set_output(SpuOutput fn, void *arg);
  * begin drains earlier PCM; end drains the segment and patches the WAV header.
  * Returns -1 on invalid state or I/O failure. Existing output callbacks still run. */
 int spu_capture_begin(FILE *trace, FILE *wav);
+/* Arm at a checkpoint, then rebase to the first new sample-address/KON bundle.
+ * WAV must be readable/seekable (w+b). Fails closed if no bundle is confirmed. */
+void spu_capture_note_anchor(void);
+int spu_capture_origin(uint64_t *cycle, uint32_t *vblank);
 int spu_capture_end(void);
 #endif
