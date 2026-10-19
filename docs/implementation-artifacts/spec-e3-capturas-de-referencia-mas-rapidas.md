@@ -150,6 +150,9 @@ recapturan, así que una caché parcial no es peligrosa.
   paralelas: 941,54 s; caché `build/reference/` guardada en el volumen local del runner
   (sin servidor compartido). El pipeline 107 se creó por API y, por las reglas de AD-16, no
   corre clase B: el hit de caché se comprueba en el pipeline del push de cierre.
+- CI, pipeline 108 (push de `7431766`): `native-disc` (job 421) restauró la caché
+  (`Successfully extracted cache`); `reference_newgame_state` 0,13 s; ctest del job
+  1370,25 s → 412,51 s.
 - Revisión: parches `args.bios` en el pin de `--reuse` y comparación del sello en bytes;
   tests del capturador 37/37 tras los parches.
 

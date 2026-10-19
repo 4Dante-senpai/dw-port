@@ -298,14 +298,13 @@
   con ocho omisiones de disco por preset en la ejecución sin `DW1_DISC_DIR`, cubiertas
   después por clase B 12/12 en ambos presets vía `ctest_no_skip.sh`, sin omisiones).
   CI pipeline 106: verde; `reference_newgame_state` en frío 941,54 s y caché guardada.
+  Pipeline 108 (job 421): caché restaurada, `reference_newgame_state` 0,13 s; ctest de
+  `native-disc` 1370 s → 412 s.
   Diferido: identidad del binario de PCSX-Redux en la huella (`deferred-work.md`).
   Detalles y mediciones en
   `docs/implementation-artifacts/spec-e3-capturas-de-referencia-mas-rapidas.md`.
 
 ## En curso
-
-- Capturas rápidas E3: comprobar en el pipeline del push de cierre (segundo con clase B)
-  que `native-disc` restaura la caché y `reference_newgame_state` imprime `cached`.
 
 - Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1, 3.2, 3.3 y 3.4 cerradas; sigue la 3.5. El resto de la Épica 4 sigue después de la Épica 3.
 
