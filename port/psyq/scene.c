@@ -3,6 +3,7 @@
 #include "scene.h"
 #include "clock.h"
 #include "ps1mem.h"
+#include "../backend/spu.h"
 #include <stdlib.h>
 #include <string.h>
 #ifndef __EMSCRIPTEN__
@@ -10,6 +11,7 @@
 #include <link.h>
 #include <errno.h>
 #include <limits.h>
+#include <sys/stat.h>
 
 extern void port_pad_latch(uint16_t buttons);
 static const PortCapture *config;
@@ -24,7 +26,7 @@ static size_t variable_count;
 typedef struct {
     char label[128];
     void *function;
-    unsigned occurrence, hits, window, reached, start;
+    unsigned occurrence, hits, window, reached, start, after;
 } Checkpoint;
 static Checkpoint *checkpoints;
 static size_t checkpoint_count, next_checkpoint;
@@ -33,6 +35,71 @@ typedef struct { unsigned checkpoint, k, mask, applied; } Event;
 static Event *events;
 static size_t event_count;
 static void snapshot(const char *label, unsigned relative);
+static void fail(const char *message);
+typedef struct {
+    char start[128], finish[128], trace[1024], wav[1024];
+    unsigned window, origin, stop_count;
+    char anchor[32];
+    uint64_t cycle;
+    char stop_names[32][128];
+    void *stops[32];
+} AudioSegment;
+static AudioSegment audio_segments[2];
+static unsigned audio_count, audio_index;
+static FILE *audio_trace, *audio_wav;
+static FILE *audio_open(const char *path, const char *mode)
+{
+    char resolved[PATH_MAX], root[PATH_MAX], parent[PATH_MAX];
+    struct stat info;
+    if (!lstat(path, &info) && S_ISLNK(info.st_mode)) fail("audio file must not be a symlink");
+    if (!realpath(DW1_SOURCE_ROOT, root)) fail("cannot resolve repository root");
+    if (!realpath(path, resolved)) {
+        if (errno != ENOENT || path[0] != '/') fail("audio path must be absolute and outside the repository");
+        strcpy(parent, path); /* Declaration paths are limited to 1023 bytes. */
+        char *slash = strrchr(parent, '/');
+        if (!slash || !slash[1]) fail("invalid audio path");
+        if (slash == parent) strcpy(parent, "/");
+        else *slash = 0;
+        if (!realpath(parent, resolved)) fail("cannot resolve audio directory");
+    }
+    size_t length = strlen(root);
+    if (!strncmp(root, resolved, length) && (!resolved[length] || resolved[length] == '/'))
+        fail("audio evidence must be outside the repository");
+    return fopen(path, mode);
+}
+int port_scene_audio_complete(void) { return audio_count && audio_index == audio_count; }
+static void audio_end(const char *reason)
+{
+    AudioSegment *segment = &audio_segments[audio_index];
+    if (spu_capture_origin(&segment->cycle, &segment->origin)) fail("missing new note-on audio anchor");
+    int failed = fprintf(audio_trace, "# end %llu %s\n",
+                         (unsigned long long)((clock_now() - segment->cycle) / 768), reason) < 0;
+    failed |= spu_capture_end();
+    failed |= fclose(audio_trace) != 0;
+    failed |= fclose(audio_wav) != 0;
+    audio_trace = audio_wav = NULL;
+    if (failed) fail("cannot finalize audio segment");
+    audio_index++;
+}
+static void audio_enter(const char *label)
+{
+    if (audio_index >= audio_count) return;
+    AudioSegment *segment = &audio_segments[audio_index];
+    if (audio_trace && !strcmp(label, segment->finish)) {
+        audio_end("checkpoint");
+        if (audio_index >= audio_count) return;
+        segment = &audio_segments[audio_index];
+    }
+    if (!audio_trace && !strcmp(label, segment->start)) {
+        audio_trace = audio_open(segment->trace, "w");
+        audio_wav = audio_open(segment->wav, "w+b");
+        if (!audio_trace || !audio_wav || spu_capture_begin(audio_trace, audio_wav))
+            fail("cannot open audio segment");
+        segment->origin = clock_vblanks();
+        segment->cycle = clock_now();
+        if (!strcmp(segment->anchor, "note_on")) spu_capture_note_anchor();
+    }
+}
 int port_scene_complete(void)
 {
     if (!checkpoint_count || next_checkpoint != checkpoint_count) return 0;
@@ -43,10 +110,20 @@ int port_scene_complete(void)
 void port_scene_enter(void *function)
 {
     if (!checkpoint_count) return;
+    if (audio_trace) {
+        AudioSegment *segment = &audio_segments[audio_index];
+        for (unsigned i = 0; i < segment->stop_count; i++) if (function == segment->stops[i]) {
+            char reason[160];
+            snprintf(reason, sizeof(reason), "event:%s", segment->stop_names[i]);
+            audio_end(reason);
+            break;
+        }
+    }
     if (!have_mark && function == mark_function) port_scene_mark(config->mark);
     if (!have_mark) return;
     for (size_t i = 0; i < checkpoint_count; i++) {
         Checkpoint *cp = &checkpoints[i];
+        if (cp->after && !checkpoints[cp->after - 1].reached) continue;
         if (cp->function != function || ++cp->hits != cp->occurrence) continue;
         if (i != next_checkpoint) {
             fprintf(stderr, "scene: checkpoint out of order: %s\n", cp->label);
@@ -55,6 +132,7 @@ void port_scene_enter(void *function)
         cp->reached = 1;
         cp->start = clock_vblanks();
         next_checkpoint++;
+        audio_enter(cp->label);
         if (trace) snapshot(cp->label, 0);
     }
 }
@@ -129,6 +207,35 @@ static void latch(void)
 void port_scene_prepare(const PortCapture *value)
 {
     config = value;
+    if (config->audio_segments) {
+        FILE *file = fopen(config->audio_segments, "r");
+        if (!file) fail("cannot open audio segment declarations");
+        char line[7000], extra;
+        while (fgets(line, sizeof(line), file)) {
+            if (audio_count == 2) fail("too many audio segments");
+            AudioSegment *segment = &audio_segments[audio_count++];
+            char stop_list[4096] = "-";
+            int fields = sscanf(line, "%127s %127s %u %1023s %1023s %4095s %31s %c", segment->start,
+                       segment->finish, &segment->window, segment->trace, segment->wav, stop_list, segment->anchor, &extra);
+            if (fields < 5 || fields > 7 ||
+                (fields == 7 && strcmp(segment->anchor, "-") && strcmp(segment->anchor, "note_on")) ||
+                (!strcmp(segment->anchor, "note_on") && !strcmp(stop_list, "-")) ||
+                ((!strcmp(segment->finish, "-") && !strcmp(stop_list, "-") ? 1 : 0) != (segment->window > 0)) ||
+                (strcmp(stop_list, "-") && (segment->window || strcmp(segment->finish, "-"))))
+                fail("invalid audio segment declaration");
+            if (strcmp(stop_list, "-")) {
+                char *save;
+                for (char *name = strtok_r(stop_list, ",", &save); name; name = strtok_r(NULL, ",", &save)) {
+                    unsigned n = segment->stop_count++;
+                    if (n == 32 || strlen(name) >= 128) fail("too many/invalid audio stop symbols");
+                    strcpy(segment->stop_names[n], name);
+                    segment->stops[n] = dlsym(RTLD_DEFAULT, name);
+                    if (!segment->stops[n]) fail("missing audio stop symbol");
+                }
+            }
+        }
+        if (ferror(file) || fclose(file) || audio_count != 2) fail("expected two audio segments");
+    }
     if (config->mark) {
         mark_function = dlsym(RTLD_DEFAULT, config->mark);
         if (!mark_function) {
@@ -139,11 +246,17 @@ void port_scene_prepare(const PortCapture *value)
     if (config->checkpoints) {
         FILE *file = fopen(config->checkpoints, "r");
         if (!file) fail("cannot open checkpoints");
-        char line[256], name[128], window_text[64], extra;
+        char line[512], name[128], window_text[64], after[128], extra;
         while (fgets(line, sizeof(line), file)) {
-            if (sscanf(line, "%127s %63s %c", name, window_text, &extra) != 2)
-                fail("invalid checkpoint declaration");
+            strcpy(after, "-");
+            int fields = sscanf(line, "%127s %63s %127s %c", name, window_text, after, &extra);
+            if (fields < 2 || fields > 3) fail("invalid checkpoint declaration");
             Checkpoint cp = {.occurrence = 1, .window = checkpoint_number(window_text, 10)};
+            if (strcmp(after, "-")) {
+                for (size_t i = 0; i < checkpoint_count; i++)
+                    if (!strcmp(checkpoints[i].label, after)) cp.after = i + 1;
+                if (!cp.after) fail("unknown checkpoint predecessor");
+            }
             for (size_t i = 0; i < checkpoint_count; i++)
                 if (!strcmp(checkpoints[i].label, name)) fail("duplicate checkpoint");
             strcpy(cp.label, name);
@@ -293,6 +406,9 @@ static void snapshot(const char *label, unsigned relative)
 void port_scene_tick(void)
 {
     latch();
+    if (audio_trace && audio_segments[audio_index].window &&
+        clock_vblanks() - audio_segments[audio_index].origin >= audio_segments[audio_index].window)
+        audio_end("vblanks");
     if (!trace || !have_mark) return;
     if (!checkpoint_count) { snapshot(NULL, 0); return; }
     for (size_t i = 0; i < checkpoint_count; i++) {
@@ -313,5 +429,6 @@ void port_scene_start(void) {}
 void port_scene_tick(void) {}
 void port_scene_finish(void) {}
 int port_scene_complete(void) { return 0; }
+int port_scene_audio_complete(void) { return 0; }
 void port_scene_enter(void *function) { (void)function; }
 #endif

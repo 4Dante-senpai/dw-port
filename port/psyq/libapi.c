@@ -131,8 +131,13 @@ static uint64_t period(int rc)
 static void on_target(void *arg)
 {
 	int rc = (int)(intptr_t)arg;
-	counters[rc].start = clock_now();
-	counters[rc].event = clock_schedule(period(rc), on_target, arg);
+	/* The counter resets at the target, independently of CPU interrupt latency.
+	 * A masked handler can postpone dispatch past one or more targets: retain
+	 * the /8 phase and coalesce those targets into the pending interrupt. */
+	uint64_t span = period(rc);
+	uint64_t elapsed = clock_now() - counters[rc].start;
+	counters[rc].start += elapsed / span * span;
+	counters[rc].event = clock_schedule(span - elapsed % span, on_target, arg);
 	if (counters[rc].mode & 0x10)
 		psyq_raise_irq(IRQ_RCNT0 + rc);
 }

@@ -114,6 +114,14 @@ RUN git init /tmp/pcsx && cd /tmp/pcsx && \
     printf '{"version":"dw1-reference","changeset":"%s","timestamp":%s}\n' \
         "${PCSX_REDUX_SHA}" "$(git show -s --format=%ct HEAD)" > /out/share/pcsx-redux/resources/version.json
 
+# Capture the mixer's PCM before SDL queue drops or callback silence insertion.
+# Apply against the pinned source, failing closed on any changed patch context.
+COPY tools/port/reference/pcsx-redux-pcm-tap.patch /tmp/dw1-pcm-tap.patch
+RUN cd /tmp/pcsx && git apply --check /tmp/dw1-pcm-tap.patch && \
+    git apply /tmp/dw1-pcm-tap.patch && \
+    PKG_CONFIG_PATH=/opt/sdl3/native/lib/pkgconfig make -j3 CPPFLAGS_Release="-O1 -g0" && \
+    strip pcsx-redux && cp pcsx-redux /out/libexec/
+
 # Match the measured SCPH-1001 rand startup seed (206 calls before New Game).
 # Keep this after the expensive emulator layer; rebuild only OpenBIOS.
 RUN cd /tmp/pcsx && \

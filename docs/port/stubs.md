@@ -1,31 +1,16 @@
 # Stubs M2 con comportamiento definido
 
-Estas 46 entradas sustituyen los stubs generados. Cada entrada avanza el reloj una vez.
-No implementan hardware ni paridad audiovisual; permiten continuar el arranque.
+Quedan 25 entradas del juego con comportamiento M2 o parcial. Las entradas M2
+avanzan el reloj una vez; las parciales pueden llamar APIs del reloj/SPU.
+Este inventario no implica paridad audiovisual.
+El diagnóstico de `title_audio` sobre `e303346` y la corrección de fase
+de RCnt2 se registran en [audio-parity.md](audio-parity.md); no cambian este
+inventario ni cierran la comparación clase B. La investigación sobre
+`b97a378` añade cobertura L1 del recálculo de voces conservadas entre SEQ;
+no introduce stubs ni cambia el criterio de aceptación.
 
 | Función | Comportamiento M2 | Historia de reemplazo |
 |---|---|---|
-| `SsEnd` | Silencio; sin estado de secuenciador. | 3.5 |
-| `SsInit` | Silencio; sin estado de secuenciador. | 3.5 |
-| `SsQuit` | Silencio; sin estado de secuenciador. | 3.5 |
-| `SsStart` | Silencio; sin estado de secuenciador. | 3.5 |
-| `SsSeqClose` | Silencio; no libera recursos. | 3.5 |
-| `SsSeqStop` | Silencio; no libera recursos. | 3.5 |
-| `SsVabClose` | Silencio; no libera recursos. | 3.5 |
-| `SsUtAllKeyOff` | Silencio; no libera recursos. | 3.5 |
-| `SsSeqPlay` | Silencio; acepta configuración sin efectos. | 3.5 |
-| `SsSeqSetVol` | Silencio; acepta configuración sin efectos. | 3.5 |
-| `SsSetMVol` | Silencio; acepta configuración sin efectos. | 3.5 |
-| `SsSetTableSize` | Silencio; acepta configuración sin efectos. | 3.5 |
-| `SsSetTickMode` | Silencio; acepta configuración sin efectos. | 3.5 |
-| `SsSeqOpen` | Secuencia silenciosa con identificador 0. | 3.5 |
-| `SsVabOpenHeadSticky` | Devuelve el vabid recibido; sin transferencia. | 3.5 |
-| `SsVabTransBody` | Devuelve el vabid recibido; sin transferencia. | 3.5 |
-| `SsVabTransCompleted` | Transferencia completada inmediatamente (1). | 3.5 |
-| `SsUtGetVBaddrInSB` | Dirección 0; no hay memoria SPU. | 3.5 |
-| `SsUtKeyOffV` | Éxito (0) sin sonido. | 3.5 |
-| `SsUtAutoVol` | Éxito (0) sin sonido. | 3.5 |
-| `SsUtKeyOnV` | Éxito (0) sin sonido. | 3.5 |
 | `MemCardInit` | Reinicia el comando pendiente; tarjeta ausente. | 3.8 |
 | `MemCardStart` | Tarjeta ausente; no inicia trabajo. | 3.8 |
 | `MemCardExist` | Registra McFuncExist y devuelve 1; no accede al buffer. | 3.8 |
@@ -57,10 +42,24 @@ No implementan hardware ni paridad audiovisual; permiten continuar el arranque.
 `libspu`: las seis entradas de la historia 3.4 usan el SPU del Backend;
 no son stubs M2. Ver `docs/port/spu.md` y las pruebas `spu`/`libspu`.
 
-Audio de `libsnd`: retornos verificados en `src/main/sound.c` (loadVAB, seqPlay, selección
-de voces) y `sound_async.c`: los VAB conservan el identificador, las transferencias
-terminan y las voces están apagadas. `SsUtGetVBaddrInSB` devuelve 0; el consumidor
-actual no usa esa dirección.
+Audio de `libsnd` (paso 1 de 3.5, 2026-10-19): las 21 entradas públicas y
+sus dependencias alcanzadas están traducidas del asm USA de DW1.
+`SsStart`/`SsSeqCalledTbyT` ya despachan SEQ: notas, programas, controles,
+pitch, tempo, NRPN/bucles, fin y transiciones. No quedan marcadores M2 en
+libsnd. Las pruebas L1 sin disco verifican los ticks y registros SPU de
+SEQ/VAB sintéticos y las utilidades `SsUt*`; las entradas necesarias de
+libspu ya tienen implementación. Atribución, límites y la sustitución
+no verificada para los ADSR de NRPN 11..14 se detallan en
+[libsnd.md](libsnd.md#secuenciador-completado-desde-224e9ea).
+La paridad de trazas/PCM con disco depende de la referencia externa del
+orquestador y no se afirma con estas pruebas sintéticas.
+
+El inventario M2 de esta página es manual, basado en los marcadores `stub-m2:`;
+`gen_stubs.py` genera únicamente símbolos ausentes del enlace. El build vuelve
+a ejecutarlo: las 21 entradas de libsnd ya estaban definidas como símbolos,
+así que su contador de implementadas no mide la retirada de estos stubs M2.
+Atribución, diferencias defensivas respecto del asm e hipótesis en
+[libsnd.md](libsnd.md). No se afirma paridad de audio ni se cierra 3.5.
 
 Tarjeta: se conserva únicamente la convención de comando/resultado de
 `reference/dw2-pc/psyq/libmcrd.c` (CC0, atribución en el código). El último comando

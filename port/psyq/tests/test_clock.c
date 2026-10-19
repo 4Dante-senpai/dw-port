@@ -245,6 +245,31 @@ static void calls_psyq(void)
 	inside = clock_now();
 }
 
+static void delay_counter(void *arg)
+{
+	clock_advance((uintptr_t)arg); /* interrupts stay masked during this event */
+}
+
+static void late_root_counter(void)
+{
+	reset();
+	rcnt_hits = 0;
+	InterruptCallback(6, on_rcnt2);
+	SetRCnt(RCntCNT2, 1000, RCntMdINTR);
+	uint64_t origin = clock_now();
+	/* Cross three targets while masked, including a partial /8 tick. One
+	 * pending IRQ is delivered; the next target retains its original phase. */
+	clock_schedule(7990, delay_counter, (void *)(uintptr_t)17013);
+	clock_advance(7990);
+	clock_advance(0);
+	CHECK(rcnt_hits == 1 && rcnt_last == origin + 25003);
+	CHECK(GetRCnt(RCntCNT2) == (1003 + CLOCK_PSYQ_ENTRY_CYCLES) / 8);
+	clock_advance(origin + 32000 - clock_now() - 1);
+	CHECK(rcnt_hits == 1);
+	clock_advance(1);
+	CHECK(rcnt_hits == 2 && rcnt_last == origin + 32000);
+}
+
 static void handler_calls_psyq(void)
 {
 	reset();
@@ -346,6 +371,7 @@ int main(void)
 	vsync_semantics();
 	polling_terminates();
 	root_counter();
+	late_root_counter();
 	deterministic();
 	same_cycle_order();
 	cancel_ids();

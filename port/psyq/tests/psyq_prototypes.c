@@ -95,6 +95,10 @@ _Static_assert(sizeof(StHEADER) == 32 && offsetof(StHEADER, frameCount) == 8 &&
                "stream header ABI");
 _Static_assert(sizeof(SpuReverbAttr) == 20 && offsetof(SpuReverbAttr, depth) == 8,
                "SPU reverb ABI");
+_Static_assert(sizeof(SpuCommonAttr) == 40 && offsetof(SpuCommonAttr, cd) == 16 &&
+               offsetof(SpuCommonAttr, ext) == 28, "SPU common attributes ABI");
+_Static_assert(sizeof(SpuVoiceAttr) == 64 && offsetof(SpuVoiceAttr, addr) == 28 &&
+               offsetof(SpuVoiceAttr, adsr1) == 58, "SPU voice attributes ABI");
 _Static_assert(SPU_OFF == 0 && McFuncExist == 1 && McFuncAccept == 2 &&
                McFuncReadFile == 3 && McFuncWriteFile == 4 && McErrCardNotExist == 1,
                "silent audio and absent card constants");

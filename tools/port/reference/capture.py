@@ -14,6 +14,7 @@ import struct
 import subprocess
 import sys
 import tomllib
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[3]
 _spec = importlib.util.spec_from_file_location("scene_runner", ROOT / "tools/port/scenes/run.py")
@@ -94,13 +95,22 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
         shutil.rmtree(work)
     work.mkdir()
     # Portable configuration prevents host settings, cards or input from leaking in.
-    (work / "pcsx.json").write_text(json.dumps({"SPU": {
-        "Backend": "dummy", "UseNullSync": True, "Mute": True, "Speed": 0}}))
+    audio = scene.get("audio")
+    settings = dict(Backend="dummy", UseNullSync=True, Mute=False, Speed=1,
+                    Interp=2, KeyOnDelay=6) if audio else dict(
+                        Backend="dummy", UseNullSync=True, Mute=True, Speed=0)
+    (work / "pcsx.json").write_text(json.dumps({"SPU": settings}))
     config = dict(symbols, capture_vblank=scene["capture_vblank"],
                   inputs=scene.get("inputs", []), max_vblanks=max_vblanks,
                   raw=str(work / "display.raw"), meta=str(work / "display.json"),
                   progress=str(work / "progress.txt"), inputs_from=scene.get("inputs_from", "frame0"))
     config["checkpoints"] = scene.get("resolved_checkpoints", [])
+    if audio:
+        config["audio_drain_vblanks"] = 4
+        config["audio"] = [dict(segment, stop_addresses=_runner.checkpoint_symbols(
+                                dict(checkpoints=segment.get("stop_on", [])), ROOT / "config/us/symbols.txt"), trace=str(output / f"run-{index}-{i}.spu"),
+                                meta=str(output / f"run-{index}-{i}.json"))
+                           for i, segment in enumerate(audio, 1)]
     if scene.get("state_vars"):
         config.update(state_vars=scene["state_vars"], state_symbols=scene["state_symbols"],
                       state_trace=str(output / f"run-{index}.state"))
@@ -115,8 +125,11 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
                "-dofile", str(script), "-run"]
     log = output / f"run-{index}.log"
     with log.open("wb") as stream:
+        environment = dict(os.environ)
+        if audio:
+            environment["DW1_REDUX_PCM_TAP"] = str(output / f"run-{index}.pcm")
         process = subprocess.Popen(command, cwd=work, stdout=stream, stderr=subprocess.STDOUT,
-                                   start_new_session=True)
+                                   start_new_session=True, env=environment)
         try:
             code = process.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
@@ -124,8 +137,10 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
             process.wait()
             code = "wall timeout"
     progress = (work / "progress.txt").read_text().strip() if (work / "progress.txt").exists() else "before frame 0"
-    if code != 0 or not (work / "display.json").exists():
+    if code != 0 or (not audio and not (work / "display.json").exists()):
         raise ValueError(f"run {index}: {code}; last point: {progress}; log: {log}")
+    if audio:
+        return progress
     meta = json.loads((work / "display.json").read_text())
     capture = output / f"run-{index}.ppm"
     capture.write_bytes(to_ppm((work / "display.raw").read_bytes(), **meta))
@@ -142,14 +157,17 @@ def main(argv=None):
     parser.add_argument("id", choices=sorted(p.stem for p in (ROOT / "tools/port/scenes").glob("*.toml")))
     parser.add_argument("--update", action="store_true")
     parser.add_argument("--state", action="store_true")
-    parser.add_argument("--reuse", action="store_true", help="reuse a valid deterministic state capture")
+    parser.add_argument("--audio", action="store_true")
+    parser.add_argument("--reuse", action="store_true", help="reuse a valid deterministic state/audio capture")
     parser.add_argument("--bios", type=Path)
     parser.add_argument("--out", type=Path)
     parser.add_argument("--timeout", type=float, default=600)
     parser.add_argument("--max-vblanks", type=int, default=10000)
     args = parser.parse_args(argv)
-    if args.reuse and (args.update or not args.state):
-        raise ValueError("--reuse requires --state and cannot be combined with --update")
+    if args.reuse and (args.update or not (args.state or args.audio)):
+        raise ValueError("--reuse requires --state or --audio and cannot be combined with --update")
+    if args.audio and (args.state or args.update):
+        raise ValueError("--audio cannot be combined with --state or --update")
     if args.bios and args.update:
         raise ValueError("--bios cannot be combined with --update")
     if args.timeout <= 0 or args.max_vblanks <= 0:
@@ -160,6 +178,10 @@ def main(argv=None):
     scene_path = ROOT / "tools/port/scenes" / f"{args.id}.toml"
     scene = tomllib.loads(scene_path.read_text())
     validate_scene(scene)
+    if scene.get("audio") and not args.audio:
+        raise ValueError("audio scenes require --audio")
+    if args.audio and not scene.get("audio"):
+        raise ValueError("--audio requires an audio scene")
     scene["resolved_checkpoints"] = _runner.checkpoint_symbols(scene, ROOT / "config/us/symbols.txt")
     symbols = resolve_symbols(ROOT / "config/us/symbols.txt", scene["mark"])
     if args.state:
@@ -181,6 +203,12 @@ def main(argv=None):
         return 77
     if not bios.is_file():
         raise ValueError(f"OpenBIOS missing: {bios}")
+    if args.audio:
+        spec = importlib.util.spec_from_file_location("reference_audio", Path(__file__).with_name("audio.py"))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module.capture_audio(args, scene, symbols, emulator, cues[0].resolve(), bios,
+                                    SimpleNamespace(ROOT=ROOT, run_once=run_once))
     output = safe_output(args.out or Path(os.environ.get(
         "DW1_REFERENCE_DIR", str(ROOT / "build/reference"))) / args.id)
     output.mkdir(parents=True, exist_ok=True)

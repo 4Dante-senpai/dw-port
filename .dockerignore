@@ -1,3 +1,4 @@
-# The images only COPY requirements.txt; keep the disc image, builds and references out of the context
+# The images only COPY requirements.txt and the PCSX-Redux patch; keep the disc image, builds and references out of the context
 *
 !requirements.txt
+!tools/port/reference/pcsx-redux-pcm-tap.patch
