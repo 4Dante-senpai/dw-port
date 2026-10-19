@@ -3,6 +3,9 @@
 Quedan 25 entradas del juego con comportamiento M2 o parcial. Las entradas M2
 avanzan el reloj una vez; las parciales pueden llamar APIs del reloj/SPU.
 Este inventario no implica paridad audiovisual.
+El diagnóstico de `title_audio` sobre `e303346` y la corrección de fase
+de RCnt2 se registran en [audio-parity.md](audio-parity.md); no cambian este
+inventario ni cierran la comparación clase B.
 
 | Función | Comportamiento M2 | Historia de reemplazo |
 |---|---|---|

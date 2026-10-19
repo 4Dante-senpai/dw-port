@@ -321,20 +321,35 @@ static void explicit_voices(void)
     SsVabClose(0);
 }
 
+static void mask_audio_tick(void *arg)
+{
+    (void)arg;
+    clock_advance(2000);
+}
+
 static void tick_clock(void)
 {
     SsSetTickMode(2); SsStart();
     FILE *trace = tmpfile(); CHECK(trace != NULL);
     CHECK(spu_capture_begin(trace, NULL) == 0);
+    /* SsStart installs its callback one PsyQ entry after programming RCnt2.
+     * Mask the first target: dispatch latency must not shift later ticks. */
+    clock_schedule(0x44e8 * 8 - CLOCK_PSYQ_ENTRY_CYCLES - 8, mask_audio_tick, NULL);
     clock_advance(CLOCK_HZ);
     CHECK(spu_capture_end() == 0);
     rewind(trace);
-    char line[160]; unsigned ticks = 0;
+    char line[160]; unsigned ticks = 0, first = 0, second = 0;
     while (fgets(line, sizeof(line), trace)) {
         unsigned vb_index, sample, reg, value;
-        if (sscanf(line, "%u %u %x %x", &vb_index, &sample, &reg, &value) == 4 && reg == 0x188) ticks++;
+        if (sscanf(line, "%u %u %x %x", &vb_index, &sample, &reg, &value) == 4 && reg == 0x188) {
+            if (!ticks) first = sample;
+            else if (ticks == 1) second = sample;
+            ticks++;
+        }
     }
     fclose(trace); CHECK(ticks == 240);
+    /* 183.75 samples/period minus 1992/768 samples of first-IRQ latency. */
+    CHECK(second - first == 181 || second - first == 182);
     SsEnd();
     CHECK(spu_capture_begin(trace = tmpfile(), NULL) == 0);
     clock_advance(CLOCK_HZ / 60);
