@@ -131,6 +131,11 @@ class AudioTests(unittest.TestCase):
             audio.compare_pcm(self.wav("noise.wav", [1] * (audio.WINDOW * 2)), silence)
         with self.assertRaisesRegex(ValueError, "duration mismatch"):
             audio.compare_pcm(self.wav("long.wav", [0] * (audio.WINDOW * 2 + 200)), silence)
+        duration = audio.compare_pcm(self.wav("long-diagnostic.wav", [0] * (audio.WINDOW * 2 + 200)),
+                                     silence, diagnostic_only=True)
+        self.assertTrue(duration["duration_mismatch"])
+        self.assertEqual(duration["compared_frames"], audio.WINDOW)
+        self.assertTrue(math.isinf(duration["worst_snr_db"]))
 
     def test_external_paths(self):
         repo = self.root / "repo"

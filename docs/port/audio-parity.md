@@ -188,7 +188,9 @@ acepta prefijos. El tramo 1 se compara entero. La regla B original, los
 desfases de muestras y el SNR siguen ejecutándose y se guardan en el JSON
 del runner aunque falle el contenido; sus diferencias no bloquean hasta
 3.10. También se reportan duraciones PCM desiguales y ventanas bajo 40 dB.
-La determinación de dos corridas, hashes, archivos externos y errores de
+El reporte conserva los límites de captura de ambos lados incluso si el
+contenido diverge antes de comprobar la duración mínima.
+El determinismo de dos corridas, hashes, archivos externos y errores de
 proceso/sanitizadores conserva sus comprobaciones.
 
 El tramo 2 comienza en la primera entrada a `SsSeqPlay` posterior a
@@ -200,7 +202,8 @@ cuerpo. `seqPlay` llama a `SsSeqSetVol` en `0x800C5E30` antes de entrar en
 inicio de reproducción. Las llamadas anteriores a `gameLoop` no cuentan.
 
 El primer evento posterior del juego se define como la siguiente entrada
-a una de las 21 API públicas de `libsnd`, enumeradas en `stop_on` del TOML.
+a una de las 21 API públicas de `libsnd` usadas por el juego, enumeradas
+en `stop_on` del TOML.
 El tick llama rutinas internas `snd_*`/`vm_*`, sin pasar por esas entradas.
 Ambos capturadores cierran antes de ejecutar la API del juego; si la misma
 dirección puede abrir y cerrar, procesan primero el cierre del tramo activo.
@@ -229,3 +232,93 @@ Ese intervalo no satisface el mínimo aprobado de diez segundos. Se conserva
 el límite y se informa el fallo; no se prolonga la captura más allá del evento
 ni se cambia la escena para ocultarlo. Las copias antiguas del tramo 2,
 originadas en `gameLoop`, no demuestran el nuevo límite y necesitan recaptura.
+
+### Verificación de la decisión 3 en el contenedor
+
+Desde el checkpoint `0860f80`, se ejecutaron los builds y las suites completas
+de los tres presets, sin `DW1_DISC_DIR` en esas suites:
+
+| Preset | Aprobadas | Omitidas por fixture/disco | Fallidas |
+|---|---:|---:|---:|
+| native-headless | 44 | 10 | 0 |
+| native-asan | 42 | 10 | 0 |
+| web | 25 | 3 | 0 |
+
+Logs externos: `/tmp/dw1-decision3-build-{native,asan,web}.log` y
+`/tmp/dw1-decision3-ctest-{native,asan,web}.log`. Las omisiones incluyen
+`scene_title_audio_compare` sin sello durante la recaptura; no acreditan
+paridad clase B. `scene_audio_unit`, `scene_runner`, `scene_audio_runtime` y
+`reference_capture_unit` aprobaron. También se repitieron las pruebas
+focalizadas tras ampliar el reporte de límites y el caso de duración PCM
+desigual: se conserva el SNR calculado como diagnóstico, mientras un WAV
+truncado sigue bloqueando. No se detectaron errores de sanitizadores.
+
+La evidencia nativa de esta sesión se regeneró en
+`/tmp/dw1-decision3-port`, reproduciendo exactamente el conteo y el límite
+musical anteriores. El contenido del tramo 1 y sus métricas frente a la
+referencia copiada se guardan en `copied-comparison.json`.
+
+### Recaptura completa y gate real
+
+Se completó la captura nueva con el TOML vigente:
+
+```sh
+DW1_DISC_DIR=/dw/game_rom/extracted python3 -I -B tools/port/reference/capture.py title_audio --audio --out /tmp/dw1-decision3-reference --max-vblanks 40000 --timeout 1800
+DW1_DISC_DIR=/dw/game_rom/extracted DW1_AUDIO_DIR=/tmp/dw1-decision3-runner python3 -I -B tools/port/scenes/run.py title_audio --build native-headless --compare-audio
+```
+
+Las dos corridas de Redux produjeron trazas y PCM idénticos byte a byte.
+`--reuse` con ese mismo directorio verificó los hashes y reutilizó el sello.
+Ambas referencias alcanzaron `gameLoop` en el VBlank 17560 y `SsSeqPlay` en
+17685; cerraron antes de `SsUtKeyOnV`, 572 VBlanks después del ancla.
+No hay dependencia de `/ref` en esta comprobación.
+
+El runner realizó dos corridas nativas deterministas y devolvió **1**:
+
+| Tramo | Resultado de contenido | Límite port / referencia |
+|---|---|---|
+| 1 | 744/744 escrituras idénticas | 1099910 / 1226736 muestras, `checkpoint` |
+| 2 | Divergencia en la primera escritura; 654 / 660 escrituras totales | 409127 / 419933 muestras, `event:SsUtKeyOnV` |
+
+Primera divergencia del tramo 2, índice 0: port **VBlank 1, muestra 59,
+registro `0x000` = `0x078e`**; referencia **VBlank 0, muestra 108,
+registro `0x000` = `0x0143`**. Es una diferencia de valor de voz, no solo de
+fase, y bloquea según la decisión 3. Su causa dentro del estado musical o de
+`libsnd` queda sin determinar en esta implementación del gate; no se ajusta
+el inicio ni se descartan escrituras para obtener un prefijo común.
+
+Los límites musicales también incumplen el mínimo aprobado:
+**9,277256 s** en el port y **9,522290 s** en la referencia. La divergencia de
+contenido se informa primero; `capture_bounds` conserva ambos límites aunque
+esa diferencia impida llegar a la validación de duración. Incluso corrigiendo
+los valores, esta ventana no demostraría los diez segundos exigidos.
+
+Los diagnósticos se calcularon a pesar del fallo:
+
+| Métrica no bloqueante | Tramo 1 | Tramo 2 |
+|---|---:|---:|
+| Desfase de muestras máximo / media, por ocurrencia de registro | 138180 / 27771,6409 | 69 / 52,5055 |
+| Lag PCM por correlación, muestras | -38954 | -58 |
+| Peor SNR, dB | -3,739384 | 8,491279 |
+
+La regla B difiere en ambos tramos y las duraciones PCM son desiguales;
+esas métricas no bloquean. Se preserva el reporte completo en
+`build/port/native-headless/scenes/title_audio/audio.json`, con solo hashes
+y métricas. Audio y trazas están en los directorios externos anteriores.
+`/tmp/dw1-decision3-port/fresh-comparison.json` contiene además la comparación
+directa de las trazas, y `/tmp/dw1-decision3-runner.log` la salida del runner.
+
+Se repitió `scene_title_audio_compare` con `native-asan`, la referencia fresca
+y los fixtures de preparación excluidos para reutilizar esa captura. También
+falla por la misma primera escritura del tramo 2; sus dos corridas son
+deterministas y los cuatro hashes de trazas/PCM coinciden con los de nativo.
+No hay diagnósticos de ASan/UBSan. Log:
+`/tmp/dw1-decision3-audio-asan.log`; evidencia externa:
+`/tmp/dw1-decision3-asan/native-asan/title_audio`.
+Este fallo real clase B permanece abierto, independientemente de las suites
+sin disco aprobadas antes de disponer de la referencia fresca.
+
+La implementación del gate está verificada, pero **3.5 sigue sin satisfacer
+la aceptación**: quedan la diferencia de contenido musical y una ventana
+válida de diez segundos antes del primer evento. No se modificaron `libsnd`,
+el reloj ni los inputs para eludir estos fallos, ni se hicieron commits.

@@ -444,10 +444,11 @@ def run_audio(args, scene, build, checkpoints, pack):
             audio.read_pcm(wav)
         pcm = audio.diagnostic(audio.compare_pcm, output / f"run-1-{i}.wav",
                                reference / f"run-1-{i}.wav", diagnostic_only=True)
-        metrics.append(dict(segment=i, content=content, rule_b=trace, pcm=pcm))
+        bounds = dict(port=audio.trace_data(actual)[1], reference=audio.trace_data(expected)[1])
+        metrics.append(dict(segment=i, content=content, capture_bounds=bounds, rule_b=trace, pcm=pcm))
         if content["status"] != "match":
             failures.append(f"segment {i}: {content['error']}")
-        print(f"audio segment {i}: content={content}; rule B (non-blocking)={trace}; "
+        print(f"audio segment {i}: content={content}; capture bounds={bounds}; rule B (non-blocking)={trace}; "
               f"PCM (non-blocking)={pcm}")
     # Only hashes/metrics go into build/; PCM and register evidence stay external.
     report.parent.mkdir(parents=True, exist_ok=True)

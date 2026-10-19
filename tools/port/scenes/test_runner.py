@@ -149,6 +149,9 @@ with tempfile.TemporaryDirectory() as directory:
             evidence = json.loads((build/"scenes/title_audio/audio.json").read_text())
             assert evidence["segments"][0]["content"]["status"] == "match"
             assert evidence["segments"][1]["content"]["status"] == "different"
+            assert evidence["segments"][1]["capture_bounds"]["port"] == dict(
+                sample=440999, reason="event:game_event")
+            assert evidence["segments"][1]["capture_bounds"]["reference"]["sample"] == 441000
         def truncated_host(command, **kwargs):
             result = original_host(command, **kwargs)
             declarations = Path(command[command.index("--audio-segments")+1])
