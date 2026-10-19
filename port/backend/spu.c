@@ -52,6 +52,11 @@ static SpuCdInput cd_input;
 static void *cd_arg;
 static SpuOutput output;
 static void *output_arg;
+static FILE *capture_trace, *capture_wav;
+static uint64_t capture_cycle, capture_bytes;
+static uint32_t capture_vblank;
+static int capture_error;
+static void capture_pcm(const int16_t *pcm, unsigned frames);
 static uint32_t keys;
 static void render(int16_t *out, int n);
 
@@ -64,7 +69,7 @@ void spu_sync(void) {
     if (reset_state && target > generated) {
         for (unsigned i = 0; i < SPU_RAM_SIZE; i++)
             if (spu_ram[i]) { reset_state = 0; break; }
-        if (reset_state && !output && !cd_input) {
+        if (reset_state && !output && !cd_input && !capture_wav) {
             advance_reset_state(target - generated);
             generated = target;
         }
@@ -74,6 +79,7 @@ void spu_sync(void) {
         int n = target - generated > 512 ? 512 : (int)(target - generated);
         render(pcm, n);
         generated += n;
+        if (capture_wav) capture_pcm(pcm, (unsigned)n);
         if (output) output(pcm, (unsigned)n, output_arg);
     }
 }
@@ -82,6 +88,69 @@ void spu_set_cd_input(SpuCdInput fn, void *arg) { spu_sync(); cd_input = fn; cd_
 void spu_set_output(SpuOutput fn, void *arg) { spu_sync(); output = fn; output_arg = arg; }
 uint32_t spu_keys(void) { spu_sync(); return keys; }
 int spu_transfer_completed(void) { spu_sync(); return clock_now() >= transfer_due; }
+
+static void put_le(uint8_t *p, uint32_t value, unsigned size)
+{
+    for (unsigned i = 0; i < size; i++) p[i] = (uint8_t)(value >> (8 * i));
+}
+
+static int wav_header(FILE *file, uint32_t bytes)
+{
+    uint8_t header[44] = {0};
+    memcpy(header, "RIFF", 4); put_le(header + 4, 36 + bytes, 4);
+    memcpy(header + 8, "WAVEfmt ", 8); put_le(header + 16, 16, 4);
+    put_le(header + 20, 1, 2); put_le(header + 22, 2, 2);
+    put_le(header + 24, 44100, 4); put_le(header + 28, 176400, 4);
+    put_le(header + 32, 4, 2); put_le(header + 34, 16, 2);
+    memcpy(header + 36, "data", 4); put_le(header + 40, bytes, 4);
+    return fwrite(header, 1, sizeof(header), file) == sizeof(header) ? 0 : -1;
+}
+
+static void capture_pcm(const int16_t *pcm, unsigned frames)
+{
+    uint8_t bytes[512 * 4];
+    assert(frames <= 512);
+    if (capture_error) return;
+    if (capture_bytes + frames * 4ull > UINT32_MAX - 36u) {
+        capture_error = 1;
+        return;
+    }
+    for (unsigned i = 0; i < frames * 2; i++)
+        put_le(bytes + i * 2, (uint16_t)pcm[i], 2);
+    if (fwrite(bytes, 4, frames, capture_wav) != frames) capture_error = 1;
+    capture_bytes += frames * 4u;
+}
+
+int spu_capture_begin(FILE *trace, FILE *wav)
+{
+    if ((!trace && !wav) || capture_trace || capture_wav || trace == wav) return -1;
+    spu_sync();
+    if (wav && (ftell(wav) != 0 || wav_header(wav, 0))) return -1;
+    if (trace && fprintf(trace, "# dw1-spu-trace-v1\n") < 0) return -1;
+    capture_trace = trace;
+    capture_wav = wav;
+    capture_cycle = clock_now();
+    capture_vblank = clock_vblanks();
+    capture_bytes = 0;
+    capture_error = 0;
+    return 0;
+}
+
+int spu_capture_end(void)
+{
+    if (!capture_trace && !capture_wav) return -1;
+    /* A platform reset may already have rewound the virtual clock. Preserve
+     * the PCM collected so far, and report the interrupted segment as invalid. */
+    if (clock_now() / 768 < generated || clock_now() < capture_cycle) capture_error = 1;
+    else spu_sync();
+    if (capture_trace && fflush(capture_trace)) capture_error = 1;
+    if (capture_wav) {
+        if (fseek(capture_wav, 0, SEEK_SET) || wav_header(capture_wav, (uint32_t)capture_bytes)
+            || fflush(capture_wav)) capture_error = 1;
+    }
+    capture_trace = capture_wav = NULL;
+    return capture_error ? -1 : 0;
+}
 
 static uint16_t regs[0x200]; /* register file as written (halfwords at 0x1F801C00..) */
 static Voice voices[24];
@@ -123,6 +192,8 @@ static void log_once(int id, const char *what) {
 }
 
 void spu_reset(void) {
+    /* A reset cannot silently leave an unfinished WAV behind. */
+    if (capture_trace || capture_wav) (void)spu_capture_end();
     reset_state = 1;
     generated = clock_now() / 768;
     transfer_due = clock_now();
@@ -308,6 +379,10 @@ void spu_write16(uint32_t off, uint16_t v) {
     reset_state = 0;
     assert(off < 0x400 && !(off & 1));
     off &= 0x3FE;
+    if (capture_trace && fprintf(capture_trace, "%u %llu %03x %04x\n",
+            clock_vblanks() - capture_vblank,
+            (unsigned long long)((clock_now() - capture_cycle) / 768), off, v) < 0)
+        capture_error = 1;
     regs[off >> 1] = v;
     if (off < 0x180) {
         int i = off >> 4;

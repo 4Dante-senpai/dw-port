@@ -25,6 +25,7 @@ static int usage(const char *argv0)
 	                "  --inputs FILE --inputs-from frame0|mark  latch wire button masks per VBlank\n"
 	                "  --checkpoints FILE  capture ordered symbol[#n] entries and VBlank windows\n"
 	                "  --state-vars FILE --state-trace FILE  record typed state and rand outputs\n"
+	                "  --audio-segments FILE  capture SPU trace/WAV segments instead of an image\n"
 	                "  --until-overlay  exit with status 0 once the first overlay is loaded\n",
 	        argv0);
 	return 2;
@@ -48,6 +49,7 @@ int main(int argc, char **argv)
 			continue;
 		}
 		if (i + 1 < argc) {
+			if (!strcmp(argv[i], "--audio-segments")) { config.audio_segments = argv[++i]; continue; }
 			if (!strcmp(argv[i], "--inputs")) { config.inputs = argv[++i]; continue; }
 			if (!strcmp(argv[i], "--checkpoints")) { config.checkpoints = argv[++i]; continue; }
 			if (!strcmp(argv[i], "--inputs-from")) { config.inputs_from = argv[++i]; continue; }
@@ -84,7 +86,10 @@ int main(int argc, char **argv)
 		}
 		return usage(argv[0]);
 	}
-	if ((config.mark || config.capture || config.vblank) &&
+	if (config.audio_segments && (!*config.audio_segments || !config.mark || !*config.mark ||
+	    !config.checkpoints || !*config.checkpoints || config.capture || config.state_vars || config.vblank))
+		return usage(argv[0]);
+	if (!config.audio_segments && (config.mark || config.capture || config.vblank) &&
 	    (!config.mark || !*config.mark || !config.capture || !*config.capture || !config.vblank))
 		return usage(argv[0]);
 	if ((config.inputs_from && strcmp(config.inputs_from, "mark") && strcmp(config.inputs_from, "frame0")) ||

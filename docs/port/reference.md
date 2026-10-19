@@ -266,3 +266,44 @@ a `rand`, coincidentes con las dos corridas de los runners nativo y ASan.
 Las pruebas sin disco incluyen un programa MIPS sintético que atraviesa los
 breakpoints FFI reales de entrada/retorno de `rand` dieciséis veces, además del
 test de callbacks del adaptador y la comprobación de los dieciséis bits de pad.
+
+## Captura de audio de la historia 3.5
+
+La implementación y el bloqueo experimental se detallan en [libsnd.md](libsnd.md).
+La referencia PCM aún no es válida: dos trazas de registros idénticas produjeron
+WAV diferentes con el sink SDL `disk`. No hay un SNR del port aprobado.
+
+```sh
+DW1_DISC_DIR=/dw/game_rom/extracted python3 -I -B tools/port/reference/capture.py title_audio --audio --reuse --max-vblanks 40000 --timeout 1800
+python3 -I -B tools/port/scenes/run.py title_audio --build native-headless --compare-audio
+```
+
+El primer comando exige dos capturas idénticas antes de guardar el sello; el
+segundo devuelve 77 si falta una referencia verificada. `--out` o
+`DW1_REFERENCE_DIR` eligen el directorio externo de referencia; el valor por
+defecto para audio es `/tmp/dw1-audio-reference/title_audio`. `DW1_AUDIO_DIR`
+elige la raíz externa del audio nativo (por defecto `/tmp/dw1-audio-port`).
+Audio, trazas y archivos de trabajo quedan fuera del checkout, incluso si el
+directorio configurado contiene un enlace simbólico hacia él.
+
+`capture.lua` registra escrituras SH/SW a `0x1F801C00..0x1F801DFF`, tomando el
+valor de `rt` tras decodificar la instrucción y verificar su dirección efectiva.
+Usa `PCSX.getCPUCycles()` y reinicia las columnas de tiempo en cada checkpoint.
+El modo audio no toma capturas de imagen. Requiere el parche versionado
+`tools/port/reference/pcsx-redux-pcm-tap.patch`, aplicado por la etapa
+`pcsx-redux` del Dockerfile sobre el SHA fijado. Usa el sink `dummy`,
+`UseNullSync=true`, `Speed=1`, gaussiana (`Interp=2`) y `KeyOnDelay=6`.
+`DW1_REDUX_PCM_TAP` activa la captura PCM16LE estéreo a 44,1 kHz antes de
+`dropVoiceFrames`/`feedStreamData`; sin esa variable, el tap está desactivado.
+El adaptador exige su cabecera y el mensaje de disponibilidad del emulador;
+un binario anterior falla en vez de producir una referencia aceptada.
+
+El archivo intermedio empieza por los ocho bytes `DW1PCM1\n`. Cada bloque
+contiene un índice absoluto de muestra de 64 bits y un número de frames de
+32 bits, ambos little-endian, seguidos de los frames estéreo PCM16LE. Los
+índices permiten detectar huecos, solapamientos y reinicios del reloj dentro
+del tramo. La conversión selecciona las muestras desde `inicio/768 + 1`
+hasta `fin/768 + 1` (extremo final excluido, divisiones enteras), sin añadir
+silencio, ajustar la ganancia ni resamplear. Se dejan cuatro VBlanks tras
+cerrar el último tramo para que el mixer asíncrono drene su salida; quedan
+fuera de los intervalos comparados.

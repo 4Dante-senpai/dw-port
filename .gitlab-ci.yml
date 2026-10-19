@@ -65,6 +65,7 @@ native-disc:
     when: always
   variables:
     DW1_DISC_DIR: /private/disc
+    DW1_AUDIO_DIR: /tmp/dw1-audio-port
   script:
     - cmake --preset native-headless
     - cmake --build --preset native-headless
@@ -81,6 +82,7 @@ native-asan-disc:
     when: always
   variables:
     DW1_DISC_DIR: /private/disc
+    DW1_AUDIO_DIR: /tmp/dw1-audio-port
   script:
     - cmake --preset native-asan
     - cmake --build --preset native-asan

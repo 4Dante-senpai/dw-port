@@ -11,6 +11,7 @@ typedef struct {
 	const char *state_vars;
 	const char *state_trace;
 	const char *checkpoints;
+	const char *audio_segments;
 } PortCapture;
 
 /* Starts the game on its own thread (static stack in the OT window) and waits. With

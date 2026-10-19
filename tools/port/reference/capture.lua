@@ -12,6 +12,32 @@ local listenerEpoch = 0
 local checkpoints = c.checkpoints or {}
 local checkpointIndex = 1
 local snapshot, enterCheckpoints
+local audio, audioIndex = nil, 1
+local audioFinishedTick
+local function audioEnd()
+    if not audio then return end
+    assert(audio.file:close())
+    local meta = assert(io.open(audio.meta, 'w'))
+    assert(meta:write(string.format('{"start_cycle":%.0f,"end_cycle":%.0f,"vblanks":%d}',
+        audio.cycle, tonumber(PCSX.getCPUCycles()), ticks-audio.tick)))
+    assert(meta:close())
+    audio = nil
+    audioIndex = audioIndex + 1
+    if audioIndex > #c.audio then audioFinishedTick = ticks end
+end
+local function audioCheckpoint(label)
+    if not c.audio then return end
+    if audio and audio.finish == label then audioEnd() end
+    local segment = c.audio[audioIndex]
+    if segment and segment.start == label then
+        assert(not audio, 'overlapping audio segments')
+        audio = segment
+        audio.tick = ticks
+        audio.cycle = tonumber(PCSX.getCPUCycles())
+        audio.file = assert(io.open(audio.trace, 'w'))
+        assert(audio.file:write('# dw1-spu-trace-v1\n'))
+    end
+end
 local function complete()
     if #checkpoints == 0 or checkpointIndex <= #checkpoints then return false end
     for _, cp in ipairs(checkpoints) do
@@ -34,6 +60,40 @@ local function guarded(fn)
         end
         return message
     end
+end
+if c.audio then
+    -- The write breakpoint fires before the store. The pinned core can expose the
+    -- current instruction at rawPC or rawPC-4; match its effective address, never
+    -- guess the value from the destination register (KON/KOFF are write-only).
+    breakpoints.spu = PCSX.addBreakpoint(0x1f801c00, 'Write', 0x200, 'DW1 SPU trace', guarded(function(address, width)
+        if not audio then return true end
+        local r, ram = PCSX.getRegisters(), PCSX.getMemPtr()
+        local instruction
+        for _, pc in ipairs({tonumber(r.rawPC), tonumber(r.rawPC)-4}) do
+            local p = bit.band(pc, 0x1fffff)
+            local code = tonumber(ram[p]) + tonumber(ram[p+1])*256 +
+                         tonumber(ram[p+2])*65536 + tonumber(ram[p+3])*16777216
+            local op = bit.rshift(code, 26)
+            local immediate = bit.band(code, 65535)
+            if immediate >= 32768 then immediate = immediate-65536 end
+            local effective = bit.band(tonumber(r.GPR.r[bit.band(bit.rshift(code,21),31)]) + immediate, 0x1fffffff)
+            if effective == bit.band(address, 0x1fffffff) and
+               ((op == 0x29 and width == 2) or (op == 0x2b and width == 4)) then
+                instruction = code
+                break
+            end
+        end
+        assert(instruction, 'SPU write is not a decoded SH/SW at rawPC or rawPC-4')
+        local value = tonumber(r.GPR.r[bit.band(bit.rshift(instruction,16),31)])
+        local sample = math.floor((tonumber(PCSX.getCPUCycles())-audio.cycle)/768)
+        for i=0,width-1,2 do
+            local off = bit.band(address,0x1fffffff)-0x1f801c00+i
+            assert(off >= 0 and off < 0x200 and off%2 == 0)
+            assert(audio.file:write(string.format('%d %.0f %03x %04x\n',
+                ticks-audio.tick, sample, off, bit.band(bit.rshift(value,i*8),65535))))
+        end
+        return true
+    end))
 end
 -- Exercise the actual override API before guest execution, then restore released inputs.
 local pad = PCSX.SIO0.slots[1].pads[1]
@@ -168,6 +228,7 @@ enterCheckpoints = function(address)
             assert(checkpoints[checkpointIndex] == cp, 'checkpoint out of order: ' .. cp.label)
             cp.start = ticks
             checkpointIndex = checkpointIndex + 1
+            audioCheckpoint(cp.label)
             snapshot(cp.label, 0)
             progress('checkpoint ' .. cp.label)
         end
@@ -183,6 +244,7 @@ for address, _ in pairs(byAddress) do
 end
 local onVsync = guarded(function()
     ticks = ticks + 1
+    if audio and audio.vblanks and ticks-audio.tick >= audio.vblanks then audioEnd() end
     local base = c.inputs_from == 'mark' and mark or (c.inputs_from ~= 'mark' and origin or nil)
     if base then input(ticks - base) end
     if mark then
@@ -194,7 +256,14 @@ local onVsync = guarded(function()
             end
         end
     end
-    if mark and ((#checkpoints > 0 and complete()) or (#checkpoints == 0 and ticks - mark >= c.capture_vblank)) then
+    if c.audio and audioIndex > #c.audio then
+        -- Let the asynchronous mixer flush through the recorded end cycle.
+        -- These later VBlanks belong to neither segment.
+        if ticks - audioFinishedTick >= (c.audio_drain_vblanks or 0) then
+            progress('audio captured')
+            PCSX.quit(0)
+        end
+    elseif not c.audio and mark and ((#checkpoints > 0 and complete()) or (#checkpoints == 0 and ticks - mark >= c.capture_vblank)) then
         -- SoftGPU returns the GP1 display rectangle, raw RGB555 or RGB24.
         local shot = PCSX.GPU.takeScreenShot()
         assert(shot.bpp == 0 or shot.bpp == 1, 'unexpected screenshot bpp')

@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location("scene_runner", Path(__file__).with_name("run.py"))
@@ -62,6 +63,60 @@ with tempfile.TemporaryDirectory() as directory:
                 else:
                     assert mode == "ok" and result == 0 and len(calls) == 2, mode
 print("scene_runner: skip 77, missing explicit Pack, success, failed exit, sanitizers, missing mark/capture, <=16 colors, malformed PPM, divergent capture/clock: OK")
+
+# Audio-only runs never request a display capture, and refuse unverified evidence.
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory) / "repo"
+    reference, output = Path(directory) / "reference", Path(directory) / "audio"
+    root.mkdir(); reference.mkdir()
+    build = root / "build/port/native-headless"
+    scene = dict(mark="start", checkpoints=["start", "finish", "music"], inputs=[],
+                 audio=[dict(start="start", finish="finish"), dict(start="music", vblanks=1200)])
+    checkpoints = [dict(label=name) for name in scene["checkpoints"]]
+    args = SimpleNamespace(id="title_audio", build="native-headless")
+    stamp = root / "build/reference/title_audio/audio.json"
+    import hashlib
+    import json
+    import wave
+    def audio_host(command, **kwargs):
+        assert "--capture" not in command and "--capture-vblank" not in command
+        declarations = Path(command[command.index("--audio-segments") + 1])
+        for row in declarations.read_text().splitlines():
+            start, finish, window, trace, wav = row.split()
+            Path(trace).write_text("# dw1-spu-trace-v1\n0 0 180 0001\n")
+            with wave.open(wav, "wb") as stream:
+                stream.setparams((2, 2, 44100, 0, "NONE", "not compressed"))
+                stream.writeframes(b"\x01\0" * (44100 * 5 * 2))
+        return subprocess.CompletedProcess(command, 0, b"", b"")
+    with patch.object(runner, "ROOT", root), patch.dict(os.environ, {"DW1_AUDIO_DIR": str(output)}, clear=True), redirect_stdout(io.StringIO()):
+        with patch.object(runner.subprocess, "run") as process:
+            assert runner.run_audio(args, scene, build, checkpoints, root / "us.pack") == 77
+            process.assert_not_called()
+        stamp.parent.mkdir(parents=True)
+        for run in (1, 2):
+            for segment in (1, 2):
+                (reference / f"run-{run}-{segment}.spu").write_text("# dw1-spu-trace-v1\n0 0 180 0001\n")
+                with wave.open(str(reference / f"run-{run}-{segment}.wav"), "wb") as stream:
+                    stream.setparams((2, 2, 44100, 0, "NONE", "not compressed"))
+                    stream.writeframes(b"\x01\0" * (44100 * 5 * 2))
+        hashes = {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in reference.iterdir()}
+        stamp.write_text(json.dumps(dict(scene=dict(scene, resolved_checkpoints=checkpoints),
+                                        output=str(reference), hashes=hashes)))
+        with patch.object(runner.subprocess, "run", side_effect=audio_host) as process, patch.object(runner.audio, "alignment", return_value=0):
+            assert runner.run_audio(args, scene, build, checkpoints, root / "us.pack") == 0
+            assert process.call_count == 2
+            assert (build / "scenes/title_audio/audio.json").exists()
+        (reference / "run-1-1.spu").write_text("tampered")
+        with patch.object(runner.subprocess, "run") as process:
+            try:
+                runner.run_audio(args, scene, build, checkpoints, root / "us.pack")
+            except ValueError as error:
+                assert "missing/stale audio reference" in str(error)
+            else:
+                raise AssertionError("tampered audio evidence accepted")
+            process.assert_not_called()
+            assert not (build / "scenes/title_audio/audio.json").exists()
+print("scene_runner: audio skip 77, two deterministic runs, no image capture, hash validation: OK")
 
 # Comparison matrix: execute the real runner with only the host process replaced.
 with tempfile.TemporaryDirectory() as directory:

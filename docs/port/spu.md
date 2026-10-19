@@ -61,3 +61,19 @@ dos capturas deterministas de PCSX-Redux. Las suites generales se ejecutan; el
 satisfactoriamente. Las pruebas de disco omitidas en web se repiten con el disco
 configurado, incluido `web_scene_title`; en sanitizadores se mantienen omitidas
 las pruebas dependientes del disco, cubiertas por el build nativo habitual.
+
+## Captura opcional (infraestructura 3.5)
+
+`spu_capture_begin(FILE *trace, FILE *wav)` abre un tramo relativo al ciclo y
+VBlank actuales. Acepta cualquiera de los dos streams o ambos; pertenecen al
+llamador. `spu_capture_end()` drena el PCM pendiente, finaliza la cabecera WAV
+y propaga errores de escritura/flush/seek. El callback `SpuOutput` continúa
+recibiendo las mismas muestras. El WAV usa PCM16 little-endian, estéreo,
+44,1 kHz. Las pruebas cubren comienzos entre muestras, cierre, reset del reloj,
+errores de E/S y la coexistencia con el callback.
+
+Las trazas registran `(ciclo − origen) / 768`; la comparación sigue la regla B
+de AD-15. El runtime admite dos tramos disjuntos por checkpoint y exige archivos
+fuera del checkout. Véanse [libsnd.md](libsnd.md) y [reference.md](reference.md)
+para el formato, los comandos y el fallo de determinismo PCM observado en la
+referencia. La paridad de audio del port sigue pendiente.

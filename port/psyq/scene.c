@@ -3,6 +3,7 @@
 #include "scene.h"
 #include "clock.h"
 #include "ps1mem.h"
+#include "../backend/spu.h"
 #include <stdlib.h>
 #include <string.h>
 #ifndef __EMSCRIPTEN__
@@ -10,6 +11,7 @@
 #include <link.h>
 #include <errno.h>
 #include <limits.h>
+#include <sys/stat.h>
 
 extern void port_pad_latch(uint16_t buttons);
 static const PortCapture *config;
@@ -33,6 +35,61 @@ typedef struct { unsigned checkpoint, k, mask, applied; } Event;
 static Event *events;
 static size_t event_count;
 static void snapshot(const char *label, unsigned relative);
+static void fail(const char *message);
+typedef struct {
+    char start[128], finish[128], trace[1024], wav[1024];
+    unsigned window, origin;
+} AudioSegment;
+static AudioSegment audio_segments[2];
+static unsigned audio_count, audio_index;
+static FILE *audio_trace, *audio_wav;
+static FILE *audio_open(const char *path, const char *mode)
+{
+    char resolved[PATH_MAX], root[PATH_MAX], parent[PATH_MAX];
+    struct stat info;
+    if (!lstat(path, &info) && S_ISLNK(info.st_mode)) fail("audio file must not be a symlink");
+    if (!realpath(DW1_SOURCE_ROOT, root)) fail("cannot resolve repository root");
+    if (!realpath(path, resolved)) {
+        if (errno != ENOENT || path[0] != '/') fail("audio path must be absolute and outside the repository");
+        strcpy(parent, path); /* Declaration paths are limited to 1023 bytes. */
+        char *slash = strrchr(parent, '/');
+        if (!slash || !slash[1]) fail("invalid audio path");
+        if (slash == parent) strcpy(parent, "/");
+        else *slash = 0;
+        if (!realpath(parent, resolved)) fail("cannot resolve audio directory");
+    }
+    size_t length = strlen(root);
+    if (!strncmp(root, resolved, length) && (!resolved[length] || resolved[length] == '/'))
+        fail("audio evidence must be outside the repository");
+    return fopen(path, mode);
+}
+int port_scene_audio_complete(void) { return audio_count && audio_index == audio_count; }
+static void audio_end(void)
+{
+    int failed = spu_capture_end();
+    failed |= fclose(audio_trace) != 0;
+    failed |= fclose(audio_wav) != 0;
+    audio_trace = audio_wav = NULL;
+    if (failed) fail("cannot finalize audio segment");
+    audio_index++;
+}
+static void audio_enter(const char *label)
+{
+    if (audio_index >= audio_count) return;
+    AudioSegment *segment = &audio_segments[audio_index];
+    if (audio_trace && !strcmp(label, segment->finish)) {
+        audio_end();
+        if (audio_index >= audio_count) return;
+        segment = &audio_segments[audio_index];
+    }
+    if (!audio_trace && !strcmp(label, segment->start)) {
+        audio_trace = audio_open(segment->trace, "w");
+        audio_wav = audio_open(segment->wav, "wb");
+        if (!audio_trace || !audio_wav || spu_capture_begin(audio_trace, audio_wav))
+            fail("cannot open audio segment");
+        segment->origin = clock_vblanks();
+    }
+}
 int port_scene_complete(void)
 {
     if (!checkpoint_count || next_checkpoint != checkpoint_count) return 0;
@@ -55,6 +112,7 @@ void port_scene_enter(void *function)
         cp->reached = 1;
         cp->start = clock_vblanks();
         next_checkpoint++;
+        audio_enter(cp->label);
         if (trace) snapshot(cp->label, 0);
     }
 }
@@ -129,6 +187,20 @@ static void latch(void)
 void port_scene_prepare(const PortCapture *value)
 {
     config = value;
+    if (config->audio_segments) {
+        FILE *file = fopen(config->audio_segments, "r");
+        if (!file) fail("cannot open audio segment declarations");
+        char line[2400], extra;
+        while (fgets(line, sizeof(line), file)) {
+            if (audio_count == 2) fail("too many audio segments");
+            AudioSegment *segment = &audio_segments[audio_count++];
+            if (sscanf(line, "%127s %127s %u %1023s %1023s %c", segment->start,
+                       segment->finish, &segment->window, segment->trace, segment->wav, &extra) != 5 ||
+                ((!strcmp(segment->finish, "-") ? 1 : 0) != (segment->window > 0)))
+                fail("invalid audio segment declaration");
+        }
+        if (ferror(file) || fclose(file) || audio_count != 2) fail("expected two audio segments");
+    }
     if (config->mark) {
         mark_function = dlsym(RTLD_DEFAULT, config->mark);
         if (!mark_function) {
@@ -293,6 +365,9 @@ static void snapshot(const char *label, unsigned relative)
 void port_scene_tick(void)
 {
     latch();
+    if (audio_trace && audio_segments[audio_index].window &&
+        clock_vblanks() - audio_segments[audio_index].origin >= audio_segments[audio_index].window)
+        audio_end();
     if (!trace || !have_mark) return;
     if (!checkpoint_count) { snapshot(NULL, 0); return; }
     for (size_t i = 0; i < checkpoint_count; i++) {
@@ -313,5 +388,6 @@ void port_scene_start(void) {}
 void port_scene_tick(void) {}
 void port_scene_finish(void) {}
 int port_scene_complete(void) { return 0; }
+int port_scene_audio_complete(void) { return 0; }
 void port_scene_enter(void *function) { (void)function; }
 #endif
