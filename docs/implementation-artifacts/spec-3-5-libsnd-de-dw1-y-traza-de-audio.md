@@ -2,10 +2,10 @@
 title: 'Historia 3.5: libsnd de DW1 y traza de audio'
 type: 'feature'
 created: '2026-10-18'
-status: 'in-progress'
+status: 'done'
 baseline_commit: 'd7eeb9172f78896e54f7e71ac7f642e4d8f451f7'
 route: 'dispatch'
-review_loop_iteration: 0
+review_loop_iteration: 1
 context:
   - '{project-root}/docs/implementation-artifacts/epic-3-context.md'
   - '{project-root}/docs/port/spu.md'
@@ -61,15 +61,15 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `port/psyq/libsnd.c` (+ `libsnd_seq.c`/`libsnd_vm.c` si conviene) -- 21 entradas y rutinas internas traducidas del asm de DW1.
-- [ ] `port/psyq/libspu.c` -- entradas de `libspu` que alcanza `libsnd`.
-- [ ] `port/backend/spu.{h,c}` -- traza de escrituras y salida WAV opcional.
-- [ ] `port/psyq/tests/test_libsnd.c` -- L1: tick, SEQ sintético, VAB, utilidades `SsUt*`.
-- [ ] `tools/port/reference/capture.{lua,py}` -- traza SPU y PCM de la referencia; tests en `test_capture.py`.
-- [ ] `tools/port/scenes/run.py`, `title_audio.toml`, `test_runner.py` -- `--compare-audio`, gate por contenido de decisiones 3/4; regla B, desfases y SNR no bloqueantes hasta 3.10, con casos sintéticos.
-- [ ] `CMakeLists.txt`, `.gitlab-ci.yml` -- tests L1 en nativo/ASan/web; `reference_title_audio` y `scene_title_audio_compare` clase B.
-- [ ] `docs/port/libsnd.md`, `docs/port/stubs.md`, `docs/port/reference.md`, `gen_stubs.py` -- estado, atribución, hipótesis y medición de SNR.
-- [ ] `docs/planning-artifacts/architecture/architecture-dw-port-2026-10-11/ARCHITECTURE-SPINE.md` (AD-15, Audio) y `docs/implementation-artifacts/epic-3-context.md` -- enmendar el gate según las decisiones 3/4, con fecha y motivo.
+- [x] `port/psyq/libsnd.c` (+ `libsnd_seq.c`/`libsnd_vm.c` si conviene) -- 21 entradas y rutinas internas traducidas del asm de DW1.
+- [x] `port/psyq/libspu.c` -- entradas de `libspu` que alcanza `libsnd`.
+- [x] `port/backend/spu.{h,c}` -- traza de escrituras y salida WAV opcional.
+- [x] `port/psyq/tests/test_libsnd.c` -- L1: tick, SEQ sintético, VAB, utilidades `SsUt*`.
+- [x] `tools/port/reference/capture.{lua,py}` -- traza SPU y PCM de la referencia; tests en `test_capture.py`.
+- [x] `tools/port/scenes/run.py`, `title_audio.toml`, `test_runner.py` -- `--compare-audio`, gate por contenido de decisiones 3/4; regla B, desfases y SNR no bloqueantes hasta 3.10, con casos sintéticos.
+- [x] `CMakeLists.txt`, `.gitlab-ci.yml` -- tests L1 en nativo/ASan/web; `reference_title_audio` y `scene_title_audio_compare` clase B.
+- [x] `docs/port/libsnd.md`, `docs/port/stubs.md`, `docs/port/reference.md`, `gen_stubs.py` -- estado, atribución, hipótesis y medición de SNR.
+- [x] `docs/planning-artifacts/architecture/architecture-dw-port-2026-10-11/ARCHITECTURE-SPINE.md` (AD-15, Audio) y `docs/implementation-artifacts/epic-3-context.md` -- enmendar el gate según las decisiones 3/4, con fecha y motivo.
 
 **Acceptance Criteria:**
 - Given las 21 funciones traducidas, when se buscan stubs `stub-m2:` de `libsnd`/`libspu`, then no queda ninguno y `gen_stubs.py` las cuenta como implementadas.
@@ -142,3 +142,5 @@ Orden: (1) traducir las 21 entradas de `libsnd`, sus rutinas internas y las entr
 - 2026-10-19 (decisión 4 del dueño, enmienda la decisión 3 para el tramo 2): el primer grupo tras `SsSeqPlay` recalcula voces heredadas de la canción anterior (`Snd_SetPlayMode` → `_SsVmSetSeqVol`, sin filtro de voz activa), cuyo estado depende del timing de escena/CD de la 3.10; la fórmula del asm reproduce ambos lados (`docs/port/audio-parity.md`, test L1 `sequence_restart_volume`). El tramo 2 se ancla en el primer note-on nuevo (bundle KON con dirección de muestra) posterior al primer `SsSeqPlay` tras `gameLoop` y termina en el primer evento del juego ajeno al secuenciador; mínimo 9 s de música. La secuencia ordenada de escrituras de voz desde ese ancla es idéntica a la de referencia en la ventana común. El recálculo de voces heredadas y los 10 s se difieren a la 3.10. Se enmienda AD-15 con fecha y motivo.
 
 ## Review Triage Log
+
+- 2026-10-19, revisión Codex (blind-hunter, verification-gap, edge-case-hunter) sobre `main...HEAD`: parcheados el cierre idéntico de tramos y el footer obligatorio, la duración del WAV frente a la traza, los símbolos y la identidad de la referencia en la huella, el overflow de dirección VAB, la documentación del gate y los tests de recorte PCM en el ancla, robo de voces con 24 ocupadas, modos de tick 3/5 y medio tick, y `SpuInit` con DMA pendiente. Conservados por fidelidad al asm, con comentario de dirección: la reutilización parcial de `SpuMalloc` con la tabla llena y `SpuInitMalloc` con `top` nulo. Rechazado: el SNR bloqueante, contrario a la decisión 3.
