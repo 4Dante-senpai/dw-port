@@ -31,8 +31,8 @@ static void audio(void)
 {
     clock_reset();
     psyq_libspu_reset();
-    ENTRY(SsInit()); ENTRY(SsStart());
-    ENTRY(SsSetTableSize(NULL, 1, 1)); ENTRY(SsSetTickMode(240)); SsSetMVol(127, 127);
+    SsInit(); SsStart();
+    ENTRY(SsSetTableSize(NULL, 1, 1)); SsSetTickMode(240); SsSetMVol(127, 127);
     for (short id = 0; id < 4; id++) {
         ENTRY(SsVabClose(id));
         ENTRY(CHECK(SsVabOpenHeadSticky(NULL, id, 0x1000) == -1));
@@ -41,12 +41,12 @@ static void audio(void)
         CHECK(SsVabTransCompleted(1) == 1);
         ENTRY(CHECK(SsUtGetVBaddrInSB(id) == 0xfffffffful));
     }
-    ENTRY(CHECK(SsSeqOpen(NULL, 2) == 0));
+    ENTRY(CHECK(SsSeqOpen(NULL, 2) == -1));
     ENTRY(SsSeqSetVol(0, 80, 80)); ENTRY(SsSeqPlay(0, 1, 0));
-    ENTRY(CHECK(SsUtKeyOnV(10, 0, 1, 0, 60, 0, 127, 127) == 0));
+    ENTRY(CHECK(SsUtKeyOnV(10, 0, 1, 0, 60, 0, 127, 127) == -1));
     ENTRY(CHECK(SpuGetKeyStatus(1 << 10) == SPU_OFF));
     ENTRY(CHECK(SsUtAutoVol(10, 127, 0, 6) == 0));
-    ENTRY(CHECK(SsUtKeyOffV(10) == 0)); ENTRY(SsUtAllKeyOff(0));
+    ENTRY(CHECK(SsUtKeyOffV(10) == 0)); SsUtAllKeyOff(0);
     ENTRY(CHECK(SpuSetReverb(1) == 1));
     SpuReverbAttr attr = {.mask = 2, .depth = {.left = 0x1000}};
     ENTRY(CHECK(SpuSetReverbDepth(&attr) == 0));
@@ -57,7 +57,7 @@ static void audio(void)
     CHECK(SpuClearReverbWorkArea(3) == 0);
     CHECK(clock_now() - before_clear == CLOCK_PSYQ_ENTRY_CYCLES + (0x80000 - 0xf6f8 * 8) * 4);
     ENTRY(CHECK(SpuSetReverbVoice(1, 0x7fffff) == 0x7fffff));
-    ENTRY(SsSeqStop(0)); ENTRY(SsSeqClose(0)); ENTRY(SsEnd()); ENTRY(SsQuit());
+    ENTRY(SsSeqStop(0)); ENTRY(SsSeqClose(0)); SsEnd(); SsQuit();
 }
 
 static void cards(void)

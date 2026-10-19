@@ -22,6 +22,8 @@ static long transfer_mode;
 static int transfer_available = 1;
 static int transfer_event = -1;
 static uint64_t transfer_due;
+static uint16_t center_notes[24];
+static int spu_started;
 static int allocated_at_or_after(uint32_t addr);
 
 void psyq_libspu_reset(void)
@@ -37,6 +39,8 @@ void psyq_libspu_reset(void)
     if (transfer_event >= 0) clock_cancel(transfer_event);
     transfer_event = -1;
     transfer_due = 0;
+    memset(center_notes, 0, sizeof(center_notes));
+    spu_started = 0;
     spu_reset();
 }
 
@@ -343,6 +347,7 @@ static void transfer_irq(void *arg)
 {
     (void)arg;
     transfer_event = -1;
+    if (!spu_started) return;
     spu_write16(0x1aa, spu_read16(0x1aa) & ~0x30);
 }
 
@@ -425,4 +430,173 @@ void SpuSetCommonAttr(SpuCommonAttr *attr)
         spu_write16(0x1aa, (spu_read16(0x1aa) & ~8) | (attr->ext.reverb ? 8 : 0));
     if (!mask || (mask & 0x2000))
         spu_write16(0x1aa, (spu_read16(0x1aa) & ~2) | (attr->ext.mix ? 2 : 0));
+}
+
+/* asm: asm/us/main/psyq/libspu.s: _spu_note2pitch. Integer interpolation,
+ * including the original 32-bit intermediate products and masked shifts. */
+static uint16_t spu_note_pitch(uint16_t center, uint16_t note)
+{
+    int delta = (note >> 8) * 128 + (note & 255) - (center >> 8) * 128 - (center & 255);
+    unsigned distance = delta < 0 ? -delta : delta;
+    unsigned oct = distance / 1536, rem = distance % 1536;
+    uint32_t base;
+    if (delta >= 0) base = 0x1000u << (oct & 31);
+    else {
+        if (rem) { oct++; rem = 1536 - rem; }
+        base = 0x1000u >> (oct & 31);
+    }
+    base &= 0xffff;
+    uint32_t factor = 0x103b, lo = base << 12, hi = base * factor;
+    for (unsigned i = 0; i < rem / 32; i++) {
+        lo = base * factor;
+        factor = (factor * 0x103bu) >> 12;
+        hi = base * factor;
+    }
+    uint32_t pitch = (lo + ((hi - lo) >> 5) * (rem & 31)) >> 12;
+    return pitch >= 0x4000 ? 0x3fff : pitch;
+}
+
+/* asm: asm/us/main/psyq/libspu.s: SpuSetVoiceAttr and _spu_FsetRXXa.
+ * Attribute bits and update order are those of mw_lib41, including mask=0. */
+void SpuSetVoiceAttr(SpuVoiceAttr *a)
+{
+    clock_psyq_entry();
+    uint32_t m = a->mask;
+    for (unsigned i = 0; i < 24; i++) {
+        if (!(a->voice & (1u << i))) continue;
+        unsigned r = i * 16;
+        if (!m || (m & 0x10)) spu_write16(r + 4, a->pitch);
+        if (!m || (m & 0x40)) center_notes[i] = a->sample_note;
+        if (!m || (m & 0x20)) spu_write16(r + 4, spu_note_pitch(center_notes[i], a->note));
+        if (!m || (m & 1)) spu_write16(r, common_volume(a->volume.left,
+            !m || (m & 4) ? a->volmode.left : 0));
+        if (!m || (m & 2)) spu_write16(r + 2, common_volume(a->volume.right,
+            !m || (m & 8) ? a->volmode.right : 0));
+        if (!m || (m & 0x80)) spu_write16(r + 6, (a->addr + 7) >> 3);
+        if (!m || (m & 0x10000)) spu_write16(r + 14, (a->loop_addr + 7) >> 3);
+        if (!m || (m & 0x20000)) spu_write16(r + 8, a->adsr1);
+        if (!m || (m & 0x40000)) spu_write16(r + 10, a->adsr2);
+        if (!m || (m & 0x800)) {
+            unsigned rate = a->ar > 127 ? 127 : a->ar;
+            if ((!m || (m & 0x100)) && a->a_mode == 5) rate |= 0x80;
+            spu_write16(r + 8, (spu_read16(r + 8) & 0xff) | (rate << 8));
+        }
+        if (!m || (m & 0x1000)) spu_write16(r + 8,
+            (spu_read16(r + 8) & 0xff0f) | ((a->dr > 15 ? 15 : a->dr) << 4));
+        if (!m || (m & 0x2000)) {
+            unsigned mode = 0x100, rate = a->sr > 127 ? 127 : a->sr;
+            if (!m || (m & 0x200)) {
+                if (a->s_mode == 1) mode = 0;
+                else if (a->s_mode == 5) mode = 0x200;
+                else if (a->s_mode == 7) mode = 0x300;
+            }
+            spu_write16(r + 10, (spu_read16(r + 10) & 0x3f) | ((rate | mode) << 6));
+        }
+        if (!m || (m & 0x4000)) {
+            unsigned rate = a->rr > 31 ? 31 : a->rr;
+            if ((!m || (m & 0x400)) && a->r_mode == 7) rate |= 0x20;
+            spu_write16(r + 10, (spu_read16(r + 10) & 0xffc0) | rate);
+        }
+        if (!m || (m & 0x8000)) spu_write16(r + 8,
+            (spu_read16(r + 8) & 0xfff0) | (a->sl > 15 ? 15 : a->sl));
+    }
+}
+
+/* asm: asm/us/main/psyq/libspu.s: SpuGetVoiceEnvelope. */
+void SpuGetVoiceEnvelope(int voice, short *env)
+{
+    clock_psyq_entry();
+    if ((unsigned long)voice < 24 && env) *env = spu_read16(voice * 16 + 12);
+}
+
+/* asm: asm/us/main/psyq/libspu.s: SpuSetKey, immediate _spu_env=0 path.
+ * No reachable entry enables the retail deferred register queue. */
+void SpuSetKey(long on, unsigned long voices)
+{
+    clock_psyq_entry();
+    if (on != 0 && on != 1) return;
+    unsigned r = on ? 0x188 : 0x18c;
+    spu_write16(r, voices);
+    spu_write16(r + 2, (voices >> 16) & 255);
+}
+
+/* asm: asm/us/main/psyq/libspu.s: SpuSetNoiseVoice -> _SpuSetAnyVoice. */
+unsigned long SpuSetNoiseVoice(long on, unsigned long voices)
+{
+    clock_psyq_entry();
+    uint16_t high = spu_read16(0x196);
+    uint32_t bits = spu_read16(0x194) | ((uint32_t)(high & 255) << 16);
+    if (on == 1) bits |= voices & 0xffffff;
+    else if (on == 0) bits &= ~(voices & 0xffffff);
+    else if (on == 8) bits = voices & 0xffffff;
+    else return bits;
+    spu_write16(0x194, bits);
+    spu_write16(0x196, (bits >> 16) | (on == 8 ? 0 : high & 0xff00));
+    return bits;
+}
+
+/* asm: asm/us/main/psyq/libspu.s: SpuSetNoiseClock. */
+long SpuSetNoiseClock(long value)
+{
+    clock_psyq_entry();
+    value = value < 0 ? 0 : value > 63 ? 63 : value;
+    spu_write16(0x1aa, (spu_read16(0x1aa) & 0xc0ff) | (value << 8));
+    return value;
+}
+
+/* asm: asm/us/main/psyq/libspu.s: SpuStart, _SpuDataCallback.
+ * The BIOS DMA event is represented by transfer_event in the virtual clock;
+ * the backend owns the transfer, so no BIOS event handle is needed. */
+void SpuStart(void)
+{
+    clock_psyq_entry();
+    if (!spu_started) spu_started = 1;
+}
+
+/* asm: asm/us/main/psyq/libspu.s: SpuQuit. Detaching the DMA callback
+ * does not turn off voices, mute the chip, or discard sound RAM. */
+void SpuQuit(void)
+{
+    clock_psyq_entry();
+    spu_started = 0;
+}
+
+/* asm: asm/us/main/psyq/libspu.s: SpuInit -> _SpuInit(0), _spu_init(0).
+ * DMA bus setup and CPU delay loops have no corresponding host bus or CPU.
+ * RAM, ENVX and repeat addresses survive the initialization. */
+void SpuInit(void)
+{
+    clock_psyq_entry();
+    ResetCallback();
+    transfer_mode = transfer_start = 0;
+    spu_write16(0x180, 0); spu_write16(0x182, 0); spu_write16(0x1aa, 0);
+    spu_write16(0x180, 0); spu_write16(0x182, 0);
+    spu_write16(0x1ac, 4);
+    spu_write16(0x184, 0); spu_write16(0x186, 0);
+    spu_write16(0x18c, 0xffff); spu_write16(0x18e, 0xffff);
+    spu_write16(0x198, 0); spu_write16(0x19a, 0);
+    transfer_start = 0x200;
+    for (unsigned r = 0x190; r <= 0x196; r += 2) spu_write16(r, 0);
+    for (unsigned r = 0x1b0; r <= 0x1b6; r += 2) spu_write16(r, 0);
+    /* _spu_dummy contains four 0x07070707 words. */
+    unsigned char dummy[16]; memset(dummy, 7, sizeof(dummy));
+    transfer_mode = 1;
+    SpuWrite(dummy, sizeof(dummy));
+    transfer_mode = 0;
+    for (unsigned i = 0; i < 24; i++) {
+        unsigned r = i * 16;
+        spu_write16(r, 0); spu_write16(r + 2, 0);
+        spu_write16(r + 4, 0x3fff); spu_write16(r + 6, 0x200);
+        spu_write16(r + 8, 0); spu_write16(r + 10, 0);
+        center_notes[i] = 0xc000;
+    }
+    spu_write16(0x188, 0xffff); spu_write16(0x18a, 0xff);
+    spu_write16(0x18c, 0xffff); spu_write16(0x18e, 0xff);
+    transfer_available = 1;
+    spu_write16(0x1aa, 0xc000);
+    SpuStart();
+    memset(&reverb, 0, sizeof(reverb));
+    reverb_on = 0; reverb_offset = reverb_start[0];
+    spu_write16(0x1a2, reverb_offset);
+    mem_list = NULL; block_count = last_block = 0;
 }

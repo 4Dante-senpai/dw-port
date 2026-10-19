@@ -21,6 +21,15 @@ static void (*irq_callbacks[IRQ_COUNT])(void);
 
 /* asm: config/us/bss.yaml, libetc at 0x80135450; both words start at zero. */
 static uint32_t pad_buf;
+/* asm: asm/us/main/data/psyq/libetc.data.s: _etc_vmode starts at zero.
+ * DW1 USA reaches no setter. */
+static long video_mode;
+/* asm: asm/us/main/psyq/libetc.s: GetVideoMode. */
+long GetVideoMode(void)
+{
+    clock_psyq_entry();
+    return video_mode;
+}
 static int PadIdentifier __attribute__((unused)); /* Stored by PsyQ. */
 
 /* asm:asm/us/main/psyq/libetc.s:PadInit -- the scene observer reapplies held inputs at VBlank. */

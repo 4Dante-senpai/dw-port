@@ -50,6 +50,7 @@ int VSyncCallback(void (*f)());
 long VSyncCallbacks(int ch, void (*f)());
 long InterruptCallback(int irq, void (*f)());
 int ResetCallback(void);
+long GetVideoMode(void);
 
 
 
@@ -238,6 +239,15 @@ typedef struct {
 #define SPU_ON_ENV_OFF 3
 typedef struct { short left, right; } SpuVolume;
 typedef struct {
+    unsigned long voice, mask;
+    SpuVolume volume, volmode, volumex;
+    unsigned short pitch, note, sample_note;
+    short envx;
+    unsigned long addr, loop_addr;
+    long a_mode, s_mode, r_mode;
+    unsigned short ar, dr, sr, rr, sl, adsr1, adsr2;
+} SpuVoiceAttr;
+typedef struct {
     unsigned long mask;
     long mode;
     SpuVolume depth;
@@ -263,6 +273,7 @@ void SsEnd(void);
 void SsInit(void);
 void SsQuit(void);
 void SsStart(void);
+void SsSeqCalledTbyT(void);
 void SsSeqClose(short id);
 void SsSeqStop(short id);
 void SsVabClose(short id);
@@ -294,6 +305,14 @@ unsigned long SpuSetTransferStartAddr(unsigned long addr);
 long SpuSetTransferMode(long mode);
 long SpuIsTransferCompleted(long flag);
 void SpuSetCommonAttr(SpuCommonAttr *attr);
+void SpuInit(void);
+void SpuStart(void);
+void SpuQuit(void);
+void SpuSetVoiceAttr(SpuVoiceAttr *attr);
+void SpuGetVoiceEnvelope(int voice, short *env);
+void SpuSetKey(long on, unsigned long voices);
+unsigned long SpuSetNoiseVoice(long on, unsigned long voices);
+long SpuSetNoiseClock(long clock);
 /* Internal mw_lib41 transfer reservation shared with libsnd. */
 void psyq_spu_set_in_transfer(int busy);
 int psyq_spu_get_in_transfer(void);
