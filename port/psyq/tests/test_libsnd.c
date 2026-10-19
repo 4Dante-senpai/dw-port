@@ -12,10 +12,12 @@
 static unsigned char vh[0x20 + 128 * 16 + 512 + 512];
 static unsigned char vb[192];
 static uint32_t allocation_records[18];
+static uint32_t seq_table[0xb0 * 4 / 4];
 
 static void put16(unsigned char *p, uint16_t v) { p[0] = v; p[1] = v >> 8; }
 static void put32(unsigned char *p, uint32_t v) { put16(p, v); put16(p + 2, v >> 16); }
 static unsigned get16(const unsigned char *p) { return p[0] | (p[1] << 8); }
+static uint32_t get32(const unsigned char *p) { return get16(p) | ((uint32_t)get16(p + 2) << 16); }
 
 static void header(unsigned version, unsigned format)
 {
@@ -177,11 +179,177 @@ static void banks(void)
     SsVabClose(0);
 }
 
+static void sequence_records(void)
+{
+    unsigned char *table = (unsigned char *)seq_table;
+    memset(table, 0xa5, sizeof(seq_table));
+    SsSetTableSize((char *)table, 2, 2);
+    for (unsigned record = 0; record < 4; record++) {
+        unsigned char *q = table + record * 0xb0;
+        CHECK(q[0x22] == 255 && q[0x23] == 0 && q[0x21] == 0xa5);
+        CHECK(get32(q + 0x98) == 0 && get32(q + 0xac) == 0);
+        CHECK(get16(q + 0x4e) == 0 && get16(q + 0x58) == 127 && get16(q + 0x5e) == 127);
+        CHECK(q[0] == 0xa5 && q[0xaf] == 0); /* No whole-record memset. */
+    }
+    unsigned long seq_words[8] = {0};
+    unsigned char *seq = (unsigned char *)seq_words;
+    seq[0] = 'p'; seq[7] = 1;
+    seq[8] = 1; seq[9] = 0xe0; /* 480 PPQN. */
+    seq[10] = 7; seq[11] = 0xa1; seq[12] = 0x20; /* 500000 us => 120 BPM. */
+    seq[13] = 4; seq[14] = 2;
+    seq[15] = 0x81; seq[16] = 0; /* 128 MIDI ticks => 1280 internal units. */
+    SsSetTickMode(2);
+    CHECK(SsSeqOpen(seq_words, 3) == 0);
+    CHECK(get16(table + 0x50) == 480 && get16(table + 0x52) == 0xffff);
+    CHECK(get16(table + 0x54) == 40 && get16(table + 0x56) == 40);
+    CHECK(get32(table + 0x84) == 1280 && get32(table + 0x88) == 1280);
+    CHECK(get32(table + 0x8c) == 120 && get32(table + 0x94) == 120);
+    CHECK(get32(table) == (uint32_t)(uintptr_t)(seq + 17));
+    CHECK(table[0x26] == 3 && table[0x24] == 4 && table[0x25] == 2);
+    for (int i = 0; i < 16; i++) {
+        CHECK(table[0x37 + i] == i && table[0x27 + i] == 64);
+        CHECK(get16(table + 0x60 + 2 * i) == 127);
+    }
+    SsSeqSetVol(0, 200, -1);
+    CHECK(get16(table + 0x58) == 200 && get16(table + 0x5a) == 0xffff);
+    SsSeqPlay(0, 1, 257);
+    CHECK(get32(table + 0x98) == 1 && table[0x14] == 1 && table[0x20] == 1);
+    CHECK(get16(table + 0x58) == 127 && get16(table + 0x5a) == 127);
+    SsSeqSetVol(0, 80, 64);
+    CHECK(get16(table + 0x58) == 80 && get16(table + 0x5a) == 64);
+    SsSeqStop(0);
+    CHECK(get32(table + 0x98) == 4 && table[0x14] == 0);
+    CHECK(get32(table + 0x88) == 0 && get32(table + 0x90) == 1280);
+    CHECK(get16(table + 0x58) == 80 && get16(table + 0x5c) == 127);
+    SsSeqClose(0);
+    CHECK(get32(table + 0x98) == 0 && get16(table + 0x58) == 127);
+    seq[7] = 0;
+    CHECK(SsSeqOpen(seq_words, 0) == -1); /* Slot 0 remains reserved on failure. */
+    seq[7] = 1;
+    CHECK(SsSeqOpen(seq_words, 0) == 1 && SsSeqOpen(seq_words, 0) == -1);
+    SsSeqClose(0); SsSeqClose(1);
+    seq[8] = 0; seq[9] = 1; seq[15] = 0; /* Slow resolution takes alternate timing branch. */
+    CHECK(SsSeqOpen(seq_words, 0) == 0);
+    CHECK(get16(table + 0x52) == 1200 && get16(table + 0x54) == 1200);
+    SsSeqClose(0);
+}
+
+static void voice_attributes(void)
+{
+    SpuVoiceAttr a = {.voice = (1u << 3) | (1u << 20), .mask = 0x70093,
+        .volume = {1234, -2}, .pitch = 0x1234, .addr = 0x2011, .loop_addr = 0x3001,
+        .adsr1 = 0xabcd, .adsr2 = 0x1234};
+    SpuSetVoiceAttr(&a);
+    for (int i = 3; i <= 20; i += 17) {
+        CHECK(spu_read16(i * 16) == 1234 && spu_read16(i * 16 + 2) == 0x7ffe);
+        CHECK(spu_read16(i * 16 + 4) == 0x1234 && spu_read16(i * 16 + 6) == 0x403);
+        CHECK(spu_read16(i * 16 + 8) == 0xabcd && spu_read16(i * 16 + 10) == 0x1234);
+        CHECK(spu_read16(i * 16 + 14) == 0x601);
+    }
+    a.voice = 1u << 3; a.mask = 0xff00; a.ar = a.dr = a.sr = a.rr = a.sl = 255;
+    a.a_mode = 5; a.s_mode = 7; a.r_mode = 3;
+    SpuSetVoiceAttr(&a);
+    CHECK(spu_read16(0x38) == 0xffff && spu_read16(0x3a) == 0xdfdf);
+    a.mask = 0x400 | 0x4000; a.r_mode = 7;
+    SpuSetVoiceAttr(&a);
+    CHECK(spu_read16(0x3a) == 0xdfff);
+    a.mask = 0x60; a.sample_note = 0x3c00; a.note = 0x4800;
+    SpuSetVoiceAttr(&a); CHECK(spu_read16(0x34) == 0x2000);
+    a.note = 0x3000; SpuSetVoiceAttr(&a); CHECK(spu_read16(0x34) == 0x800);
+    a.mask = 0x20; a.note = 0x5400; SpuSetVoiceAttr(&a); CHECK(spu_read16(0x34) == 0x3fff);
+    a.note = 0x7f00; SpuSetVoiceAttr(&a); CHECK(spu_read16(0x34) == 0); /* Retail truncates base to 16 bits. */
+    CHECK(SpuSetNoiseClock(-1) == 0 && SpuSetNoiseClock(99) == 63);
+    CHECK((spu_read16(0x1aa) & 0x3f00) == 0x3f00);
+    CHECK(SpuSetNoiseVoice(8, 0x100001) == 0x100001);
+    CHECK(SpuSetNoiseVoice(1, 8) == 0x100009 && SpuSetNoiseVoice(0, 1) == 0x100008);
+    CHECK(SpuSetNoiseVoice(9, 0) == 0x100008);
+}
+
+static void explicit_voices(void)
+{
+    SsInit(); /* Initializes the allocator and all voice registers, preserving RAM. */
+    CHECK(spu_read16(0x180) == 0x3fff && spu_read16(0x1aa) == 0xc000);
+    CHECK(spu_read16(0x178) == 0x80ff && spu_read16(0x17a) == 0x4000);
+    CHECK(SpuMalloc(16) == 0x1010); SpuFree(0x1010);
+    header(5, 0x70); vh[0x18] = 127;
+    unsigned char *p = vh + 0x20 + 3 * 16, *t = vh + 0x20 + 128 * 16;
+    p[1] = 127; p[4] = 64;
+    t[0] = 10; t[1] = 4; t[2] = 127; t[3] = 64; t[4] = 60;
+    put16(t + 16, 0x80ff); put16(t + 18, 0x4000); put16(t + 22, 2);
+    memset(vb, 0, sizeof(vb)); vb[1] = 3; vb[17] = 3;
+    CHECK(SsVabOpenHeadSticky(vh, 0, 0x3000) == 0);
+    CHECK(SsUtKeyOnV(10, 0, 3, 0, 60, 0, 127, 127) == -1); /* Header-only. */
+    CHECK(SsVabTransBody(vb, 0) == 0 && SsVabTransCompleted(1) == 1);
+    CHECK(SsUtKeyOnV(-1, 0, 3, 0, 60, 0, 127, 127) == -1);
+    CHECK(SsUtKeyOnV(24, 0, 3, 0, 60, 0, 127, 127) == -1);
+    CHECK(SsUtKeyOnV(10, 16, 3, 0, 60, 0, 127, 127) == -1);
+    CHECK(SsUtKeyOnV(10, 0, -1, 0, 60, 0, 127, 127) == -1);
+    CHECK(SsUtKeyOnV(10, 0, 3, 0, 60, 0, 127, 127) == 10);
+    CHECK(!(spu_keys() & (1u << 10))); /* Deferred until the tick. */
+    SsSeqCalledTbyT();
+    CHECK(spu_keys() & (1u << 10));
+    CHECK(spu_read16(0xa0) == 16383 && spu_read16(0xa2) == 16383);
+    CHECK(spu_read16(0xa4) == 0x1000 && spu_read16(0xa6) == 0x602);
+    CHECK(spu_read16(0xa8) == 0x80ff && spu_read16(0xaa) == 0x4000);
+    CHECK(spu_read16(0x198) & (1u << 10));
+    CHECK(SsUtKeyOnV(23, 0, 3, 0, 72, 0, 127, 0) == 23);
+    SsSeqCalledTbyT();
+    CHECK(spu_read16(0x174) == 0x2000 && spu_read16(0x172) == 0);
+    CHECK(SsUtKeyOnV(11, 0, 3, 0, 60, 8, 127, 127) == 11);
+    SsSeqCalledTbyT(); CHECK(spu_read16(0xb4) == 0x100e);
+    CHECK(SsUtKeyOffV(-1) == -1 && SsUtKeyOffV(24) == -1);
+    CHECK(SsUtKeyOffV(23) == 0 && (spu_keys() & (1u << 23)));
+    SsSeqCalledTbyT(); CHECK(!(spu_keys() & (1u << 23)));
+    CHECK(SsUtAutoVol(24, 3, 0, 3) == -1 && SsUtAutoVol(10, 3, 0, 0) == -1);
+    CHECK(SsUtAutoVol(10, 3, 0, 3) == 0);
+    SsSeqCalledTbyT(); CHECK(spu_read16(0xa0) == 245 && spu_read16(0xa2) == 258);
+    SsSeqCalledTbyT(); CHECK(spu_read16(0xa0) == 122 && spu_read16(0xa2) == 129);
+    SsSeqCalledTbyT(); CHECK(spu_read16(0xa0) == 0 && spu_read16(0xa2) == 0);
+    CHECK(SsUtAutoVol(10, 0, 2, 6) == 0);
+    for (int i = 0; i < 3; i++) SsSeqCalledTbyT();
+    CHECK(spu_read16(0xa2) == 0);
+    SsSeqCalledTbyT(); CHECK(spu_read16(0xa2) == 129);
+    for (int i = 0; i < 4; i++) SsSeqCalledTbyT();
+    CHECK(spu_read16(0xa2) == 258);
+    put16(t + 22, 0xff); /* Noise VAG sentinel. */
+    CHECK(SsUtKeyOnV(12, 0, 3, 0, 65, 0, 127, 127) == 12);
+    SsSeqCalledTbyT(); CHECK(spu_read16(0x194) == (1u << 12));
+    CHECK((spu_read16(0x1aa) & 0x3f00) == 0x500);
+    SsUtAllKeyOff(9);
+    CHECK(spu_read16(0xa0) == 0 && spu_read16(0xa4) == 0x1000);
+    SsSeqCalledTbyT(); CHECK(spu_keys() == 0);
+    SsVabClose(0);
+}
+
+static void tick_clock(void)
+{
+    SsSetTickMode(2); SsStart();
+    FILE *trace = tmpfile(); CHECK(trace != NULL);
+    CHECK(spu_capture_begin(trace, NULL) == 0);
+    clock_advance(CLOCK_HZ);
+    CHECK(spu_capture_end() == 0);
+    rewind(trace);
+    char line[160]; unsigned ticks = 0;
+    while (fgets(line, sizeof(line), trace)) {
+        unsigned vb_index, sample, reg, value;
+        if (sscanf(line, "%u %u %x %x", &vb_index, &sample, &reg, &value) == 4 && reg == 0x188) ticks++;
+    }
+    fclose(trace); CHECK(ticks == 240);
+    SsEnd();
+    CHECK(spu_capture_begin(trace = tmpfile(), NULL) == 0);
+    clock_advance(CLOCK_HZ / 60);
+    CHECK(spu_capture_end() == 0);
+    rewind(trace); CHECK(fgets(line, sizeof(line), trace) != NULL); /* Header only. */
+    CHECK(fgets(line, sizeof(line), trace) == NULL); fclose(trace);
+    SsSetTickMode(0); SsStart(); SsEnd();
+}
+
 int main(void)
 {
-    clock_reset(); psyq_libspu_reset();
+    clock_reset(); psyq_libspu_reset(); SpuStart();
     for (unsigned i = 0; i < sizeof(vb); i++) vb[i] = i ^ 0x5a;
     allocator(); transfer(); banks(); master_volume();
-    puts("libsnd L1 VAB/transfer/allocator/master volume: OK");
+    voice_attributes(); explicit_voices(); sequence_records(); tick_clock();
+    puts("libsnd L1 VAB/SEQ records/voices/timer: OK (SEQ event dispatch pending)");
     return 0;
 }

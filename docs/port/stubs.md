@@ -1,25 +1,12 @@
 # Stubs M2 con comportamiento definido
 
-Estas 40 entradas sustituyen los stubs generados. Cada entrada avanza el reloj una vez.
-No implementan hardware ni paridad audiovisual; permiten continuar el arranque.
+Quedan 26 entradas del juego con comportamiento M2 o parcial. Las entradas M2
+avanzan el reloj una vez; las parciales pueden llamar APIs del reloj/SPU.
+Este inventario no implica paridad audiovisual.
 
 | Función | Comportamiento M2 | Historia de reemplazo |
 |---|---|---|
-| `SsEnd` | Silencio; sin estado de secuenciador. | 3.5 |
-| `SsInit` | Silencio; sin estado de secuenciador. | 3.5 |
-| `SsQuit` | Silencio; sin estado de secuenciador. | 3.5 |
-| `SsStart` | Silencio; sin estado de secuenciador. | 3.5 |
-| `SsSeqClose` | Silencio; no libera recursos. | 3.5 |
-| `SsSeqStop` | Silencio; no libera recursos. | 3.5 |
-| `SsUtAllKeyOff` | Silencio; no libera recursos. | 3.5 |
-| `SsSeqPlay` | Silencio; acepta configuración sin efectos. | 3.5 |
-| `SsSeqSetVol` | Silencio; acepta configuración sin efectos. | 3.5 |
-| `SsSetTableSize` | Silencio; acepta configuración sin efectos. | 3.5 |
-| `SsSetTickMode` | Silencio; acepta configuración sin efectos. | 3.5 |
-| `SsSeqOpen` | Secuencia silenciosa con identificador 0. | 3.5 |
-| `SsUtKeyOffV` | Éxito (0) sin sonido. | 3.5 |
-| `SsUtAutoVol` | Éxito (0) sin sonido. | 3.5 |
-| `SsUtKeyOnV` | Éxito (0) sin sonido. | 3.5 |
+| `SsStart` | Parcial: RCnt2/VSync y vaciado de voces; sin despacho de eventos SEQ. | 3.5 |
 | `MemCardInit` | Reinicia el comando pendiente; tarjeta ausente. | 3.8 |
 | `MemCardStart` | Tarjeta ausente; no inicia trabajo. | 3.8 |
 | `MemCardExist` | Registra McFuncExist y devuelve 1; no accede al buffer. | 3.8 |
@@ -51,13 +38,20 @@ No implementan hardware ni paridad audiovisual; permiten continuar el arranque.
 `libspu`: las seis entradas de la historia 3.4 usan el SPU del Backend;
 no son stubs M2. Ver `docs/port/spu.md` y las pruebas `spu`/`libspu`.
 
-Audio de `libsnd` (pase parcial de 3.5, 2026-10-19): se sustituyeron
-`SsVabClose`, `SsVabOpenHeadSticky`, `SsVabTransBody`, `SsVabTransCompleted`,
-`SsUtGetVBaddrInSB` y `SsSetMVol` por traducciones del asm USA. Las otras 15
-filas de 3.5 siguen siendo stubs; el secuenciador y las voces todavía no suenan.
-Las nuevas rutinas `SpuInitMalloc`, `SpuMalloc`, `SpuFree`, `SpuWrite`,
-`SpuSetTransferStartAddr`, `SpuSetTransferMode`, `SpuIsTransferCompleted` y
-`SpuSetCommonAttr` tienen pruebas sintéticas en `test_libsnd.c`.
+Audio de `libsnd` (continuación parcial de 3.5, 2026-10-19): los seis
+cuerpos VAB/volumen del checkpoint `04fbf9d` y otros 14 cuerpos públicos se
+tradujeron del asm USA. Las voces explícitas `SsUtKeyOnV`/`SsUtKeyOffV`,
+AutoVol y AllKeyOff tienen pruebas sintéticas. Las ocho entradas restantes de
+libspu alcanzadas por esta ruta ya están traducidas, con pruebas de registros.
+
+**La música SEQ sigue pendiente.** `SsStart` conserva `stub-m2:` y su callback
+interno `SsSeqCalledTbyT` tiene otro marcador parcial, adicional a las 26
+entradas del juego de la tabla. El callback solo vacía voces. Abrir, configurar,
+parar y cerrar SEQ ya modifica los registros de estado, pero todavía no se
+consumen notas, controles, tempo, bucles ni fin de secuencia. No se considera
+cumplida la traducción transitiva de esas entradas ni la aceptación L1 SEQ.
+La lista de rutinas pendientes, atribución y riesgos está en
+[libsnd.md](libsnd.md#pendiente-exacto-de-esta-continuación).
 
 El inventario M2 de esta página es manual, basado en los marcadores `stub-m2:`;
 `gen_stubs.py` genera únicamente símbolos ausentes del enlace. El build vuelve
