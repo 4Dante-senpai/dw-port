@@ -31,7 +31,10 @@ if [ "$mode" = container ]; then
     # The repo is mounted at /dw (existing build trees) and at its host path (absolute paths in
     # BMAD prompts). The host's Codex install and credentials are shared with the container.
     export DOCKER_CONTEXT=${DOCKER_CONTEXT:-default}
-    codex=(docker run -i --rm --name "$name" --user "$(id -u):$(id -g)" -e HOME=/tmp -e CODEX_HOME=/codex
+    # Cap the container so parallel builds, ctest and emulator runs cannot starve the host
+    # (2026-10-19: an uncapped run pushed the CT's load average past 300 and hung Proxmox).
+    codex=(docker run -i --rm --name "$name" --cpus "${DW_CPUS:-2.5}" --memory "${DW_MEMORY:-9g}"
+        --memory-swap "${DW_MEMORY_SWAP:-10g}" --user "$(id -u):$(id -g)" -e HOME=/tmp -e CODEX_HOME=/codex
         -e AGENT_LABEL -e CLAUDE_CODE_SESSION_ID
         -v "$root":/dw -v "$root":"$root" -v dw_venv:/dw/.venv -v "$tmp":"$tmp"
         -v "$(npm root -g)/@openai/codex":/opt/codex:ro -v "${CODEX_HOME:-$HOME/.codex}":/codex

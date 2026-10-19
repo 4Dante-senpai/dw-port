@@ -71,6 +71,15 @@ static void capture_vblank(void)
 {
 	spu_sync();
 	port_scene_tick();
+	if (capture_config.audio_segments) {
+		if (port_scene_audio_complete()) {
+			port_scene_finish();
+			if (clock_trace && fclose(clock_trace)) exit(1);
+			puts("port: audio segments captured");
+			exit(0);
+		}
+		return;
+	}
 	if (!marked || (capture_config.checkpoints ? !port_scene_complete() :
 	    (uint32_t)(clock_vblanks() - mark_vblank) < capture_config.vblank))
 		return;

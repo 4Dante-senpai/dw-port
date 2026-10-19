@@ -266,3 +266,132 @@ a `rand`, coincidentes con las dos corridas de los runners nativo y ASan.
 Las pruebas sin disco incluyen un programa MIPS sintético que atraviesa los
 breakpoints FFI reales de entrada/retorno de `rand` dieciséis veces, además del
 test de callbacks del adaptador y la comprobación de los dieciséis bits de pad.
+
+## Captura de audio de la historia 3.5
+
+La implementación se detalla en [libsnd.md](libsnd.md) y la evidencia de paridad
+en [audio-parity.md](audio-parity.md). El fallo histórico del sink SDL `disk`
+(WAV diferentes con registros idénticos) motivó el tap PCM descrito abajo;
+ese sink ya no genera la referencia. No hay un SNR del port aprobado.
+
+```sh
+DW1_DISC_DIR=/dw/game_rom/extracted python3 -I -B tools/port/reference/capture.py title_audio --audio --out /tmp/dw1-audio-reference/title_audio --max-vblanks 40000 --timeout 1800
+DW1_DISC_DIR=/dw/game_rom/extracted DW1_AUDIO_DIR=/tmp/dw1-audio-port python3 -I -B tools/port/scenes/run.py title_audio --build native-headless --compare-audio
+```
+
+El primer comando exige dos capturas idénticas antes de guardar el sello; el
+segundo devuelve 77 si falta el sello de referencia. Un sello existente con
+escena obsoleta o archivos ausentes/alterados falla y exige recaptura.
+`--reuse` solo reutiliza
+una captura cuyo fingerprint siga vigente. `--out` o
+`DW1_REFERENCE_DIR` eligen el directorio externo de referencia; el valor por
+defecto para audio es `/tmp/dw1-audio-reference/title_audio`. `DW1_AUDIO_DIR`
+elige la raíz externa del audio nativo (por defecto `/tmp/dw1-audio-port`).
+Audio, trazas y archivos de trabajo quedan fuera del checkout, incluso si el
+directorio configurado contiene un enlace simbólico hacia él.
+
+### Gate vigente: decisión 4 del dueño, 2026-10-19
+
+La decisión 4 sustituye el gate de la decisión 3. Se compara la lista ordenada
+`(registro, valor)` de escrituras de voz (`registro < 0x180`), incluidas
+las duplicadas. El tramo 1 sigue siendo completo:
+`runLandingScreen` → `unloadNewGameScene`.
+
+Para el tramo 2, `checkpoint_after = { SsSeqPlay = "gameLoop" }` ignora las
+llamadas anteriores. `config/us/symbols.txt` fija `SsSeqPlay` en `0x800CD73C`;
+`asm/us/main/psyq/libsnd.s` muestra su llamada a `Snd_SetPlayMode`.
+La misma entrada arma ambos capturadores: ExecBP en Redux e instrumentación
+de función en el port, antes del cuerpo. `seqPlay` llama previamente a
+`SsSeqSetVol` (`asm/us/main/sound.s`, `0x800C5E30`).
+
+`anchor = "note_on"` difiere el origen efectivo hasta una nota nueva. El
+algoritmo compartido por `capture.lua` y `spu.c` es:
+
+1. Desde la primera escritura de voz, acumular un flush, guardando la primera
+   escritura por voz y las voces con escritura de dirección (`voz*0x10+6`).
+2. En KON bajo (`0x188`) o alto (`0x18a`), intersectar sus bits no nulos con
+   esas voces. La primera intersección confirma una nota nueva. El origen es
+   la primera escritura del bundle de esa voz (la más temprana si hay varias),
+   conservando pitch, volumen y ADSR anteriores al KON. Dirección cero también
+   es una dirección válida. Volumen/pitch aislados nunca confirman el ancla.
+3. Sin coincidencia al terminar KON alto, descartar el candidato. El buffer
+   admite 256 escrituras; desbordarlo o cerrar sin nota confirmada falla.
+   Después de confirmar, conservar todas las escrituras hasta el cierre.
+
+Los ciclos y VBlanks se rebajan respecto de esa primera escritura, no respecto
+del KON ni de `SsSeqPlay`. Redux selecciona PCM por índices absolutos del tap;
+el port elimina del WAV provisional exactamente los frames anteriores al
+nuevo origen, preservando la fase absoluta del mixer y su callback de salida.
+Las pruebas sintéticas ejecutan ambos detectores con recálculos heredados,
+KON cero, dirección/KON de voces distintas, voces bajas/altas y un bundle
+que atraviesa una muestra; verifican el origen y el recorte del WAV nativo.
+
+`stop_on` conserva las 21 entradas públicas de `libsnd` usadas por el juego.
+La siguiente entrada cierra el tramo **antes** de ejecutar la llamada, incluso
+si todavía no se confirmó el ancla. El tick usa rutinas internas (`snd_*`,
+`vm_*`) y no cierra el tramo. Si la dirección también abre un tramo, se
+procesa primero el cierre; Redux usa un solo breakpoint por dirección.
+No se saltan llamadas del juego para obtener una ventana mayor.
+
+La traza añade `# end <muestras> <motivo>`, con muestras
+`floor((ciclo_fin − ciclo_ancla)/768)`. El tramo musical exige cierre
+`event:<símbolo>` de `stop_on` y al menos **396900 muestras (9 s) en cada lado**.
+Se comparan todas las escrituras de voz con muestra relativa en
+`[0, min(fin_port, fin_referencia))`. No hay búsqueda de prefijos, reordenamiento,
+ajuste de ganancia ni eliminación de duplicadas. El reporte muestra la ventana
+común y cuántas escrituras quedan después de ella en cada lado. Una diferencia
+dentro de la ventana informa el índice y los dos registros/valores, tiempos y
+VBlanks; también falla una escritura faltante o adicional.
+
+El TOML y la huella del adaptador invalidan la referencia anterior: exige
+recaptura. Las dos pasadas de audio se ejecutan **en serie**, con un solo
+emulador activo, y deben producir trazas y PCM idénticos byte a byte. Los
+archivos siguen fuera del checkout. El reporte conserva regla B por VBlank,
+desfases y SNR por ventanas de cinco segundos sobre los tramos capturados;
+son diagnósticos no bloqueantes hasta 3.10. Se mantienen integridad de archivos,
+límites de captura y detección de errores del proceso/sanitizadores.
+
+Motivo: la decisión 3 empezaba con recálculos correctos de voces heredadas
+(`0x078e`/`0x0143`) y exigía diez segundos donde el primer `SsUtKeyOnV` deja
+9,277256/9,522290 s desde `SsSeqPlay`. El dueño aprobó el origen de nota nueva,
+nueve segundos y la ventana común, conservando el cierre. La sincronización y
+el estado heredado se difieren a 3.10. Resultados históricos y nueva evidencia
+en [audio-parity.md](audio-parity.md).
+
+`capture.lua` registra escrituras SH/SW a `0x1F801C00..0x1F801DFF`, tomando el
+valor de `rt` tras decodificar la instrucción y verificar su dirección efectiva.
+Usa `PCSX.getCPUCycles()` y reinicia las columnas de tiempo en cada checkpoint.
+El modo audio no toma capturas de imagen. Requiere el parche versionado
+`tools/port/reference/pcsx-redux-pcm-tap.patch`, aplicado por la etapa
+`pcsx-redux` del Dockerfile sobre el SHA fijado. Usa el sink `dummy`,
+`UseNullSync=true`, `Speed=1`, gaussiana (`Interp=2`) y `KeyOnDelay=6`.
+`DW1_REDUX_PCM_TAP` activa la captura PCM16LE estéreo a 44,1 kHz antes de
+`dropVoiceFrames`/`feedStreamData`; sin esa variable, el tap está desactivado.
+El adaptador exige su cabecera y el mensaje de disponibilidad del emulador;
+un binario anterior falla en vez de producir una referencia aceptada.
+
+El archivo intermedio empieza por los ocho bytes `DW1PCM1\n`. Cada bloque
+contiene un índice absoluto de muestra de 64 bits y un número de frames de
+32 bits, ambos little-endian, seguidos de los frames estéreo PCM16LE. Los
+índices permiten detectar huecos, solapamientos y reinicios del reloj dentro
+del tramo. La conversión selecciona las muestras desde `inicio/768 + 1`
+hasta `fin/768 + 1` (extremo final excluido, divisiones enteras), sin añadir
+silencio, ajustar la ganancia ni resamplear. Se dejan cuatro VBlanks tras
+cerrar el último tramo para que el mixer asíncrono drene su salida; quedan
+fuera de los intervalos comparados.
+
+### Integridad de la evidencia de audio (revisión 2026-10-19)
+
+La comparación rechaza footers ausentes y causas de cierre distintas entre
+port y referencia: `checkpoint` debe coincidir con `checkpoint`, y
+`event:<nombre>` con el mismo evento. Un tramo sin música requiere su cierre
+por checkpoint. Cada WAV válido debe contener los frames del intervalo de
+su traza, con tolerancia de ±1 por redondeo; un prefijo PCM válido pero corto
+también falla.
+
+El fingerprint incluye las direcciones resueltas de `VSync`, el mark, todos
+los checkpoints/anclas y `stop_on`, además de hashes de escena, adaptador,
+comparador, parche PCM, BIOS y ejecutable Redux. El sello conserva la ruta de
+la BIOS usada. Antes de ejecutar el port, el runner recalcula esa identidad
+con la BIOS y el Redux instalados; cambios de símbolos, BIOS, emulador o
+adaptador obligan a recapturar, aunque los archivos de evidencia sigan intactos.

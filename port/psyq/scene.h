@@ -7,5 +7,6 @@ void port_scene_start(void);
 void port_scene_tick(void);
 void port_scene_finish(void);
 int port_scene_complete(void);
+int port_scene_audio_complete(void);
 void port_scene_enter(void *function);
 #endif

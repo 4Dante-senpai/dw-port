@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-18
+Última actualización: 2026-10-19
 
 ## Modo de operación
 
@@ -252,6 +252,22 @@
   comparación con disco real 3/3 (Pack, referencia nueva y port); web 3/3, 4 casos de navegador.
   Evidencia: `docs/implementation-artifacts/evidence/story-3-2.log`.
 
+- Historia 3.5 (`libsnd` de DW1 y traza de audio): las 21 entradas de `libsnd` que llama el Juego,
+  su secuenciador SEQ (`SsSeqCalledTbyT`: notas, controles, NRPN, tempo, bucles, fin) y las
+  entradas de `libspu` que alcanza están traducidas del asm de DW1 (registro de voz de `0x36`
+  bytes, distinto de DW2); ya no quedan `stub-m2:` en `libsnd`. Traza de escrituras SPU y WAV en
+  el port y en la referencia; parche de PCSX-Redux que toma el PCM del mezclador antes del
+  dispositivo (dos capturas idénticas byte a byte). Escena `title_audio` en dos tramos. Gate por
+  contenido (decisiones 3 y 4 del dueño, AD-15 enmendado): tramo 1 744/744 escrituras de voz y
+  tramo 2 612/612 desde el primer note-on nuevo; regla B por VBlank y SNR se reportan sin
+  bloquear hasta 3.10, porque el port aún no modela costos de CPU/CD (desfase de escena previo a
+  libsnd, `docs/port/audio-parity.md`). RCnt2 conserva su retícula al atenderse tarde.
+  Contenedores del port limitados a 2,5 CPUs / 9 GB tras saturar el host Proxmox. Revisión
+  (3 capas Codex): 9 parches, 2 conservados por fidelidad al asm, 1 rechazado (SNR bloqueante,
+  contrario a la decisión 3). CTest nativo 45, ASan 43, web 25 y disco 16/16 nativo y 52/52 ASan
+  verdes. Sin cambios en `src/`/`include/`. Evidencia:
+  `docs/implementation-artifacts/evidence/story-3-5.log`.
+
 - Historia 3.4 (SPU emulado y `libspu`): `port/backend/spu` adapta el SPU de DW2-PC (CC0):
   24 voces ADPCM con interpolación gaussiana, ADSR, ruido, PMON, reverb, KON/KOFF/ENDX, DMA y
   entrada de CD por callback; genera las muestras pendientes antes de cada acceso a registro, una
@@ -306,7 +322,7 @@
 
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1, 3.2, 3.3 y 3.4 cerradas; sigue la 3.5. El resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.5 cerradas; sigue la 3.6. El resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 
@@ -325,7 +341,7 @@
 | Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (52 mínimas M2) / 0 / 12 (de 199) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
-| Escenas que funcionan (nativo) | 2 (título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control) |
+| Escenas que funcionan (nativo) | 3 (título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control; `title_audio` con escrituras de voz idénticas en 2 tramos) |
 | Escenas que funcionan (web) | 1 (título, igual a nativo, Chromium y Firefox) |
 | Llamadas con firma distinta inventariadas / sin resolver | 1031 / 0 (`fnptr_casts.tsv`) |
 
