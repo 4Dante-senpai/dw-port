@@ -1,0 +1,16 @@
+Historia 3.5 — verificación del orquestador en la imagen dw-port (con tap PCM de PCSX-Redux), 2026-10-19
+
+Contenedores limitados a 2,5 CPUs / 9 GB; builds con -j2 y ctest con -j1, en serie.
+Disco: DW1_DISC_DIR=/dw/game_rom/extracted; referencia y audio del port fuera del checkout.
+
+ctest_no_skip.sh --preset native-headless -R 'pack_disc|dw1_overlay|gte_tables_disc|scene_|reference_title|reference_newgame_state':
+100% tests passed, 0 tests failed out of 16 (sin omisiones), incluidos reference_title_audio y scene_title_audio_compare
+ctest_no_skip.sh --preset native-asan (suite completa con disco):
+100% tests passed, 0 tests failed out of 52 (sin omisiones)
+Suites sin disco (Codex, en serie): native-headless 45 aprobadas, native-asan 43, web 25.
+
+Referencia title_audio: dos corridas de Redux con trazas SPU y WAV idénticos byte a byte (tap PCM previo al dispositivo).
+Gate de contenido (decisiones 3 y 4 del dueño): tramo 1 744/744 escrituras de voz idénticas; tramo 2 (desde el primer
+note-on nuevo tras SsSeqPlay) 612/612 en la ventana común de 9,047 s. Regla B por VBlank y SNR (-3,74 / 8,49 dB)
+reportados sin bloquear hasta 3.10 (costos de CPU/CD y período de VBlank).
+Sin cambios en src/ ni include/. Diagnóstico de paridad: docs/port/audio-parity.md.
