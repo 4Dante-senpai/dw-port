@@ -8,6 +8,10 @@ alcanzadas tienen implementación; no quedan marcadores M2 en libsnd.
 La paridad de trazas/PCM con `title_audio` y el cierre de la historia siguen
 pendientes de la referencia que captura el orquestador fuera del contenedor.
 
+El diagnóstico posterior sobre `e303346`, sus límites y la corrección de
+RCnt2 están en [audio-parity.md](audio-parity.md). La comparación clase B
+todavía falla; completar las traducciones no demuestra paridad temporal.
+
 ## Sonda previa de música
 
 Dos corridas del original USA con el PCSX-Redux fijado y los inputs de
