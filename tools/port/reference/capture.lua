@@ -14,8 +14,10 @@ local checkpointIndex = 1
 local snapshot, enterCheckpoints
 local audio, audioIndex = nil, 1
 local audioFinishedTick
-local function audioEnd()
+local function audioEnd(reason)
     if not audio then return end
+    assert(audio.file:write(string.format('# end %.0f %s\n',
+        math.floor((tonumber(PCSX.getCPUCycles())-audio.cycle)/768), reason)))
     assert(audio.file:close())
     local meta = assert(io.open(audio.meta, 'w'))
     assert(meta:write(string.format('{"start_cycle":%.0f,"end_cycle":%.0f,"vblanks":%d}',
@@ -27,7 +29,7 @@ local function audioEnd()
 end
 local function audioCheckpoint(label)
     if not c.audio then return end
-    if audio and audio.finish == label then audioEnd() end
+    if audio and audio.finish == label then audioEnd("checkpoint") end
     local segment = c.audio[audioIndex]
     if segment and segment.start == label then
         assert(not audio, 'overlapping audio segments')
@@ -215,16 +217,31 @@ snapshot = function(label, relative)
         assert(state:flush())
     end
 end
-local byAddress = {}
+local byAddress, audioStops = {}, {}
+for _, segment in ipairs(c.audio or {}) do
+    for _, entry in ipairs(segment.stop_addresses or {}) do
+        audioStops[entry.address] = entry.label
+        byAddress[entry.address] = byAddress[entry.address] or {}
+    end
+end
 for _, cp in ipairs(checkpoints) do
     if not byAddress[cp.address] then byAddress[cp.address] = {} end
     table.insert(byAddress[cp.address], cp)
 end
 enterCheckpoints = function(address)
     if not mark then return end
+    if audio and audioStops[address] then
+        for _, entry in ipairs(audio.stop_addresses or {}) do
+            if entry.address == address then audioEnd('event:' .. entry.label); break end
+        end
+    end
     for _, cp in ipairs(byAddress[address] or {}) do
-        cp.hits = (cp.hits or 0) + 1
-        if cp.hits == cp.occurrence then
+        local armed = not cp.after
+        for _, previous in ipairs(checkpoints) do
+            if previous.label == cp.after and previous.start then armed = true end
+        end
+        if armed then cp.hits = (cp.hits or 0) + 1 end
+        if armed and cp.hits == cp.occurrence then
             assert(checkpoints[checkpointIndex] == cp, 'checkpoint out of order: ' .. cp.label)
             cp.start = ticks
             checkpointIndex = checkpointIndex + 1
@@ -244,7 +261,7 @@ for address, _ in pairs(byAddress) do
 end
 local onVsync = guarded(function()
     ticks = ticks + 1
-    if audio and audio.vblanks and ticks-audio.tick >= audio.vblanks then audioEnd() end
+    if audio and audio.vblanks and ticks-audio.tick >= audio.vblanks then audioEnd("vblanks") end
     local base = c.inputs_from == 'mark' and mark or (c.inputs_from ~= 'mark' and origin or nil)
     if base then input(ticks - base) end
     if mark then

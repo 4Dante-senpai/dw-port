@@ -9,11 +9,13 @@
 void AUDIO_START(void) {}
 void AUDIO_FINISH(void) {}
 void AUDIO_MUSIC(void) {}
+void AUDIO_STOP(void) {}
 
 int dw1_game_main(void)
 {
     port_frame_done();
     port_scene_enter(AUDIO_START);
+    port_scene_enter(AUDIO_MUSIC); /* Scoped anchor is not armed yet. */
     spu_write16(0x180, 0x1234);
     clock_advance(clock_vblank_cycle(1) - clock_now());
     spu_write16(0x182, 0x2345);
@@ -28,6 +30,9 @@ int dw1_game_main(void)
     printf("frames %llu %llu\n", (unsigned long long)(clock_vblank_cycle(2) / 768),
            (unsigned long long)(clock_vblank_cycle(7) / 768 - (clock_vblank_cycle(5) + 17) / 768));
     clock_advance(clock_vblank_cycle(7) - clock_now());
+    port_scene_enter(AUDIO_STOP);
+    spu_write16(0x180, 0xdead); /* First game event is excluded. */
+    clock_advance(clock_vblank_cycle(8) - clock_now());
     abort(); /* Successful capture exits from the VBlank observer. */
 }
 

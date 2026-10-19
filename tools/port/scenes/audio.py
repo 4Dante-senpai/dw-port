@@ -1,4 +1,4 @@
-"""SPU trace rule B and stereo PCM comparison; no third-party dependencies."""
+"""Decision 3 voice-content gate, rule B diagnostics and stereo PCM metrics."""
 from array import array
 from collections import defaultdict
 import cmath
@@ -19,8 +19,8 @@ def external_output(path, root):
     return path
 
 
-def read_trace(path):
-    groups = defaultdict(list)
+def trace_data(path):
+    rows, end = [], None
     previous = (-1, -1)
     with Path(path).open() as stream:
         if stream.readline().strip() != "# dw1-spu-trace-v1":
@@ -28,6 +28,14 @@ def read_trace(path):
         for line_number, line in enumerate(stream, 2):
             fields = line.split()
             try:
+                if end is not None:
+                    raise ValueError()
+                if len(fields) == 4 and fields[:2] == ["#", "end"]:
+                    sample = int(fields[2])
+                    if sample < max(0, previous[1]):
+                        raise ValueError()
+                    end = dict(sample=sample, reason=fields[3])
+                    continue
                 if len(fields) != 4:
                     raise ValueError()
                 vb, sample = map(int, fields[:2])
@@ -37,9 +45,54 @@ def read_trace(path):
                     raise ValueError()
             except ValueError:
                 raise ValueError(f"invalid SPU trace row: {path}:{line_number}") from None
-            groups[vb, reg].append((value, sample))
+            rows.append((vb, sample, reg, value))
             previous = vb, sample
+    return rows, end
+
+
+def read_trace(path):
+    groups = defaultdict(list)
+    for vb, sample, reg, value in trace_data(path)[0]:
+        groups[vb, reg].append((value, sample))
     return groups
+
+
+def compare_voice_content(actual, reference, music=False, stop_on=()):
+    """No search, offset fitting, sorting, deduplication or prefix acceptance."""
+    a_rows, a_end = trace_data(actual)
+    b_rows, b_end = trace_data(reference)
+    left = [row for row in a_rows if row[2] < 0x180]
+    right = [row for row in b_rows if row[2] < 0x180]
+    offsets = []
+    for index in range(max(len(left), len(right))):
+        a = left[index] if index < len(left) else None
+        b = right[index] if index < len(right) else None
+        if a is None or b is None or a[2:] != b[2:]:
+            def show(row):
+                return ("missing" if row is None else
+                        f"VBlank {row[0]} sample {row[1]} reg 0x{row[2]:03x}=0x{row[3]:04x}")
+            raise ValueError(f"first voice-content divergence at write {index}: "
+                             f"port={show(a)} reference={show(b)}")
+        offsets.append(abs(a[1] - b[1]))
+    if not left:
+        raise ValueError("empty voice-content segment")
+    if music:
+        for name, end in (("port", a_end), ("reference", b_end)):
+            if not end or end["reason"] not in {f"event:{symbol}" for symbol in stop_on}:
+                raise ValueError(f"{name} music lacks first game-event boundary; recapture at SEQ anchor")
+            if end["sample"] < RATE * 10:
+                raise ValueError(f"{name} music before first game event is {end['sample']/RATE:.6f} s; "
+                                 "requires >= 10 s")
+    return dict(writes=len(left), sample_offset_max=max(offsets),
+                sample_offset_mean=sum(offsets)/len(offsets),
+                port_end=a_end, reference_end=b_end)
+
+
+def diagnostic(call, *args, **kwargs):
+    try:
+        return dict(status="match", metrics=call(*args, **kwargs))
+    except ValueError as error:
+        return dict(status="different", error=str(error))
 
 
 def compare_trace(actual, reference):
@@ -60,6 +113,28 @@ def compare_trace(actual, reference):
             total += delta
             count += 1
     return dict(writes=count, sample_offset_max=maximum, sample_offset_mean=total / count if count else 0)
+
+
+def trace_diagnostics(actual, reference):
+    rule_b = diagnostic(compare_trace, actual, reference)
+    # Pair each register's occurrences in original order, irrespective of VBlank.
+    # Report unmatched occurrences explicitly; this does not accept a prefix.
+    sides = []
+    for path in (actual, reference):
+        registers = defaultdict(list)
+        for _, sample, reg, value in trace_data(path)[0]:
+            registers[reg].append((sample, value))
+        sides.append(registers)
+    offsets, unpaired = [], [0, 0]
+    for reg in sides[0].keys() | sides[1].keys():
+        a, b = sides[0][reg], sides[1][reg]
+        offsets.extend(abs(x[0]-y[0]) for x, y in zip(a, b))
+        unpaired[0] += max(0, len(a)-len(b))
+        unpaired[1] += max(0, len(b)-len(a))
+    return dict(rule_b=rule_b, sample_pairing="register occurrence order, across VBlanks",
+                paired_writes=len(offsets), unpaired_writes=unpaired,
+                sample_offset_max=max(offsets, default=0),
+                sample_offset_mean=sum(offsets)/len(offsets) if offsets else 0)
 
 
 def read_pcm(path):
@@ -149,7 +224,7 @@ def alignment(actual, reference, max_offset=RATE):
     return peak - margin
 
 
-def compare_pcm(actual_path, reference_path, threshold=40.0, max_offset=RATE):
+def compare_pcm(actual_path, reference_path, threshold=40.0, max_offset=RATE, diagnostic_only=False):
     actual, reference = read_pcm(actual_path), read_pcm(reference_path)
     lag = alignment(actual, reference, max_offset)
     a0, b0 = max(0, lag), max(0, -lag)
@@ -157,7 +232,8 @@ def compare_pcm(actual_path, reference_path, threshold=40.0, max_offset=RATE):
     if frames < WINDOW:
         raise ValueError("aligned PCM must contain at least one 5 s window")
     # Allow only the boundary loss implied by alignment; never hide dropped samples.
-    if abs(len(actual) // 2 - len(reference) // 2) > abs(lag) + 1:
+    duration_mismatch = abs(len(actual) // 2 - len(reference) // 2) > abs(lag) + 1
+    if duration_mismatch and not diagnostic_only:
         raise ValueError("PCM duration mismatch exceeds alignment boundary loss")
     windows = []
     for start in range(0, frames, WINDOW):
@@ -170,10 +246,11 @@ def compare_pcm(actual_path, reference_path, threshold=40.0, max_offset=RATE):
         snr = math.inf if not error else 10 * math.log10(signal / error) if signal else -math.inf
         windows.append(dict(start_sample=start, frames=end - start, snr_db=snr))
     worst = min(windows, key=lambda w: w["snr_db"])
-    if worst["snr_db"] < threshold:
+    if worst["snr_db"] < threshold and not diagnostic_only:
         raise ValueError(f"PCM worst window {worst['start_sample'] / RATE:.3f} s: "
                          f"SNR {worst['snr_db']:.3f} dB < {threshold:g} dB; lag={lag} samples")
-    return dict(lag_samples=lag, compared_frames=frames, worst_snr_db=worst["snr_db"], windows=windows)
+    return dict(lag_samples=lag, compared_frames=frames, worst_snr_db=worst["snr_db"],
+                duration_mismatch=duration_mismatch, meets_40_db=worst["snr_db"] >= threshold, windows=windows)
 
 
 def validate_segments(scene):
@@ -183,8 +260,8 @@ def validate_segments(scene):
         raise ValueError("audio requires exactly two disjoint segments")
     previous = -1
     for segment in segments:
-        if set(segment) not in ({"start", "finish"}, {"start", "vblanks"}):
-            raise ValueError("segment requires start and exactly one of finish/vblanks")
+        if set(segment) not in ({"start", "finish"}, {"start", "vblanks"}, {"start", "stop_on"}):
+            raise ValueError("segment requires start and exactly one of finish/vblanks/stop_on")
         if segment["start"] not in checkpoints:
             raise ValueError("unknown segment start checkpoint")
         start = checkpoints.index(segment["start"])
@@ -194,6 +271,13 @@ def validate_segments(scene):
             if segment["finish"] not in checkpoints or checkpoints.index(segment["finish"]) <= start:
                 raise ValueError("invalid segment finish checkpoint")
             previous = checkpoints.index(segment["finish"])
+        elif "stop_on" in segment:
+            stops = segment["stop_on"]
+            if (not isinstance(stops, list) or not stops
+                    or any(not isinstance(name, str) or not name.isidentifier() for name in stops)
+                    or len(stops) != len(set(stops))):
+                raise ValueError("stop_on requires unique function symbols")
+            previous = len(checkpoints)
         else:
             if type(segment["vblanks"]) is not int or not 600 <= segment["vblanks"] <= 40000:
                 raise ValueError("segment vblanks must be between 600 and 40000")

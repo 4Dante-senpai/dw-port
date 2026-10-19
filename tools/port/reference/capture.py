@@ -107,7 +107,8 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
     config["checkpoints"] = scene.get("resolved_checkpoints", [])
     if audio:
         config["audio_drain_vblanks"] = 4
-        config["audio"] = [dict(segment, trace=str(output / f"run-{index}-{i}.spu"),
+        config["audio"] = [dict(segment, stop_addresses=_runner.checkpoint_symbols(
+                                dict(checkpoints=segment.get("stop_on", [])), ROOT / "config/us/symbols.txt"), trace=str(output / f"run-{index}-{i}.spu"),
                                 meta=str(output / f"run-{index}-{i}.json"))
                            for i, segment in enumerate(audio, 1)]
     if scene.get("state_vars"):

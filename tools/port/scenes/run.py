@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -127,6 +128,12 @@ def validate_scene(scene):
         raise ValueError("window must be a nonnegative integer")
     if any("#" in cp and int(cp.rsplit("#", 1)[1]) > 0xffffffff for cp in checkpoints):
         raise ValueError("checkpoint occurrence exceeds uint32")
+    armed = scene.get("checkpoint_after", {})
+    if (not isinstance(armed, dict) or any(
+            label not in checkpoints or after not in checkpoints
+            or checkpoints.index(after) >= checkpoints.index(label)
+            for label, after in armed.items())):
+        raise ValueError("checkpoint_after must name an earlier checkpoint")
     previous = (-1, -1)
     for event in scene.get("inputs", []):
         keys = {"after", "vblank", "buttons"} if checkpoints else {"vblank", "buttons"}
@@ -168,6 +175,8 @@ def checkpoint_symbols(scene, path, binary=None):
                 raise ValueError(f"native checkpoint function is not instrumented: {name}")
         result.append(dict(label=label, address=symbols[name], occurrence=int(occurrence or 1),
                            window=scene.get("window", 0)))
+        if label in scene.get("checkpoint_after", {}):
+            result[-1]["after"] = scene["checkpoint_after"][label]
     return result
 
 
@@ -225,6 +234,8 @@ def state_fingerprint(scene, bios_identity=None):
     if bios_identity is None:
         bios_identity = bios_fingerprint()
     definition = {key: scene.get(key) for key in ("mark", "capture_vblank", "inputs", "inputs_from", "expect_rand", "checkpoints", "window")}
+    if "checkpoint_after" in scene:
+        definition["checkpoint_after"] = scene["checkpoint_after"]
     content = json.dumps([definition, bios_identity], sort_keys=True).encode()
     for name in ("tools/port/scenes/state_vars.txt", "config/us/symbols.txt",
                  "tools/port/reference/capture.lua", "tools/port/reference/capture.py",
@@ -363,6 +374,9 @@ def compare_state(port, reference, variables, checkpoint, expect_rand=False, che
 
 def run_audio(args, scene, build, checkpoints, pack):
     audio.validate_segments(scene)
+    for segment in scene["audio"]:
+        if segment.get("stop_on"):
+            checkpoint_symbols(dict(checkpoints=segment["stop_on"]), ROOT / "config/us/symbols.txt", build / "dw1")
     report = ROOT / "build/port" / args.build / "scenes" / args.id / "audio.json"
     report.unlink(missing_ok=True)
     stamp = ROOT / "build/reference" / args.id / "audio.json"
@@ -393,13 +407,14 @@ def run_audio(args, scene, build, checkpoints, pack):
     inputs, cp_file = output / "inputs.txt", output / "checkpoints.txt"
     inputs.write_text("".join(f"{e['after']} {e['vblank']} {sum(1 << b for b in set(e['buttons'])):04x}\n"
                               for e in scene.get("inputs", [])))
-    cp_file.write_text("".join(f"{cp['label']} 0\n" for cp in checkpoints))
+    cp_file.write_text("".join(f"{cp['label']} 0 {cp.get('after', '-')}\n" for cp in checkpoints))
     all_hashes = []
     for index in (1, 2):
         declarations = output / f"segments-{index}.txt"
         declarations.write_text("".join(
             f"{seg['start']} {seg.get('finish', '-')} {seg.get('vblanks', 0)} "
-            f"{output}/run-{index}-{i}.spu {output}/run-{index}-{i}.wav\n"
+            f"{output}/run-{index}-{i}.spu {output}/run-{index}-{i}.wav "
+            f"{','.join(seg.get('stop_on', [])) or '-'}\n"
             for i, seg in enumerate(scene["audio"], 1)))
         paths = [output / f"run-{index}-{i}.{suffix}" for i in (1, 2) for suffix in ("spu", "wav")]
         for path in paths:
@@ -418,18 +433,27 @@ def run_audio(args, scene, build, checkpoints, pack):
         all_hashes.append([hashlib.sha256(path.read_bytes()).hexdigest() for path in paths])
     if all_hashes[0] != all_hashes[1]:
         raise ValueError("non-deterministic native SPU trace/PCM")
-    metrics = []
-    for i in (1, 2):
-        trace = audio.compare_trace(output / f"run-1-{i}.spu", reference / f"run-1-{i}.spu")
-        pcm = audio.compare_pcm(output / f"run-1-{i}.wav", reference / f"run-1-{i}.wav")
-        metrics.append(dict(segment=i, trace=trace, pcm=pcm))
-        print(f"audio segment {i}: {trace}; worst SNR={pcm['worst_snr_db']:.3f} dB, "
-              f"lag={pcm['lag_samples']} samples")
+    metrics, failures = [], []
+    for i, segment in enumerate(scene["audio"], 1):
+        actual, expected = output / f"run-1-{i}.spu", reference / f"run-1-{i}.spu"
+        content = audio.diagnostic(audio.compare_voice_content, actual, expected,
+                                   music=i == 2, stop_on=segment.get("stop_on", []))
+        trace = audio.trace_diagnostics(actual, expected)
+        # Decision 3 defers fidelity metrics, not evidence-format validation.
+        for wav in (output / f"run-1-{i}.wav", reference / f"run-1-{i}.wav"):
+            audio.read_pcm(wav)
+        pcm = audio.diagnostic(audio.compare_pcm, output / f"run-1-{i}.wav",
+                               reference / f"run-1-{i}.wav", diagnostic_only=True)
+        metrics.append(dict(segment=i, content=content, rule_b=trace, pcm=pcm))
+        if content["status"] != "match":
+            failures.append(f"segment {i}: {content['error']}")
+        print(f"audio segment {i}: content={content}; rule B (non-blocking)={trace}; "
+              f"PCM (non-blocking)={pcm}")
     # Only hashes/metrics go into build/; PCM and register evidence stay external.
     report.parent.mkdir(parents=True, exist_ok=True)
     def finite_metrics(value):
-        if isinstance(value, float) and value == float("inf"):
-            return "+inf"
+        if isinstance(value, float) and not math.isfinite(value):
+            return "+inf" if value > 0 else "-inf"
         if isinstance(value, dict):
             return {key: finite_metrics(item) for key, item in value.items()}
         if isinstance(value, list):
@@ -437,6 +461,8 @@ def run_audio(args, scene, build, checkpoints, pack):
         return value
     report.write_text(json.dumps(finite_metrics(dict(hashes=all_hashes[0], segments=metrics)),
                                  indent=2, allow_nan=False) + "\n")
+    if failures:
+        raise ValueError("; ".join(failures))
     return 0
 
 
@@ -496,7 +522,8 @@ def main():
     inputs.write_text("".join((e['after'] + " " if checkpoints else "") + f"{e['vblank']} {sum(1 << b for b in set(e['buttons'])):04x}\n" for e in scene.get("inputs", [])))
     checkpoint_file = output / "checkpoints.txt"
     if checkpoints:
-        checkpoint_file.write_text("".join(f"{cp['label']} {cp['window']}\n" for cp in checkpoints))
+        checkpoint_file.write_text("".join(f"{cp['label']} {cp['window']} {cp.get('after', '-')}\n"
+                                           for cp in checkpoints))
     results = []
     for index in (1, 2):
         capture = output / f"run-{index}.ppm"

@@ -269,22 +269,61 @@ test de callbacks del adaptador y la comprobación de los dieciséis bits de pad
 
 ## Captura de audio de la historia 3.5
 
-La implementación y el bloqueo experimental se detallan en [libsnd.md](libsnd.md).
-La referencia PCM aún no es válida: dos trazas de registros idénticas produjeron
-WAV diferentes con el sink SDL `disk`. No hay un SNR del port aprobado.
+La implementación se detalla en [libsnd.md](libsnd.md) y la evidencia de paridad
+en [audio-parity.md](audio-parity.md). El fallo histórico del sink SDL `disk`
+(WAV diferentes con registros idénticos) motivó el tap PCM descrito abajo;
+ese sink ya no genera la referencia. No hay un SNR del port aprobado.
 
 ```sh
-DW1_DISC_DIR=/dw/game_rom/extracted python3 -I -B tools/port/reference/capture.py title_audio --audio --reuse --max-vblanks 40000 --timeout 1800
-python3 -I -B tools/port/scenes/run.py title_audio --build native-headless --compare-audio
+DW1_DISC_DIR=/dw/game_rom/extracted python3 -I -B tools/port/reference/capture.py title_audio --audio --out /tmp/dw1-audio-reference/title_audio --max-vblanks 40000 --timeout 1800
+DW1_DISC_DIR=/dw/game_rom/extracted DW1_AUDIO_DIR=/tmp/dw1-audio-port python3 -I -B tools/port/scenes/run.py title_audio --build native-headless --compare-audio
 ```
 
 El primer comando exige dos capturas idénticas antes de guardar el sello; el
-segundo devuelve 77 si falta una referencia verificada. `--out` o
+segundo devuelve 77 si falta una referencia verificada. `--reuse` solo reutiliza
+una captura cuyo fingerprint siga vigente. `--out` o
 `DW1_REFERENCE_DIR` eligen el directorio externo de referencia; el valor por
 defecto para audio es `/tmp/dw1-audio-reference/title_audio`. `DW1_AUDIO_DIR`
 elige la raíz externa del audio nativo (por defecto `/tmp/dw1-audio-port`).
 Audio, trazas y archivos de trabajo quedan fuera del checkout, incluso si el
 directorio configurado contiene un enlace simbólico hacia él.
+
+### Gate vigente: decisión 3 del dueño, 2026-10-19
+
+Se compara la lista completa ordenada `(registro, valor)` de escrituras de
+voz (`registro < 0x180`), incluidas duplicadas. El tramo 1 sigue siendo
+`runLandingScreen` → `unloadNewGameScene`. Para el tramo 2,
+`checkpoint_after = { SsSeqPlay = "gameLoop" }` ignora las llamadas anteriores
+a `SsSeqPlay`: el origen es la primera entrada posterior a `gameLoop`.
+`config/us/symbols.txt` fija `SsSeqPlay` en `0x800CD73C`;
+`asm/us/main/psyq/libsnd.s` muestra su llamada a `Snd_SetPlayMode`. Es la misma
+entrada detectada por ExecBP en Redux y por instrumentación de función en el
+port, antes de ejecutar su cuerpo. No se usa `playMusic` porque incluye carga
+y preparación; `seqPlay` también llama a `SsSeqSetVol` antes de `SsSeqPlay`
+(`asm/us/main/sound.s`, `0x800C5E30`).
+
+`stop_on` enumera las 21 entradas públicas de `libsnd`. La siguiente entrada
+cierra el tramo **antes** de ejecutar la llamada del juego. El tick usa rutinas
+internas (`snd_*`, `vm_*`), sin entrar por esas API públicas, por lo que no
+cierra el tramo. Si una dirección también es el origen (`SsSeqPlay`), ambos
+capturadores procesan primero el cierre de un tramo ya activo y después la
+apertura; Redux usa un solo breakpoint por dirección. Se conservan todas las
+escrituras del tick y del inicio de música anteriores al cierre. No se intenta
+clasificar escrituras por valor ni buscar un desplazamiento que coincida.
+
+La traza `dw1-spu-trace-v1` añade al final `# end <muestras> <motivo>`:
+`event:<símbolo>`, `checkpoint` o `vblanks`. Las muestras son
+`floor((ciclo_fin − ciclo_inicio)/768)`, incluso si no hubo escrituras recientes.
+El tramo musical exige `event:` de la lista configurada y ≥ 441000 muestras
+en **cada** captura. Una traza antigua sin ese límite no demuestra diez segundos
+antes del primer evento y exige recaptura. El cambio del TOML y del adaptador
+invalida la referencia anterior; no se reutilizan sus offsets de `gameLoop`.
+
+El reporte JSON conserva regla B por VBlank, desfases de muestra y SNR por
+ventanas de cinco segundos, incluso cuando falla el gate de contenido. Esas
+métricas son diagnósticas y no bloquean hasta 3.10, según AD-15 enmendado.
+Se mantienen la comprobación de dos corridas deterministas, integridad de
+archivos, límites de captura y detección de errores del proceso/sanitizadores.
 
 `capture.lua` registra escrituras SH/SW a `0x1F801C00..0x1F801DFF`, tomando el
 valor de `rt` tras decodificar la instrucción y verificar su dirección efectiva.

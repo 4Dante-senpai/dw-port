@@ -173,6 +173,59 @@ estado tardó 543,62 s y terminó sin errores de sanitizadores. Logs:
 `disc-native.log`, `disc-asan.log` y `disc-newgame-asan.log` en el directorio
 privado indicado arriba. `git diff --check` aprobó.
 
-Los logs de build, suites, comando solicitado y capturas directas están en
-`/tmp/dw1-audio-parity/`. No se modificaron las reglas de comparación ni el
-stamp de audio que apunta a `/ref`.
+Los logs de build, suites, comando solicitado y capturas directas de esa
+pasada están en `/tmp/dw1-audio-parity/`. En esa pasada no se modificaron las
+reglas de comparación ni el stamp de audio que apuntaba a `/ref`.
+
+## Decisión 3 del dueño: gate de contenido (2026-10-19)
+
+La última entrada del Spec Change Log de 3.5 sustituye el gate anterior.
+`audio.compare_voice_content` compara la lista global completa de pares
+`(registro, valor)` de voces (`registro < 0x180`), en orden y conservando
+duplicados. Ante una diferencia informa el índice de escritura y, para cada
+lado, VBlank, muestra, registro y valor, o `missing`. No busca offsets ni
+acepta prefijos. El tramo 1 se compara entero. La regla B original, los
+desfases de muestras y el SNR siguen ejecutándose y se guardan en el JSON
+del runner aunque falle el contenido; sus diferencias no bloquean hasta
+3.10. También se reportan duraciones PCM desiguales y ventanas bajo 40 dB.
+La determinación de dos corridas, hashes, archivos externos y errores de
+proceso/sanitizadores conserva sus comprobaciones.
+
+El tramo 2 comienza en la primera entrada a `SsSeqPlay` posterior a
+`gameLoop`, usando `checkpoint_after` en ambos capturadores. El símbolo
+original es `0x800CD73C` (`config/us/symbols.txt`); su asm llama a
+`Snd_SetPlayMode`. Se instrumenta la misma entrada en el port, antes del
+cuerpo. `seqPlay` llama a `SsSeqSetVol` en `0x800C5E30` antes de entrar en
+`SsSeqPlay`: anclar en este último evita confundir preparación/carga con el
+inicio de reproducción. Las llamadas anteriores a `gameLoop` no cuentan.
+
+El primer evento posterior del juego se define como la siguiente entrada
+a una de las 21 API públicas de `libsnd`, enumeradas en `stop_on` del TOML.
+El tick llama rutinas internas `snd_*`/`vm_*`, sin pasar por esas entradas.
+Ambos capturadores cierran antes de ejecutar la API del juego; si la misma
+dirección puede abrir y cerrar, procesan primero el cierre del tramo activo.
+El adaptador Redux comparte un breakpoint por dirección. Las pruebas
+sintéticas verifican esta coincidencia de dirección, el rechazo de anclas
+tempranas y la exclusión de las escrituras del evento que cierra el tramo.
+
+El footer `# end <muestras> event:<símbolo>` registra el límite real,
+`floor((ciclo_fin − ciclo_inicio)/768)`, sin inferirlo de la última escritura.
+El gate exige cierre por evento configurado y al menos 441000 muestras
+(diez segundos) en ambos lados. No admite un cierre por timeout ni una traza
+antigua sin límite musical verificable. Este cambio invalida el TOML y
+requiere recapturar la referencia, sin adaptar su prefijo a posteriori.
+
+### Evidencia de la nueva captura
+
+La captura nativa en `/tmp/dw1-decision3-port` confirma las **744/744**
+escrituras de voz del tramo 1 frente a la copia de referencia de
+`build/audio-debug/ref/run-1-1.spu`, sin desplazamiento de contenido.
+El desfase máximo de muestras de esas escrituras es 138180 y la media
+40169,2285; son diagnósticos. `copied-comparison.json` conserva el resultado.
+
+El tramo 2 nativo tiene 654 escrituras de voz antes de la siguiente API del
+juego, `SsUtKeyOnV`, a las 409127 muestras (**9,277256 s**) del ancla.
+Ese intervalo no satisface el mínimo aprobado de diez segundos. Se conserva
+el límite y se informa el fallo; no se prolonga la captura más allá del evento
+ni se cambia la escena para ocultarlo. Las copias antiguas del tramo 2,
+originadas en `gameLoop`, no demuestran el nuevo límite y necesitan recaptura.

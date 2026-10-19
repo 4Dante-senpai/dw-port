@@ -71,7 +71,7 @@ with tempfile.TemporaryDirectory() as directory:
     root.mkdir(); reference.mkdir()
     build = root / "build/port/native-headless"
     scene = dict(mark="start", checkpoints=["start", "finish", "music"], inputs=[],
-                 audio=[dict(start="start", finish="finish"), dict(start="music", vblanks=1200)])
+                 audio=[dict(start="start", finish="finish"), dict(start="music", stop_on=["game_event"])])
     checkpoints = [dict(label=name) for name in scene["checkpoints"]]
     args = SimpleNamespace(id="title_audio", build="native-headless")
     stamp = root / "build/reference/title_audio/audio.json"
@@ -82,23 +82,23 @@ with tempfile.TemporaryDirectory() as directory:
         assert "--capture" not in command and "--capture-vblank" not in command
         declarations = Path(command[command.index("--audio-segments") + 1])
         for row in declarations.read_text().splitlines():
-            start, finish, window, trace, wav = row.split()
-            Path(trace).write_text("# dw1-spu-trace-v1\n0 0 180 0001\n")
+            start, finish, window, trace, wav, stops = row.split()
+            Path(trace).write_text("# dw1-spu-trace-v1\n0 0 000 0001\n# end 441000 event:game_event\n")
             with wave.open(wav, "wb") as stream:
                 stream.setparams((2, 2, 44100, 0, "NONE", "not compressed"))
-                stream.writeframes(b"\x01\0" * (44100 * 5 * 2))
+                stream.writeframes(b"\x01\0" * (44100 * 10 * 2))
         return subprocess.CompletedProcess(command, 0, b"", b"")
-    with patch.object(runner, "ROOT", root), patch.dict(os.environ, {"DW1_AUDIO_DIR": str(output)}, clear=True), redirect_stdout(io.StringIO()):
+    with patch.object(runner, "ROOT", root), patch.object(runner, "checkpoint_symbols", return_value=[]), patch.dict(os.environ, {"DW1_AUDIO_DIR": str(output)}, clear=True), redirect_stdout(io.StringIO()):
         with patch.object(runner.subprocess, "run") as process:
             assert runner.run_audio(args, scene, build, checkpoints, root / "us.pack") == 77
             process.assert_not_called()
         stamp.parent.mkdir(parents=True)
         for run in (1, 2):
             for segment in (1, 2):
-                (reference / f"run-{run}-{segment}.spu").write_text("# dw1-spu-trace-v1\n0 0 180 0001\n")
+                (reference / f"run-{run}-{segment}.spu").write_text("# dw1-spu-trace-v1\n0 0 000 0001\n# end 441000 event:game_event\n")
                 with wave.open(str(reference / f"run-{run}-{segment}.wav"), "wb") as stream:
                     stream.setparams((2, 2, 44100, 0, "NONE", "not compressed"))
-                    stream.writeframes(b"\x01\0" * (44100 * 5 * 2))
+                    stream.writeframes(b"\x01\0" * (44100 * 10 * 2))
         hashes = {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in reference.iterdir()}
         stamp.write_text(json.dumps(dict(scene=dict(scene, resolved_checkpoints=checkpoints),
                                         output=str(reference), hashes=hashes)))
@@ -106,6 +106,62 @@ with tempfile.TemporaryDirectory() as directory:
             assert runner.run_audio(args, scene, build, checkpoints, root / "us.pack") == 0
             assert process.call_count == 2
             assert (build / "scenes/title_audio/audio.json").exists()
+        # Content remains the only fidelity gate; low SNR, -inf and rule B
+        # mismatch must still be serialized even when the content gate fails.
+        original_host = audio_host
+        for changed, expected_error in ((False, None), (True, "first voice-content divergence")):
+            def diagnostic_host(command, **kwargs):
+                result = original_host(command, **kwargs)
+                declarations = Path(command[command.index("--audio-segments")+1])
+                for row in declarations.read_text().splitlines():
+                    _, _, _, trace, wav, _ = row.split()
+                    Path(trace).write_text("# dw1-spu-trace-v1\n10 1000 188 0020\n"
+                        + f"10 1001 000 {2 if changed else 1:04x}\n# end 441000 event:game_event\n")
+                    with wave.open(wav, "wb") as stream:
+                        stream.setparams((2, 2, 44100, 0, "NONE", "not compressed"))
+                        stream.writeframes(b"\0\0" * (44100*10*2))
+                return result
+            with patch.object(runner.subprocess, "run", side_effect=diagnostic_host), patch.object(runner.audio, "alignment", return_value=0):
+                try:
+                    result = runner.run_audio(args, scene, build, checkpoints, root/"us.pack")
+                except ValueError as error:
+                    assert expected_error and expected_error in str(error), error
+                else:
+                    assert expected_error is None and result == 0
+                evidence = json.loads((build/"scenes/title_audio/audio.json").read_text())
+                assert evidence["segments"][0]["rule_b"]["rule_b"]["status"] == "different"
+                assert not evidence["segments"][0]["pcm"]["metrics"]["meets_40_db"]
+                assert evidence["segments"][0]["content"]["status"] == ("different" if changed else "match")
+        # Identical content cannot waive the minimum music interval.
+        def short_host(command, **kwargs):
+            result = original_host(command, **kwargs)
+            declarations = Path(command[command.index("--audio-segments")+1])
+            music_trace = Path(declarations.read_text().splitlines()[1].split()[3])
+            music_trace.write_text(music_trace.read_text().replace("441000", "440999"))
+            return result
+        with patch.object(runner.subprocess, "run", side_effect=short_host), patch.object(runner.audio, "alignment", return_value=0):
+            try:
+                runner.run_audio(args, scene, build, checkpoints, root/"us.pack")
+            except ValueError as error:
+                assert "segment 2: port music" in str(error) and ">= 10 s" in str(error), error
+            else:
+                raise AssertionError("short music accepted despite matching content")
+            evidence = json.loads((build/"scenes/title_audio/audio.json").read_text())
+            assert evidence["segments"][0]["content"]["status"] == "match"
+            assert evidence["segments"][1]["content"]["status"] == "different"
+        def truncated_host(command, **kwargs):
+            result = original_host(command, **kwargs)
+            declarations = Path(command[command.index("--audio-segments")+1])
+            wav = Path(declarations.read_text().splitlines()[0].split()[4])
+            wav.write_bytes(wav.read_bytes()[:-4])
+            return result
+        with patch.object(runner.subprocess, "run", side_effect=truncated_host):
+            try:
+                runner.run_audio(args, scene, build, checkpoints, root/"us.pack")
+            except ValueError as error:
+                assert "truncated WAV" in str(error), error
+            else:
+                raise AssertionError("malformed PCM accepted as a non-blocking metric")
         (reference / "run-1-1.spu").write_text("tampered")
         with patch.object(runner.subprocess, "run") as process:
             try:
@@ -309,6 +365,11 @@ with tempfile.TemporaryDirectory() as directory:
                 inputs=[dict(after="first", vblank=0, buttons=[3]),
                         dict(after="loop#2", vblank=0, buttons=[])])
     runner.validate_scene(base)
+    runner.validate_scene(base | dict(checkpoint_after={"loop#2": "first"}))
+    for mapping in ({"first": "loop#2"}, {"loop#2": "missing"}, {"first": "first"}):
+        try: runner.validate_scene(base | dict(checkpoint_after=mapping))
+        except ValueError: pass
+        else: raise AssertionError(mapping)
     for change in (dict(checkpoints=[]), dict(checkpoints=["first", "first"]),
                    dict(checkpoints=["first#0"]), dict(checkpoints=["first#-1"]),
                    dict(window=-1), dict(window=True),
@@ -324,6 +385,7 @@ with tempfile.TemporaryDirectory() as directory:
     symbols = root / "symbols"
     symbols.write_text("first = 0x80010000;\nloop = 0x80010004;\n")
     assert runner.checkpoint_symbols(base, symbols)[1]["occurrence"] == 2
+    assert runner.checkpoint_symbols(base | dict(checkpoint_after={"loop#2": "first"}), symbols)[1]["after"] == "first"
     for scene, native, message in ((base | dict(checkpoints=["missing"]), None, "reference"),
                                    (base, root / "dw1", "native")):
         with patch.object(runner.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "", "")):
