@@ -249,6 +249,8 @@ long SpuInitMalloc(long num, char *top)
 {
     clock_psyq_entry();
     if (num <= 0) return 0;
+    /* DW1 0x800C7738/0x800C7760 stores through top unconditionally for num > 0.
+     * NULL is not a supported table; only num <= 0 avoids the stores. */
     mem_list = (SpuBlock *)top;
     block_count = num;
     last_block = 0;
@@ -286,6 +288,8 @@ long SpuMalloc(long size)
         mem_list[last_block] = (SpuBlock){(b->addr + bytes) | BLOCK_FREE, b->size - bytes};
         last_block++;
     }
+    /* DW1 0x800C7AAC..0x800C7B0C skips splitting when the table is full,
+     * but still shrinks the reused block: its unused suffix is lost. */
     b->addr &= BLOCK_ADDR;
     b->size = bytes;
     collect_blocks();

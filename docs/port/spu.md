@@ -72,8 +72,29 @@ recibiendo las mismas muestras. El WAV usa PCM16 little-endian, estéreo,
 44,1 kHz. Las pruebas cubren comienzos entre muestras, cierre, reset del reloj,
 errores de E/S y la coexistencia con el callback.
 
-Las trazas registran `(ciclo − origen) / 768`; la comparación sigue la regla B
-de AD-15. El runtime admite dos tramos disjuntos por checkpoint y exige archivos
-fuera del checkout. Véanse [libsnd.md](libsnd.md) y [reference.md](reference.md)
-para el formato, los comandos y el fallo de determinismo PCM observado en la
-referencia. La paridad de audio del port sigue pendiente.
+Las trazas registran `(ciclo − origen) / 768`. El gate vigente de 3.5
+(decisiones 3/4, 2026-10-19) compara las escrituras de voz ordenadas:
+tramo 1 completo entre `runLandingScreen` y `unloadNewGameScene`; tramo 2
+desde la primera nota nueva (dirección de muestra + KON, conservando el bundle
+entero) tras el primer `SsSeqPlay` posterior a `gameLoop`, hasta el primer
+evento de juego de `stop_on`. Cada lado debe ofrecer ≥9 s; se compara el
+intervalo común. La regla B por VBlank, desfases y SNR se reportan sin bloquear
+hasta 3.10. Se exige la misma causa de cierre en ambos lados; el tramo 1
+requiere checkpoint, y cada WAV debe coincidir con el intervalo de su traza
+con tolerancia de un frame. Véanse [libsnd.md](libsnd.md) y
+[reference.md](reference.md) para los comandos y la evidencia actual.
+
+`spu_capture_note_anchor()` conserva PCM provisional hasta confirmar KON;
+recorta los bytes anteriores al origen sin cambiar el callback de salida.
+La regresión L1 compara PCM no silencioso exacto con una captura sin recorte,
+a ambos lados de la confirmación, cruzando bloques de copia de 4096 bytes.
+
+### Semántica del asignador comprobada contra DW1
+
+Se conserva la reutilización parcial de un bloque libre cuando la tabla está
+llena: `0x800C7AAC`–`0x800C7B0C` evita dividirlo y almacena el tamaño pedido,
+perdiendo su sufijo. Una prueba L1 fija ese resultado. `SpuInitMalloc` tampoco
+comprueba `top == NULL` cuando `num > 0`: las escrituras de `0x800C7738` y
+`0x800C7760` son incondicionales. El llamador debe proporcionar una tabla
+válida; solo `num <= 0` evita acceder a ella. No se añade un retorno de error
+que el original no tiene.

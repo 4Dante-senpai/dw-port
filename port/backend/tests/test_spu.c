@@ -299,6 +299,57 @@ static void capture(void)
     spu_write16(4,0);CHECK(spu_capture_end()==-1);fclose(trace);
 #endif
 }
+/* A varying CD signal exposes byte shifts/duplication hidden by silent PCM. */
+static void capture_signal(int16_t *left, int16_t *right, void *arg)
+{
+    unsigned *index = arg;
+    *left = (int16_t)((*index * 73u) % 24001u - 12000);
+    *right = (int16_t)((*index * 137u) % 16001u - 8000);
+    ++*index;
+}
+static void capture_note_pcm(void)
+{
+    FILE *wav[2]; unsigned char hashes[2][32];
+    for (unsigned anchored = 0; anchored < 2; anchored++) {
+        reset();
+        unsigned index = 0;
+        spu_set_cd_input(capture_signal, &index);
+        spu_write16(0x1aa, 0xc001);
+        spu_write16(0x1b0, 0x4000); spu_write16(0x1b2, 0x4000);
+        spu_write16(0x180, 0x3fff); spu_write16(0x182, 0x3fff);
+        clock_advance(17 * 768 + 700);
+        FILE *trace = tmpfile(); wav[anchored] = tmpfile(); CHECK(trace && wav[anchored]);
+        CHECK(spu_capture_begin(trace, wav[anchored]) == 0);
+        if (anchored) spu_capture_note_anchor();
+        spu_set_output(collect, NULL);
+        samples(1025); /* 4100 skipped bytes cross the 4096-byte copy block. */
+        uint64_t origin = clock_now();
+        spu_write16(0, 0x1234); /* The bundle starts before its confirming KON. */
+        samples(3077); /* Multiple copy blocks must survive confirmation. */
+        spu_write16(6, 0x200);
+        spu_write16(0x188, 1); spu_write16(0x18a, 0);
+        uint64_t cycle; uint32_t vblank;
+        CHECK(spu_capture_origin(&cycle, &vblank) == 0);
+        if (anchored) CHECK(cycle == origin);
+        samples(2051); /* PCM produced after rebasing must also stay exact. */
+        CHECK(spu_capture_end() == 0);
+        CHECK(output_frames == 6153 && tail_nonzero > 10000);
+        Sha256_Final(&sha, hashes[anchored]);
+        fclose(trace);
+        spu_set_cd_input(NULL, NULL);
+    }
+    /* Trimming evidence must not alter the original output callback's PCM. */
+    CHECK(!memcmp(hashes[0], hashes[1], 32));
+    CHECK(fseek(wav[0], 44 + 1025 * 4, SEEK_SET) == 0);
+    rewind(wav[1]); unsigned char header[44];
+    CHECK(fread(header, 1, 44, wav[1]) == 44 && le32(header + 40) == (6153 - 1025) * 4);
+    for (unsigned i = 0; i < (6153 - 1025) * 4; i++) {
+        int expected = fgetc(wav[0]); CHECK(expected != EOF && fgetc(wav[1]) == expected);
+    }
+    CHECK(fgetc(wav[0]) == EOF && fgetc(wav[1]) == EOF);
+    fclose(wav[0]); fclose(wav[1]);
+    spu_set_cd_input(NULL, NULL);
+}
 static void noise_and_voice24(void)
 {
     reset();spu_write16(0x1aa,0xfc00);spu_write16(0x194,1);
@@ -325,6 +376,6 @@ static void noise_and_voice24(void)
 }
 int main(void)
 {
-    transfers();envelopes();adpcm();pitched_vectors();cd_and_reverb();room();voice_reverb();reset_fast_forward();noise_and_voice24();timing();capture();
+    transfers();envelopes();adpcm();pitched_vectors();cd_and_reverb();room();voice_reverb();reset_fast_forward();noise_and_voice24();timing();capture();capture_note_pcm();
     puts("SPU L1: OK");return 0;
 }

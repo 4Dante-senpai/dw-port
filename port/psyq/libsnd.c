@@ -305,7 +305,9 @@ static short vab_open_sticky(unsigned char *data, short id, uint32_t addr)
     uint32_t total = 0;
     unsigned shift = (int32_t)vh32(data + 4) < 5 ? 2 : 3;
     for (unsigned i = 0; i <= samples; i++) total += (uint32_t)vh16(sizes + i * 2) << shift;
-    if ((uint32_t)(addr + total) > 0x80000) goto fail;
+    /* DW1 0x800D2E24..0x800D2E30 permits an exact RAM end. Reject invalid
+     * host input without allowing its 32-bit addr + total to wrap. */
+    if (addr > 0x80000u || total > 0x80000u - addr) goto fail;
     b->start = addr;
     total = 0;
     for (unsigned i = 0; i <= samples; i++) {

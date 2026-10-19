@@ -49,8 +49,8 @@ class AudioTests(unittest.TestCase):
                 audio.compare_trace(self.trace("bad", rows), ref)
 
     def test_voice_content_gate(self):
-        ref = self.trace("ref", "0 0 000 1234\n0 1 188 0001\n1 735 004 5678\n")
-        port = self.trace("port", "10 8000 188 0000\n10 8100 000 1234\n20 15000 004 5678\n")
+        ref = self.trace("ref", "0 0 000 1234\n0 1 188 0001\n1 735 004 5678\n# end 20000 checkpoint\n")
+        port = self.trace("port", "10 8000 188 0000\n10 8100 000 1234\n20 15000 004 5678\n# end 20000 checkpoint\n")
         self.assertEqual(audio.compare_voice_content(port, ref)["writes"], 2)
         metrics = audio.trace_diagnostics(port, ref)
         self.assertEqual(metrics["rule_b"]["status"], "different")
@@ -60,9 +60,27 @@ class AudioTests(unittest.TestCase):
                      "0 0 000 1234\n0 1 004 5678\n0 2 004 5678\n",
                      "0 0 000 9999\n0 1 004 5678\n"):
             with self.assertRaisesRegex(ValueError, "first voice-content divergence at write"):
-                audio.compare_voice_content(self.trace("bad", rows), ref)
+                audio.compare_voice_content(self.trace("bad", rows+"# end 20000 checkpoint\n"), ref)
         with self.assertRaisesRegex(ValueError, "empty voice-content"):
-            audio.compare_voice_content(self.trace("a", "0 0 188 0\n"), self.trace("b", ""))
+            audio.compare_voice_content(self.trace("a", "0 0 188 0\n# end 0 checkpoint\n"), self.trace("b", "# end 0 checkpoint\n"))
+
+    def test_segment_end_reasons(self):
+        rows = "0 0 000 1234\n"
+        checkpoint = self.trace("checkpoint", rows + "# end 500000 checkpoint\n")
+        for suffix in ("", "# end 500000 vblanks\n", "# end 500000 event:stop\n"):
+            with self.assertRaisesRegex(ValueError, "boundary"):
+                audio.compare_voice_content(self.trace("bad", rows+suffix), checkpoint)
+        truncated = self.trace("truncated", rows)
+        with self.assertRaisesRegex(ValueError, "truncated capture"):
+            audio.compare_voice_content(truncated, truncated)
+        for reason in ("vblanks", "event:stop"):
+            wrong = self.trace("wrong", rows+f"# end 500000 {reason}\n")
+            with self.assertRaisesRegex(ValueError, "checkpoint boundary"):
+                audio.compare_voice_content(wrong, wrong)
+        left = self.trace("left", rows+"# end 500000 event:stop\n")
+        right = self.trace("right", rows+"# end 500000 event:other\n")
+        with self.assertRaisesRegex(ValueError, "end reasons differ"):
+            audio.compare_voice_content(left, right, True, ["stop", "other"])
 
     def test_music_bounds_and_minimum(self):
         rows = "0 0 000 1234\n"
