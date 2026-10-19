@@ -253,8 +253,9 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
   - **Video.** Se compara el área de display de la VRAM convertida a RGB555, sin mejoras y a 1×, **exacta**. Las excepciones se listan por Escena con su motivo.
   - **MDEC (FR-6).** Por frame decodificado, diferencia absoluta máxima por canal ≤ 4/255 y diferencia media ≤ 0,5/255 [ASSUMPTION: calibrar en M3].
   - **Audio (FR-7).**
-    - La traza de escrituras a registros SPU, con timestamp en muestras, es **idéntica** a la del Emulador de referencia.
-    - El PCM de 44,1 kHz, alineado por correlación cruzada, da SNR ≥ 40 dB en ventanas de 5 s [ASSUMPTION: calibrar en M3].
+    - Dentro de cada VBlank contado desde el checkpoint que abre un tramo, la secuencia de valores escrita en cada registro SPU es **idéntica** a la de referencia (regla B). No se exige orden entre registros distintos ni coincidencia de muestra; el desfase absoluto se reporta con máximo y media, sin umbral hasta 3.10. Timestamp: `(ciclo − ciclo del inicio del tramo) / 768`.
+    - El PCM de 44,1 kHz, alineado por correlación cruzada, da SNR ≥ 40 dB en ventanas de 5 s por tramo [ASSUMPTION: calibrar en M3].
+    - Enmienda del dueño, 2026-10-18/19 (historia 3.5, decisiones 1 y 2): el port aún no modela costos de CPU; solo VBlank y RCnt2 caen en el ciclo exacto. `title_audio` excluye el video entre `unloadNewGameScene` y `gameLoop`, con orígenes independientes.
   - **Estado (FR-5).** En puntos de control, las variables de `tools/port/scenes/state_vars.txt` (nombradas por símbolo, tipadas) son idénticas en ambos lados. Los punteros se comparan traducidos: arena → `0x80000000 | offset`; global nativo → símbolo + offset.
   - **Sin wobble (FR-13).** En builds de debug el GTE registra la posición de pantalla subpíxel de cada `RTPS`/`RTPT` por id de vértice. El test mide el desplazamiento máximo entre dos frames consecutivos con la cámara quieta, en píxeles de salida.
 

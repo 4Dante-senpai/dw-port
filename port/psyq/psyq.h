@@ -243,6 +243,12 @@ typedef struct {
     SpuVolume depth;
     long delay, feedback;
 } SpuReverbAttr;
+typedef struct { SpuVolume volume; long reverb, mix; } SpuExtAttr;
+typedef struct {
+    unsigned long mask;
+    SpuVolume mvol, mvolmode, mvolx;
+    SpuExtAttr cd, ext;
+} SpuCommonAttr;
 #endif
 #ifndef _MEMCARD_H_
 #define McFuncExist 1
@@ -280,6 +286,17 @@ long SpuSetReverb(long on);
 long SpuSetReverbDepth(SpuReverbAttr *attr);
 long SpuSetReverbModeParam(SpuReverbAttr *attr);
 unsigned long SpuSetReverbVoice(long on, unsigned long voice);
+long SpuInitMalloc(long num, char *top);
+long SpuMalloc(long size);
+void SpuFree(unsigned long addr);
+unsigned long SpuWrite(unsigned char *addr, unsigned long size);
+unsigned long SpuSetTransferStartAddr(unsigned long addr);
+long SpuSetTransferMode(long mode);
+long SpuIsTransferCompleted(long flag);
+void SpuSetCommonAttr(SpuCommonAttr *attr);
+/* Internal mw_lib41 transfer reservation shared with libsnd. */
+void psyq_spu_set_in_transfer(int busy);
+int psyq_spu_get_in_transfer(void);
 void MemCardInit(long flag);
 void MemCardStart(void);
 long MemCardExist(long chan);

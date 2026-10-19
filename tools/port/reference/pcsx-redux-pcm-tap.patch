@@ -1,0 +1,72 @@
+diff --git a/src/spu/interface.h b/src/spu/interface.h
+index 925fd13..09a3454 100644
+--- a/src/spu/interface.h
++++ b/src/spu/interface.h
+@@ -306,6 +306,7 @@ class impl final : public SPUInterface {
+     std::atomic<uint64_t> m_eventsApplied = 0;  // written by the mixer thread only
+     std::atomic<uint64_t> m_horizonCycle = 0;   // written by the CPU thread only
+     std::atomic<uint64_t> m_mixedSamples = 0;   // written by the mixer thread only
++    FILE *m_dw1PcmTap = nullptr;               // optional pre-device PCM evidence
+     uint64_t m_mixPos = 0;                      // mixer thread: samples [0, m_mixPos) are mixed
+     uint64_t m_lastHorizon = 0;                 // CPU thread
+     std::atomic<bool> m_mixerRunning = false;
+diff --git a/src/spu/spu.cc b/src/spu/spu.cc
+index 052e3b4..12883a8 100644
+--- a/src/spu/spu.cc
++++ b/src/spu/spu.cc
+@@ -578,6 +578,21 @@ void PCSX::SPU::impl::MainThread() {
+ bool PCSX::SPU::impl::flushOutput() {
+     const size_t frames = (reinterpret_cast<uint8_t *>(pS) - spuBuffer) / sizeof(SDLAudio::Frame);
+     if (frames == 0) return true;
++    // DW1 reference tap: preserve the mixer clock and PCM before device queue drops.
++    // Each record is <u64 first sample, u32 frame count, stereo s16le frames>.
++    // Indexed chunks let the consumer reject clock rebases and missing samples.
++    if (m_dw1PcmTap) {
++        const uint64_t first = m_mixPos - frames;
++        uint8_t header[12];
++        for (unsigned i = 0; i < 8; i++) header[i] = first >> (8 * i);
++        for (unsigned i = 0; i < 4; i++) header[8 + i] = frames >> (8 * i);
++        if (fwrite(header, 1, sizeof(header), m_dw1PcmTap) != sizeof(header) ||
++            fwrite(spuBuffer, sizeof(SDLAudio::Frame), frames, m_dw1PcmTap) != frames ||
++            fflush(m_dw1PcmTap) != 0) {
++            perror("DW1 PCM tap write");
++            std::abort();
++        }
++    }
+     // When the host emulates a stretch slower than realtime, the device plays silence until the
+     // CPU catches up, and the CPU then runs the same lead ahead of the device as before: what was
+     // mixed during the hitch stays queued, and the sound would stay that much later than the
+@@ -804,6 +819,19 @@ void PCSX::SPU::impl::RemoveThread() {
+ // Initialize most of the SPU buffers.
+ void PCSX::SPU::impl::SetupStreams() {
+     int i;
++    if (const char *path = std::getenv("DW1_REDUX_PCM_TAP")) {
++        // The pinned toolchain is little-endian; fail instead of writing a false format.
++        const uint16_t endian = 1;
++        static_assert(sizeof(SDLAudio::Frame) == 4);
++        if (*reinterpret_cast<const uint8_t *>(&endian) != 1) std::abort();
++        m_dw1PcmTap = fopen(path, "wb");
++        if (!m_dw1PcmTap || fwrite("DW1PCM1\n", 1, 8, m_dw1PcmTap) != 8 ||
++            fflush(m_dw1PcmTap) != 0) {
++            perror("DW1 PCM tap open");
++            std::abort();
++        }
++        fprintf(stderr, "DW1 PCM tap: PCM16LE stereo 44100 Hz, indexed mixer samples\n");
++    }
+ 
+     // Allocate the mixing buffer.
+     spuBuffer = (uint8_t *)malloc(32768);
+@@ -831,6 +859,13 @@ void PCSX::SPU::impl::SetupStreams() {
+ 
+ // Free most of the SPU buffers.
+ void PCSX::SPU::impl::RemoveStreams(void) {
++    if (m_dw1PcmTap) {
++        if (fclose(m_dw1PcmTap) != 0) {
++            perror("DW1 PCM tap close");
++            std::abort();
++        }
++        m_dw1PcmTap = nullptr;
++    }
+     // Free the mixing buffer.
+     free(spuBuffer);
+     spuBuffer = NULL;

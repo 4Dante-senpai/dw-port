@@ -1,6 +1,6 @@
 # Stubs M2 con comportamiento definido
 
-Estas 46 entradas sustituyen los stubs generados. Cada entrada avanza el reloj una vez.
+Estas 40 entradas sustituyen los stubs generados. Cada entrada avanza el reloj una vez.
 No implementan hardware ni paridad audiovisual; permiten continuar el arranque.
 
 | Función | Comportamiento M2 | Historia de reemplazo |
@@ -11,18 +11,12 @@ No implementan hardware ni paridad audiovisual; permiten continuar el arranque.
 | `SsStart` | Silencio; sin estado de secuenciador. | 3.5 |
 | `SsSeqClose` | Silencio; no libera recursos. | 3.5 |
 | `SsSeqStop` | Silencio; no libera recursos. | 3.5 |
-| `SsVabClose` | Silencio; no libera recursos. | 3.5 |
 | `SsUtAllKeyOff` | Silencio; no libera recursos. | 3.5 |
 | `SsSeqPlay` | Silencio; acepta configuración sin efectos. | 3.5 |
 | `SsSeqSetVol` | Silencio; acepta configuración sin efectos. | 3.5 |
-| `SsSetMVol` | Silencio; acepta configuración sin efectos. | 3.5 |
 | `SsSetTableSize` | Silencio; acepta configuración sin efectos. | 3.5 |
 | `SsSetTickMode` | Silencio; acepta configuración sin efectos. | 3.5 |
 | `SsSeqOpen` | Secuencia silenciosa con identificador 0. | 3.5 |
-| `SsVabOpenHeadSticky` | Devuelve el vabid recibido; sin transferencia. | 3.5 |
-| `SsVabTransBody` | Devuelve el vabid recibido; sin transferencia. | 3.5 |
-| `SsVabTransCompleted` | Transferencia completada inmediatamente (1). | 3.5 |
-| `SsUtGetVBaddrInSB` | Dirección 0; no hay memoria SPU. | 3.5 |
 | `SsUtKeyOffV` | Éxito (0) sin sonido. | 3.5 |
 | `SsUtAutoVol` | Éxito (0) sin sonido. | 3.5 |
 | `SsUtKeyOnV` | Éxito (0) sin sonido. | 3.5 |
@@ -57,10 +51,20 @@ No implementan hardware ni paridad audiovisual; permiten continuar el arranque.
 `libspu`: las seis entradas de la historia 3.4 usan el SPU del Backend;
 no son stubs M2. Ver `docs/port/spu.md` y las pruebas `spu`/`libspu`.
 
-Audio de `libsnd`: retornos verificados en `src/main/sound.c` (loadVAB, seqPlay, selección
-de voces) y `sound_async.c`: los VAB conservan el identificador, las transferencias
-terminan y las voces están apagadas. `SsUtGetVBaddrInSB` devuelve 0; el consumidor
-actual no usa esa dirección.
+Audio de `libsnd` (pase parcial de 3.5, 2026-10-19): se sustituyeron
+`SsVabClose`, `SsVabOpenHeadSticky`, `SsVabTransBody`, `SsVabTransCompleted`,
+`SsUtGetVBaddrInSB` y `SsSetMVol` por traducciones del asm USA. Las otras 15
+filas de 3.5 siguen siendo stubs; el secuenciador y las voces todavía no suenan.
+Las nuevas rutinas `SpuInitMalloc`, `SpuMalloc`, `SpuFree`, `SpuWrite`,
+`SpuSetTransferStartAddr`, `SpuSetTransferMode`, `SpuIsTransferCompleted` y
+`SpuSetCommonAttr` tienen pruebas sintéticas en `test_libsnd.c`.
+
+El inventario M2 de esta página es manual, basado en los marcadores `stub-m2:`;
+`gen_stubs.py` genera únicamente símbolos ausentes del enlace. El build vuelve
+a ejecutarlo: las 21 entradas de libsnd ya estaban definidas como símbolos,
+así que su contador de implementadas no mide la retirada de estos stubs M2.
+Atribución, diferencias defensivas respecto del asm e hipótesis en
+[libsnd.md](libsnd.md). No se afirma paridad de audio ni se cierra 3.5.
 
 Tarjeta: se conserva únicamente la convención de comando/resultado de
 `reference/dw2-pc/psyq/libmcrd.c` (CC0, atribución en el código). El último comando

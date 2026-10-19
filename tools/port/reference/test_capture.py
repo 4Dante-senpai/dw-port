@@ -14,10 +14,100 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
+from types import SimpleNamespace
+import wave
 
 spec = importlib.util.spec_from_file_location("capture", Path(__file__).with_name("capture.py"))
 capture = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(capture)
+audio_spec = importlib.util.spec_from_file_location("reference_audio", Path(__file__).with_name("audio.py"))
+reference_audio = importlib.util.module_from_spec(audio_spec)
+audio_spec.loader.exec_module(reference_audio)
+
+
+class AudioCaptureTests(unittest.TestCase):
+    def test_mixer_tap_conversion_and_discontinuities(self):
+        with tempfile.TemporaryDirectory() as directory:
+            raw, wav = Path(directory) / "mixer.pcm", Path(directory) / "segment.wav"
+            def chunk(first, values):
+                return struct.pack("<QI", first, len(values)//2) + struct.pack("<"+"h"*len(values), *values)
+            first = chunk(100, [-32768, 32767, -1, 0])
+            second = chunk(102, [1, 12345, -12345, 0])
+            raw.write_bytes(b"DW1PCM1\n" + first + second)
+            reference_audio.tap_to_wav(raw, wav, 101, 103)
+            with wave.open(str(wav)) as stream:
+                self.assertEqual(stream.getparams()[:3], (2, 2, 44100))
+                self.assertEqual(struct.unpack("<4h", stream.readframes(2)), (-1, 0, 1, 12345))
+            for bounds in ((-1, 1), (1, 1), (0.5, 1)):
+                with self.assertRaisesRegex(ValueError, "bounds"):
+                    reference_audio.tap_to_wav(raw, wav, *bounds)
+            for data, message in (
+                (b"unpatched", "header"),
+                (b"DW1PCM1\n"+first+second[:-1], "truncated"),
+                (b"DW1PCM1\n"+first+b"x", "header"),
+                (b"DW1PCM1\n"+first, "interval"),
+                (b"DW1PCM1\n"+first+chunk(103, [1,2]), "discontinuous"),
+                (b"DW1PCM1\n"+first+chunk(101, [1,2]), "discontinuous"),
+                (b"DW1PCM1\n"+struct.pack("<QI", 0, 0), "size"),
+            ):
+                raw.write_bytes(data)
+                with self.assertRaisesRegex(ValueError, message):
+                    reference_audio.tap_to_wav(raw, wav, 100, 104)
+
+    def test_determinism_reuse_and_invalidation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            root, output = base / "repo", base / "audio"
+            for name in ("tools/port/reference/capture.py", "tools/port/reference/capture.lua",
+                         "tools/port/reference/audio.py", "tools/port/scenes/audio.py",
+                         "tools/port/reference/pcsx-redux-pcm-tap.patch", "bios", "emulator"):
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(name)
+            scene = dict(checkpoints=["start", "finish", "music"], inputs=[],
+                         audio=[dict(start="start", finish="finish"), dict(start="music", vblanks=1200)])
+            args = SimpleNamespace(id="title_audio", out=output, reuse=False, timeout=1, max_vblanks=40000)
+            calls = []
+            changed = None
+            def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vblanks):
+                calls.append(index)
+                (output / f"run-{index}.log").write_text("unpatched emulator" if changed == "unpatched" else
+                    "DW1 PCM tap: PCM16LE stereo 44100 Hz, indexed mixer samples")
+                level = 1234 if changed == "wav" and index == 2 else 5678
+                (output / f"run-{index}.pcm").write_bytes(
+                    b"DW1PCM1\n" + struct.pack("<QI10h", 0, 5, *([level] * 10)))
+                for segment in (1, 2):
+                    (output / f"run-{index}-{segment}.spu").write_text(
+                        "# dw1-spu-trace-v1\n0 0 180 " + ("0002" if changed == "spu" and index == 2 else "0001") + "\n")
+                    (output / f"run-{index}-{segment}.json").write_text(json.dumps(
+                        dict(start_cycle=0, end_cycle=3072)))
+            adapter = SimpleNamespace(ROOT=root, run_once=run_once)
+            def run():
+                return reference_audio.capture_audio(args, scene, {}, root / "emulator", base / "disc",
+                                                     root / "bios", adapter)
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(run(), 0)
+                self.assertCountEqual(calls, [1, 2])
+                args.reuse = True
+                calls.clear()
+                self.assertEqual(run(), 0)
+                self.assertEqual(calls, [])
+                for dependency in (output / "run-2-1.wav", root / "bios", root / "emulator",
+                                   root / "tools/port/reference/capture.lua",
+                                   root / "tools/port/reference/pcsx-redux-pcm-tap.patch"):
+                    dependency.write_bytes(b"modified")
+                    calls.clear()
+                    self.assertEqual(run(), 0)
+                    self.assertCountEqual(calls, [1, 2])
+                for changed in ("spu", "wav"):
+                    args.reuse = False
+                    with self.assertRaisesRegex(ValueError, "non-deterministic reference segment 1 " + changed):
+                        run()
+                    self.assertFalse((root / "build/reference/title_audio/audio.json").exists())
+                changed = "unpatched"
+                with self.assertRaisesRegex(ValueError, "PCM tap unavailable"):
+                    run()
+                self.assertFalse((root / "build/reference/title_audio/audio.json").exists())
 
 
 class ConversionTests(unittest.TestCase):
@@ -73,6 +163,69 @@ class PortDisplayTests(unittest.TestCase):
 
 
 class AdapterTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("pcsx-redux") and shutil.which("xvfb-run"), "PCSX-Redux Lua runtime unavailable")
+    def test_lua_audio_segments_and_store_decode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            work = Path(directory)
+            script = work / "audio.lua"
+            script.write_text("local work = " + json.dumps(str(work)) + "\n" + r'''
+local quit=PCSX.quit
+local bit=require('bit')
+local callbacks, onVsync, held={},nil,{}
+local quits=0
+local ram, cycles={},9000000000 -- exceeds uint32; do not truncate the clock
+local r={rawPC=0x80010000,GPR={r={[5]=0x1f801c00,[6]=0x12345678},n={ra=700}}}
+for i=0,31 do r.GPR.r[i]=r.GPR.r[i] or 0 end
+local pad={clearOverride=function(b) held[b]=nil end,
+ setOverride=function(b) held[b]=true end,getButton=function(b) return held[b]==true end}
+PCSX={SIO0={slots={{pads={pad}}}},
+ getRegisters=function() return r end,getMemPtr=function() return ram end,
+ getCPUCycles=function() return cycles end,
+ addBreakpoint=function(address,kind,width,name,callback)
+   local b={callback=callback,active=true};function b:disable() self.active=false end
+   callbacks[address]=b;return b
+ end,
+ Events={createEventListener=function(name,callback) onVsync=callback;return {} end},
+ GPU={takeScreenShot=function() error('audio must not capture an image') end},
+ quit=function(code) assert(code==0);quits=quits+1 end}
+DW1_CAPTURE={mark=100,vsync=200,inputs={},inputs_from='mark',progress=work..'/progress',
+ max_vblanks=30,audio_drain_vblanks=2,checkpoints={{label='start',address=100,occurrence=1,window=0},
+ {label='stop',address=300,occurrence=1,window=0},{label='music',address=400,occurrence=1,window=0}},
+ audio={{start='start',finish='stop',trace=work..'/1.spu',meta=work..'/1.json'},
+ {start='music',vblanks=2,trace=work..'/2.spu',meta=work..'/2.json'}}}
+''' + "\ndofile(" + json.dumps(str(capture.ROOT / "tools/port/reference/capture.lua")) + ")\n" + r'''
+local function enter(address) callbacks[address].callback() end
+local function instruction(word)
+ for i=0,3 do ram[0x10000+i]=bit.band(bit.rshift(word,i*8),255) end
+ for i=4,7 do ram[0x10000+i]=0 end
+end
+enter(200);enter(700);enter(100)
+instruction(0xa4a60000) -- sh a2,0(a1): first register value is 0x5678
+cycles=cycles+767;callbacks[0x1f801c00].callback(0x1f801c00,2)
+onVsync();cycles=cycles+1;r.rawPC=0x80010004 -- core exposes next PC
+instruction(0xaca60000) -- sw: two independently ordered halfword writes
+callbacks[0x1f801c00].callback(0x1f801c00,4)
+enter(300)
+cycles=cycles+100;enter(400);cycles=cycles+768
+r.rawPC=0x80010000;instruction(0xa4a60000)
+callbacks[0x1f801c00].callback(0x1f801c00,2)
+onVsync();onVsync()
+assert(quits==0, 'must drain after closing the final interval')
+callbacks[0x1f801c00].callback(0x1f801c00,2) -- closed trace must ignore drain writes
+onVsync();assert(quits==0)
+onVsync();assert(quits==1, 'must quit after exactly two drain VBlanks')
+quit(0)
+''')
+            process = subprocess.run(["xvfb-run", "-a", "pcsx-redux", "-no-ui", "-portable", str(work),
+                                      "-noupdate", "-no-webserver", "-no-gdb", "-dofile", str(script)],
+                                     cwd=work, capture_output=True, timeout=30)
+            self.assertEqual(process.returncode, 0, (process.stdout, process.stderr))
+            self.assertEqual((work / "1.spu").read_text(),
+                             "# dw1-spu-trace-v1\n0 0 000 5678\n1 1 000 5678\n1 1 002 1234\n")
+            self.assertEqual((work / "2.spu").read_text(), "# dw1-spu-trace-v1\n0 1 000 5678\n")
+            self.assertEqual(json.loads((work / "1.json").read_text())["start_cycle"], 9000000000)
+            self.assertEqual(json.loads((work / "2.json").read_text())["vblanks"], 2)
+
     @unittest.skipUnless(shutil.which("pcsx-redux") and shutil.which("xvfb-run"), "PCSX-Redux Lua runtime unavailable")
     def test_real_lua_checkpoint_callbacks_without_disc(self):
         with tempfile.TemporaryDirectory() as directory:

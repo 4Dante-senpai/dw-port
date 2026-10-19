@@ -1,4 +1,4 @@
-/* L1: silent audio, absent cards, and the real USA movie TU over a synthetic Pack. */
+/* L1: audio API regression, absent cards, and the real USA movie TU over a synthetic Pack. */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,14 +32,14 @@ static void audio(void)
     clock_reset();
     psyq_libspu_reset();
     ENTRY(SsInit()); ENTRY(SsStart());
-    ENTRY(SsSetTableSize(NULL, 1, 1)); ENTRY(SsSetTickMode(240)); ENTRY(SsSetMVol(127, 127));
+    ENTRY(SsSetTableSize(NULL, 1, 1)); ENTRY(SsSetTickMode(240)); SsSetMVol(127, 127);
     for (short id = 0; id < 4; id++) {
         ENTRY(SsVabClose(id));
-        ENTRY(CHECK(SsVabOpenHeadSticky(NULL, id, 0x1000) == id));
-        ENTRY(CHECK(SsVabTransBody(NULL, id) == id));
-        ENTRY(CHECK(SsVabTransCompleted(0) == 1));
-        ENTRY(CHECK(SsVabTransCompleted(1) == 1));
-        ENTRY(CHECK(SsUtGetVBaddrInSB(id) == 0));
+        ENTRY(CHECK(SsVabOpenHeadSticky(NULL, id, 0x1000) == -1));
+        ENTRY(CHECK(SsVabTransBody(NULL, id) == -1));
+        CHECK(SsVabTransCompleted(0) == 1);
+        CHECK(SsVabTransCompleted(1) == 1);
+        ENTRY(CHECK(SsUtGetVBaddrInSB(id) == 0xfffffffful));
     }
     ENTRY(CHECK(SsSeqOpen(NULL, 2) == 0));
     ENTRY(SsSeqSetVol(0, 80, 80)); ENTRY(SsSeqPlay(0, 1, 0));

@@ -156,11 +156,13 @@ enable_testing()
 # SPU L1 runs the identical C implementation on native, sanitizers and Node/WASM.
 add_test(NAME spu_vectors COMMAND python3 -I -B
   ${CMAKE_SOURCE_DIR}/tools/port/audio/spu_vectors.py --check)
-foreach(suite spu libspu)
+add_test(NAME scene_audio_unit COMMAND python3 -I -B
+  ${CMAKE_SOURCE_DIR}/tools/port/scenes/test_audio.py)
+foreach(suite spu libspu libsnd)
   if(suite STREQUAL "spu")
     set(test_source port/backend/tests/test_spu.c)
   else()
-    set(test_source port/psyq/tests/test_libspu.c)
+    set(test_source port/psyq/tests/test_${suite}.c)
   endif()
   add_executable(test_${suite} ${test_source})
   target_compile_options(test_${suite} PRIVATE -Wall -Wextra -Werror)
@@ -305,6 +307,7 @@ add_library(dw1_runtime STATIC port/psyq/crt.c port/psyq/scene.c port/psyq/libgs
   ${DW1_RTS_INFO_H})
 target_include_directories(dw1_runtime PRIVATE ${CMAKE_BINARY_DIR}/generated)
 target_compile_options(dw1_runtime PRIVATE -Wall -Wextra -Werror)
+target_compile_definitions(dw1_runtime PRIVATE DW1_SOURCE_ROOT="${CMAKE_SOURCE_DIR}")
 target_link_libraries(dw1_runtime PUBLIC dw1_psyq ${CMAKE_DL_LIBS})
 
 # A stub for every PsyQ function the game calls that the port does not implement yet.
@@ -422,6 +425,14 @@ if(NOT EMSCRIPTEN)
     $<TARGET_FILE:dw1> $<TARGET_FILE:test_scene_capture> ${CMAKE_BINARY_DIR} $<TARGET_FILE:test_scene_state>)
   set_tests_properties(scene_state_unit PROPERTIES FIXTURES_REQUIRED synthetic_pack TIMEOUT 120)
 
+  add_executable(test_scene_audio port/psyq/tests/test_scene_audio.c)
+  target_link_libraries(test_scene_audio dw1_runtime)
+  target_link_options(test_scene_audio PRIVATE -rdynamic)
+  target_compile_options(test_scene_audio PRIVATE -Wall -Wextra -Werror)
+  add_test(NAME scene_audio_runtime COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/scenes/test_host_audio.py $<TARGET_FILE:test_scene_audio>)
+  set_tests_properties(scene_audio_runtime PROPERTIES TIMEOUT 60)
+
   # Class B: need the user's disc in DW1_DISC_DIR (skipped without it). pack_disc leaves the
   # USA Pack at us.pack in the build directory for dw1_overlay.
   add_test(NAME pack_disc COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_pack_disc.sh
@@ -445,6 +456,15 @@ if(NOT EMSCRIPTEN)
     ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py newgame --state --reuse --max-vblanks 40000 --timeout 1800)
   set_tests_properties(reference_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
     FIXTURES_SETUP newgame_reference RESOURCE_LOCK newgame_capture)
+  add_test(NAME reference_title_audio COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py title_audio --audio --reuse
+    --max-vblanks 40000 --timeout 1800)
+  set_tests_properties(reference_title_audio PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+    FIXTURES_SETUP title_audio_reference RESOURCE_LOCK newgame_capture)
+  add_test(NAME scene_title_audio_compare COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py title_audio --build ${DW1_SCENE_PRESET} --compare-audio)
+  set_tests_properties(scene_title_audio_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+    FIXTURES_REQUIRED "disc_pack;title_audio_reference" RESOURCE_LOCK newgame_capture)
   add_test(NAME scene_newgame_state COMMAND sh -c
     "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py newgame --build ${DW1_SCENE_PRESET} --state")
   set_tests_properties(scene_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1250

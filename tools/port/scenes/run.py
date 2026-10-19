@@ -2,6 +2,7 @@
 """Run a native scene twice; optionally compare RGB555 against its pinned reference."""
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -12,6 +13,9 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[3]
 OPENBIOS = Path("/usr/local/share/pcsx-redux/openbios.bin")
+_audio_spec = importlib.util.spec_from_file_location("scene_audio", Path(__file__).with_name("audio.py"))
+audio = importlib.util.module_from_spec(_audio_spec)
+_audio_spec.loader.exec_module(audio)
 
 
 def read_ppm(path):
@@ -357,20 +361,104 @@ def compare_state(port, reference, variables, checkpoint, expect_rand=False, che
     return 0
 
 
+def run_audio(args, scene, build, checkpoints, pack):
+    audio.validate_segments(scene)
+    report = ROOT / "build/port" / args.build / "scenes" / args.id / "audio.json"
+    report.unlink(missing_ok=True)
+    stamp = ROOT / "build/reference" / args.id / "audio.json"
+    if not stamp.is_file():
+        print(f"scene {args.id}: no deterministic audio reference; skipped")
+        return 77
+    record = json.loads(stamp.read_text())
+    if record.get("scene") != dict(scene, resolved_checkpoints=checkpoints):
+        raise ValueError("stale audio reference scene; run capture.py --audio")
+    reference = audio.external_output(record["output"], ROOT)
+    hashes = record.get("hashes", {})
+    required = {f"run-{run}-{segment}.{suffix}" for run in (1, 2)
+                for segment in (1, 2) for suffix in ("spu", "wav")}
+    if set(hashes) != required:
+        raise ValueError("incomplete audio reference manifest")
+    for name, expected in hashes.items():
+        path = reference / name
+        if (path.parent != reference or not path.is_file()
+                or hashlib.sha256(path.read_bytes()).hexdigest() != expected):
+            raise ValueError("missing/stale audio reference evidence; run capture.py --audio")
+    output = audio.external_output(Path(os.environ.get("DW1_AUDIO_DIR", "/tmp/dw1-audio-port")) /
+                                   args.build / args.id, ROOT)
+    if output == reference or output.is_relative_to(reference) or reference.is_relative_to(output):
+        raise ValueError("audio output and reference directories must be disjoint")
+    if any(character.isspace() for character in str(output)):
+        raise ValueError("audio output directory cannot contain whitespace")
+    output.mkdir(parents=True, exist_ok=True)
+    inputs, cp_file = output / "inputs.txt", output / "checkpoints.txt"
+    inputs.write_text("".join(f"{e['after']} {e['vblank']} {sum(1 << b for b in set(e['buttons'])):04x}\n"
+                              for e in scene.get("inputs", [])))
+    cp_file.write_text("".join(f"{cp['label']} 0\n" for cp in checkpoints))
+    all_hashes = []
+    for index in (1, 2):
+        declarations = output / f"segments-{index}.txt"
+        declarations.write_text("".join(
+            f"{seg['start']} {seg.get('finish', '-')} {seg.get('vblanks', 0)} "
+            f"{output}/run-{index}-{i}.spu {output}/run-{index}-{i}.wav\n"
+            for i, seg in enumerate(scene["audio"], 1)))
+        paths = [output / f"run-{index}-{i}.{suffix}" for i in (1, 2) for suffix in ("spu", "wav")]
+        for path in paths:
+            path.unlink(missing_ok=True)
+        environment = dict(os.environ)
+        if args.build == "native-asan":
+            environment["ASAN_OPTIONS"] = environment.get("ASAN_OPTIONS", "") + ":detect_stack_use_after_return=0"
+        command = [str(build / "dw1"), "--headless", "--pack", str(pack), "--frames", "40000",
+                   "--capture-mark", scene["mark"], "--inputs-from", "mark", "--inputs", str(inputs),
+                   "--checkpoints", str(cp_file), "--audio-segments", str(declarations)]
+        result = subprocess.run(command, cwd=build, env=environment, capture_output=True, timeout=1800)
+        log = result.stdout + result.stderr
+        (output / f"run-{index}.log").write_bytes(log)
+        if result.returncode or re.search(rb"AddressSanitizer|runtime error", log):
+            raise ValueError(f"audio run {index} failed: exit {result.returncode}; {output}/run-{index}.log")
+        all_hashes.append([hashlib.sha256(path.read_bytes()).hexdigest() for path in paths])
+    if all_hashes[0] != all_hashes[1]:
+        raise ValueError("non-deterministic native SPU trace/PCM")
+    metrics = []
+    for i in (1, 2):
+        trace = audio.compare_trace(output / f"run-1-{i}.spu", reference / f"run-1-{i}.spu")
+        pcm = audio.compare_pcm(output / f"run-1-{i}.wav", reference / f"run-1-{i}.wav")
+        metrics.append(dict(segment=i, trace=trace, pcm=pcm))
+        print(f"audio segment {i}: {trace}; worst SNR={pcm['worst_snr_db']:.3f} dB, "
+              f"lag={pcm['lag_samples']} samples")
+    # Only hashes/metrics go into build/; PCM and register evidence stay external.
+    report.parent.mkdir(parents=True, exist_ok=True)
+    def finite_metrics(value):
+        if isinstance(value, float) and value == float("inf"):
+            return "+inf"
+        if isinstance(value, dict):
+            return {key: finite_metrics(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [finite_metrics(item) for item in value]
+        return value
+    report.write_text(json.dumps(finite_metrics(dict(hashes=all_hashes[0], segments=metrics)),
+                                 indent=2, allow_nan=False) + "\n")
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("id", choices=sorted(p.stem for p in (ROOT / "tools/port/scenes").glob("*.toml")))
     parser.add_argument("--build", required=True, choices=["native-headless", "native-asan"])
     parser.add_argument("--pack", type=Path)
     parser.add_argument("--compare", action="store_true")
+    parser.add_argument("--compare-audio", action="store_true")
     parser.add_argument("--state", action="store_true")
     args = parser.parse_args()
+    if args.compare_audio and (args.compare or args.state):
+        raise ValueError("--compare-audio cannot be combined with --compare or --state")
     build = ROOT / "build/port" / args.build
     output = build / "scenes" / args.id
     if args.compare:
         (output / "diff.ppm").unlink(missing_ok=True)
     scene = tomllib.loads((ROOT / "tools/port/scenes" / f"{args.id}.toml").read_text())
     validate_scene(scene)
+    if args.compare_audio:
+        audio.validate_segments(scene)
     frame = validate_comparison(scene, args.id) if args.compare else None
     vars_path = ROOT / "tools/port/scenes/state_vars.txt"
     checkpoints = checkpoint_symbols(scene, ROOT / "config/us/symbols.txt", build / "dw1")
@@ -399,6 +487,10 @@ def main():
             return 77
         subprocess.run([str(build / "dw1-pack"), "build", str(cues[0]),
                         str(ROOT / "tools/port/manifest/us.tsv"), str(pack)], check=True)
+    if args.compare_audio:
+        return run_audio(args, scene, build, checkpoints, pack)
+    if scene.get("audio"):
+        raise ValueError("audio scenes require --compare-audio")
     output.mkdir(parents=True, exist_ok=True)
     inputs = output / "inputs.txt"
     inputs.write_text("".join((e['after'] + " " if checkpoints else "") + f"{e['vblank']} {sum(1 << b for b in set(e['buttons'])):04x}\n" for e in scene.get("inputs", [])))
