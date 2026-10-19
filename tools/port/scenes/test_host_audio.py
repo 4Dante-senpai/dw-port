@@ -41,6 +41,29 @@ with tempfile.TemporaryDirectory() as directory:
     assert event_rows[-1].endswith(" event:AUDIO_STOP"), event_rows
     assert [row.split()[3] for row in event_rows[1:-1]] == ["3456", "4567"]
     assert (output/"1.spu").read_text().splitlines()[-1].endswith(" checkpoint")
+    # The production detector must retain the complete bundle, reject inherited
+    # volume/unrelated KON, and rebase both exact trace cycles and PCM bounds.
+    segments.write_text(segments.read_text().replace("AUDIO_STOP\n", "AUDIO_STOP note_on\n"))
+    missing = subprocess.run([sys.argv[1], str(checkpoints), str(segments)], env=environment,
+                             capture_output=True, text=True, timeout=30)
+    assert missing.returncode == 1 and "missing new note-on" in missing.stderr
+    note = subprocess.run([sys.argv[1], str(checkpoints), str(segments)],
+                          env=dict(environment, DW1_TEST_NOTE_ANCHOR="1"),
+                          capture_output=True, text=True, timeout=30)
+    assert note.returncode == 0, (note.stdout, note.stderr)
+    rows = (output/"2.spu").read_text().splitlines()[1:-1]
+    assert rows[0] == "0 0 004 0400", rows
+    assert [row.split()[3] for row in rows] == ["0400", "0123", "0234", "0345", "0456", "0567", "0001", "0000", "4567"]
+    assert rows[1] == "0 1 000 0123", rows
+    frames = int(next(line for line in note.stdout.splitlines() if line.startswith("frames ")).split()[2])
+    with wave.open(str(output/"2.wav")) as wav:
+        assert wav.getnframes() == frames
+    high = subprocess.run([sys.argv[1], str(checkpoints), str(segments)],
+                          env=dict(environment, DW1_TEST_NOTE_ANCHOR="high"),
+                          capture_output=True, text=True, timeout=30)
+    assert high.returncode == 0, (high.stdout, high.stderr)
+    rows = (output/"2.spu").read_text().splitlines()[1:-1]
+    assert rows[0] == "0 0 114 0400" and rows[-2].endswith("18a 0002"), rows
     # Direct CLI use must enforce the same external-evidence policy as Python.
     repo = Path(__file__).resolve().parents[3]
     alias = output / "repo"

@@ -290,49 +290,73 @@ elige la raíz externa del audio nativo (por defecto `/tmp/dw1-audio-port`).
 Audio, trazas y archivos de trabajo quedan fuera del checkout, incluso si el
 directorio configurado contiene un enlace simbólico hacia él.
 
-### Gate vigente: decisión 3 del dueño, 2026-10-19
+### Gate vigente: decisión 4 del dueño, 2026-10-19
 
-Se compara la lista completa ordenada `(registro, valor)` de escrituras de
-voz (`registro < 0x180`), incluidas duplicadas. El tramo 1 sigue siendo
-`runLandingScreen` → `unloadNewGameScene`. Para el tramo 2,
-`checkpoint_after = { SsSeqPlay = "gameLoop" }` ignora las llamadas anteriores
-a `SsSeqPlay`: el origen es la primera entrada posterior a `gameLoop`.
-`config/us/symbols.txt` fija `SsSeqPlay` en `0x800CD73C`;
-`asm/us/main/psyq/libsnd.s` muestra su llamada a `Snd_SetPlayMode`. Es la misma
-entrada detectada por ExecBP en Redux y por instrumentación de función en el
-port, antes de ejecutar su cuerpo. No se usa `playMusic` porque incluye carga
-y preparación; `seqPlay` también llama a `SsSeqSetVol` antes de `SsSeqPlay`
-(`asm/us/main/sound.s`, `0x800C5E30`).
+La decisión 4 sustituye el gate de la decisión 3. Se compara la lista ordenada
+`(registro, valor)` de escrituras de voz (`registro < 0x180`), incluidas
+las duplicadas. El tramo 1 sigue siendo completo:
+`runLandingScreen` → `unloadNewGameScene`.
 
-`stop_on` enumera las 21 entradas públicas de `libsnd` usadas por el juego. La siguiente entrada
-cierra el tramo **antes** de ejecutar la llamada del juego. El tick usa rutinas
-internas (`snd_*`, `vm_*`), sin entrar por esas API públicas, por lo que no
-cierra el tramo. Si una dirección también es el origen (`SsSeqPlay`), ambos
-capturadores procesan primero el cierre de un tramo ya activo y después la
-apertura; Redux usa un solo breakpoint por dirección. Se conservan todas las
-escrituras del tick y del inicio de música anteriores al cierre. No se intenta
-clasificar escrituras por valor ni buscar un desplazamiento que coincida.
+Para el tramo 2, `checkpoint_after = { SsSeqPlay = "gameLoop" }` ignora las
+llamadas anteriores. `config/us/symbols.txt` fija `SsSeqPlay` en `0x800CD73C`;
+`asm/us/main/psyq/libsnd.s` muestra su llamada a `Snd_SetPlayMode`.
+La misma entrada arma ambos capturadores: ExecBP en Redux e instrumentación
+de función en el port, antes del cuerpo. `seqPlay` llama previamente a
+`SsSeqSetVol` (`asm/us/main/sound.s`, `0x800C5E30`).
 
-La traza `dw1-spu-trace-v1` añade al final `# end <muestras> <motivo>`:
-`event:<símbolo>`, `checkpoint` o `vblanks`. Las muestras son
-`floor((ciclo_fin − ciclo_inicio)/768)`, incluso si no hubo escrituras recientes.
-El tramo musical exige `event:` de la lista configurada y ≥ 441000 muestras
-en **cada** captura. Una traza antigua sin ese límite no demuestra diez segundos
-antes del primer evento y exige recaptura. El cambio del TOML y del adaptador
-invalida la referencia anterior; no se reutilizan sus offsets de `gameLoop`.
+`anchor = "note_on"` difiere el origen efectivo hasta una nota nueva. El
+algoritmo compartido por `capture.lua` y `spu.c` es:
 
-El reporte JSON conserva regla B por VBlank, desfases de muestra y SNR por
-ventanas de cinco segundos, incluso cuando falla el gate de contenido. Esas
-métricas son diagnósticas y no bloquean hasta 3.10, según AD-15 enmendado.
-Se mantienen la comprobación de dos corridas deterministas, integridad de
-archivos, límites de captura y detección de errores del proceso/sanitizadores.
+1. Desde la primera escritura de voz, acumular un flush, guardando la primera
+   escritura por voz y las voces con escritura de dirección (`voz*0x10+6`).
+2. En KON bajo (`0x188`) o alto (`0x18a`), intersectar sus bits no nulos con
+   esas voces. La primera intersección confirma una nota nueva. El origen es
+   la primera escritura del bundle de esa voz (la más temprana si hay varias),
+   conservando pitch, volumen y ADSR anteriores al KON. Dirección cero también
+   es una dirección válida. Volumen/pitch aislados nunca confirman el ancla.
+3. Sin coincidencia al terminar KON alto, descartar el candidato. El buffer
+   admite 256 escrituras; desbordarlo o cerrar sin nota confirmada falla.
+   Después de confirmar, conservar todas las escrituras hasta el cierre.
 
-La recaptura del 2026-10-19 en `/tmp/dw1-decision3-reference` produjo dos
-trazas y PCM idénticos con este ancla. El gate real aprueba las 744 escrituras
-del tramo 1 y rechaza el tramo 2 desde su primera escritura (`0x000`:
-`0x078e` port, `0x0143` referencia). Ambos cierran antes de `SsUtKeyOnV`
-con menos de diez segundos: 9,277256 s y 9,522290 s. La aceptación sigue
-pendiente; los diagnósticos y comandos están en [audio-parity.md](audio-parity.md).
+Los ciclos y VBlanks se rebajan respecto de esa primera escritura, no respecto
+del KON ni de `SsSeqPlay`. Redux selecciona PCM por índices absolutos del tap;
+el port elimina del WAV provisional exactamente los frames anteriores al
+nuevo origen, preservando la fase absoluta del mixer y su callback de salida.
+Las pruebas sintéticas ejecutan ambos detectores con recálculos heredados,
+KON cero, dirección/KON de voces distintas, voces bajas/altas y un bundle
+que atraviesa una muestra; verifican el origen y el recorte del WAV nativo.
+
+`stop_on` conserva las 21 entradas públicas de `libsnd` usadas por el juego.
+La siguiente entrada cierra el tramo **antes** de ejecutar la llamada, incluso
+si todavía no se confirmó el ancla. El tick usa rutinas internas (`snd_*`,
+`vm_*`) y no cierra el tramo. Si la dirección también abre un tramo, se
+procesa primero el cierre; Redux usa un solo breakpoint por dirección.
+No se saltan llamadas del juego para obtener una ventana mayor.
+
+La traza añade `# end <muestras> <motivo>`, con muestras
+`floor((ciclo_fin − ciclo_ancla)/768)`. El tramo musical exige cierre
+`event:<símbolo>` de `stop_on` y al menos **396900 muestras (9 s) en cada lado**.
+Se comparan todas las escrituras de voz con muestra relativa en
+`[0, min(fin_port, fin_referencia))`. No hay búsqueda de prefijos, reordenamiento,
+ajuste de ganancia ni eliminación de duplicadas. El reporte muestra la ventana
+común y cuántas escrituras quedan después de ella en cada lado. Una diferencia
+dentro de la ventana informa el índice y los dos registros/valores, tiempos y
+VBlanks; también falla una escritura faltante o adicional.
+
+El TOML y la huella del adaptador invalidan la referencia anterior: exige
+recaptura. Las dos pasadas de audio se ejecutan **en serie**, con un solo
+emulador activo, y deben producir trazas y PCM idénticos byte a byte. Los
+archivos siguen fuera del checkout. El reporte conserva regla B por VBlank,
+desfases y SNR por ventanas de cinco segundos sobre los tramos capturados;
+son diagnósticos no bloqueantes hasta 3.10. Se mantienen integridad de archivos,
+límites de captura y detección de errores del proceso/sanitizadores.
+
+Motivo: la decisión 3 empezaba con recálculos correctos de voces heredadas
+(`0x078e`/`0x0143`) y exigía diez segundos donde el primer `SsUtKeyOnV` deja
+9,277256/9,522290 s desde `SsSeqPlay`. El dueño aprobó el origen de nota nueva,
+nueve segundos y la ventana común, conservando el cierre. La sincronización y
+el estado heredado se difieren a 3.10. Resultados históricos y nueva evidencia
+en [audio-parity.md](audio-parity.md).
 
 `capture.lua` registra escrituras SH/SW a `0x1F801C00..0x1F801DFF`, tomando el
 valor de `rt` tras decodificar la instrucción y verificar su dirección efectiva.

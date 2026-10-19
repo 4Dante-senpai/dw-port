@@ -39,6 +39,7 @@ static void fail(const char *message);
 typedef struct {
     char start[128], finish[128], trace[1024], wav[1024];
     unsigned window, origin, stop_count;
+    char anchor[32];
     uint64_t cycle;
     char stop_names[32][128];
     void *stops[32];
@@ -70,6 +71,7 @@ int port_scene_audio_complete(void) { return audio_count && audio_index == audio
 static void audio_end(const char *reason)
 {
     AudioSegment *segment = &audio_segments[audio_index];
+    if (spu_capture_origin(&segment->cycle, &segment->origin)) fail("missing new note-on audio anchor");
     int failed = fprintf(audio_trace, "# end %llu %s\n",
                          (unsigned long long)((clock_now() - segment->cycle) / 768), reason) < 0;
     failed |= spu_capture_end();
@@ -90,11 +92,12 @@ static void audio_enter(const char *label)
     }
     if (!audio_trace && !strcmp(label, segment->start)) {
         audio_trace = audio_open(segment->trace, "w");
-        audio_wav = audio_open(segment->wav, "wb");
+        audio_wav = audio_open(segment->wav, "w+b");
         if (!audio_trace || !audio_wav || spu_capture_begin(audio_trace, audio_wav))
             fail("cannot open audio segment");
         segment->origin = clock_vblanks();
         segment->cycle = clock_now();
+        if (!strcmp(segment->anchor, "note_on")) spu_capture_note_anchor();
     }
 }
 int port_scene_complete(void)
@@ -212,9 +215,11 @@ void port_scene_prepare(const PortCapture *value)
             if (audio_count == 2) fail("too many audio segments");
             AudioSegment *segment = &audio_segments[audio_count++];
             char stop_list[4096] = "-";
-            int fields = sscanf(line, "%127s %127s %u %1023s %1023s %4095s %c", segment->start,
-                       segment->finish, &segment->window, segment->trace, segment->wav, stop_list, &extra);
-            if (fields < 5 || fields > 6 ||
+            int fields = sscanf(line, "%127s %127s %u %1023s %1023s %4095s %31s %c", segment->start,
+                       segment->finish, &segment->window, segment->trace, segment->wav, stop_list, segment->anchor, &extra);
+            if (fields < 5 || fields > 7 ||
+                (fields == 7 && strcmp(segment->anchor, "-") && strcmp(segment->anchor, "note_on")) ||
+                (!strcmp(segment->anchor, "note_on") && !strcmp(stop_list, "-")) ||
                 ((!strcmp(segment->finish, "-") && !strcmp(stop_list, "-") ? 1 : 0) != (segment->window > 0)) ||
                 (strcmp(stop_list, "-") && (segment->window || strcmp(segment->finish, "-"))))
                 fail("invalid audio segment declaration");

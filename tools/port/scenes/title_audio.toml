@@ -135,6 +135,7 @@ start = "runLandingScreen"
 finish = "unloadNewGameScene"
 
 [[audio]]
-# First SsSeqPlay entry after gameLoop; stop BEFORE the next public libsnd call.
+# Arm at the first SsSeqPlay after gameLoop; begin at its first new KON/address bundle.
 start = "SsSeqPlay"
+anchor = "note_on"
 stop_on = ["SsEnd", "SsInit", "SsQuit", "SsStart", "SsSeqClose", "SsSeqStop", "SsVabClose", "SsUtAllKeyOff", "SsSeqPlay", "SsSeqSetVol", "SsSetMVol", "SsSetTableSize", "SsSetTickMode", "SsSeqOpen", "SsUtKeyOffV", "SsUtAutoVol", "SsUtKeyOnV", "SsUtGetVBaddrInSB", "SsVabOpenHeadSticky", "SsVabTransBody", "SsVabTransCompleted"]

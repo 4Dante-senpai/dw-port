@@ -71,7 +71,7 @@ with tempfile.TemporaryDirectory() as directory:
     root.mkdir(); reference.mkdir()
     build = root / "build/port/native-headless"
     scene = dict(mark="start", checkpoints=["start", "finish", "music"], inputs=[],
-                 audio=[dict(start="start", finish="finish"), dict(start="music", stop_on=["game_event"])])
+                 audio=[dict(start="start", finish="finish"), dict(start="music", stop_on=["game_event"], anchor="note_on")])
     checkpoints = [dict(label=name) for name in scene["checkpoints"]]
     args = SimpleNamespace(id="title_audio", build="native-headless")
     stamp = root / "build/reference/title_audio/audio.json"
@@ -82,7 +82,8 @@ with tempfile.TemporaryDirectory() as directory:
         assert "--capture" not in command and "--capture-vblank" not in command
         declarations = Path(command[command.index("--audio-segments") + 1])
         for row in declarations.read_text().splitlines():
-            start, finish, window, trace, wav, stops = row.split()
+            start, finish, window, trace, wav, stops, anchor = row.split()
+            assert anchor == ("note_on" if start == "music" else "-")
             Path(trace).write_text("# dw1-spu-trace-v1\n0 0 000 0001\n# end 441000 event:game_event\n")
             with wave.open(wav, "wb") as stream:
                 stream.setparams((2, 2, 44100, 0, "NONE", "not compressed"))
@@ -114,7 +115,7 @@ with tempfile.TemporaryDirectory() as directory:
                 result = original_host(command, **kwargs)
                 declarations = Path(command[command.index("--audio-segments")+1])
                 for row in declarations.read_text().splitlines():
-                    _, _, _, trace, wav, _ = row.split()
+                    _, _, _, trace, wav, _, _ = row.split()
                     Path(trace).write_text("# dw1-spu-trace-v1\n10 1000 188 0020\n"
                         + f"10 1001 000 {2 if changed else 1:04x}\n# end 441000 event:game_event\n")
                     with wave.open(wav, "wb") as stream:
@@ -137,20 +138,20 @@ with tempfile.TemporaryDirectory() as directory:
             result = original_host(command, **kwargs)
             declarations = Path(command[command.index("--audio-segments")+1])
             music_trace = Path(declarations.read_text().splitlines()[1].split()[3])
-            music_trace.write_text(music_trace.read_text().replace("441000", "440999"))
+            music_trace.write_text(music_trace.read_text().replace("441000", "396899"))
             return result
         with patch.object(runner.subprocess, "run", side_effect=short_host), patch.object(runner.audio, "alignment", return_value=0):
             try:
                 runner.run_audio(args, scene, build, checkpoints, root/"us.pack")
             except ValueError as error:
-                assert "segment 2: port music" in str(error) and ">= 10 s" in str(error), error
+                assert "segment 2: port music" in str(error) and ">= 9 s" in str(error), error
             else:
                 raise AssertionError("short music accepted despite matching content")
             evidence = json.loads((build/"scenes/title_audio/audio.json").read_text())
             assert evidence["segments"][0]["content"]["status"] == "match"
             assert evidence["segments"][1]["content"]["status"] == "different"
             assert evidence["segments"][1]["capture_bounds"]["port"] == dict(
-                sample=440999, reason="event:game_event")
+                sample=396899, reason="event:game_event")
             assert evidence["segments"][1]["capture_bounds"]["reference"]["sample"] == 441000
         def truncated_host(command, **kwargs):
             result = original_host(command, **kwargs)

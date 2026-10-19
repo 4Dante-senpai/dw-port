@@ -16,6 +16,7 @@ local audio, audioIndex = nil, 1
 local audioFinishedTick
 local function audioEnd(reason)
     if not audio then return end
+    assert(not audio.waitNote, 'missing new note-on audio anchor')
     assert(audio.file:write(string.format('# end %.0f %s\n',
         math.floor((tonumber(PCSX.getCPUCycles())-audio.cycle)/768), reason)))
     assert(audio.file:close())
@@ -36,8 +37,42 @@ local function audioCheckpoint(label)
         audio = segment
         audio.tick = ticks
         audio.cycle = tonumber(PCSX.getCPUCycles())
+        audio.waitNote = audio.anchor == 'note_on'
+        audio.pending, audio.first, audio.addresses = {}, {}, 0
         audio.file = assert(io.open(audio.trace, 'w'))
         assert(audio.file:write('# dw1-spu-trace-v1\n'))
+    end
+end
+local function audioWrite(off, value)
+    local row = {cycle=tonumber(PCSX.getCPUCycles()), tick=ticks, off=off, value=value}
+    local function emit(r)
+        assert(audio.file:write(string.format('%d %.0f %03x %04x\n',
+            r.tick-audio.tick, math.floor((r.cycle-audio.cycle)/768), r.off, r.value)))
+    end
+    if not audio.waitNote then emit(row); return end
+    -- Identical to spu.c: one flush ends at KON hi. Only an address written
+    -- for a keyed voice confirms a new note; retain its whole earlier bundle.
+    if off < 0x180 or #audio.pending > 0 then
+        assert(#audio.pending < 256, 'note-on anchor buffer overflow')
+        table.insert(audio.pending, row)
+        if off < 0x180 then
+            local voice = math.floor(off/16)
+            audio.first[voice] = audio.first[voice] or #audio.pending
+            if off%16 == 6 then audio.addresses = bit.bor(audio.addresses, bit.lshift(1,voice)) end
+        end
+    end
+    local keyed = off == 0x188 and value or off == 0x18a and bit.lshift(value,16) or 0
+    keyed = bit.band(keyed, audio.addresses, 0xffffff)
+    if keyed ~= 0 then
+        local first = #audio.pending
+        for voice=0,23 do
+            if bit.band(keyed,bit.lshift(1,voice)) ~= 0 then first=math.min(first,audio.first[voice]) end
+        end
+        audio.cycle, audio.tick = audio.pending[first].cycle, audio.pending[first].tick
+        audio.waitNote = false
+        for i=first,#audio.pending do emit(audio.pending[i]) end
+    elseif off == 0x18a then
+        audio.pending, audio.first, audio.addresses = {}, {}, 0
     end
 end
 local function complete()
@@ -87,12 +122,10 @@ if c.audio then
         end
         assert(instruction, 'SPU write is not a decoded SH/SW at rawPC or rawPC-4')
         local value = tonumber(r.GPR.r[bit.band(bit.rshift(instruction,16),31)])
-        local sample = math.floor((tonumber(PCSX.getCPUCycles())-audio.cycle)/768)
         for i=0,width-1,2 do
             local off = bit.band(address,0x1fffffff)-0x1f801c00+i
             assert(off >= 0 and off < 0x200 and off%2 == 0)
-            assert(audio.file:write(string.format('%d %.0f %03x %04x\n',
-                ticks-audio.tick, sample, off, bit.band(bit.rshift(value,i*8),65535))))
+            audioWrite(off, bit.band(bit.rshift(value,i*8),65535))
         end
         return true
     end))

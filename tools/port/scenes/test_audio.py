@@ -66,8 +66,8 @@ class AudioTests(unittest.TestCase):
 
     def test_music_bounds_and_minimum(self):
         rows = "0 0 000 1234\n"
-        reference = self.trace("ref", rows + "# end 441000 event:stop\n")
-        for end, message in (("", "boundary"), ("# end 440999 event:stop\n", ">= 10 s"),
+        reference = self.trace("ref", rows + "# end 396900 event:stop\n")
+        for end, message in (("", "boundary"), ("# end 396899 event:stop\n", ">= 9 s"),
                              ("# end 882000 vblanks\n", "boundary"),
                              ("# end 882000 event:other\n", "boundary")):
             with self.assertRaisesRegex(ValueError, message):
@@ -76,7 +76,7 @@ class AudioTests(unittest.TestCase):
         port = self.trace("port", rows + "# end 500000 event:stop\n")
         self.assertEqual(audio.compare_voice_content(port, reference, True, ["stop"])["writes"], 1)
         short_ref = self.trace("short", rows + "# end 100 event:stop\n")
-        with self.assertRaisesRegex(ValueError, "reference music.*>= 10 s"):
+        with self.assertRaisesRegex(ValueError, "reference music.*>= 9 s"):
             audio.compare_voice_content(port, short_ref, True, ["stop"])
         for suffix in ("# end -1 event:stop\n", "# end 0 event:stop\n0 0 000 1\n",
                        "# end 0 event:stop\n# end 0 event:stop\n"):
@@ -89,6 +89,23 @@ class AudioTests(unittest.TestCase):
                      "-1 0 000 0000\n", "0 -1 000 0000\n", "bogus\n"):
             with self.assertRaises(ValueError):
                 audio.read_trace(self.trace("bad", rows))
+
+    def test_music_common_window(self):
+        # A fixed sample endpoint, independent of the observed write sequence.
+        port = self.trace("port", "0 0 004 0400\n0 0 006 0300\n0 1 188 0001\n"
+                          "500 396899 000 1234\n# end 396900 event:stop\n")
+        ref = self.trace("ref", "0 0 004 0400\n0 0 006 0300\n0 2 188 0001\n"
+                         "500 396898 000 1234\n501 396900 000 9999\n# end 400000 event:stop\n")
+        result = audio.compare_voice_content(port, ref, True, ["stop"])
+        self.assertEqual(result["writes"], 3)
+        self.assertEqual(result["common_window_samples"], 396900)
+        self.assertEqual(result["excluded_tail_writes"], [0, 1])
+        for replacement in ("000 4321", "002 1234"):
+            changed = ref.read_text().replace("000 1234", replacement)
+            with self.assertRaisesRegex(ValueError, "divergence at write 2"):
+                audio.compare_voice_content(port, self.trace("changed", changed.split("\n",1)[1]), True, ["stop"])
+        # Swapping sides must not change the common endpoint or waive the 9 s floor.
+        self.assertEqual(audio.compare_voice_content(ref, port, True, ["stop"])["writes"], 3)
 
     def test_correlation(self):
         rng = random.Random(35)
@@ -151,6 +168,12 @@ class AudioTests(unittest.TestCase):
     def test_scene_segments(self):
         scene = tomllib.loads(Path(__file__).with_name("title_audio.toml").read_text())
         self.assertEqual(audio.validate_segments(scene), scene["audio"])
+        self.assertEqual(scene["audio"][1]["anchor"], "note_on")
+        for index, anchor in ((0, "note_on"), (1, "unknown"), (1, None)):
+            segments = [dict(segment) for segment in scene["audio"]]
+            segments[index]["anchor"] = anchor
+            with self.assertRaisesRegex(ValueError, "note_on anchor requires stop_on"):
+                audio.validate_segments(dict(scene, audio=segments))
         for key, value in (("audio", []), ("audio", [dict(start="gameLoop", vblanks=1200)] * 2),
                            ("inputs", scene["inputs"] + [dict(after="SsSeqPlay", vblank=1, buttons=[])])):
             with self.assertRaises(ValueError):

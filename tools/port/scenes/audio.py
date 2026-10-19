@@ -1,4 +1,4 @@
-"""Decision 3 voice-content gate, rule B diagnostics and stereo PCM metrics."""
+"""Decision 4 voice-content gate, rule B diagnostics and stereo PCM metrics."""
 from array import array
 from collections import defaultdict
 import cmath
@@ -58,11 +58,20 @@ def read_trace(path):
 
 
 def compare_voice_content(actual, reference, music=False, stop_on=()):
-    """No search, offset fitting, sorting, deduplication or prefix acceptance."""
+    """Whole segment 1; fixed common sample interval for note-anchored music."""
     a_rows, a_end = trace_data(actual)
     b_rows, b_end = trace_data(reference)
-    left = [row for row in a_rows if row[2] < 0x180]
-    right = [row for row in b_rows if row[2] < 0x180]
+    common = None
+    if music:
+        for name, end in (("port", a_end), ("reference", b_end)):
+            if not end or end["reason"] not in {f"event:{symbol}" for symbol in stop_on}:
+                raise ValueError(f"{name} music lacks first game-event boundary; recapture at SEQ anchor")
+            if end["sample"] < RATE * 9:
+                raise ValueError(f"{name} music before first game event is {end['sample']/RATE:.6f} s; "
+                                 "requires >= 9 s")
+        common = min(a_end["sample"], b_end["sample"])
+    left = [row for row in a_rows if row[2] < 0x180 and (common is None or row[1] < common)]
+    right = [row for row in b_rows if row[2] < 0x180 and (common is None or row[1] < common)]
     offsets = []
     for index in range(max(len(left), len(right))):
         a = left[index] if index < len(left) else None
@@ -76,15 +85,11 @@ def compare_voice_content(actual, reference, music=False, stop_on=()):
         offsets.append(abs(a[1] - b[1]))
     if not left:
         raise ValueError("empty voice-content segment")
-    if music:
-        for name, end in (("port", a_end), ("reference", b_end)):
-            if not end or end["reason"] not in {f"event:{symbol}" for symbol in stop_on}:
-                raise ValueError(f"{name} music lacks first game-event boundary; recapture at SEQ anchor")
-            if end["sample"] < RATE * 10:
-                raise ValueError(f"{name} music before first game event is {end['sample']/RATE:.6f} s; "
-                                 "requires >= 10 s")
     return dict(writes=len(left), sample_offset_max=max(offsets),
                 sample_offset_mean=sum(offsets)/len(offsets),
+                common_window_samples=common,
+                excluded_tail_writes=[sum(row[2] < 0x180 and row[1] >= common for row in rows)
+                                      if common is not None else 0 for rows in (a_rows, b_rows)],
                 port_end=a_end, reference_end=b_end)
 
 
@@ -260,8 +265,10 @@ def validate_segments(scene):
         raise ValueError("audio requires exactly two disjoint segments")
     previous = -1
     for segment in segments:
-        if set(segment) not in ({"start", "finish"}, {"start", "vblanks"}, {"start", "stop_on"}):
+        if set(segment) - {"anchor"} not in ({"start", "finish"}, {"start", "vblanks"}, {"start", "stop_on"}):
             raise ValueError("segment requires start and exactly one of finish/vblanks/stop_on")
+        if "anchor" in segment and (segment["anchor"] != "note_on" or "stop_on" not in segment):
+            raise ValueError("note_on anchor requires stop_on")
         if segment["start"] not in checkpoints:
             raise ValueError("unknown segment start checkpoint")
         start = checkpoints.index(segment["start"])
