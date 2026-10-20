@@ -13,6 +13,7 @@
 #include "../clock.h"
 #include "../../backend/cdrom.h"
 #include "../../backend/gpu.h"
+#include "../../backend/spu.h"
 #include "../../host/pack/sha256.h"
 
 /* The matching mw_lib41 assertions live in psyq_prototypes.c. */
@@ -142,16 +143,19 @@ static void streaming(void)
     unsigned long *bs, *head, *bs2, *head2, run = 9;
     CdlLOC loc;
     clock_reset();
-    ENTRY(CHECK(CdRead2(0) == 1));
-    ENTRY(StSetRing(NULL, 24)); ENTRY(StSetStream(1, 1, (unsigned long)-1, NULL, NULL));
+    spu_reset(); psyq_libcd_reset();
+    static unsigned long ring[24*2048/4];
+    ENTRY(StSetRing(ring, 24)); ENTRY(StSetStream(1, 1, (unsigned long)-1, NULL, NULL));
+    ENTRY(CHECK(CdRead2(0x1e0) == 1));
+    clock_advance(CLOCK_HZ/150);
     ENTRY(CHECK(StGetNext(&bs, &head) == 0));
     ENTRY(CHECK(StGetNext(&bs2, &head2) == 0));
     CHECK(bs == bs2 && head == head2);
     StHEADER *h = (StHEADER *)head;
-    CHECK(h->frameCount == 0xFFFFFFFFUL && h->width == 320 && h->height == 240);
-    ENTRY(CHECK(StFreeRing(bs) == 0));
+    CHECK(h->frameCount == 0x7FFFFFFFUL && h->width == 320 && h->height == 240);
+    ENTRY(CHECK(StFreeRing(bs) == 1));
     ENTRY(CHECK(StGetBackloc(&loc) == 0));
-    CHECK(loc.minute == 0 && loc.second == 0 && loc.sector == 0);
+    CHECK(CdPosToInt(&loc) == -149);
     ENTRY(StCdInterrupt()); ENTRY(StUnSetRing());
     ENTRY(DecDCTReset(0)); ENTRY(DecDCTvlcBuild(NULL));
     ENTRY(CHECK(DecDCTvlc2(bs, &run, NULL) == 0)); CHECK(run == 0);
@@ -205,7 +209,7 @@ static void movie(void)
     CHECK(!ferror(f)); fclose(f); Sha256_Final(&sha, hash);
     for (int i = 0; i < 32; i++) snprintf(hex + 2 * i, 3, "%02x", hash[i]);
     CHECK(cdrom_open("pack_t1.pack", hex, err, sizeof(err)) == 0);
-    clock_reset(); psyq_libetc_reset(); psyq_libcd_reset();
+    clock_reset(); spu_reset(); psyq_libetc_reset(); psyq_libcd_reset();
     ResetGraph(0); CdInit();
     gpu_fill(0, 0, 1024, 512, 0xFFFFFF);
     memset(MOV_SLICE_BUFFER_0, 0xA5, sizeof(MOV_SLICE_BUFFER_0));
@@ -218,7 +222,7 @@ static void movie(void)
     CHECK(MOVIE_COMPLETED == 1 && MOVIE_WIDTH == 320 && MOVIE_HEIGHT == 240);
     CHECK(slices == 20 && MOV_ENV.frameIndex == 1 && MOV_ENV.flipPending == 0);
     printf("movie: slices=%d vblanks=%u\n", slices, clock_vblanks() - before);
-    CHECK(clock_vblanks() - before == 8); /* Fixed virtual timing, no host time. */
+    CHECK(clock_vblanks() - before == 10); /* Fixed virtual timing, no host time. */
     const uint16_t *vram = gpu_vram();
     for (int y = 32; y < 272; y++)
         for (int x = 0; x < 480; x++) CHECK(vram[y * 1024 + x] == 0);

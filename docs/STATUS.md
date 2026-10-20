@@ -252,6 +252,21 @@
   comparación con disco real 3/3 (Pack, referencia nueva y port); web 3/3, 4 casos de navegador.
   Evidencia: `docs/implementation-artifacts/evidence/story-3-2.log`.
 
+- Historia 3.6 (XA y sectores Form 2): en DW1 el XA solo aparece intercalado en los cuatro
+  `MOVIE/*.STR` (1 de cada 8 sectores, ADPCM 4 bits estéreo 37,8 kHz). `port/backend/xa` decodifica
+  los 8 formatos con el zigzag de psx-spx (adaptado de DW2-PC, CC0) y alimenta la entrada de CD del
+  SPU; `CdRead2` y el anillo `St*` leen el STR real del Pack (decisión 1 del dueño: el streaming
+  pasa a 3.6; el video sigue negro hasta MDEC en 3.7, pero dura lo que el STR). `CdInit` reproduce
+  `CD_initvol`. El parche de Redux suma un tap XA en `FeedXA` (Redux no mezcla el XA en el SPU).
+  Gate (decisión 2): escena `xa_op1`, OP1 completo, SNR 54,42 dB (umbral 40) sin desfase y 0
+  escrituras SPU en ambos lados; el PCM mezclado es diagnóstico. El runner pasa a 40.000 frames
+  (con los STR reales `newgame` no llegaba a `gameLoop`); se recapturaron `newgame` y
+  `title_audio`. Revisión (3 capas Codex): 7 parches, 7 rechazados (inalcanzables en DW1), 1 diferido
+  (anillo lleno: ¿la consola descarta o pausa?). `make compare` idéntico; web 31/31, nativo 59/59 y
+  ASan 57/57 con disco, sin omisiones. Sin cambios en `src/`/`include/`. Evidencia:
+  `docs/implementation-artifacts/evidence/story-3-6.log`. Pendiente: CI con la imagen publicada
+  por el job `images` y su digest fijado.
+
 - Historia 3.5 (`libsnd` de DW1 y traza de audio): las 21 entradas de `libsnd` que llama el Juego,
   su secuenciador SEQ (`SsSeqCalledTbyT`: notas, controles, NRPN, tempo, bucles, fin) y las
   entradas de `libspu` que alcanza están traducidas del asm de DW1 (registro de voz de `0x36`
@@ -325,7 +340,7 @@
 
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.5 cerradas; sigue la 3.6. El resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.6 cerradas; sigue la 3.7 (MDEC, `libpress` y videos STR). El resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 
@@ -341,10 +356,10 @@
 | Archivos C del juego que compilan a wasm32 en el preset `web` | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Bloques `DW1_PORT` en `src/`/`include/` | 79 apariciones del guard (`docs/port/src-changes.md`) |
-| Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (52 mínimas M2) / 0 / 12 (de 199) |
+| Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (17 con comportamiento M2: `libpress` y Memory card) / 0 / 11 (de 198) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
-| Escenas que funcionan (nativo) | 3 (título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control; `title_audio` con escrituras de voz idénticas en 2 tramos) |
+| Escenas que funcionan (nativo) | 4 (`xa_op1`: XA de OP1 a 54,42 dB contra la referencia; título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control; `title_audio` con escrituras de voz idénticas en 2 tramos) |
 | Escenas que funcionan (web) | 1 (título, igual a nativo, Chromium y Firefox) |
 | Llamadas con firma distinta inventariadas / sin resolver | 1031 / 0 (`fnptr_casts.tsv`) |
 

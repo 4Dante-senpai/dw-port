@@ -1,6 +1,6 @@
 # Stubs M2 con comportamiento definido
 
-Quedan 25 entradas del juego con comportamiento M2 o parcial. Las entradas M2
+Quedan 17 entradas del juego con comportamiento M2 o parcial. Las entradas M2
 avanzan el reloj una vez; las parciales pueden llamar APIs del reloj/SPU.
 Este inventario no implica paridad audiovisual.
 El diagnóstico de `title_audio` sobre `e303346` y la corrección de fase
@@ -22,18 +22,10 @@ no introduce stubs ni cambia el criterio de aceptación.
 | `MemCardFormat` | Devuelve McErrCardNotExist; salidas intactas. | 3.8 |
 | `MemCardGetDirentry` | Devuelve McErrCardNotExist; salidas intactas. | 3.8 |
 | `MemCardSync` | Sin comando: -1; con comando: 1, McFunc y McErrCardNotExist, sin espera. | 3.8 |
-| `CdRead2` | Inicia el stream sintético (1). | 3.7 |
-| `StSetRing` | Stream sintético; sin E/S ni callbacks de CD. | 3.7 |
-| `StUnSetRing` | Stream sintético; sin E/S ni callbacks de CD. | 3.7 |
-| `StSetStream` | Stream sintético; sin E/S ni callbacks de CD. | 3.7 |
-| `StCdInterrupt` | Stream sintético; sin E/S ni callbacks de CD. | 3.7 |
-| `StFreeRing` | Libera sin efectos (0); buffer estático. | 3.7 |
-| `StGetBackloc` | Posición sintética cero; devuelve 0. | 3.7 |
-| `StGetNext` | Siempre 0 con el mismo frame negro 320×240 y frameCount 0xFFFFFFFF. | 3.7 |
 | `DecDCTReset` | Reinicia callback y salida pendiente. | 3.7 |
 | `DecDCTin` | Acepta entrada sin decodificar. | 3.7 |
 | `DecDCTvlc2` | Éxito (0); cabecera run-level vacía. | 3.7 |
-| `DecDCTvlcBuild` | No construye tablas: el stream es sintético. | 3.7 |
+| `DecDCTvlcBuild` | No construye tablas VLC; el STR ya se lee del Pack. | 3.7 |
 | `DecDCToutCallback` | Instala o elimina callback; devuelve 0. | 3.7 |
 | `DecDCTout` | Llena size longs de ceros; callbacks iterativos en el hilo del juego, sin recursión. | 3.7 |
 
@@ -68,27 +60,19 @@ de tarjeta ausente; los punteros de salida nulos se permiten. `MemCardInit` borr
 el comando. No hay acceso a archivos ni a buffers de lectura/escritura. El menú
 consulta -1 para iniciar Exist y 1 para consumir su resultado.
 
-Video: no se consumen sectores STR. `StGetNext` publica siempre el mismo encabezado
-y bitstream estáticos. El ancho 320 se convierte en 480 palabras VRAM para RGB24;
-20 slices de 24×240 completan el frame. `DecDCTout` termina de drenar las salidas
-pendientes antes de retornar. Una llamada desde el callback registra la siguiente
-salida; cada callback retorna antes de ejecutar el siguiente, conservando el orden
-y evitando recursión. Solo se admite una salida pendiente, como en `MOV_onSliceDecoded`.
+Video: `CdRead2` y el anillo `St*` consumen sectores reales del Pack y publican
+frames STR completos; el audio intercalado se decodifica y alimenta al SPU.
+Ver [xa.md](xa.md). `libpress` conserva la salida negra hasta 3.7.
+El ancho 320 se convierte en 480 palabras VRAM para RGB24; 20 slices de
+24×240 completan el frame. Los callbacks iterativos no introducen recursión.
 
-La prueba L1 `av_stubs` enlaza los objetos originales del overlay `mov` y el Pack
-sintético de `test_pack`. `MOV_playMovie(0)` devuelve 1, produce exactamente
-20 slices y consume 8 VBlanks con el reloj y los costes actuales. La prueba
-verifica los buffers negros antes de cada transferencia, el orden de los slices,
-`flipPending` al final del frame, la VRAM y la ausencia de recursión. Esa duración
-es una constante de regresión M2, no una medición del hardware original.
+`av_stubs` conserva la prueba del consumidor original `MOV_playMovie(0)` con
+el Pack sintético sin frames válidos: EOF produce el frame terminal negro,
+20 slices y 10 VBlanks con los costes actuales. Es una regresión del port,
+no una medida del hardware. `cd_stream` verifica por separado sectores válidos,
+publicación de varios chunks, wrap del anillo, contrapresión, XA y EOF parcial.
 
 Al eliminar el último stub generado, el arranque sin disco ya no emite trazas
 de llamadas pendientes. `port_frame_done` registra `frame N` al alcanzar el
 límite del Host, y `frame0` exige esa entrada ordenada por ciclos. Esto conserva
 la evidencia del arranque sin depender de que queden funciones sin implementar.
-
-Limitación heredada observada: `MOV_playMovie` declara `DRAWENV draw` y lo pasa
-a `PutDrawEnv` sin inicializarlo. Esta historia mantiene `src/` intacto como exige
-la especificación. ASan/UBSan no verifican lecturas de memoria sin inicializar;
-la prueba del frame sintético no demuestra que ese estado de dibujo sea válido
-en otros layouts de pila o configuraciones de compilación.
