@@ -268,7 +268,8 @@
   verdes. Sin cambios en `src/`/`include/`. Evidencia:
   `docs/implementation-artifacts/evidence/story-3-5.log`. CI: pipeline 116 verde (native, web-objects,
   native-disc 16/16, native-asan-disc 52/52, matching, testing) con `dw-port@sha256:1d19dce2…`, publicada
-  por el pipeline 115 con el tap PCM.
+  por el pipeline 115 con el tap PCM. El fallo de `native` en el 115 fue contención del runner
+  durante el build en frío de `images`; pasó en el 116.
 
 - Historia 3.4 (SPU emulado y `libspu`): `port/backend/spu` adapta el SPU de DW2-PC (CC0):
   24 voces ADPCM con interpolación gaussiana, ADSR, ruido, PMON, reverb, KON/KOFF/ENDX, DMA y
