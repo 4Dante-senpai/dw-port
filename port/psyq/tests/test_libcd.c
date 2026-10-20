@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include "../../backend/cdrom.h"
+#include "../../backend/spu.h"
 #include "../../host/pack/sha256.h"
 #include "../clock.h"
 #include "../overlay.h"
@@ -71,6 +72,7 @@ static void reset(int with_pack)
 {
 	char err[512];
 	clock_reset();
+	spu_reset();
 	psyq_libcd_reset();
 	cdrom_close();
 	if (with_pack && cdrom_open("pack_t1.pack", manifest_sha, err, sizeof(err)) != 0) {

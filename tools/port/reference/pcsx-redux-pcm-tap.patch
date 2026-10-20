@@ -53,11 +53,11 @@ index 052e3b4..12883a8 100644
 +        }
 +        fprintf(stderr, "DW1 PCM tap: PCM16LE stereo 44100 Hz, indexed mixer samples\n");
 +    }
- 
+
      // Allocate the mixing buffer.
      spuBuffer = (uint8_t *)malloc(32768);
 @@ -831,6 +859,13 @@ void PCSX::SPU::impl::SetupStreams() {
- 
+
  // Free most of the SPU buffers.
  void PCSX::SPU::impl::RemoveStreams(void) {
 +    if (m_dw1PcmTap) {
@@ -70,3 +70,47 @@ index 052e3b4..12883a8 100644
      // Free the mixing buffer.
      free(spuBuffer);
      spuBuffer = NULL;
+diff --git a/src/spu/xa.cc b/src/spu/xa.cc
+index 674a020..8973267 100644
+--- a/src/spu/xa.cc
++++ b/src/spu/xa.cc
+@@ -61,6 +61,23 @@ int16_t PCSX::SPU::impl::zigzag(const int16_t *ring, unsigned table) {
+ }
+
+ void PCSX::SPU::impl::FeedXA(xa_decode_t *xap) {
++    // DW1 XA evidence: output before voldiv, separate from mixed PCM.
++    static FILE *dw1Xa = []() -> FILE * {
++        const char *path = std::getenv("DW1_REDUX_XA_TAP");
++        if (!path) return nullptr;
++        FILE *f = fopen(path, "wb");
++        if (!f || fwrite("DW1XA1\n", 1, 7, f) != 7) std::abort();
++        fprintf(stderr, "DW1 XA tap: FeedXA before voldiv\n");
++        return f;
++    }();
++    auto dw1XaSample = [&](int16_t l, int16_t r) {
++        if (!dw1Xa) return;
++        uint64_t cycle = PCSX::g_emulator->m_cpu->m_regs.cycle;
++        uint8_t record[12];
++        for (unsigned i=0;i<8;i++) record[i]=cycle>>(8*i);
++        record[8]=l; record[9]=l>>8; record[10]=r; record[11]=r>>8;
++        if (fwrite(record, 1, 12, dw1Xa)!=12) std::abort();
++    };
+     int voldiv = 4 - settings.get<Volume>();
+
+     if (!spuIsOpen) return;
+@@ -144,6 +161,7 @@ void PCSX::SPU::impl::FeedXA(xa_decode_t *xap) {
+                     }
+                 }
+                 SDLAudio::Frame f;
++                dw1XaSample(rawSampleL,rawSampleR);
+                 f.L = rawSampleL / voldiv;
+                 f.R = rawSampleR / voldiv;
+                 *XAFeed++ = f;
+@@ -152,6 +170,7 @@ void PCSX::SPU::impl::FeedXA(xa_decode_t *xap) {
+         xaLastL = l;
+         xaLastR = r;
+     }
++    if (dw1Xa && fflush(dw1Xa)) std::abort();
+     cbLock.unlock();
+
+     if (XAFeed != XABuffer) {

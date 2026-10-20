@@ -35,4 +35,7 @@ int cdrom_read_file(const PackEntry *entry, uint32_t offset, void *out, uint32_t
  * file (its slack is not in the Pack), 0 on the empty disc or outside the index. */
 uint32_t cdrom_read_sector(uint32_t lba, uint8_t *out, uint32_t size);
 
+/* Sequential RT seam: reconstructed Size1, also for Form 1 user data. */
+uint32_t cdrom_stream_sector(uint32_t lba, uint8_t out[CDROM_SECTOR_SIZE1]);
+
 #endif

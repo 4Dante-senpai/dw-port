@@ -77,3 +77,14 @@ uint32_t cdrom_read_sector(uint32_t lba, uint8_t *out, uint32_t size)
 	}
 	return n;
 }
+
+uint32_t cdrom_stream_sector(uint32_t lba, uint8_t out[CDROM_SECTOR_SIZE1])
+{
+    const PackEntry *entry=cdrom_find_lba(lba);
+    if (!entry || entry->mode==PACK_F2) return cdrom_read_sector(lba,out,CDROM_SECTOR_SIZE1);
+    memset(out,0,CDROM_SECTOR_SIZE1);
+    uint32_t a=lba+150;
+    out[0]=bcd(a/4500); out[1]=bcd(a/75%60); out[2]=bcd(a%75); out[3]=2;
+    out[6]=out[10]=8; /* Form 1 data, never XA. */
+    return cdrom_read_sector(lba,out+12,CDROM_SECTOR_DATA);
+}

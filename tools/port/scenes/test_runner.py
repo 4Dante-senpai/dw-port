@@ -532,3 +532,54 @@ with tempfile.TemporaryDirectory() as directory:
             assert len(captures) == (0 if mode == 'valid' else 1), mode
             assert len(hosts) == 2, mode
 print('scene_runner: main --state valid/missing/stale cached references without disc: OK')
+
+# XA has one function-return window, includes global SPU registers, and never
+# accepts a matching prefix when the movie tails have different lengths.
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    actual, expected = root/"actual.spu", root/"expected.spu"
+    scene = dict(xa=True, checkpoints=["MOV_playMovie", "runLandingScreen"],
+                 audio=[dict(start="MOV_playMovie", finish="MOV_playMovie")])
+    assert len(runner.audio.validate_segments(scene)) == 1
+    for segments in ([], [dict(start="MOV_playMovie", finish="MOV_playMovie"),
+                          dict(start="runLandingScreen", vblanks=1)]):
+        try: runner.audio.validate_segments(dict(scene, audio=segments))
+        except ValueError as error: assert "XA audio requires exactly one segment" in str(error)
+        else: raise AssertionError("XA scenes must declare exactly one audio segment")
+    actual.write_text("# dw1-spu-trace-v1\n0 1 1b0 3fff\n# end 100 return\n")
+    expected.write_text("# dw1-spu-trace-v1\n4 20 1b0 3fff\n# end 200 return\n")
+    assert runner.audio.compare_voice_content(actual,expected,all_registers=True)["writes"] == 1
+    for text in ("# dw1-spu-trace-v1\n0 1 1b0 3ffe\n# end 200 return\n",
+                 "# dw1-spu-trace-v1\n0 1 1b0 3fff\n0 150 1aa c001\n# end 200 return\n"):
+        expected.write_text(text)
+        try: runner.audio.compare_voice_content(actual,expected,all_registers=True)
+        except ValueError: pass
+        else: raise AssertionError("XA must compare all ordered registers through both ends")
+    for path in (actual,expected): path.write_text("# dw1-spu-trace-v1\n# end 100 return\n")
+    assert runner.audio.compare_voice_content(actual,expected,all_registers=True)["writes"] == 0
+print("scene_runner: XA single return window, all SPU registers, full tails and empty writes OK")
+
+with tempfile.TemporaryDirectory() as directory:
+    import struct
+    root=Path(directory)
+    raw, wav = root/"tap.xa", root/"tap.wav"
+    raw.write_bytes(b"DW1XA1\n"+b"".join(struct.pack("<Qhh",cycle,value,-value)
+                    for cycle,value in ((10,1),(10,2),(20,3),(30,4))))
+    identity_module.xa_to_wav(raw,wav,10,30)
+    with wave.open(str(wav),"rb") as stream:
+        assert stream.getnframes()==3
+        assert stream.readframes(3)==struct.pack("<hhhhhh",1,-1,2,-2,3,-3)
+    for data in (b"bad", b"DW1XA1\nx", b"DW1XA1\n"+struct.pack("<QhhQhh",20,1,2,10,1,2)):
+        raw.write_bytes(data)
+        try: identity_module.xa_to_wav(raw,wav,0,30)
+        except ValueError: pass
+        else: raise AssertionError("malformed XA tap must fail")
+    actual,expected=root/"a.wav",root/"b.wav"
+    for path in (actual,expected):
+        with wave.open(str(path),"wb") as stream:
+            stream.setparams((2,2,44100,0,"NONE","not compressed"))
+            stream.writeframes(struct.pack("<hh",1000,-1000)*264600)
+    with patch.object(runner.audio,"alignment",return_value=0):
+        result=runner.audio.compare_pcm(actual,expected,whole_window=True)
+    assert len(result["windows"])==1 and result["compared_frames"]==264600
+print("scene_runner: timestamped XA tap validation and full-window SNR OK")

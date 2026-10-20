@@ -57,7 +57,7 @@ def read_trace(path):
     return groups
 
 
-def compare_voice_content(actual, reference, music=False, stop_on=()):
+def compare_voice_content(actual, reference, music=False, stop_on=(), all_registers=False):
     """Whole segment 1; fixed common sample interval for note-anchored music."""
     a_rows, a_end = trace_data(actual)
     b_rows, b_end = trace_data(reference)
@@ -66,7 +66,7 @@ def compare_voice_content(actual, reference, music=False, stop_on=()):
         raise ValueError("missing segment end boundary; truncated capture")
     if a_end["reason"] != b_end["reason"]:
         raise ValueError(f"segment boundary end reasons differ: port={a_end['reason']} reference={b_end['reason']}")
-    if not music and a_end["reason"] != "checkpoint":
+    if not music and a_end["reason"] != ("return" if all_registers else "checkpoint"):
         raise ValueError("non-music segment must end at checkpoint boundary")
     if music:
         for name, end in (("port", a_end), ("reference", b_end)):
@@ -76,8 +76,8 @@ def compare_voice_content(actual, reference, music=False, stop_on=()):
                 raise ValueError(f"{name} music before first game event is {end['sample']/RATE:.6f} s; "
                                  "requires >= 9 s")
         common = min(a_end["sample"], b_end["sample"])
-    left = [row for row in a_rows if row[2] < 0x180 and (common is None or row[1] < common)]
-    right = [row for row in b_rows if row[2] < 0x180 and (common is None or row[1] < common)]
+    left = [row for row in a_rows if (all_registers or row[2] < 0x180) and (common is None or row[1] < common)]
+    right = [row for row in b_rows if (all_registers or row[2] < 0x180) and (common is None or row[1] < common)]
     offsets = []
     for index in range(max(len(left), len(right))):
         a = left[index] if index < len(left) else None
@@ -89,12 +89,12 @@ def compare_voice_content(actual, reference, music=False, stop_on=()):
             raise ValueError(f"first voice-content divergence at write {index}: "
                              f"port={show(a)} reference={show(b)}")
         offsets.append(abs(a[1] - b[1]))
-    if not left:
+    if not left and not all_registers:
         raise ValueError("empty voice-content segment")
-    return dict(writes=len(left), sample_offset_max=max(offsets),
-                sample_offset_mean=sum(offsets)/len(offsets),
+    return dict(writes=len(left), sample_offset_max=max(offsets, default=0),
+                sample_offset_mean=sum(offsets)/len(offsets) if offsets else 0,
                 common_window_samples=common,
-                excluded_tail_writes=[sum(row[2] < 0x180 and row[1] >= common for row in rows)
+                excluded_tail_writes=[sum((all_registers or row[2] < 0x180) and row[1] >= common for row in rows)
                                       if common is not None else 0 for rows in (a_rows, b_rows)],
                 port_end=a_end, reference_end=b_end)
 
@@ -235,7 +235,7 @@ def alignment(actual, reference, max_offset=RATE):
     return peak - margin
 
 
-def compare_pcm(actual_path, reference_path, threshold=40.0, max_offset=RATE, diagnostic_only=False):
+def compare_pcm(actual_path, reference_path, threshold=40.0, max_offset=RATE, diagnostic_only=False, whole_window=False):
     actual, reference = read_pcm(actual_path), read_pcm(reference_path)
     lag = alignment(actual, reference, max_offset)
     a0, b0 = max(0, lag), max(0, -lag)
@@ -247,8 +247,8 @@ def compare_pcm(actual_path, reference_path, threshold=40.0, max_offset=RATE, di
     if duration_mismatch and not diagnostic_only:
         raise ValueError("PCM duration mismatch exceeds alignment boundary loss")
     windows = []
-    for start in range(0, frames, WINDOW):
-        end = min(start + WINDOW, frames)
+    for start in range(0, frames, frames if whole_window else WINDOW):
+        end = min(start + (frames if whole_window else WINDOW), frames)
         signal = error = 0
         for i in range(start * 2, end * 2):
             a, b = actual[a0 * 2 + i], reference[b0 * 2 + i]
@@ -267,8 +267,10 @@ def compare_pcm(actual_path, reference_path, threshold=40.0, max_offset=RATE, di
 def validate_segments(scene):
     segments = scene.get("audio", [])
     checkpoints = scene.get("checkpoints", [])
-    if len(segments) != 2:
-        raise ValueError("audio requires exactly two disjoint segments")
+    if scene.get("xa") and len(segments) != 1:
+        raise ValueError("XA audio requires exactly one segment")
+    if len(segments) not in (1, 2):
+        raise ValueError("audio requires one or two disjoint segments")
     previous = -1
     for segment in segments:
         if set(segment) - {"anchor"} not in ({"start", "finish"}, {"start", "vblanks"}, {"start", "stop_on"}):
@@ -281,7 +283,8 @@ def validate_segments(scene):
         if start <= previous:
             raise ValueError("overlapping or unordered audio segments")
         if "finish" in segment:
-            if segment["finish"] not in checkpoints or checkpoints.index(segment["finish"]) <= start:
+            if segment["finish"] not in checkpoints or (checkpoints.index(segment["finish"]) < start or
+                    (segment["finish"]==segment["start"] and not scene.get("xa"))):
                 raise ValueError("invalid segment finish checkpoint")
             previous = checkpoints.index(segment["finish"])
         elif "stop_on" in segment:

@@ -1,0 +1,13 @@
+id = "xa_op1"
+overlay = "mov"
+mark = "MOV_playMovie"
+inputs_from = "mark"
+inputs = []
+capture_vblank = 6000
+expect_rand = false
+checkpoints = ["MOV_playMovie", "runLandingScreen"]
+window = 0
+xa = true
+[[audio]]
+start = "MOV_playMovie"
+finish = "MOV_playMovie"

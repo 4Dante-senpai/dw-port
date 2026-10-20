@@ -31,7 +31,7 @@ images:
   before_script: []
   rules:
     - if: $CI_PIPELINE_SOURCE == "push"   # changes is always true for other sources
-      changes: [Dockerfile, requirements.txt, tools/port/Dockerfile]
+      changes: [Dockerfile, requirements.txt, tools/port/Dockerfile, tools/port/reference/pcsx-redux-pcm-tap.patch]
     - when: manual
       allow_failure: true
   script:
@@ -50,11 +50,12 @@ native:
     - cmake --build --preset native-headless
     - ctest --preset native-headless --output-on-failure
 
-# Class A: the game objects and the Backend compile to wasm32 (no link yet, story 4.1).
+# Class A: WASM build plus the disc-free L1 suite under Node.
 web-objects:
   script:
     - cmake --preset web
     - cmake --build --preset web
+    - ctest --preset web --output-on-failure
 
 native-disc:
   extends: .class_b
@@ -70,7 +71,7 @@ native-disc:
     - cmake --preset native-headless
     - cmake --build --preset native-headless
     - xvfb-run -a pcsx-redux -version > /dev/null   # reference_title must run, not skip (77)
-    - tools/port/ci/ctest_no_skip.sh --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|scene_|reference_title|reference_newgame_state"
+    - tools/port/ci/ctest_no_skip.sh --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|scene_|reference_title|reference_newgame_state|reference_xa_op1"
 
 # Class B: the whole suite under ASan/UBSan, including the title scene (story 2.15).
 native-asan-disc:
@@ -118,6 +119,7 @@ testing:
     - cmake --build --preset native-headless
     - cmake --preset web
     - cmake --build --preset web
+    - ctest --preset web --output-on-failure
     - ctest --preset web -R "pack_disc|native_title_capture|web_scene_title|web_launcher|testing_deploy|testing_context"
     - tools/port/testing/install-docker.sh /tmp/dw1-docker-cli
     - export PATH="/tmp/dw1-docker-cli:$PATH"
