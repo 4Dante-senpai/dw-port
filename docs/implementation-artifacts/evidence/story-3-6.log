@@ -1,0 +1,24 @@
+Historia 3.6 — verificación del orquestador en la imagen dw-port:latest local (145b6af9dc15, con el tap XA de PCSX-Redux), 2026-10-20
+
+La imagen se reconstruyó con tools/port/docker_build.sh: el parche pcsx-redux-pcm-tap.patch pasa `git apply --check`
+y Redux compila con DW1_REDUX_XA_TAP (FeedXA antes de voldiv).
+Disco: DW1_DISC_DIR=/dw/game_rom/extracted; referencias, trazas y WAV fuera del checkout.
+Un corte de luz interrumpió la primera corrida durante la suite nativa; se relanzó desde ese paso.
+
+make -j + make compare (dw-build): Compiled binaries match with target binaries. Sin cambios en src/ ni include/.
+ctest --preset web: 100% tests passed, 0 tests failed out of 31 (xa_vectors, xa, cd_stream en Node/WASM).
+ctest_no_skip.sh --preset native-headless (suite completa con disco): 100% tests passed, 0 tests failed out of 59, sin omisiones.
+  reference_title 255,8 s; reference_title_audio 829,0 s; scene_title_audio_compare 52,1 s;
+  reference_xa_op1 405,3 s; scene_xa_op1_compare 22,7 s; scene_newgame_state 147,1 s.
+ctest_no_skip.sh --preset native-asan (suite completa con disco): 100% tests passed, 0 tests failed out of 57, sin omisiones.
+  scene_xa_op1_compare 58,9 s; scene_title_audio_compare 179,5 s.
+
+Referencia xa_op1: dos corridas de Redux con traza SPU, PCM mezclado y PCM XA idénticos byte a byte.
+Gate XA (decisión 2 del dueño): 5.346.096 pares a 44,1 kHz (OP1 completo), desfase 0, sin diferencia de duración,
+SNR 54,42 dB en una sola ventana (umbral 40 dB). Escrituras SPU dentro de MOV_playMovie: 0 en el port y 0 en la
+referencia (secuencia completa idéntica; las de CdInit ocurren antes). PCM mezclado: diagnóstico, SNR -inf porque Redux
+envía el XA por un stream aparte y su mezclador queda en silencio durante la película.
+Formato real verificado en el disco (solo lectura local): OP1/ED2 con 1 de cada 8 sectores XA, file 1 canal 1, coding 0x01.
+
+Pendiente de CI: el job images publica la imagen al hacer push de main (el parche está en sus disparadores); después se
+fija el digest nuevo en .gitlab-ci.yml.

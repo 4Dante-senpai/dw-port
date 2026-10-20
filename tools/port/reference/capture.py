@@ -24,9 +24,12 @@ OPENBIOS = _runner.OPENBIOS
 ppm_colors = _runner.ppm_colors
 
 
-def resolve_symbols(path, mark):
+def resolve_symbols(path, mark, overlay=None):
+    source=path.read_text()
+    extra=path.with_name(f"symbols_{overlay}.txt")
+    if overlay and extra.is_file(): source += "\n" + extra.read_text()
     symbols = {name: int(address, 16) for name, address in re.findall(
-        r"^([\w.$]+)\s*=\s*(0x[0-9a-fA-F]+);", path.read_text(), re.M)}
+        r"^([\w.$]+)\s*=\s*(0x[0-9a-fA-F]+);", source, re.M)}
     for name in ("VSync", mark):
         if name not in symbols:
             raise ValueError(f"missing symbol: {name}")
@@ -128,6 +131,8 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
         environment = dict(os.environ)
         if audio:
             environment["DW1_REDUX_PCM_TAP"] = str(output / f"run-{index}.pcm")
+            if scene.get("xa"):
+                environment["DW1_REDUX_XA_TAP"] = str(output / f"run-{index}.xa")
         process = subprocess.Popen(command, cwd=work, stdout=stream, stderr=subprocess.STDOUT,
                                    start_new_session=True, env=environment)
         try:
@@ -183,7 +188,7 @@ def main(argv=None):
     if args.audio and not scene.get("audio"):
         raise ValueError("--audio requires an audio scene")
     scene["resolved_checkpoints"] = _runner.checkpoint_symbols(scene, ROOT / "config/us/symbols.txt")
-    symbols = resolve_symbols(ROOT / "config/us/symbols.txt", scene["mark"])
+    symbols = resolve_symbols(ROOT / "config/us/symbols.txt", scene["mark"], scene.get("overlay"))
     if args.state:
         scene["state_vars"] = _runner.state_variables(ROOT / "tools/port/scenes/state_vars.txt", ROOT / "config/us/symbols.txt")
         source = (ROOT / "config/us/symbols.txt").read_text()

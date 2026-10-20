@@ -39,6 +39,14 @@ local function audioCheckpoint(label)
         audio.cycle = tonumber(PCSX.getCPUCycles())
         audio.waitNote = audio.anchor == 'note_on'
         audio.pending, audio.first, audio.addresses = {}, {}, 0
+        if audio.finish == audio.start then
+            local ra=tonumber(PCSX.getRegisters().GPR.n.ra)
+            breakpoints.audioReturn=PCSX.addBreakpoint(ra, 'Exec', 4, 'DW1 movie return', function()
+                audioEnd('return')
+                breakpoints.audioReturn:disable()
+                return true
+            end)
+        end
         audio.file = assert(io.open(audio.trace, 'w'))
         assert(audio.file:write('# dw1-spu-trace-v1\n'))
     end

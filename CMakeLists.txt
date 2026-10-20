@@ -140,7 +140,7 @@ if(NOT EMSCRIPTEN)
 endif()
 
 # Hardware models (CD over the Pack and GTE).
-add_library(dw1_backend STATIC port/backend/cdrom.c port/backend/gte.c port/backend/spu.c
+add_library(dw1_backend STATIC port/backend/cdrom.c port/backend/gte.c port/backend/spu.c port/backend/xa.c
   port/backend/gpu_soft/gpu_soft.c)
 target_link_libraries(dw1_backend PUBLIC dw1_pack_lib)
 target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
@@ -158,11 +158,13 @@ enable_testing()
 # SPU L1 runs the identical C implementation on native, sanitizers and Node/WASM.
 add_test(NAME spu_vectors COMMAND python3 -I -B
   ${CMAKE_SOURCE_DIR}/tools/port/audio/spu_vectors.py --check)
+add_test(NAME xa_vectors COMMAND python3 -I -B
+  ${CMAKE_SOURCE_DIR}/tools/port/audio/xa_vectors.py --check)
 add_test(NAME scene_audio_unit COMMAND python3 -I -B
   ${CMAKE_SOURCE_DIR}/tools/port/scenes/test_audio.py)
-foreach(suite spu libspu libsnd)
-  if(suite STREQUAL "spu")
-    set(test_source port/backend/tests/test_spu.c)
+foreach(suite spu xa libspu libsnd cd_stream)
+  if(suite STREQUAL "spu" OR suite STREQUAL "xa")
+    set(test_source port/backend/tests/test_${suite}.c)
   else()
     set(test_source port/psyq/tests/test_${suite}.c)
   endif()
@@ -176,6 +178,10 @@ foreach(suite spu libspu libsnd)
     add_test(NAME ${suite} COMMAND test_${suite})
   endif()
   set_tests_properties(${suite} PROPERTIES TIMEOUT 180)
+  if(suite STREQUAL "cd_stream")
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/stream_test)
+    set_tests_properties(${suite} PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/stream_test)
+  endif()
 endforeach()
 
 if(NOT EMSCRIPTEN)
@@ -467,6 +473,15 @@ if(NOT EMSCRIPTEN)
     ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py title_audio --build ${DW1_SCENE_PRESET} --compare-audio)
   set_tests_properties(scene_title_audio_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
     FIXTURES_REQUIRED "disc_pack;title_audio_reference" RESOURCE_LOCK newgame_capture)
+  add_test(NAME reference_xa_op1 COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py xa_op1 --audio --reuse
+    --max-vblanks 40000 --timeout 1800)
+  set_tests_properties(reference_xa_op1 PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+    FIXTURES_SETUP xa_op1_reference RESOURCE_LOCK newgame_capture)
+  add_test(NAME scene_xa_op1_compare COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py xa_op1 --build ${DW1_SCENE_PRESET} --compare-audio)
+  set_tests_properties(scene_xa_op1_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+    FIXTURES_REQUIRED "disc_pack;xa_op1_reference" RESOURCE_LOCK newgame_capture)
   add_test(NAME scene_newgame_state COMMAND sh -c
     "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py newgame --build ${DW1_SCENE_PRESET} --state")
   set_tests_properties(scene_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1250
