@@ -20,5 +20,10 @@ referencia (secuencia completa idéntica; las de CdInit ocurren antes). PCM mezc
 envía el XA por un stream aparte y su mezclador queda en silencio durante la película.
 Formato real verificado en el disco (solo lectura local): OP1/ED2 con 1 de cada 8 sectores XA, file 1 canal 1, coding 0x01.
 
-Pendiente de CI: el job images publica la imagen al hacer push de main (el parche está en sus disparadores); después se
-fija el digest nuevo en .gitlab-ci.yml.
+CI (GitLab, 2026-10-20): el pipeline 119 (2cd8c0f) publicó dw-port@sha256:fd5b68d52149ab302578f04b19bcc40260be0040de985a04784528e14e2cc1f6
+con el tap XA (job images, ~4 min con caché de capas; dw-build sin cambios) y se canceló porque el resto corría con la
+imagen anterior. Imagen fijada en 1ae3548. Pipeline 120: native, web-objects, native-disc 18/18, matching y testing
+verdes; native-asan-disc pasó 52/57 hasta scene_xa_op1_compare y el timeout de 1 h lo cortó en scene_newgame_state
+(exit -15), por recapturar las referencias con el Redux nuevo. d85f422 sube a 2 h native-disc y native-asan-disc.
+Pipeline 122 (d85f422) verde: native, web-objects, native-disc 18/18 (ctest 3002,1 s; reference_xa_op1 468,2 s,
+scene_xa_op1_compare 23,6 s), native-asan-disc 57/57 (ctest 4158,5 s; scene_xa_op1_compare 60,9 s), matching y testing.
