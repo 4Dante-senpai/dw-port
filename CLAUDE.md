@@ -125,6 +125,11 @@ Las ejecuciones de Codex lanzadas por `tools/port/codex-run.sh` ignoran esta sec
 4. **Detenerse y pedir intervención humana** solo para: proveer la imagen del disco o
    `cc_mips.dll`, aprobar PRD y arquitectura, decisiones irreversibles, force-push, o publicar
    un deploy accesible públicamente.
+5. **Dónde correr:** trabajo paralelo (`ctest -j` completo, varias escenas o capturas a la vez,
+   builds web y nativo juntos) con `tools/port/remote_run.sh` (daemon del PC del dueño, 24 CPUs;
+   cae solo al local si no responde). Comandos sueltos y capturas largas de un hilo con
+   `tools/port/docker_run.sh` local (un hilo es ~15% más rápido acá). Detalles en
+   `docs/port/setup.md`.
 
 ## GitLab (gitlab.homelab.local)
 - Para operaciones sobre GitLab (issues, merge requests, ramas, pipelines, jobs, logs)
