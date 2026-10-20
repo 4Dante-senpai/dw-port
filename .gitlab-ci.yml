@@ -59,6 +59,7 @@ web-objects:
 
 native-disc:
   extends: .class_b
+  timeout: 2h                          # reference recapture (new Redux/BIOS/symbols) exceeds 1 h
   cache:
     key:
       files: [.gitlab-ci.yml]
@@ -76,6 +77,7 @@ native-disc:
 # Class B: the whole suite under ASan/UBSan, including the title scene (story 2.15).
 native-asan-disc:
   extends: .class_b
+  timeout: 2h                          # reference recapture (new Redux/BIOS/symbols) exceeds 1 h
   cache:
     key:
       files: [.gitlab-ci.yml]
