@@ -264,8 +264,9 @@
   `title_audio`. Revisión (3 capas Codex): 7 parches, 7 rechazados (inalcanzables en DW1), 1 diferido
   (anillo lleno: ¿la consola descarta o pausa?). `make compare` idéntico; web 31/31, nativo 59/59 y
   ASan 57/57 con disco, sin omisiones. Sin cambios en `src/`/`include/`. Evidencia:
-  `docs/implementation-artifacts/evidence/story-3-6.log`. Pendiente: CI con la imagen publicada
-  por el job `images` y su digest fijado.
+  `docs/implementation-artifacts/evidence/story-3-6.log`. CI: imagen `dw-port@sha256:fd5b68d5…` publicada por
+  el pipeline 119 (cancelado) y fijada en `1ae3548`; pipeline 120 en curso (native y web-objects verdes;
+  falta confirmar native-disc, native-asan-disc, matching y testing).
 
 - Historia 3.5 (`libsnd` de DW1 y traza de audio): las 21 entradas de `libsnd` que llama el Juego,
   su secuenciador SEQ (`SsSeqCalledTbyT`: notas, controles, NRPN, tempo, bucles, fin) y las
