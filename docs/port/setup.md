@@ -31,6 +31,23 @@ tools/port/docker_run.sh <comando>    # corre <comando> en dw-port con el repo e
 `.dockerignore` deja fuera del contexto todo menos `requirements.txt`, así la imagen del disco
 nunca se envía al daemon.
 
+Daemon remoto para trabajo pesado: `tools/port/remote_run.sh <comando>` es igual a
+`docker_run.sh`, pero corre en el contexto Docker `$DW_REMOTE` (por defecto `windows`:
+Docker Desktop del PC del dueño, 24 CPUs y 15 GB, expuesto como `tcp://localhost:2375` a través
+de un túnel SSH inverso que solo existe mientras la sesión de VS Code Remote está abierta).
+Como ese daemon no ve este disco, el repo (incluidos `game_rom/` y `disks/`, que quedan solo en el PC del
+dueño) se sincroniza con rsync al volumen `dw_remote_src` antes de correr y los cambios vuelven
+al terminar (`rsync -u`: si un archivo cambió en los dos lados, gana la copia local). Si la
+imagen falta en el remoto, se copia desde el contexto `default`. Si el remoto no responde, cae a
+`docker_run.sh` en el contexto `default`. Límites por defecto: `DW_CPUS=20`, `DW_MEMORY=12g`.
+Se usa un volumen y no un bind mount a una carpeta de Windows porque el bind mount es ~200x más
+lento con archivos chicos (medido el 2026-10-20).
+
+Mediciones del 2026-10-20 (remoto i7-13700K vs. local i5-6600K): sync incremental ~3 s (el primero
+~3,5 min); un hilo ~15% más lento en el remoto (Python, 3 corridas); `native-headless` limpio 1 s
+vs. 7 s; `make` + `make compare` limpio 2 s vs. 6 s. Conviene para trabajo paralelo (`ctest -j`,
+varias escenas o capturas a la vez); una sola captura larga de un hilo no gana nada.
+
 Devcontainer: `.devcontainer/port/devcontainer.json` (construye `dw-build` en
 `initializeCommand` y luego `tools/port/Dockerfile`). El devcontainer de upstream
 (`.devcontainer/devcontainer.json`) sigue igual.
