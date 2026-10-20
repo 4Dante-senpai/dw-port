@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-19
+Última actualización: 2026-10-20
 
 ## Modo de operación
 
@@ -266,7 +266,9 @@
   (3 capas Codex): 9 parches, 2 conservados por fidelidad al asm, 1 rechazado (SNR bloqueante,
   contrario a la decisión 3). CTest nativo 45, ASan 43, web 25 y disco 16/16 nativo y 52/52 ASan
   verdes. Sin cambios en `src/`/`include/`. Evidencia:
-  `docs/implementation-artifacts/evidence/story-3-5.log`.
+  `docs/implementation-artifacts/evidence/story-3-5.log`. CI: pipeline 116 verde (native, web-objects,
+  native-disc 16/16, native-asan-disc 52/52, matching, testing) con `dw-port@sha256:1d19dce2…`, publicada
+  por el pipeline 115 con el tap PCM.
 
 - Historia 3.4 (SPU emulado y `libspu`): `port/backend/spu` adapta el SPU de DW2-PC (CC0):
   24 voces ADPCM con interpolación gaussiana, ADSR, ruido, PMON, reverb, KON/KOFF/ENDX, DMA y

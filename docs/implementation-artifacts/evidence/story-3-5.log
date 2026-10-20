@@ -14,3 +14,9 @@ Gate de contenido (decisiones 3 y 4 del dueño): tramo 1 744/744 escrituras de v
 note-on nuevo tras SsSeqPlay) 612/612 en la ventana común de 9,047 s. Regla B por VBlank y SNR (-3,74 / 8,49 dB)
 reportados sin bloquear hasta 3.10 (costos de CPU/CD y período de VBlank).
 Sin cambios en src/ ni include/. Diagnóstico de paridad: docs/port/audio-parity.md.
+
+CI (GitLab, 2026-10-20): pipeline 115 (f1a6329) publicó dw-port@sha256:1d19dce20e83c4d953042a30d0623b30af9866d1675fb9af7ee71f2bbb71d755
+con el tap PCM (job images, build en frío de PCSX-Redux ~2 h 43 min); su job native se cortó en inventory por falta de RAM
+en el runner. Pipeline 116 (aaefe04, imagen fijada): native, web-objects, native-disc, native-asan-disc, matching y testing
+en verde. native-disc 16/16 (reference_title_audio 946,7 s, scene_title_audio_compare 31,5 s; total 2148,5 s);
+native-asan-disc 52/52 (scene_title_audio_compare 92,5 s; total 2950,4 s); matching: make compare idéntico.
