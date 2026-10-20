@@ -4,6 +4,7 @@
 #include "clock.h"
 #include "ps1mem.h"
 #include "../backend/spu.h"
+#include "../backend/xa.h"
 #include <stdlib.h>
 #include <string.h>
 #ifndef __EMSCRIPTEN__
@@ -46,7 +47,7 @@ typedef struct {
 } AudioSegment;
 static AudioSegment audio_segments[2];
 static unsigned audio_count, audio_index;
-static FILE *audio_trace, *audio_wav;
+static FILE *audio_trace, *audio_wav, *xa_wav;
 static FILE *audio_open(const char *path, const char *mode)
 {
     char resolved[PATH_MAX], root[PATH_MAX], parent[PATH_MAX];
@@ -75,6 +76,7 @@ static void audio_end(const char *reason)
     int failed = fprintf(audio_trace, "# end %llu %s\n",
                          (unsigned long long)((clock_now() - segment->cycle) / 768), reason) < 0;
     failed |= spu_capture_end();
+    if (xa_wav) { XaDec_CaptureEnd(); failed |= fclose(xa_wav)!=0; xa_wav=NULL; }
     failed |= fclose(audio_trace) != 0;
     failed |= fclose(audio_wav) != 0;
     audio_trace = audio_wav = NULL;
@@ -95,6 +97,13 @@ static void audio_enter(const char *label)
         audio_wav = audio_open(segment->wav, "w+b");
         if (!audio_trace || !audio_wav || spu_capture_begin(audio_trace, audio_wav))
             fail("cannot open audio segment");
+        const char *xa_path=getenv("DW1_XA_WAV");
+        if (xa_path) {
+            if (strlen(xa_path)>=1024) fail("XA path too long");
+            xa_wav=audio_open(xa_path,"w+b");
+            if (!xa_wav) fail("cannot open XA capture");
+            XaDec_CaptureBegin(xa_wav);
+        }
         segment->origin = clock_vblanks();
         segment->cycle = clock_now();
         if (!strcmp(segment->anchor, "note_on")) spu_capture_note_anchor();
@@ -143,7 +152,12 @@ void __cyg_profile_func_enter(void *function, void *caller)
 }
 void __cyg_profile_func_exit(void *function, void *caller)
 {
-    (void)function; (void)caller;
+    (void)caller;
+    if (audio_trace && audio_index<audio_count) {
+        AudioSegment *segment=&audio_segments[audio_index];
+        if (!strcmp(segment->start,segment->finish) && function==dlsym(RTLD_DEFAULT,segment->start))
+            audio_end("return");
+    }
 }
 static void fail(const char *message)
 {
@@ -234,7 +248,7 @@ void port_scene_prepare(const PortCapture *value)
                 }
             }
         }
-        if (ferror(file) || fclose(file) || audio_count != 2) fail("expected two audio segments");
+        if (ferror(file) || fclose(file) || (audio_count < 1 || audio_count > 2)) fail("expected one or two audio segments");
     }
     if (config->mark) {
         mark_function = dlsym(RTLD_DEFAULT, config->mark);

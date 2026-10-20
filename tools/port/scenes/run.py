@@ -155,6 +155,8 @@ def checkpoint_symbols(scene, path, binary=None):
     if not scene.get("checkpoints"):
         return []
     source = path.read_text()
+    overlay = path.with_name(f"symbols_{scene.get('overlay', '')}.txt")
+    if scene.get("overlay") and overlay.is_file(): source += "\n" + overlay.read_text()
     symbols = {name: int(address, 16) for name, address in re.findall(
         r"^([\w.$]+)\s*=\s*(0x[0-9a-fA-F]+);", source, re.M)}
     native = None
@@ -400,7 +402,7 @@ def run_audio(args, scene, build, checkpoints, pack):
     reference = audio.external_output(record["output"], ROOT)
     hashes = record.get("hashes", {})
     required = {f"run-{run}-{segment}.{suffix}" for run in (1, 2)
-                for segment in (1, 2) for suffix in ("spu", "wav")}
+                for segment in range(1,len(scene["audio"])+1) for suffix in (("spu", "wav", "xa.wav") if scene.get("xa") else ("spu", "wav"))}
     if set(hashes) != required:
         raise ValueError("incomplete audio reference manifest")
     for name, expected in hashes.items():
@@ -427,10 +429,12 @@ def run_audio(args, scene, build, checkpoints, pack):
             f"{output}/run-{index}-{i}.spu {output}/run-{index}-{i}.wav "
             f"{','.join(seg.get('stop_on', [])) or '-'} {seg.get('anchor', '-')}\n"
             for i, seg in enumerate(scene["audio"], 1)))
-        paths = [output / f"run-{index}-{i}.{suffix}" for i in (1, 2) for suffix in ("spu", "wav")]
+        paths = [output / f"run-{index}-{i}.{suffix}" for i in range(1,len(scene["audio"])+1) for suffix in (("spu", "wav", "xa.wav") if scene.get("xa") else ("spu", "wav"))]
         for path in paths:
             path.unlink(missing_ok=True)
         environment = dict(os.environ)
+        if scene.get("xa"):
+            environment["DW1_XA_WAV"] = str(output / f"run-{index}-1.xa.wav")
         if args.build == "native-asan":
             environment["ASAN_OPTIONS"] = environment.get("ASAN_OPTIONS", "") + ":detect_stack_use_after_return=0"
         command = [str(build / "dw1"), "--headless", "--pack", str(pack), "--frames", "40000",
@@ -448,7 +452,7 @@ def run_audio(args, scene, build, checkpoints, pack):
     for i, segment in enumerate(scene["audio"], 1):
         actual, expected = output / f"run-1-{i}.spu", reference / f"run-1-{i}.spu"
         content = audio.diagnostic(audio.compare_voice_content, actual, expected,
-                                   music=i == 2, stop_on=segment.get("stop_on", []))
+                                   music=i == 2, stop_on=segment.get("stop_on", []), all_registers=scene.get("xa", False))
         trace = audio.trace_diagnostics(actual, expected)
         # Decision 4 defers fidelity metrics, not evidence-format validation.
         for side, directory, trace_path in (("port", output, actual), ("reference", reference, expected)):
@@ -458,12 +462,17 @@ def run_audio(args, scene, build, checkpoints, pack):
                 raise ValueError(f"segment {i}: {side} WAV frame count {frames} does not match trace interval {end}")
         pcm = audio.diagnostic(audio.compare_pcm, output / f"run-1-{i}.wav",
                                reference / f"run-1-{i}.wav", diagnostic_only=True)
+        xa_pcm = None
+        if scene.get("xa"):
+            xa_pcm = audio.diagnostic(audio.compare_pcm, output / f"run-1-{i}.xa.wav",
+                                      reference / f"run-1-{i}.xa.wav", whole_window=True)
+            if xa_pcm["status"] != "match": failures.append(f"XA: {xa_pcm['error']}")
         bounds = dict(port=audio.trace_data(actual)[1], reference=audio.trace_data(expected)[1])
-        metrics.append(dict(segment=i, content=content, capture_bounds=bounds, rule_b=trace, pcm=pcm))
+        metrics.append(dict(segment=i, content=content, capture_bounds=bounds, rule_b=trace, pcm=pcm, xa=xa_pcm))
         if content["status"] != "match":
             failures.append(f"segment {i}: {content['error']}")
         print(f"audio segment {i}: content={content}; capture bounds={bounds}; rule B (non-blocking)={trace}; "
-              f"PCM (non-blocking)={pcm}")
+              f"PCM (non-blocking)={pcm}; XA={xa_pcm}")
     # Only hashes/metrics go into build/; PCM and register evidence stay external.
     report.parent.mkdir(parents=True, exist_ok=True)
     def finite_metrics(value):
@@ -553,7 +562,7 @@ def main():
             # primitives out of the OT window (AD-5).
             env["ASAN_OPTIONS"] = env.get("ASAN_OPTIONS", "") + ":detect_stack_use_after_return=0"
         command = [str(build / "dw1"), "--headless", "--pack", str(pack),
-                   "--frames", "10000", "--capture-mark", scene["mark"],
+                   "--frames", "40000", "--capture-mark", scene["mark"],
                    "--capture-vblank", str(scene["capture_vblank"]),
                    "--capture", str(capture), "--clock-trace", str(clock)]
         command += ["--inputs", str(inputs), "--inputs-from", scene.get("inputs_from", "frame0")]

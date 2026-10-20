@@ -395,3 +395,22 @@ comparador, parche PCM, BIOS y ejecutable Redux. El sello conserva la ruta de
 la BIOS usada. Antes de ejecutar el port, el runner recalcula esa identidad
 con la BIOS y el Redux instalados; cambios de símbolos, BIOS, emulador o
 adaptador obligan a recapturar, aunque los archivos de evidencia sigan intactos.
+
+
+## XA de OP1 (3.6)
+
+`reference_xa_op1` y `scene_xa_op1_compare` añaden una ventana única del
+inicio al retorno de `MOV_playMovie(0)`, con audio y todas las escrituras SPU.
+`finish` igual a `start` expresa retorno de función únicamente en la escena XA.
+Los símbolos del overlay se resuelven desde `symbols_mov.txt`, sin modificar
+el mapa de símbolos principal. El parche de Redux incluye ahora DW1_REDUX_XA_TAP
+antes de voldiv en FeedXA, además del tap del mezclador. Los ficheros crudos y WAV
+se guardan fuera del repo; las dos capturas deben ser idénticas byte a byte.
+
+El gate XA exige SNR >=40 dB del tramo completo tras correlación y registros/valores
+SPU idénticos en su orden completo, sin recortar a la duración común de la música.
+PCM mezclado, regla B y tiempos son diagnósticos. No se compara video MDEC.
+Ver [xa.md](xa.md) para el modelo, atribución, hipótesis y límites.
+La reconstrucción de la imagen usa `tools/port/docker_build.sh`; el job images
+incluye cambios del parche entre sus triggers, pero publicar la imagen requiere
+la autorización indicada en la especificación.

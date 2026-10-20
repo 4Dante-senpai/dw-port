@@ -1,6 +1,5 @@
 /* libcd: commands, data reads and file search over the CD model (port/backend/cdrom.h) and the
- * virtual clock (AD-8). asm:asm/us/main/psyq/libcd.s (mw_lib41). Not modeled: streaming (St*,
- * CdRead2), XA and CD-DA, read errors and retries, the shell-open status. */
+ * virtual clock (AD-8). asm:asm/us/main/psyq/libcd.s (mw_lib41). Not modeled: CD-DA, read errors and retries, the shell-open status. */
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -9,6 +8,9 @@
 #include "../host/pack/sha256.h"
 #include "clock.h"
 #include "overlay.h"
+#include "libcd_stream.h"
+#include "../backend/xa.h"
+#include "../backend/spu.h"
 #include "port.h"
 #include "ps1mem.h"
 #include "psyq.h"
@@ -26,6 +28,8 @@ _Static_assert(sizeof(CdlFILE) == 0x18 && offsetof(CdlFILE, size) == 4 && offset
 __attribute__((weak)) void port_overlay_done(void);
 
 static CdlLOC setloc;
+static unsigned char drive_mode;
+static struct { uint32_t lba, end; uint64_t period; int event, active; } rt;
 static CdlCB read_callback;
 static unsigned char read_result[8]; /* status bytes passed to the read callback */
 
@@ -38,6 +42,7 @@ static struct {
 	uint32_t size;  /* bytes per sector */
 	uint64_t sector_cycles;
 	int event;      /* pending sector event, 0 if none */
+	int aborted;
 } rd;
 
 static int from_bcd(unsigned char b)
@@ -54,6 +59,54 @@ static unsigned char to_bcd(int i)
 static int pos_to_int(const CdlLOC *p)
 {
 	return (from_bcd(p->minute) * 60 + from_bcd(p->second)) * 75 + from_bcd(p->sector) - 150;
+}
+
+static void xa_input(int16_t *l, int16_t *r, void *arg) { (void)arg; XaDec_Pop(l,r); }
+void cd_stream_stop(void)
+{
+    if (rt.active) spu_sync();
+    clock_cancel(rt.event); rt.event=rt.active=0;
+    XaDec_Stop();
+}
+static void stream_event(void *arg)
+{
+    (void)arg;
+    uint8_t sector[CDROM_SECTOR_SIZE1];
+    rt.event=0;
+    if (!rt.active) return;
+    if (rt.lba>=rt.end) { rt.active=0; cd_stream_eof(); XaDec_Stop(); return; }
+    const PackEntry *entry=cdrom_find_lba(rt.lba);
+    if (entry) {
+        cdrom_stream_sector(rt.lba,sector);
+        if ((sector[6]&0x24)==0x24 && (drive_mode&0x40)) {
+            spu_sync();
+            if (!XaDec_Sector(sector+4)) port_trace("xa rejected coding=0x%02x lba=%u",sector[7],rt.lba);
+        } else if (!cd_stream_sector(sector)) {
+            rt.event=clock_schedule(rt.period,stream_event,NULL); return;
+        }
+    }
+    rt.lba++;
+    if (rt.lba==rt.end) { rt.active=0; cd_stream_eof(); XaDec_Stop(); }
+    else rt.event=clock_schedule(rt.period,stream_event,NULL);
+}
+int cd_stream_start(long mode)
+{
+    PORT_ASSERT(!(mode & 8)); /* SF and CdlSetfilter remain unsupported. */
+    cd_stream_stop();
+    if (rd.event) {
+        clock_cancel(rd.event);
+        rd.event=0;
+        rd.aborted=1;
+    }
+    drive_mode=(unsigned char)mode;
+    const PackEntry *entry=cdrom_find_lba((uint32_t)pos_to_int(&setloc));
+    spu_sync(); /* Drain owed PCM even if the previous stream already reached EOF. */
+    XaDec_Reset(); spu_set_cd_input(xa_input,NULL);
+    rt.lba=(uint32_t)pos_to_int(&setloc);
+    rt.end=entry ? entry->lba+entry->sectors : rt.lba;
+    rt.period=(mode&CdlModeSpeed) ? SECTOR_CYCLES_2X : SECTOR_CYCLES_1X;
+    rt.active=1; rt.event=clock_schedule(rt.period,stream_event,NULL);
+    return 1;
 }
 
 /* asm: CdIntToPos -- the inverse; track is left as it is. */
@@ -128,6 +181,15 @@ int CdInit(void)
 {
 	clock_psyq_entry();
 	read_callback = NULL;
+	/* asm: CD_initvol (0x800B16B8), called by CdReset(1). Confirmed before
+	 * MOV_playMovie in the reference: CD volume 0x3fff and SPUCNT 0xc001. */
+	if (!spu_read16(0x1b8) && !spu_read16(0x1ba)) {
+		spu_write16(0x180, 0x3fff);
+		spu_write16(0x182, 0x3fff);
+	}
+	spu_write16(0x1b0, 0x3fff);
+	spu_write16(0x1b2, 0x3fff);
+	spu_write16(0x1aa, 0xc001);
 	return 1;
 }
 
@@ -139,9 +201,14 @@ static int control(unsigned char com, unsigned char *param)
 			memcpy(&setloc, param, 3); /* minute, second, sector */
 		return 1;
 	case CdlNop:
-	case CdlSetmode: /* CdRead brings its own mode */
-	case CdlPause:
-		return 1;
+	    return 1;
+    case CdlSetmode:
+        PORT_ASSERT(!param || !(*param & 8));
+        if (param) drive_mode=*param;
+        return 1;
+    case CdlPause:
+        cd_stream_stop();
+        return 1;
 	}
 	PORT_ASSERT(!"libcd: CD command not modeled");
 	return 1;
@@ -186,6 +253,7 @@ int CdSync(int mode, unsigned char *result)
 int CdRead(int sectors, unsigned long *buf, int mode)
 {
 	clock_psyq_entry();
+    cd_stream_stop();
 	uint32_t size = CDROM_SECTOR_DATA;
 	switch (mode & (CdlModeSize1 | CdlModeSize0)) {
 	case 0:
@@ -201,6 +269,7 @@ int CdRead(int sectors, unsigned long *buf, int mode)
 	rd.lba = (uint32_t)pos_to_int(&setloc);
 	rd.count = sectors > 0 ? (uint32_t)sectors : 0;
 	rd.done = 0;
+	rd.aborted = 0;
 	rd.size = size;
 	rd.sector_cycles = (mode & CdlModeSpeed) ? SECTOR_CYCLES_2X : SECTOR_CYCLES_1X;
 	rd.event = rd.count ? clock_schedule(CDROM_SEEK_CYCLES + rd.sector_cycles, sector_event, NULL) : 0;
@@ -210,17 +279,19 @@ int CdRead(int sectors, unsigned long *buf, int mode)
 static int read_finished(void *arg)
 {
 	(void)arg;
-	return rd.done >= rd.count;
+	return rd.aborted || rd.done >= rd.count;
 }
 
 /* asm: CdReadSync -- sectors still to read (0 = done); mode 0 waits for the end. result (the
- * last status, from CdReady) is left untouched: the game always passes NULL. */
+ * last status, from CdReady) is left untouched: the game always passes NULL.
+ * An aborted read returns -1, including in blocking mode. */
 int CdReadSync(int mode, unsigned char *result)
 {
 	(void)result;
 	clock_psyq_entry();
-	if (mode == 0 && rd.done < rd.count) /* no wait (and no handler check) once it is over */
+	if (mode == 0 && !read_finished(NULL)) /* no wait (and no handler check) once it is over */
 		clock_wait_until(read_finished, NULL);
+	if (rd.aborted) return -1;
 	return (int)(rd.count - rd.done);
 }
 
@@ -278,6 +349,8 @@ int CdPosToInt(CdlLOC *p)
 /* Back to the state before boot (tests). */
 void psyq_libcd_reset(void)
 {
+    clock_cancel(rt.event); memset(&rt,0,sizeof(rt));
+    cd_stream_reset(); XaDec_Reset(); drive_mode=0;
 	clock_cancel(rd.event);
 	memset(&rd, 0, sizeof(rd));
 	memset(&setloc, 0, sizeof(setloc));
