@@ -49,13 +49,15 @@ context:
 | `DecDCTvlc2` con versión de STR desconocida | cabecera inválida | mismo valor de retorno y salida que el asm | N/A |
 | Tablas del exe ausentes | Pack sin `@exe` o exe corto | arranque abortado con mensaje, como `libgte_load_tables` | `PORT_ASSERT`/error de carga |
 | Callback reentrante | el callback llama a `DecDCTout` | sin recursión de pila; se encadena por evento del reloj | N/A |
-| OP1 completo | `playMovie(0)` desde el arranque | 3637 frames que cumplen la tolerancia; `MOV_playMovie` devuelve 1 | N/A |
+| OP1 completo | `playMovie(0)` desde el arranque | 3636 frames que cumplen la tolerancia (la tabla dice 3637; el original nunca envía el último al MDEC); `MOV_playMovie` devuelve 1 | N/A |
 | Start en el VBlank k | `movie0_skip.toml` | sale del video en el mismo VBlank que la referencia; devuelve 0 | N/A |
 | Referencia ausente | sin captura | código 77 (skip) | N/A |
 
 **Decisiones del dueño (2026-10-21):**
 1. **Tiempo del MDEC (opción A):** el fin de `DecDCTout` es un evento del reloj (AD-8), con un costo hipotético por macrobloque en `port/psyq/clock_costs.h` que 3.10 calibra. Un bloque `DW1_PORT` en `MOV_waitForFlip` (`src/mov/mov.c:150`, ya clasificado `port_yield` en `isr_spins.tsv`) deja avanzar el reloj dentro del spin.
 2. **Sincronía A/V (opción A):** en cada lado se mide el desfase entre el ciclo del último `PutDispEnv` de `MOV_playMovie` y el ciclo en que el decodificador XA entrega la última muestra del STR. Bloquea si |desfase_port − desfase_referencia| supera la duración media de un frame de video de la referencia (intervalo medio entre `PutDispEnv`).
+3. **Latencia de `CdControlB(CdlPause)` (2026-10-21):** se modela ahora, como costo hipotético en `port/psyq/clock_costs.h` (psx-spx o medición contra Redux), que 3.10 calibra. Es la causa de la salida con Start en el VBlank 121 frente a 122.
+4. **IDCT (2026-10-21):** se vuelve al modelo con 4 frames a 5/255 y se hace una búsqueda acotada más en la conversión YUV→RGB; si no llega a 4/255, se vuelve al dueño con los números.
 
 </frozen-after-approval>
 
@@ -99,6 +101,8 @@ context:
 ## Implementation Notes
 
 ## Spec Change Log
+
+- 2026-10-21, dueño: fila "OP1 completo" 3637 → 3636 frames. Evidencia: dos capturas de Redux muestran que el original lee la cabecera 3637, pone `MOVIE_COMPLETED` mientras decodifica el 3636 y nunca envía el 3637 al MDEC (`build/verification-3-7/report.md`). Decisiones 3 y 4 agregadas tras la investigación de Start (pausa CD de 1.240.612 ciclos en el original frente a 64 en el port) y del IDCT (el redondeo por pasada empeoró OP1 completo a 26 frames, máx 6/255).
 
 ## Review Triage Log
 
