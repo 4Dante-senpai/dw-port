@@ -9,4 +9,6 @@ void port_scene_finish(void);
 int port_scene_complete(void);
 int port_scene_audio_complete(void);
 void port_scene_enter(void *function);
+/* Optional movie timing observation; never advances the virtual clock. */
+void port_scene_movie_timing(const char *event, unsigned value);
 #endif

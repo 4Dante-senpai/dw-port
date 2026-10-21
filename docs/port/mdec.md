@@ -49,10 +49,12 @@ el lector del Pack para obtener el valor esperado.
 encolar el siguiente slice, que se despacha después de volver del callback
 actual. Reset cancela una salida pendiente. El coste provisional de 1024
 ciclos por macroblock está aislado en `port/psyq/clock_costs.h`: permanece
-como **hipótesis sin calibrar**. El dueño autorizó investigar y calibrar sólo
-ese coste tras resolver el gate visual; el residual visual impide llegar a
-ese paso en esta continuación. No se atribuye todavía el VBlank 121 frente
-a 122 a ese coste sin una traza causal. `MOV_waitForFlip` cede 1024 ciclos por iteración
+como **hipótesis sin calibrar**. La continuación autorizada por el dueño
+investigó Start: la pausa CD bloquea 1 240 612 ciclos en el original y sólo
+64 en el port. El último MDEC termina antes de acabar la decodificación del siguiente frame;
+`MOV_waitForFlip` no espera. Por eso no se ajusta MDEC para compensar la
+latencia CD ausente. La traza causal está en [reference.md](reference.md).
+`MOV_waitForFlip` cede 1024 ciclos por iteración
 sólo bajo `DW1_PORT`; el build PS1 conserva su bucle original.
 
 ## Verificación y evidencia
@@ -129,3 +131,42 @@ general de fidelidad. Evidencia exacta, hashes, harness y píxeles residuales:
 Los cuatro streams VLC expandidos permanecen idénticos antes y después.
 El resultado completo y la condición de parada se registran en
 [reference.md](reference.md).
+
+En la siguiente continuación se hizo un único ensayo acotado con seis
+variantes: modelo conservado, piso de color, mitades hacia arriba en color,
+mitades hacia arriba en IDCT, entrada de 9 bits y truncado de Y+color hacia
+cero. El piso de color alcanza máximo ≤4 en los cuatro frames, pero la media
+azul de 2318 sube a **0,5068229166666667**, fuera de 0,5. El truncado completo
+produce dos excesos de 5 en 3439. Las otras variantes conservan los dos
+excesos originales. Se conserva el modelo previo; ninguna variante supera
+ambos gates. No se sigue buscando ni se ajustan coeficientes a los píxeles.
+Resultados completos en `build/verification-3-7-gates/bounded/results.json`.
+
+La observación opcional `DW1_MOVIE_TIMING_TRACE=1` registra `PadRead`,
+entrada/salida MDEC, callbacks, decode, espera y pausa CD en stderr con
+ciclos, VBlank relativo y número de presentación. No avanza el reloj ni
+modifica las capturas de referencia. Las sondas Redux se conservan sólo en
+`build/verification-3-7-gates/`, usando direcciones del asm original, sin
+consultar fuentes de su decodificador.
+
+La regresión completa posterior confirma que la selección rápida no basta:
+con el modelo por pasada hay 26 frames fuera del máximo y 30 componentes
+(29 B y 1 R), frente a cuatro componentes de cuatro frames en el modelo
+anterior. El máximo global pasa de 5 a 6. Medias RGB sobre todos los frames:
+0,218758 / 0,169088 / 0,251815 antes; 0,254643 / 0,200700 / 0,290384 después.
+Máxima media de un frame por canal: 0,336966 / 0,284609 / 0,408008 antes;
+0,386133 / 0,290169 / 0,469544 después. Ninguna media excede 0,5.
+La lista exacta de píxeles y la matriz de verificación están en
+[reference.md](reference.md); los datos sin redondear están en
+`build/verification-3-7-gates/full-before-after.json`. No se revierte ni
+se vuelve a ajustar tras el ensayo acotado: queda pendiente la decisión
+del dueño sobre el modelo y la fidelidad residual.
+
+Verificación final secuencial: L1 nativo 51/51, ASan 49/49 y web 34/34;
+`scene_movie0_compare` y `scene_movie0_skip_compare` fallan en nativo y
+ASan por los gates documentados. Título, estado inicial, audio de título
+y XA pasan. `make compare` pasa. Los máximos completos RGB son 5/4/6,
+y los informes nativo/ASan de OP1 y Start son idénticos. OP1 conserva A/V
+dentro de un frame y XA de 54,424193 dB. La matriz completa, residuos y
+límites del PCM mezclado están en [reference.md](reference.md); no queda
+ninguna repetición solicitada pendiente, pero la historia sigue abierta.

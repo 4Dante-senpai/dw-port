@@ -79,6 +79,23 @@ static FILE *movie_trace;
 static char movie_directory[1024];
 static unsigned movie_frames, movie_origin;
 static uint64_t movie_xa_cycle;
+void port_scene_movie_timing(const char *event, unsigned value)
+{
+    if (movie_trace && getenv("DW1_MOVIE_TIMING_TRACE"))
+        fprintf(stderr, "movie-timing %s %llu %u %u %u\n", event,
+                (unsigned long long)clock_now(), clock_vblanks()-movie_origin,
+                movie_frames, value);
+}
+static void movie_function_timing(void *function, const char *event)
+{
+    if (!movie_trace || !getenv("DW1_MOVIE_TIMING_TRACE")) return;
+    const char *names[] = {"MOV_decodeFrame", "MOV_waitForFlip", "MOV_onSliceDecoded"};
+    for (unsigned i=0; i<sizeof(names)/sizeof(names[0]); i++)
+        if (function==dlsym(RTLD_DEFAULT,names[i])) {
+            char name[80]; snprintf(name,sizeof(name),"%s:%s",names[i],event);
+            port_scene_movie_timing(name,0);
+        }
+}
 
 /* Observation only: the last sample of a sector is delivered at this CD event. */
 void port_scene_movie_xa(void)
@@ -184,6 +201,7 @@ void port_scene_enter(void *function)
 void __cyg_profile_func_enter(void *function, void *caller)
 {
     (void)caller;
+    movie_function_timing(function,"enter");
     if (getenv("DW1_MOVIE_CAPTURE") && function==dlsym(RTLD_DEFAULT,"MOV_playMovie")) {
         const char *directory=getenv("DW1_MOVIE_CAPTURE");
         if(strlen(directory)>=sizeof(movie_directory)) fail("movie output path too long");
@@ -198,6 +216,7 @@ void __cyg_profile_func_enter(void *function, void *caller)
 void __cyg_profile_func_exit(void *function, void *caller)
 {
     (void)caller;
+    movie_function_timing(function,"exit");
     if (movie_trace && function==dlsym(RTLD_DEFAULT,"MOV_playMovie")) {
         const int *completed=dlsym(RTLD_DEFAULT,"MOVIE_COMPLETED");
         fprintf(movie_trace,"{\"event\":\"end\",\"cycle\":%llu,\"vblank\":%u,\"return\":%d,\"xa_cycle\":%llu}\n",
@@ -498,4 +517,5 @@ void port_scene_finish(void) {}
 int port_scene_complete(void) { return 0; }
 int port_scene_audio_complete(void) { return 0; }
 void port_scene_enter(void *function) { (void)function; }
+void port_scene_movie_timing(const char *event, unsigned value) { (void)event; (void)value; }
 #endif
