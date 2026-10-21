@@ -2,6 +2,9 @@
 #include <libetc.h>
 #include <libgpu.h>
 #include <libpress.h>
+#ifdef DW1_PORT
+#include "../../port/psyq/clock.h"
+#endif
 
 #include <dw/mov.h>
 #include <dw/types.h>
@@ -161,6 +164,9 @@ void MOV_waitForFlip(MovieEnv *env, int32_t unused)
 	(void)&timeout;
 
 	while (env->flipPending == 0) {
+#ifdef DW1_PORT
+		clock_advance(1024);
+#endif
 		if (--timeout == 0) {
 			env->flipPending = 1;
 			env->frameIndex = (env->frameIndex != 0) ? 0 : 1;

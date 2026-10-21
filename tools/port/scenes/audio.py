@@ -12,10 +12,11 @@ WINDOW = RATE * 5
 
 
 def external_output(path, root):
-    """Audio evidence must never be written anywhere inside the checkout."""
+    """Keep copyrighted evidence outside sources, allowing the ignored build tree."""
     path = Path(path).resolve()
-    if path.is_relative_to(Path(root).resolve()):
-        raise ValueError("audio output must be outside the repository")
+    root = Path(root).resolve()
+    if path.is_relative_to(root) and not path.is_relative_to(root / "build"):
+        raise ValueError("audio output must be outside repository sources (build is allowed)")
     return path
 
 
@@ -300,9 +301,9 @@ def validate_segments(scene):
             previous = len(checkpoints)
     # No input may be scheduled in the music segment, including held movement.
     final = checkpoints.index(segments[-1]["start"])
-    if any(checkpoints.index(event["after"]) >= final for event in scene.get("inputs", [])):
+    if not scene.get("movie") and any(checkpoints.index(event["after"]) >= final for event in scene.get("inputs", [])):
         raise ValueError("new inputs in music segment")
-    if scene.get("inputs") and scene["inputs"][-1]["buttons"]:
+    if not scene.get("movie") and scene.get("inputs") and scene["inputs"][-1]["buttons"]:
         raise ValueError("music segment must begin with released inputs")
     return segments
 

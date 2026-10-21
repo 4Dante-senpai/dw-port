@@ -1,0 +1,15 @@
+movie = true
+expected_return = 0
+id = "movie0_skip"
+overlay = "mov"
+mark = "MOV_playMovie"
+inputs_from = "mark"
+inputs = [{ after = "MOV_playMovie", vblank = 120, buttons = [3] }, { after = "MOV_playMovie", vblank = 180, buttons = [] }]
+capture_vblank = 6000
+expect_rand = false
+checkpoints = ["MOV_playMovie", "runLandingScreen"]
+window = 0
+xa = true
+[[audio]]
+start = "MOV_playMovie"
+finish = "MOV_playMovie"

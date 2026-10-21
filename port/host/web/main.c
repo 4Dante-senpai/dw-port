@@ -1,4 +1,5 @@
 /* Development web host. Storage belongs exclusively to the I/O worker. */
+#include "../../psyq/libpress.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -74,7 +75,7 @@ int web_prepare(void)
     if (pack_path) {
         char error[1024];
         if (cdrom_open(pack_path, DW1_MANIFEST_SHA256, error, sizeof(error)) ||
-            libgte_load_tables(error, sizeof(error))) {
+            libgte_load_tables(error, sizeof(error)) || libpress_load_tables(error, sizeof(error))) {
             MAIN_THREAD_EM_ASM({Module.printErr(UTF8ToString($0));}, error);
             return -1;
         }

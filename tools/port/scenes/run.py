@@ -403,11 +403,13 @@ def run_audio(args, scene, build, checkpoints, pack):
     hashes = record.get("hashes", {})
     required = {f"run-{run}-{segment}.{suffix}" for run in (1, 2)
                 for segment in range(1,len(scene["audio"])+1) for suffix in (("spu", "wav", "xa.wav") if scene.get("xa") else ("spu", "wav"))}
+    if scene.get("movie"):
+        for index in (1,2): required.update(reference_audio.movie.evidence(reference / f"movie-{index}"))
     if set(hashes) != required:
         raise ValueError("incomplete audio reference manifest")
     for name, expected in hashes.items():
         path = reference / name
-        if (path.parent != reference or not path.is_file()
+        if (not path.resolve().is_relative_to(reference) or not path.is_file()
                 or hashlib.sha256(path.read_bytes()).hexdigest() != expected):
             raise ValueError("missing/stale audio reference evidence; run capture.py --audio")
     output = audio.external_output(Path(os.environ.get("DW1_AUDIO_DIR", "/tmp/dw1-audio-port")) /
@@ -435,12 +437,17 @@ def run_audio(args, scene, build, checkpoints, pack):
         environment = dict(os.environ)
         if scene.get("xa"):
             environment["DW1_XA_WAV"] = str(output / f"run-{index}-1.xa.wav")
+        if scene.get("movie"):
+            directory=output / f"movie-{index}"
+            if directory.exists(): shutil.rmtree(directory)
+            directory.mkdir()
+            environment["DW1_MOVIE_CAPTURE"] = str(directory)
         if args.build == "native-asan":
             environment["ASAN_OPTIONS"] = environment.get("ASAN_OPTIONS", "") + ":detect_stack_use_after_return=0"
         command = [str(build / "dw1"), "--headless", "--pack", str(pack), "--frames", "40000",
                    "--capture-mark", scene["mark"], "--inputs-from", "mark", "--inputs", str(inputs),
                    "--checkpoints", str(cp_file), "--audio-segments", str(declarations)]
-        result = subprocess.run(command, cwd=build, env=environment, capture_output=True, timeout=1800)
+        result = subprocess.run(command, cwd=build, env=environment, capture_output=True, timeout=3500 if scene.get("movie") else 1800)
         log = result.stdout + result.stderr
         (output / f"run-{index}.log").write_bytes(log)
         if result.returncode or re.search(rb"AddressSanitizer|runtime error", log):
@@ -449,6 +456,12 @@ def run_audio(args, scene, build, checkpoints, pack):
     if all_hashes[0] != all_hashes[1]:
         raise ValueError("non-deterministic native SPU trace/PCM")
     metrics, failures = [], []
+    video = None
+    if scene.get("movie"):
+        reference_audio.movie.deterministic(output / "movie-1", output / "movie-2")
+        video = reference_audio.movie.compare(output / "movie-1",reference / "movie-1",scene,output / "diff")
+        failures.extend(video["failures"])
+        print(f'movie: port={video["port_frames"]}, reference={video["reference_frames"]}, A/V={video["av"]}, failed checks={len(video["failures"])}')
     for i, segment in enumerate(scene["audio"], 1):
         actual, expected = output / f"run-1-{i}.spu", reference / f"run-1-{i}.spu"
         content = audio.diagnostic(audio.compare_voice_content, actual, expected,
@@ -466,7 +479,10 @@ def run_audio(args, scene, build, checkpoints, pack):
         if scene.get("xa"):
             xa_pcm = audio.diagnostic(audio.compare_pcm, output / f"run-1-{i}.xa.wav",
                                       reference / f"run-1-{i}.xa.wav", whole_window=True)
-            if xa_pcm["status"] != "match": failures.append(f"XA: {xa_pcm['error']}")
+            # The Start scenario gates exit timing/return; its short XA prefix
+            # is diagnostic and need not contain the existing 5 s SNR window.
+            if xa_pcm["status"] != "match" and not (scene.get("movie") and scene["expected_return"] == 0):
+                failures.append(f"XA: {xa_pcm['error']}")
         bounds = dict(port=audio.trace_data(actual)[1], reference=audio.trace_data(expected)[1])
         metrics.append(dict(segment=i, content=content, capture_bounds=bounds, rule_b=trace, pcm=pcm, xa=xa_pcm))
         if content["status"] != "match":
@@ -483,10 +499,10 @@ def run_audio(args, scene, build, checkpoints, pack):
         if isinstance(value, list):
             return [finite_metrics(item) for item in value]
         return value
-    report.write_text(json.dumps(finite_metrics(dict(hashes=all_hashes[0], segments=metrics)),
+    report.write_text(json.dumps(finite_metrics(dict(hashes=all_hashes[0], segments=metrics, video=video)),
                                  indent=2, allow_nan=False) + "\n")
     if failures:
-        raise ValueError("; ".join(failures))
+        raise ValueError("; ".join(failures[:8]) + (f"; {len(failures)} failed checks (see {report})" if len(failures)>8 else ""))
     return 0
 
 
@@ -509,7 +525,7 @@ def main():
     validate_scene(scene)
     if args.compare_audio:
         audio.validate_segments(scene)
-    frame = validate_comparison(scene, args.id) if args.compare else None
+    frame = validate_comparison(scene, args.id) if args.compare and not scene.get("movie") else None
     vars_path = ROOT / "tools/port/scenes/state_vars.txt"
     checkpoints = checkpoint_symbols(scene, ROOT / "config/us/symbols.txt", build / "dw1")
     variables = state_variables(vars_path, ROOT / "config/us/symbols.txt", build / "dw1") if args.state else []
@@ -537,7 +553,7 @@ def main():
             return 77
         subprocess.run([str(build / "dw1-pack"), "build", str(cues[0]),
                         str(ROOT / "tools/port/manifest/us.tsv"), str(pack)], check=True)
-    if args.compare_audio:
+    if args.compare_audio or scene.get("movie"):
         return run_audio(args, scene, build, checkpoints, pack)
     if scene.get("audio"):
         raise ValueError("audio scenes require --compare-audio")

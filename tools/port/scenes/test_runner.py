@@ -583,3 +583,53 @@ with tempfile.TemporaryDirectory() as directory:
         result=runner.audio.compare_pcm(actual,expected,whole_window=True)
     assert len(result["windows"])==1 and result["compared_frames"]==264600
 print("scene_runner: timestamped XA tap validation and full-window SNR OK")
+
+# Movie gates apply to every RGB channel and use delivery cycles, not wall time.
+movie_spec = importlib.util.spec_from_file_location('movie', Path(__file__).with_name('movie.py'))
+movie = importlib.util.module_from_spec(movie_spec)
+movie_spec.loader.exec_module(movie)
+with tempfile.TemporaryDirectory() as tmp:
+    root=Path(tmp); actual=root/'port'; reference=root/'ref'
+    for directory in (actual,reference):
+        directory.mkdir()
+        rows=[dict(event='start',cycle=0),dict(event='frame',index=1,cycle=1000,vblank=2),
+              dict(event='frame',index=2,cycle=2000,vblank=4),
+              dict(event='end',cycle=2200,vblank=4,**{'return':1,'xa_cycle':1700})]
+        (directory/'movie.jsonl').write_text('\n'.join(map(json.dumps,rows))+'\n')
+        for i in (1,2): (directory/f'frame-{i:04d}.ppm').write_bytes(b'P6\n320 240\n255\n'+bytes(230400))
+    assert not movie.evidence(root/'absent')
+    scene=dict(expected_frames=2,expected_return=1)
+    assert not movie.compare(actual,reference,scene,root/'diff')['failures']
+    movie.deterministic(actual,reference)
+    frame=actual/'frame-0002.ppm'
+    frame.write_bytes(b'P6\n320 240\n255\n'+b'\x04'+bytes(230399))
+    assert not movie.compare(actual,reference,scene,root/'diff')['failures']
+    frame.write_bytes(b'P6\n320 240\n255\n'+b'\x05'+bytes(230399))
+    result=movie.compare(actual,reference,scene,root/'diff')
+    assert result['failures'] and result['worst_frame']==2
+    assert (root/'diff/worst-frame-0002.ppm').is_file()
+    frame.write_bytes(b'P6\n320 240\n255\n'+b'\x01\x00\x00'*76800)
+    assert movie.compare(actual,reference,scene,root/'diff')['frames'][1]['channel_means']==[1,0,0]
+    assert movie.compare(actual,reference,scene,root/'diff')['failures']
+    frame.write_bytes((reference/frame.name).read_bytes())
+    rows[-1]['xa_cycle']=1
+    (actual/'movie.jsonl').write_text('\n'.join(map(json.dumps,rows))+'\n')
+    assert any('A/V' in f for f in movie.compare(actual,reference,scene,root/'diff')['failures'])
+    rows[-1].update(xa_cycle=1700,vblank=5)
+    rows[-1]['return']=0
+    (actual/'movie.jsonl').write_text('\n'.join(map(json.dumps,rows))+'\n')
+    assert any('skip VBlank' in f for f in movie.compare(actual,reference,dict(expected_return=0),root/'diff')['failures'])
+    try: movie.deterministic(actual,reference)
+    except ValueError: pass
+    else: raise AssertionError('non-deterministic movie accepted')
+    frame.unlink()
+    try: movie.sequence(actual)
+    except ValueError: pass
+    else: raise AssertionError('missing movie frame accepted')
+    # Start gates return timing; decoding more frames before Start is diagnostic.
+    rows=[json.loads(line) for line in (reference/'movie.jsonl').read_text().splitlines()]
+    rows[-1]['return']=0
+    (reference/'movie.jsonl').write_text('\n'.join(map(json.dumps,rows))+'\n')
+    (actual/'movie.jsonl').write_text('\n'.join(map(json.dumps,[rows[0],rows[1],rows[-1]]))+'\n')
+    assert not movie.compare(actual,reference,dict(expected_return=0),root/'diff')['failures']
+print('movie: per-channel tolerance, worst diff, complete sequence, determinism, return, skip VBlank and A/V bounds OK')
