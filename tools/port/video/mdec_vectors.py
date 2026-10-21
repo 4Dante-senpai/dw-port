@@ -23,11 +23,9 @@ def content():
                 val=v*2 if q==0 else v*qt[k] if k==0 else (v*qt[k]*q+4)//8
                 pos=k if q==0 else zig[k]
                 a[pos//8][pos%8]=clamp(val)
-            # Matrix products S^T * A, then T * S; round both products as
-            # psx-spx real_idct_core specifies (> half, not >= half).
-            t=[[(sum((scale[z][y]//8)*a[z][x] for z in range(8))+4095)//8192
-                for x in range(8)] for y in range(8)]
-            a=[[(sum(t[y][z]*(scale[z][x]//8) for z in range(8))+4095)//8192
+            # Direct 2-D matrix product S^T * A * S, with a single final rounding.
+            a=[[(sum((scale[z][y]//8)*a[z][w]*(scale[w][x]//8)
+                     for z in range(8) for w in range(8)) + 33554431)//67108864
                 for x in range(8)] for y in range(8)]
             blocks.append(a)
         for rgb24 in (0,1):
@@ -37,11 +35,9 @@ def content():
                     for x in range(16):
                         cr, cb = (blocks[b][y//2][x//2] for b in (0,1))
                         lum=blocks[2+(y//8)*2+x//8][y%8][x%8]
-                        # Decimal psx-spx factors; color rounding is a model
-                        # hypothesis because that source leaves it unspecified.
-                        rgb=[clamp(lum+(cr*14020+4999)//10000,-128,127)+128,
-                             clamp(lum+(-cb*3437-cr*7143+4999)//10000,-128,127)+128,
-                             clamp(lum+(cb*17720+4999)//10000,-128,127)+128]
+                        rgb=[clamp(lum+(cr*1436+512)//1024,-128,127)+128,
+                             clamp(lum+(-cb*352-cr*731+512)//1024,-128,127)+128,
+                             clamp(lum+(cb*1815+512)//1024,-128,127)+128]
                         if rgb24: pixels.extend(rgb)
                         else: pixels.extend(struct.pack('<H',sum((c>>3)<<(5*i) for i,c in enumerate(rgb)) | stp<<15))
                 hashes.append(hashlib.sha256(pixels).hexdigest())

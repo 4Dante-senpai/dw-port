@@ -1,6 +1,6 @@
 movie = true
 expected_return = 1
-expected_frames = 3637
+expected_frames = 3636
 id = "movie0"
 overlay = "mov"
 mark = "MOV_playMovie"

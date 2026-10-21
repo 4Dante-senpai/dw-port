@@ -417,6 +417,12 @@ la autorización indicada en la especificación.
 
 ## STR y libpress (3.7): evidencia y límites
 
+**Nota de vigencia:** los ensayos y matrices que siguen hasta la sección de
+decisiones 3/4 describen ejecuciones históricas, incluido el modelo por pasada
+de d57a330. El dueño ya corrigió OP1 a 3636 en el bloque congelado. Los
+resultados actuales y sus fallos residuales se registran al final.
+
+
 Las escenas `movie0` y `movie0_skip` capturan todos los `PutDispEnv` de
 `MOV_playMovie`, sin seleccionar un subconjunto de frames. Véase
 [mdec.md](mdec.md) para el modelo, atribución y gates. En la continuación
@@ -692,3 +698,100 @@ compartía directorio de trabajo. No se alcanzó el timeout ni hubo diagnóstico
 del sanitizer. La recaptura secuencial anterior y sus comparaciones pasaron;
 en esta batería se reutilizó esa referencia validada. Registro conservado en
 `build/verification-3-7/asan-interruption.txt` e informe anterior archivado.
+
+## Decisiones 3 y 4: resultados vigentes (2026-10-21)
+
+IDCT restaurada: fracción conservada entre pasadas, acumulación de 64 bits y un redondeo final; divisiones negativas explícitas. El oráculo Python calcula el producto completo SᵀAS y regenera 12 hashes sintéticos. Los factores RGB conservados son 1436/−352/−731/1815 divididos por 1024, redondeo al más cercano con mitades hacia arriba; Y+color se satura a −128..127 antes del +128. psx-spx deja precisión y redondeo de color sin especificar.
+
+CdControlB(CdlPause) avanza el reloj AD-8 y despacha eventos; el estado del comando de lectura sobrevive a StUnSetRing. Pause cancela sectores pendientes. Costes como hipótesis de 3.10, sin ajustar MDEC/GPU. La escena exige 3636 cuadros según la decisión del dueño. Se conserva la referencia: sólo se migra su sello por expected_frames, comprobando antes la identidad; capturas y hashes no cambian.
+
+## Pruebas secuenciales
+
+| Trabajo | Resultado | Pruebas | Evidencia |
+|---|---|---:|---|
+| L1-native-headless | PASS | 51/51 | [log](../../build/verification-3-7-owner/final-L1-native-headless.log) |
+| L1-native-asan | PASS | 49/49 | [log](../../build/verification-3-7-owner/final-L1-native-asan.log) |
+| L1-web | PASS | 34/34 | [log](../../build/verification-3-7-owner/final-L1-web.log) |
+| reference_movie0-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-reference_movie0-native-headless.log) |
+| reference_movie0_skip-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-reference_movie0_skip-native-headless.log) |
+| scene_movie0_compare-native-headless | FAIL | 0/1 | [log](../../build/verification-3-7-owner/final-scene_movie0_compare-native-headless.log) |
+| scene_movie0_skip_compare-native-headless | FAIL | 0/1 | [log](../../build/verification-3-7-owner/final-scene_movie0_skip_compare-native-headless.log) |
+| scene_movie0_compare-native-asan | FAIL | 0/1 | [log](../../build/verification-3-7-owner/final-scene_movie0_compare-native-asan.log) |
+| scene_movie0_skip_compare-native-asan | FAIL | 0/1 | [log](../../build/verification-3-7-owner/final-scene_movie0_skip_compare-native-asan.log) |
+| scene_title_compare-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-scene_title_compare-native-headless.log) |
+| reference_newgame_state-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-reference_newgame_state-native-headless.log) |
+| scene_newgame_state-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-scene_newgame_state-native-headless.log) |
+| reference_title_audio-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-reference_title_audio-native-headless.log) |
+| scene_title_audio_compare-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-scene_title_audio_compare-native-headless.log) |
+| reference_xa_op1-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-reference_xa_op1-native-headless.log) |
+| scene_xa_op1_compare-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-scene_xa_op1_compare-native-headless.log) |
+| make-compare | PASS | 0/0 | [log](../../build/verification-3-7-owner/final-make-compare.log) |
+
+CTest: 147 pruebas; {'Passed': 143, 'Failed': 4}. Builds nativo, ASan y web correctos. Referencias reutilizadas; sin recapturas. make compare conserva los binarios matching.
+
+## Única búsqueda acotada de color
+
+Cada variante compara OP1 completo, 3636 cuadros, incluidos bordes negros, contra los mismos frames de Redux. nearest usa mitades hacia abajo; fixed cuantiza los factores decimales publicados al entero más cercano para esa precisión; signed trunca Y+color hacia cero antes del sesgo +128, biased lo hace después del sesgo y antes de saturar a 0..255. No se ajustaron factores a píxeles.
+
+| Variante | Máximo RGB | Medias globales RGB | Mayor media de cuadro RGB | Cuadros con máximo >4 |
+|---|---|---|---|---:|
+| restored | 4/3/5 | 0.218757606 / 0.169087693 / 0.251815285 | 0.336966146 / 0.284609375 / 0.408007813 | 4 |
+| decimal-nearest | 4/3/5 | 0.218909935 / 0.169114941 / 0.251951693 | 0.343346354 / 0.284609375 / 0.418815104 | 4 |
+| decimal-floor | 4/3/4 | 0.324380221 / 0.307123126 / 0.321362296 | 0.520820313 / 0.569895833 / 0.562695313 | 0 |
+| fixed-8 | 4/3/5 | 0.218757606 / 0.169195645 / 0.250436800 | 0.336966146 / 0.284609375 / 0.393255208 | 4 |
+| fixed-12 | 4/3/5 | 0.218909935 / 0.169110171 / 0.251951693 | 0.343346354 / 0.284609375 / 0.418815104 | 4 |
+| fixed-16 | 4/3/5 | 0.218909935 / 0.169112467 / 0.251951693 | 0.343346354 / 0.284609375 / 0.418815104 | 4 |
+| decimal-trunc-signed | 4/3/5 | 0.322552642 / 0.321432811 / 0.369058303 | 0.523684896 / 0.483828125 / 0.632148438 | 14 |
+| decimal-trunc-biased | 4/3/4 | 0.324380221 / 0.307123126 / 0.321362296 | 0.520820313 / 0.569895833 / 0.562695313 | 0 |
+
+Ninguna variante cumple ambos límites. decimal-floor y decimal-trunc-biased respetan el máximo, pero exceden la media de 0,5. Saturar el intervalo firmado y luego sumar +128 equivale algebraicamente a desplazarlo primero y saturar a 0..255 cuando se conserva el mismo piso. Se conserva el modelo restaurado. El replay completo reproduce las métricas del juego y los hashes históricos de los cuatro cuadros.
+
+Antes (d57a330, redondeo por pasada): máximo RGB 5/4/6; medias globales 0,2546425716790429 / 0,2006998375618812 / 0,2903838388396131. Después (restaurado): máximo RGB 4/3/5; medias globales 0,21875760622937293 / 0,1690876929489824 / 0,2518152853696828; mayores medias de cuadro 0,33696614583333334 / 0,284609375 / 0,4080078125. Todas las medias pasan, cuatro componentes azules aún exceden 4/255:
+
+| Cuadro | Canal | Píxel desde cero | Port | Referencia | Error |
+|---|---|---|---:|---:|---:|
+| 2318 | B | (144,80) | 181 | 176 | 5/255 |
+| 2587 | B | (224,64) | 53 | 48 | 5/255 |
+| 3439 | B | (176,96) | 24 | 19 | 5/255 |
+| 3453 | B | (176,96) | 21 | 16 | 5/255 |
+
+A/V OP1: error 87181 ciclos ≤1128796,8052269602. XA aislado: 54,42419314227058 dB ≥40, desfase cero y misma duración. Start A/V: error 1003094 ≤1128792,2272727273; el fallo es el VBlank de retorno. El PCM mezclado de OP1/XA sigue sin acreditar 40 dB (SNR −inf y duración distinta); es diagnóstico no bloqueante según la especificación.
+
+Diagnósticos de audio conservados (el PCM mezclado no es gate de esta historia):
+
+| Escena / segmento | Registros | XA SNR dB | PCM SNR dB | Duración PCM distinta |
+|---|---|---|---|---|
+| native-headless-movie0 / 1 | match | 54.42419314227058 | -inf | True |
+| native-headless-movie0_skip / 1 | match | sin ventana ≥5 s | sin ventana ≥5 s | n/a |
+| native-headless-title_audio / 1 | match | sin ventana ≥5 s | -3.7066586255974574 | True |
+| native-headless-title_audio / 2 | match | sin ventana ≥5 s | 8.492502978433144 | True |
+| native-headless-xa_op1 / 1 | match | 54.42419314227058 | -inf | True |
+
+## Start y reloj
+
+psx-spx publica promedios utilizables de segunda respuesta de Pause: 0x21181c (2168860) a velocidad simple, 0x10bd93 (1097107) a doble velocidad y 0x1df2 (7666) ya pausado. Se usan como hipótesis de 3.10; no se sustituye ese dato por la medida Redux de 1240612 ciclos. [Fuente primaria](https://psx-spx.consoledev.net/cdromdrive/#cdrom-response-timings).
+
+| Evento | Port ciclos / VB / cuadro | Redux ciclos / VB / iteración |
+|---|---|---|
+| PadRead ve Start | 176859242 / 121 / 56 | 803688388 / 120 / 45 |
+| Pause entra | 176859370 / 121 / 56 | 803689630 / 120 / 45 |
+| Pause sale | 177956541 / 122 / 56 | 804930242 / 122 / 45 |
+| Retorno 0 | 178187005 / 123 / 56 | 804931349 / 122 / 45 |
+
+La latencia ausente de Pause era real: antes sólo se cobraban 64 ciclos y se retornaba en 121. También se perdía el estado de lectura al desmontar el anillo. Corregidos ambos, Pause termina en 122, pero el retorno sigue fuera del gate: 123 frente a 122. ClearImage/DrawSync cuestan 230464 ciclos en el port frente a 1107 hasta el retorno instrumentado original (1094 hasta el breakpoint end). El modelo GPU cobra 480×480 píxeles más la entrada PsyQ; PadRead ya sucede un VBlank después del original. La primera entrada MDEC conserva la diferencia previa de 20 VBlanks. El último MDEC ya terminó al salir del decode y waitForFlip no espera. No se ajusta GPU, MDEC ni otra constante para ocultar el desfase; la calibración completa de fases queda para 3.10.
+
+## Cuenta de cuadros del original
+
+El STR contiene cuadros 1..3719 y sí contiene 3637. La tabla original fija límite 3637. Las dos trazas Redux leen cabeceras 1..3637, envían al MDEC 1..3636 y presentan 1..3636. Secuencia final: presenta 3635 (4856057611), MDEC 3636 (4856069147), lee 3637 (4856956789), escribe MOVIE_COMPLETED=1 (4856956797), presenta 3636 con el flag activo (4857186405), retorna 1 (4858416486, VB7304). Nunca envía 3637 al MDEC. La cuenta coincide con la matriz corregida por el dueño. Evidencia previa: build/verification-3-7-gates/frame-count.json, str-headers.json y build/evidence/reference/movie0/headers-{1,2}.jsonl.
+
+## Límites y evidencia
+
+La historia sigue abierta por los fallos visuales y Start. A/V, XA, registros y diagnósticos PCM completos están en summary.json. El PCM mezclado es diagnóstico no bloqueante y no demuestra paridad del mixer; el XA corto de Start no alcanza la ventana de cinco segundos. La excepción ASan histórica de reference_newgame_state a los 177,92 s fue SIGTERM de una captura duplicada, no un diagnóstico ASan ni un timeout (asan-interruption.txt).
+
+Las pruebas sintéticas Pause verifican reloj/eventos, velocidades, desmontaje previo y cancelación de sectores. av_stubs ahora exige exactamente 12 VBlanks en vez de 10 porque incluye la nueva pausa a 2×; no es una relajación del gate de escena. El primer fallo de esa expectativa obsoleta y su repetición completa se conservan en initial-results-stale-expectation.json y initial-L1-native-headless-stale-expectation.log. scene_audio_runtime conserva la regresión del guard de evidencia bajo build/. No hay cambios nuevos en src/ ni bytes de ejecutable en fuentes.
+
+Cruces: {'movie0_native_asan_identical': True, 'movie0_skip_native_asan_identical': True, 'restored_frames_match_old_hashes': True, 'full_replay_matches_game_metrics': True, 'source_unchanged_during_tests': True, 'head_unchanged': True, 'spec_unchanged': True}.
+
+Evidencia actual bajo build/verification-3-7-owner/: source-sha256.json, spec.sha256, search.py, search-plan.json, search-results.json, full.c, full-channel-metrics.json, full-residual-pixels.json, skip-timing-port.json, reference-stamp-migration.json, final-results.json y logs. Capturas bajo /dw/build/evidence. El informe anterior queda en build/verification-3-7-owner/prior-report.md.
+
+Informe y JSON completos: `build/verification-3-7/{report.md,summary.json}`. No quedaron reruns solicitados pendientes.
