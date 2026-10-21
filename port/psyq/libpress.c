@@ -8,6 +8,7 @@
 #include "../backend/cdrom.h"
 #include "dw1_press_tables.h"
 #include <string.h>
+__attribute__((weak)) void port_scene_movie_timing(const char *event, unsigned value);
 
 static uint8_t mdec_iq[DW1_PRESS_MDEC_IQ_SIZE];
 static uint8_t mdec_coef[DW1_PRESS_MDEC_COEF_SIZE];
@@ -72,6 +73,7 @@ static void output_done(void *unused)
     (void)unused;
     out_event = 0;
     mdec_out(out_buffer, (size_t)out_words);
+    if (port_scene_movie_timing) port_scene_movie_timing("MDEC:done", out_words);
     if (out_callback) out_callback();
 }
 
@@ -101,6 +103,7 @@ void DecDCTin(unsigned long *buf, int mode)
     buf[0] = (buf[0] & ~0x0a000000ul) |
         ((mode & 1) ? 0 : 0x08000000ul) | ((mode & 2) ? 0x02000000ul : 0);
     decode_command = buf[0];
+    if (port_scene_movie_timing) port_scene_movie_timing("MDEC:in", 0);
     PORT_ASSERT(mdec_command(decode_command, buf + 1, buf[0] & 65535) == 0);
 }
 
@@ -119,6 +122,7 @@ void DecDCTout(unsigned long *buf, int size)
     }
     out_buffer = buf;
     out_words = size;
+    if (port_scene_movie_timing) port_scene_movie_timing("MDEC:out", size);
     unsigned mb_words = ((decode_command >> 27) & 3) == 2 ? 192 : 128;
     uint64_t count = ((unsigned)size + mb_words - 1) / mb_words;
     out_event = clock_schedule((count ? count : 1) * CLOCK_MDEC_MACROBLOCK_CYCLES,

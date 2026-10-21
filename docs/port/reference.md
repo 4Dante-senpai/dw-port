@@ -498,8 +498,197 @@ igual al manifest del disco. Evidencia adicional en
 `build/verification-3-7-gates/{str-headers,str-selected-headers,original-movie-table,frame-count}.json`
 y `MOV-original.asm`. La sonda se conserva en ese directorio y no modifica
 el adaptador versionado ni el código original. La recaptura fue necesaria
-porque se perdieron los archivos de `/tmp`; sus cuatro hashes de referencia
-de la comprobación rápida coinciden con los registrados anteriormente.
+porque se perdieron los archivos de `/tmp`; los 3636 hashes de referencia
+de cada ejecución y el footer temporal coinciden con los registrados
+anteriormente (`reference-preservation.json`).
 
 No se cambia el consumidor: no hay un bug del port en esta cuenta. El
 requisito congelado de 3637 presentaciones continúa fallando explícitamente.
+
+### Start: causa del retorno en 121 frente a 122
+
+Dos ejecuciones de cada sonda producen trazas idénticas. Se conservan en
+`build/verification-3-7-gates/skip-timing-port-{1,2}.json` y
+`build/evidence/reference/movie0_skip/timing-{1,2}.jsonl`. La sonda Redux
+observa instrucciones del asm USA; no usa código fuente del emulador.
+
+| Evento | Port: ciclo / VBlank / iteración | Original: ciclo / VBlank / iteración |
+|---|---|---|
+| Primer `DecDCTin` | 114 034 187 / 9 / 1 | 752 416 057 / 29 / 1 |
+| Primera presentación | 115 269 201 / 12 / 1 | 754 010 018 / 32 / 1 |
+| Última espera de flip: entrada | 176 858 689 / 120 / 56 | 803 214 070 / 119 / 45 |
+| Última espera de flip: salida | 176 858 689 / 120 / 56 | 803 214 099 / 119 / 45 |
+| `PadRead` devuelve Start (0x800) | 176 859 242 / 121 / 56 | 803 688 388 / 120 / 45 |
+| `CdControlB(CdlPause)`: entrada | 176 859 370 / 121 / 56 | 803 689 630 / 120 / 45 |
+| `CdControlB(CdlPause)`: salida | 176 859 434 / 121 / 56 | 804 930 242 / 122 / 45 |
+| Retorno al llamador, valor 0 | 177 089 898 / 121 / 56 | 804 931 349 / 122 / 45 |
+
+La aplicación del input no explica por sí sola el retorno: **el original
+ya ve Start en el VBlank 120**. A continuación bloquea **1 240 612 ciclos**
+en `CdControlB`, cruzando los VBlanks 121 y 122. El port ejecuta `CdlPause`
+sin latencia de comando y consume sólo **64 ciclos**. Esa hipótesis previa
+está explícita en `port/psyq/libcd.c`: `CdControl/B/F` y `CdSync` completan
+inmediatamente. En el original se observan los callsites `0x800108fc` y
+`0x80010904`; `ClearImage` vuelve en 804 931 078 y `DrawSync` en 804 931 323.
+La diferencia posterior a `PadRead` está delimitada a la espera CD.
+
+También difiere la fase del bucle: antes del primer MDEC ya hay una ventaja
+de 20 VBlanks en el port. Al llegar Start, el port está en la iteración 56
+y el original en la 45; el último `PadRead` del port ocurre un VBlank más
+tarde. Los tiempos de CPU/CD del arranque y de la expansión VLC no están
+calibrados. La traza no atribuye cada ciclo de esa divergencia inicial a
+un componente; sí demuestra que precede al primer MDEC. En la última
+iteración del port, el MDEC termina en 175 955 777 (VBlank 119), mientras
+`MOV_decodeFrame` termina en 176 858 689 (120). La espera de flip consume
+cero ciclos. Aumentar el coste MDEC no modelaría la espera de pausa ausente.
+
+Se mantiene `CLOCK_MDEC_MACROBLOCK_CYCLES=1024` como hipótesis sin calibrar
+para 3.10. No se ajusta ningún coste CD/CPU para forzar el resultado. El
+gate Start **sigue fallando 121 frente a 122**: encontrar la causa no
+constituye corregir la temporización de comandos CD.
+
+### Ensayo acotado de color y evidencia persistente
+
+La tabla antes/después por canal de los cuatro frames y el ensayo de seis
+variantes están en [mdec.md](mdec.md). Se conserva el modelo psx-spx con
+redondeo por pasada. El piso de color elimina los máximos de 5 en esa
+selección, pero incumple la media azul de 2318 (0,5068229166666667 > 0,5).
+Ninguna variante ensayada satisface ambos límites; no se relajan.
+
+El guard del host y el runner permiten evidencia bajo el árbol ignorado
+`build/`, verificando rutas resueltas. Siguen rechazando rutas a fuentes,
+incluidos alias y symlinks desde `build` hacia `src`. El test
+`scene_audio_runtime` verifica aceptación en `build`, aceptación mediante
+alias hacia ese árbol y rechazo de fuentes; pasó en nativo y ASan.
+La primera ejecución completa se detuvo por la discrepancia de guards;
+se conserva como fallo de infraestructura previo en
+`build/verification-3-7-gates/scene_movie0_compare-native-pathguard-failure.log`.
+
+Las referencias existentes de título y estado newgame se reutilizan desde
+`build/evidence/reference/`. Las capturas de audio de título y XA que estaban en `/tmp`
+ya no existían: se recapturaron y validaron en `build`, dos ejecuciones por
+escena. No se recapturó por el cambio de redondeo. La especificación completa conserva su SHA-256
+`472669cf9557c9aebb87d9ed146427c5874af25dea890f3a5fef0ef03e3029f2`.
+
+### Comparación completa con redondeo por pasada
+
+La comparación nativa completa descubre **26 frames y 30 componentes** fuera
+del máximo de 4/255: 29 azules y uno rojo. El peor error es **6/255** en el
+frame 2142; los demás componentes listados difieren 5/255. Las medias por
+canal permanecen dentro de 0,5. La selección rápida no predijo este resultado:
+aunque dos de sus cuatro frames mejoran, el resultado completo empeora
+respecto de los cuatro frames a 5/255 de la IDCT anterior. Se conserva el
+modelo por pasada ya incluido en el WIP, después del único intento adicional
+autorizado; no se presenta como una mejora global ni se continúa ajustando.
+
+Lista completa de residuos, coordenadas desde cero y valores enteros 0..255:
+
+| Frame | Canal | Píxel (x,y) | Port | Referencia | Error |
+|---|---|---|---:|---:|---:|
+| 478 | B | (224,48) | 115 | 110 | 5 |
+| 510 | B | (128,176) | 82 | 77 | 5 |
+| 1873 | B | (144,112) | 53 | 48 | 5 |
+| 1881 | B | (192,64) | 97 | 92 | 5 |
+| 1881 | B | (144,112) | 51 | 46 | 5 |
+| 1883 | B | (144,112) | 53 | 48 | 5 |
+| 1886 | B | (144,112) | 53 | 48 | 5 |
+| 1889 | B | (144,112) | 53 | 48 | 5 |
+| 2076 | B | (208,128) | 158 | 153 | 5 |
+| 2142 | B | (240,128) | 101 | 95 | 6 |
+| 2142 | B | (240,129) | 101 | 96 | 5 |
+| 2294 | B | (160,96) | 169 | 164 | 5 |
+| 2318 | B | (144,80) | 181 | 176 | 5 |
+| 2351 | R | (176,80) | 229 | 224 | 5 |
+| 2577 | B | (64,152) | 33 | 28 | 5 |
+| 2613 | B | (176,96) | 48 | 43 | 5 |
+| 2617 | B | (16,112) | 92 | 87 | 5 |
+| 2691 | B | (240,32) | 23 | 18 | 5 |
+| 2766 | B | (192,112) | 72 | 67 | 5 |
+| 2805 | B | (145,160) | 95 | 90 | 5 |
+| 2987 | B | (16,176) | 75 | 70 | 5 |
+| 3204 | B | (161,144) | 6 | 1 | 5 |
+| 3204 | B | (161,145) | 7 | 2 | 5 |
+| 3439 | B | (176,96) | 24 | 19 | 5 |
+| 3445 | B | (176,142) | 46 | 41 | 5 |
+| 3452 | B | (128,112) | 10 | 5 | 5 |
+| 3467 | B | (176,96) | 16 | 11 | 5 |
+| 3467 | B | (96,112) | 120 | 115 | 5 |
+| 3476 | B | (128,112) | 45 | 40 | 5 |
+| 3489 | B | (176,144) | 76 | 71 | 5 |
+
+Evidencia estructurada: `build/verification-3-7-gates/full-residual-pixels.json`.
+El diff de peor frame es `build/evidence/port/native-headless/movie0/diff/worst-frame-2142.ppm`.
+La cuenta permanece en 3636/3636 frente al requisito congelado de 3637.
+A/V conserva error de 87 181 ciclos frente a 1 128 796,805; XA obtiene
+54,424193 dB frente a 40. El retorno completo es 1 en ambos lados.
+
+### Verificación final secuencial (2026-10-21)
+
+Se compilaron las tres variantes con la observación opcional de tiempos.
+Todas las pruebas pesadas se ejecutaron de una en una, con capturas, work
+dirs y temporales bajo `/dw/build`. Referencias reutilizadas: OP1 completo,
+Start, título y estado inicial; las de audio de título y XA se recuperaron
+por pérdida de sus archivos externos anteriores.
+
+| Prueba / preset | Resultado | Segundos |
+|---|---|---:|
+| `L1-native-headless` | PASS 51/51 | 198.19 |
+| `L1-native-asan` | PASS 49/49 | 209.29 |
+| `L1-web` | PASS 34/34 | 531.74 |
+| `reference_movie0-native-headless` | PASS | 13.44 |
+| `reference_movie0_skip-native-headless` | PASS | 0.31 |
+| `scene_movie0_compare-native-headless` | FAIL | 202.96 |
+| `scene_movie0_skip_compare-native-headless` | FAIL | 2.66 |
+| `scene_movie0_compare-native-asan` | FAIL | 587.08 |
+| `scene_movie0_skip_compare-native-asan` | FAIL | 9.19 |
+| `scene_title_compare-native-headless` | PASS | 99.84 |
+| `reference_newgame_state-native-headless` | PASS | 0.18 |
+| `scene_newgame_state-native-headless` | PASS | 311.30 |
+| `reference_title_audio-native-headless` | PASS | 811.09 |
+| `scene_title_audio_compare-native-headless` | PASS | 216.03 |
+| `reference_xa_op1-native-headless` | PASS | 390.07 |
+| `scene_xa_op1_compare-native-headless` | PASS | 109.24 |
+
+Total: **147 pruebas CTest, 143 aprobadas y cuatro fallidas**. Las cuatro
+fallidas son las comparaciones OP1 y Start en nativo y ASan; no hay fallos
+de sanitizer. No quedan pruebas solicitadas pendientes. Los fallos visuales,
+la cuenta congelada y la temporización de Start mantienen abierta la historia.
+`make compare` vuelve a producir **Compiled binaries match with target binaries**.
+
+La comparación completa independiente obtiene máximos RGB **5/4/6**, medias
+globales **0,2546425716790429 / 0,2006998375618812 / 0,2903838388396131**,
+y mayor media de frame por canal **0,3861328125 / 0,2901692708333333 /
+0,46954427083333333**. No hay frames fuera de la media de 0,5. Los 30
+componentes fuera del máximo se enumeran arriba. Los cuatro hashes del
+harness rápido coinciden con los de la captura completa. Los informes de
+OP1 y Start, incluidos todos sus hashes y tiempos, son idénticos entre
+nativo y ASan. Cada runner verificó además dos ejecuciones deterministas.
+
+A/V OP1: error **87 181 ≤ 1 128 796,805227 ciclos**; XA aislado:
+**54,42419314227058 dB ≥ 40**, lag cero y sin duración distinta. En Start,
+A/V pasa **1 003 094 ≤ 1 128 792,227273 ciclos**; su prefijo XA no contiene
+una ventana de 5 s y sigue siendo diagnóstico. El PCM mezclado no pasa
+40 dB: OP1/XA da −inf y duración distinta; título da −3,6973754407027624 y
+8,492502978433144 dB. Conforme a la decisión 4, esas métricas no bloquean
+los tests de contenido y no acreditan paridad del mixer.
+
+No se cambió la especificación ni sus tolerancias ni se creó ningún commit.
+No hay cambios adicionales en `src/`; los observadores del port no avanzan
+el reloj virtual. La IDCT conservada ya estaba en el WIP y no se modifica
+tras el ensayo acotado. El coste MDEC de 1024 ciclos sigue como hipótesis
+para 3.10; no se ajusta para ocultar la espera CD ausente.
+
+Informe y nombres/resultados individuales, incluidos los 134 casos L1:
+[`report.md`](../../build/verification-3-7/report.md) y
+[`summary.json`](../../build/verification-3-7/summary.json). Logs por trabajo:
+`build/verification-3-7/final-<trabajo>.log`. Evidencia adicional bajo
+`build/verification-3-7-gates/`: `full-channel-metrics.json`,
+`full-before-after.json`, `full-residual-pixels.json`, `final-crosschecks.json`,
+`matching-compare-final.log` y `build-{native,asan,web}-timing.log`.
+
+La excepción histórica de `reference_newgame_state` a los 177,92 s no fue
+un fallo ASan: el agente había enviado SIGTERM a una captura duplicada que
+compartía directorio de trabajo. No se alcanzó el timeout ni hubo diagnóstico
+del sanitizer. La recaptura secuencial anterior y sus comparaciones pasaron;
+en esta batería se reutilizó esa referencia validada. Registro conservado en
+`build/verification-3-7/asan-interruption.txt` e informe anterior archivado.

@@ -1,4 +1,5 @@
 __attribute__((weak)) void port_scene_movie_xa(void);
+__attribute__((weak)) void port_scene_movie_timing(const char *event, unsigned value);
 /* libcd: commands, data reads and file search over the CD model (port/backend/cdrom.h) and the
  * virtual clock (AD-8). asm:asm/us/main/psyq/libcd.s (mw_lib41). Not modeled: CD-DA, read errors and retries, the shell-open status. */
 #include <stddef.h>
@@ -230,8 +231,11 @@ int CdControl(unsigned char com, unsigned char *param, unsigned char *result)
 int CdControlB(unsigned char com, unsigned char *param, unsigned char *result)
 {
 	(void)result;
+	if (port_scene_movie_timing) port_scene_movie_timing("CdControlB:enter", com);
 	clock_psyq_entry();
-	return control(com, param);
+	int accepted = control(com, param);
+	if (port_scene_movie_timing) port_scene_movie_timing("CdControlB:exit", com);
+	return accepted;
 }
 
 /* asm: CdControlF -- CdControl without waiting for the acknowledge. */
