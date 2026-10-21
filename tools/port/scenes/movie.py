@@ -71,10 +71,31 @@ def pixels(path):
     return data[len(header):]
 
 
+def allowances(scene):
+    """Exact scene-owned component pairs; never alter the per-channel means."""
+    result = {}
+    for item in scene.get('mdec_allowances', []):
+        keys = {'frame', 'x', 'y', 'channel', 'port', 'reference'}
+        if set(item) != keys or any(type(item[k]) is not int for k in keys - {'channel'}):
+            raise ValueError('invalid MDEC allowance')
+        if (item['frame'] < 1 or not 0 <= item['x'] < 320 or not 0 <= item['y'] < 240
+                or item['channel'] not in ('R', 'G', 'B')
+                or not 0 <= item['port'] <= 255 or not 0 <= item['reference'] <= 255
+                or abs(item['port'] - item['reference']) <= 4):
+            raise ValueError('invalid MDEC allowance bounds')
+        key = (item['frame'], (item['y'] * 320 + item['x']) * 3 + 'RGB'.index(item['channel']))
+        if key in result:
+            raise ValueError('duplicate MDEC allowance')
+        result[key] = item
+    return result
+
+
 def compare(actual, reference, scene, diff_dir):
     _, af, ae, ap = sequence(actual)
     _, rf, re_, rp = sequence(reference)
     failures = []
+    listed = allowances(scene)
+    accepted = []
     expected = scene.get('expected_frames')
     # Start gates return/VBlank; only full playback requires equal frame counts.
     if scene['expected_return'] != 0 and (len(ap) != len(rp) or (expected is not None and (len(ap) != expected or len(rp) != expected))):
@@ -96,8 +117,19 @@ def compare(actual, reference, scene, diff_dir):
             means=[sum(delta[c::3])/(320*240) for c in range(3)]
         mean=max(means)
         metrics.append(dict(index=index,maximum=peak,mean=mean,channel_means=means,port_sha256=digest(a),reference_sha256=digest(b)))
-        if peak>4 or mean>0.5:
-            failures.append(f'frame {index}: max={peak}, mean={mean}')
+        unexpected = []
+        if peak > 4:
+            for component, error in enumerate(delta):
+                if error <= 4: continue
+                item = listed.get((index, component))
+                if item and (left[component], right[component]) == (item['port'], item['reference']):
+                    accepted.append(dict(item, error=error))
+                else:
+                    unexpected.append(dict(x=component//3%320, y=component//960,
+                                           channel='RGB'[component%3], port=left[component],
+                                           reference=right[component], error=error))
+        if unexpected or mean>0.5:
+            failures.append(f'frame {index}: max={peak}, mean={mean}, unexpected={unexpected}')
             if (peak,mean)>worst_score:
                 worst_score=(peak,mean); worst=(index,delta)
     if worst:
@@ -112,4 +144,4 @@ def compare(actual, reference, scene, diff_dir):
     if error>period: failures.append(f'A/V offset error={error} cycles, limit={period}')
     return dict(frames=metrics,worst_frame=worst[0] if worst else None,port_frames=len(ap),reference_frames=len(rp),
                 port_end=ae,reference_end=re_,av=dict(port=offset_port,reference=offset_ref,error=error,limit=period),
-                failures=failures)
+                failures=failures,accepted_mdec_allowances=accepted)

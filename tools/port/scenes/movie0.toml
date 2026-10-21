@@ -11,6 +11,36 @@ expect_rand = false
 checkpoints = ["MOV_playMovie", "runLandingScreen"]
 window = 0
 xa = true
+# Owner decision 5: exact known blue-component pairs, zero-based coordinates.
+# Every other component remains <=4/255; all channel means remain <=0.5/255.
+[[mdec_allowances]]
+frame = 2318
+x = 144
+y = 80
+channel = "B"
+port = 181
+reference = 176
+[[mdec_allowances]]
+frame = 2587
+x = 224
+y = 64
+channel = "B"
+port = 53
+reference = 48
+[[mdec_allowances]]
+frame = 3439
+x = 176
+y = 96
+channel = "B"
+port = 24
+reference = 19
+[[mdec_allowances]]
+frame = 3453
+x = 176
+y = 96
+channel = "B"
+port = 21
+reference = 16
 [[audio]]
 start = "MOV_playMovie"
 finish = "MOV_playMovie"
