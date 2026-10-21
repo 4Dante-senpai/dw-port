@@ -3,25 +3,22 @@
 `port/backend/mdec.c` adapta el decodificador de `Wyrelade/DW2-PC`
 (`backend/mdec.c`, CC0 1.0). El orden zigzag, la cuantización y los comandos siguen la documentación de
 [psx-spx](https://psx-spx.consoledev.net/macroblockdecodermdec/).
-La IDCT usa las 13 bits superiores de la escala cargada y acumula en 64 bits.
-Cada una de sus dos pasadas transpuestas calcula
-`floor((sum + 4095) / 8192)`: las mitades exactas se redondean hacia abajo,
-incluidos los valores negativos. Ya no conserva la fracción de la primera
-pasada hasta el final. La descuantización AC calcula
-`floor((signed10 * qt[k] * q_scale + 4) / 8)` y satura a 11 bits;
-DC no aplica `q_scale/8`, y `q_scale=0` usa el doble del coeficiente sin zigzag.
-Las divisiones negativas descartan fracción hacia menos infinito explícitamente.
+La IDCT usa los 13 bits superiores de la escala cargada y acumula en 64 bits.
+Por decisión 4 del dueño se conserva la fracción entre las dos pasadas transpuestas:
+la primera guarda la suma completa; la segunda calcula
+`floor((sum + 33554431) / 67108864)`, con mitades hacia abajo.
+La descuantización AC calcula `floor((signed10 * qt[k] * q_scale + 4) / 8)`
+y satura a 11 bits; DC no aplica `q_scale/8`, y `q_scale=0` usa el doble
+sin zigzag. Los desplazamientos negativos usan piso explícito y portable.
 
-YCbCr usa los factores decimales de psx-spx (1,402; −0,3437; −0,7143;
-1,772), representados como racionales con denominador 10000, y redondea
-antes de saturar a −128..127 y convertir el signo. **Hipótesis:** el redondeo
-de color es al más cercano, con mitades hacia abajo. psx-spx califica su
-IDCT de aproximada y declara desconocida la precisión fija de YUV→RGB;
-también deja como posibilidad el límite de 9 bits en color. No permite
-deducir un redondeo exacto del hardware. No se añade ese límite especulativo
-ni se afirma exactitud bit a bit. La precisión se mide contra Redux.
-No se incorpora código de decodificadores GPL ni instrucciones MIPS ejecutadas
-por el port. La tabla zigzag describe un algoritmo; no procede del ejecutable.
+YUV→RGB conserva como hipótesis los factores enteros 1436, −352, −731 y
+1815, divididos por 1024, con redondeo al más cercano y mitades hacia arriba.
+Se añade luminancia, se satura a −128..127 y se aplica +128.
+psx-spx describe la IDCT como aproximada y declara desconocidos la precisión
+fija y el redondeo del color. No se afirma exactitud del hardware ni se añade
+el posible límite de 9 bits sin verificar. No se incorpora código GPL de
+PCSX-Redux ni instrucciones MIPS ejecutadas por el port. La tabla zigzag
+describe un algoritmo; no procede del ejecutable.
 
 Comandos implementados: 1 (run-level a RGB15/RGB24, signo y STP), 2
 (cuantización luminancia/crominancia) y 3 (escala IDCT). La FIFO permite
@@ -49,18 +46,20 @@ el lector del Pack para obtener el valor esperado.
 encolar el siguiente slice, que se despacha después de volver del callback
 actual. Reset cancela una salida pendiente. El coste provisional de 1024
 ciclos por macroblock está aislado en `port/psyq/clock_costs.h`: permanece
-como **hipótesis sin calibrar**. La continuación autorizada por el dueño
-investigó Start: la pausa CD bloquea 1 240 612 ciclos en el original y sólo
-64 en el port. El último MDEC termina antes de acabar la decodificación del siguiente frame;
-`MOV_waitForFlip` no espera. Por eso no se ajusta MDEC para compensar la
-latencia CD ausente. La traza causal está en [reference.md](reference.md).
+como **hipótesis sin calibrar**. Pause bloqueante usa los promedios de segunda
+respuesta de psx-spx mediante AD-8: 2168860 ciclos a 1×, 1097107 a 2× y
+7666 ya pausado. Los valores quedan como hipótesis que recalibra 3.10.
+El comando de lectura sigue activo al retirar los callbacks STR. Pause llega
+a VBlank 122, pero la cola GPU lleva el retorno a 123 frente a 122 del original;
+no se ajusta MDEC ni GPU para compensarlo. La traza causal y los resultados
+vigentes están al final de [reference.md](reference.md).
 `MOV_waitForFlip` cede 1024 ciclos por iteración
 sólo bajo `DW1_PORT`; el build PS1 conserva su bucle original.
 
 ## Verificación y evidencia
 
-`mdec_vectors.py` calcula independientemente los productos `Sᵀ A` y `T S`,
-redondeando ambos, mediante matrices de Python y tablas sintéticas asimétricas;
+`mdec_vectors.py` calcula independientemente el producto completo `Sᵀ A S`,
+con un único redondeo final y tablas sintéticas asimétricas;
 el fichero versionado contiene sólo
 12 hashes de salida. `mdec` verifica q_scale 0, 1 y 63, coeficientes negativos,
 saturación, EOB, ambos formatos, STP y lecturas parciales. `libpress` verifica
@@ -78,7 +77,7 @@ del dueño, esta continuación guarda frames, PCM y diffs bajo el árbol ignorad
 El comparador admite ese árbol y sigue rechazando evidencia en los fuentes.
 No se modifica el bloque congelado de la especificación ni sus tolerancias.
 Los gates exigen máximo por componente ≤4 y media de **cada canal** ≤0,5,
-3637 frames para OP1 completo, retorno 1/0, mismo VBlank de salida con Start,
+3636 frames para OP1 completo (decisión del dueño tras verificar el original), retorno 1/0, mismo VBlank de salida con Start,
 y diferencia del desfase entre último frame y última entrega XA ≤ intervalo
 medio entre frames consecutivos de la referencia. Una divergencia se conserva
 como fallo; no se compensa ni desplaza la secuencia.
@@ -101,7 +100,14 @@ ctest --preset web -R '^(mdec|libpress|mdec_vectors|press_tables)$' --output-on-
 Los dos primeros comandos incluyen sus fixtures de Pack/referencia; los
 fallos abiertos de [reference.md](reference.md) deben seguir apareciendo.
 
-### Revisión del redondeo (2026-10-21)
+### Histórico: ensayo anterior de redondeo por pasada (revertido)
+
+Los resultados de esta sección corresponden al commit d57a330. La decisión 4
+posterior exige restaurar el modelo anterior y evaluar las variantes de color
+sobre OP1 completo. Los resultados vigentes se registran al final; los fallos
+de cuenta 3637 y la decisión de retener el modelo por pasada quedaron superados.
+
+#### Revisión del redondeo (2026-10-21)
 
 Se sustituyó la fracción conservada entre pasadas por el redondeo de cada
 pasada de `real_idct_core`: escala desplazada tres bits y
@@ -170,3 +176,100 @@ y los informes nativo/ASan de OP1 y Start son idénticos. OP1 conserva A/V
 dentro de un frame y XA de 54,424193 dB. La matriz completa, residuos y
 límites del PCM mezclado están en [reference.md](reference.md); no queda
 ninguna repetición solicitada pendiente, pero la historia sigue abierta.
+
+## Decisiones 3 y 4: resultados vigentes (2026-10-21)
+
+IDCT restaurada: fracción conservada entre pasadas, acumulación de 64 bits y un redondeo final; divisiones negativas explícitas. El oráculo Python calcula el producto completo SᵀAS y regenera 12 hashes sintéticos. Los factores RGB conservados son 1436/−352/−731/1815 divididos por 1024, redondeo al más cercano con mitades hacia arriba; Y+color se satura a −128..127 antes del +128. psx-spx deja precisión y redondeo de color sin especificar.
+
+CdControlB(CdlPause) avanza el reloj AD-8 y despacha eventos; el estado del comando de lectura sobrevive a StUnSetRing. Pause cancela sectores pendientes. Costes como hipótesis de 3.10, sin ajustar MDEC/GPU. La escena exige 3636 cuadros según la decisión del dueño. Se conserva la referencia: sólo se migra su sello por expected_frames, comprobando antes la identidad; capturas y hashes no cambian.
+
+## Pruebas secuenciales
+
+| Trabajo | Resultado | Pruebas | Evidencia |
+|---|---|---:|---|
+| L1-native-headless | PASS | 51/51 | [log](../../build/verification-3-7-owner/final-L1-native-headless.log) |
+| L1-native-asan | PASS | 49/49 | [log](../../build/verification-3-7-owner/final-L1-native-asan.log) |
+| L1-web | PASS | 34/34 | [log](../../build/verification-3-7-owner/final-L1-web.log) |
+| reference_movie0-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-reference_movie0-native-headless.log) |
+| reference_movie0_skip-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-reference_movie0_skip-native-headless.log) |
+| scene_movie0_compare-native-headless | FAIL | 0/1 | [log](../../build/verification-3-7-owner/final-scene_movie0_compare-native-headless.log) |
+| scene_movie0_skip_compare-native-headless | FAIL | 0/1 | [log](../../build/verification-3-7-owner/final-scene_movie0_skip_compare-native-headless.log) |
+| scene_movie0_compare-native-asan | FAIL | 0/1 | [log](../../build/verification-3-7-owner/final-scene_movie0_compare-native-asan.log) |
+| scene_movie0_skip_compare-native-asan | FAIL | 0/1 | [log](../../build/verification-3-7-owner/final-scene_movie0_skip_compare-native-asan.log) |
+| scene_title_compare-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-scene_title_compare-native-headless.log) |
+| reference_newgame_state-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-reference_newgame_state-native-headless.log) |
+| scene_newgame_state-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-scene_newgame_state-native-headless.log) |
+| reference_title_audio-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-reference_title_audio-native-headless.log) |
+| scene_title_audio_compare-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-scene_title_audio_compare-native-headless.log) |
+| reference_xa_op1-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-reference_xa_op1-native-headless.log) |
+| scene_xa_op1_compare-native-headless | PASS | 1/1 | [log](../../build/verification-3-7-owner/final-scene_xa_op1_compare-native-headless.log) |
+| make-compare | PASS | 0/0 | [log](../../build/verification-3-7-owner/final-make-compare.log) |
+
+CTest: 147 pruebas; {'Passed': 143, 'Failed': 4}. Builds nativo, ASan y web correctos. Referencias reutilizadas; sin recapturas. make compare conserva los binarios matching.
+
+## Única búsqueda acotada de color
+
+Cada variante compara OP1 completo, 3636 cuadros, incluidos bordes negros, contra los mismos frames de Redux. nearest usa mitades hacia abajo; fixed cuantiza los factores decimales publicados al entero más cercano para esa precisión; signed trunca Y+color hacia cero antes del sesgo +128, biased lo hace después del sesgo y antes de saturar a 0..255. No se ajustaron factores a píxeles.
+
+| Variante | Máximo RGB | Medias globales RGB | Mayor media de cuadro RGB | Cuadros con máximo >4 |
+|---|---|---|---|---:|
+| restored | 4/3/5 | 0.218757606 / 0.169087693 / 0.251815285 | 0.336966146 / 0.284609375 / 0.408007813 | 4 |
+| decimal-nearest | 4/3/5 | 0.218909935 / 0.169114941 / 0.251951693 | 0.343346354 / 0.284609375 / 0.418815104 | 4 |
+| decimal-floor | 4/3/4 | 0.324380221 / 0.307123126 / 0.321362296 | 0.520820313 / 0.569895833 / 0.562695313 | 0 |
+| fixed-8 | 4/3/5 | 0.218757606 / 0.169195645 / 0.250436800 | 0.336966146 / 0.284609375 / 0.393255208 | 4 |
+| fixed-12 | 4/3/5 | 0.218909935 / 0.169110171 / 0.251951693 | 0.343346354 / 0.284609375 / 0.418815104 | 4 |
+| fixed-16 | 4/3/5 | 0.218909935 / 0.169112467 / 0.251951693 | 0.343346354 / 0.284609375 / 0.418815104 | 4 |
+| decimal-trunc-signed | 4/3/5 | 0.322552642 / 0.321432811 / 0.369058303 | 0.523684896 / 0.483828125 / 0.632148438 | 14 |
+| decimal-trunc-biased | 4/3/4 | 0.324380221 / 0.307123126 / 0.321362296 | 0.520820313 / 0.569895833 / 0.562695313 | 0 |
+
+Ninguna variante cumple ambos límites. decimal-floor y decimal-trunc-biased respetan el máximo, pero exceden la media de 0,5. Saturar el intervalo firmado y luego sumar +128 equivale algebraicamente a desplazarlo primero y saturar a 0..255 cuando se conserva el mismo piso. Se conserva el modelo restaurado. El replay completo reproduce las métricas del juego y los hashes históricos de los cuatro cuadros.
+
+Antes (d57a330, redondeo por pasada): máximo RGB 5/4/6; medias globales 0,2546425716790429 / 0,2006998375618812 / 0,2903838388396131. Después (restaurado): máximo RGB 4/3/5; medias globales 0,21875760622937293 / 0,1690876929489824 / 0,2518152853696828; mayores medias de cuadro 0,33696614583333334 / 0,284609375 / 0,4080078125. Todas las medias pasan, cuatro componentes azules aún exceden 4/255:
+
+| Cuadro | Canal | Píxel desde cero | Port | Referencia | Error |
+|---|---|---|---:|---:|---:|
+| 2318 | B | (144,80) | 181 | 176 | 5/255 |
+| 2587 | B | (224,64) | 53 | 48 | 5/255 |
+| 3439 | B | (176,96) | 24 | 19 | 5/255 |
+| 3453 | B | (176,96) | 21 | 16 | 5/255 |
+
+A/V OP1: error 87181 ciclos ≤1128796,8052269602. XA aislado: 54,42419314227058 dB ≥40, desfase cero y misma duración. Start A/V: error 1003094 ≤1128792,2272727273; el fallo es el VBlank de retorno. El PCM mezclado de OP1/XA sigue sin acreditar 40 dB (SNR −inf y duración distinta); es diagnóstico no bloqueante según la especificación.
+
+Diagnósticos de audio conservados (el PCM mezclado no es gate de esta historia):
+
+| Escena / segmento | Registros | XA SNR dB | PCM SNR dB | Duración PCM distinta |
+|---|---|---|---|---|
+| native-headless-movie0 / 1 | match | 54.42419314227058 | -inf | True |
+| native-headless-movie0_skip / 1 | match | sin ventana ≥5 s | sin ventana ≥5 s | n/a |
+| native-headless-title_audio / 1 | match | sin ventana ≥5 s | -3.7066586255974574 | True |
+| native-headless-title_audio / 2 | match | sin ventana ≥5 s | 8.492502978433144 | True |
+| native-headless-xa_op1 / 1 | match | 54.42419314227058 | -inf | True |
+
+## Start y reloj
+
+psx-spx publica promedios utilizables de segunda respuesta de Pause: 0x21181c (2168860) a velocidad simple, 0x10bd93 (1097107) a doble velocidad y 0x1df2 (7666) ya pausado. Se usan como hipótesis de 3.10; no se sustituye ese dato por la medida Redux de 1240612 ciclos. [Fuente primaria](https://psx-spx.consoledev.net/cdromdrive/#cdrom-response-timings).
+
+| Evento | Port ciclos / VB / cuadro | Redux ciclos / VB / iteración |
+|---|---|---|
+| PadRead ve Start | 176859242 / 121 / 56 | 803688388 / 120 / 45 |
+| Pause entra | 176859370 / 121 / 56 | 803689630 / 120 / 45 |
+| Pause sale | 177956541 / 122 / 56 | 804930242 / 122 / 45 |
+| Retorno 0 | 178187005 / 123 / 56 | 804931349 / 122 / 45 |
+
+La latencia ausente de Pause era real: antes sólo se cobraban 64 ciclos y se retornaba en 121. También se perdía el estado de lectura al desmontar el anillo. Corregidos ambos, Pause termina en 122, pero el retorno sigue fuera del gate: 123 frente a 122. ClearImage/DrawSync cuestan 230464 ciclos en el port frente a 1107 hasta el retorno instrumentado original (1094 hasta el breakpoint end). El modelo GPU cobra 480×480 píxeles más la entrada PsyQ; PadRead ya sucede un VBlank después del original. La primera entrada MDEC conserva la diferencia previa de 20 VBlanks. El último MDEC ya terminó al salir del decode y waitForFlip no espera. No se ajusta GPU, MDEC ni otra constante para ocultar el desfase; la calibración completa de fases queda para 3.10.
+
+## Cuenta de cuadros del original
+
+El STR contiene cuadros 1..3719 y sí contiene 3637. La tabla original fija límite 3637. Las dos trazas Redux leen cabeceras 1..3637, envían al MDEC 1..3636 y presentan 1..3636. Secuencia final: presenta 3635 (4856057611), MDEC 3636 (4856069147), lee 3637 (4856956789), escribe MOVIE_COMPLETED=1 (4856956797), presenta 3636 con el flag activo (4857186405), retorna 1 (4858416486, VB7304). Nunca envía 3637 al MDEC. La cuenta coincide con la matriz corregida por el dueño. Evidencia previa: build/verification-3-7-gates/frame-count.json, str-headers.json y build/evidence/reference/movie0/headers-{1,2}.jsonl.
+
+## Límites y evidencia
+
+La historia sigue abierta por los fallos visuales y Start. A/V, XA, registros y diagnósticos PCM completos están en summary.json. El PCM mezclado es diagnóstico no bloqueante y no demuestra paridad del mixer; el XA corto de Start no alcanza la ventana de cinco segundos. La excepción ASan histórica de reference_newgame_state a los 177,92 s fue SIGTERM de una captura duplicada, no un diagnóstico ASan ni un timeout (asan-interruption.txt).
+
+Las pruebas sintéticas Pause verifican reloj/eventos, velocidades, desmontaje previo y cancelación de sectores. av_stubs ahora exige exactamente 12 VBlanks en vez de 10 porque incluye la nueva pausa a 2×; no es una relajación del gate de escena. El primer fallo de esa expectativa obsoleta y su repetición completa se conservan en initial-results-stale-expectation.json y initial-L1-native-headless-stale-expectation.log. scene_audio_runtime conserva la regresión del guard de evidencia bajo build/. No hay cambios nuevos en src/ ni bytes de ejecutable en fuentes.
+
+Cruces: {'movie0_native_asan_identical': True, 'movie0_skip_native_asan_identical': True, 'restored_frames_match_old_hashes': True, 'full_replay_matches_game_metrics': True, 'source_unchanged_during_tests': True, 'head_unchanged': True, 'spec_unchanged': True}.
+
+Evidencia actual bajo build/verification-3-7-owner/: source-sha256.json, spec.sha256, search.py, search-plan.json, search-results.json, full.c, full-channel-metrics.json, full-residual-pixels.json, skip-timing-port.json, reference-stamp-migration.json, final-results.json y logs. Capturas bajo /dw/build/evidence. El informe anterior queda en build/verification-3-7-owner/prior-report.md.
+
+Informe y JSON completos: `build/verification-3-7/{report.md,summary.json}`. No quedaron reruns solicitados pendientes.

@@ -69,26 +69,25 @@ static int floor_shift(int64_t value, unsigned bits) {
     return value >= 0 ? (int)(value >> bits) : -1 - (int)((-1 - value) >> bits);
 }
 
-/* psx-spx real_idct_core: discard the low three scale bits and round each
- * transposing pass, rounding up only when the fraction is greater than 1/2.
- * The source explicitly describes this hardware model as approximate. */
+/* Retain fractional bits between passes; round only the final 2-D result.
+ * Two 1-D passes, each transposes: out[x + y * 8] = sum over u of in[y + u * 8] * scale[u][x]. */
 static void idct(int *blk) {
-    int tmp[64];
+    int64_t tmp[64];
     int x, y, u;
     for (x = 0; x < 8; x++) {
         for (y = 0; y < 8; y++) {
             int64_t sum = 0;
             for (u = 0; u < 8; u++)
                 sum += (int64_t)blk[y + u * 8] * floor_shift(scale[x + u * 8], 3);
-            tmp[x + y * 8] = floor_shift(sum + 0xfff, 13);
+            tmp[x + y * 8] = sum;
         }
     }
     for (x = 0; x < 8; x++) {
         for (y = 0; y < 8; y++) {
             int64_t sum = 0;
             for (u = 0; u < 8; u++)
-                sum += (int64_t)tmp[y + u * 8] * floor_shift(scale[x + u * 8], 3);
-            blk[x + y * 8] = floor_shift(sum + 0xfff, 13);
+                sum += tmp[y + u * 8] * floor_shift(scale[x + u * 8], 3);
+            blk[x + y * 8] = floor_shift(sum + 0x1ffffff, 26);
         }
     }
 }
@@ -148,13 +147,11 @@ static void macroblock(uint32_t *out) {
             int r = 0, g = 0, b = 0;
 
             if (ok) {
-                /* Decimal coefficients from psx-spx yuv_to_rgb, without an
-                 * assumed 10-bit coefficient table. [hypothesis] Nearest,
-                 * ties down: the source leaves color precision and rounding
-                 * unknown, so this is not a claim of hardware-exact output. */
-                r = clamp(lum + floor_div(cr[c] * 14020 + 4999, 10000), -128, 127) + 128;
-                g = clamp(lum + floor_div(-cb[c] * 3437 - cr[c] * 7143 + 4999, 10000), -128, 127) + 128;
-                b = clamp(lum + floor_div(cb[c] * 17720 + 4999, 10000), -128, 127) + 128;
+                /* [hypothesis] 10-bit color factors, nearest with ties up.
+                 * psx-spx leaves coefficient precision and rounding unspecified. */
+                r = clamp(lum + floor_div(cr[c] * 1436 + 512, 1024), -128, 127) + 128;
+                g = clamp(lum + floor_div(-cb[c] * 352 - cr[c] * 731 + 512, 1024), -128, 127) + 128;
+                b = clamp(lum + floor_div(cb[c] * 1815 + 512, 1024), -128, 127) + 128;
             }
             if (m_signed) { r ^= 128; g ^= 128; b ^= 128; }
             if (m_rgb24) {

@@ -226,7 +226,8 @@ static void movie(void)
     CHECK(MOVIE_COMPLETED == 1 && MOVIE_WIDTH == 320 && MOVIE_HEIGHT == 240);
     CHECK(slices == 20 && MOV_ENV.frameIndex == 1 && MOV_ENV.flipPending == 0);
     printf("movie: slices=%d vblanks=%u\n", slices, clock_vblanks() - before);
-    CHECK(clock_vblanks() - before == 10); /* Fixed virtual timing, no host time. */
+    /* Includes the blocking 2x Pause after detaching the STR ring. */
+    CHECK(clock_vblanks() - before == 12); /* Fixed virtual timing, no host time. */
     const uint16_t *vram = gpu_vram();
     for (int y = 32; y < 272; y++)
         for (int x = 0; x < 480; x++) CHECK(vram[y * 1024 + x] == 0);
