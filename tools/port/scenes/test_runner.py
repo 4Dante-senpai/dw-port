@@ -633,3 +633,49 @@ with tempfile.TemporaryDirectory() as tmp:
     (actual/'movie.jsonl').write_text('\n'.join(map(json.dumps,[rows[0],rows[1],rows[-1]]))+'\n')
     assert not movie.compare(actual,reference,dict(expected_return=0),root/'diff')['failures']
 print('movie: per-channel tolerance, worst diff, complete sequence, determinism, return, skip VBlank and A/V bounds OK')
+
+# Scene-owned allowances preserve all three failure paths from owner decision 5.
+import tomllib
+listed = tomllib.loads(Path(__file__).with_name('movie0.toml').read_text())['mdec_allowances']
+with tempfile.TemporaryDirectory() as tmp:
+    root=Path(tmp); actual=root/'port'; reference=root/'ref'
+    header=b'P6\n320 240\n255\n'
+    rows=[dict(event='start',cycle=0),dict(event='frame',index=1,cycle=1000,vblank=2),
+          dict(event='frame',index=2,cycle=2000,vblank=4),
+          dict(event='end',cycle=2200,vblank=4,**{'return':1,'xa_cycle':1700})]
+    for directory in (actual,reference):
+        directory.mkdir()
+        (directory/'movie.jsonl').write_text('\n'.join(map(json.dumps,rows))+'\n')
+        (directory/'frame-0001.ppm').write_bytes(header+bytes(230400))
+    for item in listed:
+        item=dict(item,frame=2)
+        scene=dict(expected_frames=2,expected_return=1,mdec_allowances=[item])
+        offset=(item['y']*320+item['x'])*3+'RGB'.index(item['channel'])
+        left=bytearray(230400);right=bytearray(230400)
+        left[offset]=item['port'];right[offset]=item['reference']
+        (reference/'frame-0002.ppm').write_bytes(header+right)
+        def check(data):
+            (actual/'frame-0002.ppm').write_bytes(header+data)
+            return movie.compare(actual,reference,scene,root/'diff')
+        result=check(left)
+        assert not result['failures'] and result['accepted_mdec_allowances']==[dict(item,error=5)]
+        # Failure 1: a different component exceeds four, even in the same pixel.
+        other=left.copy();other[offset-1]=5
+        assert any('unexpected=' in f for f in check(other)['failures'])
+        # Failure 2: a listed component worsens beyond its listed error.
+        worse=left.copy();worse[offset]+=1
+        assert any('unexpected=' in f for f in check(worse)['failures'])
+        # Failure 3: an accepted pair cannot exempt the per-channel mean.
+        mean=left.copy();mean[0::3]=bytes([1])*76800
+        result=check(mean)
+        assert result['accepted_mdec_allowances'] and result['frames'][1]['channel_means'][0]==1
+        assert result['failures'] and result['worst_frame']==2
+        # The allowance is an exact pair, not a blanket five-unit tolerance.
+        shifted=left.copy();shifted[offset]+=1
+        changed=right.copy();changed[offset]+=1
+        (reference/'frame-0002.ppm').write_bytes(header+changed)
+        assert check(shifted)['failures']
+        (reference/'frame-0002.ppm').write_bytes(header+right)
+        improved=left.copy();improved[offset]-=1
+        assert not check(improved)['failures']
+print('movie allowances: exact listed pairs pass; unlisted, worsened and mean violations fail')

@@ -75,8 +75,17 @@ idénticos. El port también se ejecuta dos veces. Por instrucción posterior
 del dueño, esta continuación guarda frames, PCM y diffs bajo el árbol ignorado
 `build/evidence/{reference,port}/`, para sobrevivir al reinicio del contenedor.
 El comparador admite ese árbol y sigue rechazando evidencia en los fuentes.
-No se modifica el bloque congelado de la especificación ni sus tolerancias.
+Se aplican las tolerancias y excepciones aprobadas sin modificar el bloque congelado.
 Los gates exigen máximo por componente ≤4 y media de **cada canal** ≤0,5,
+salvo los cuatro pares exactos de componentes azules que autoriza la decisión 5.
+Se declaran en `tools/port/scenes/movie0.toml`, en `mdec_allowances`, con
+frame, coordenadas desde cero, canal y valores port/referencia. El comparador
+acepta esos pares sin retirarlos del cálculo de las medias ni de las métricas
+brutas. Un componente distinto >4, un par listado que empeora o cualquier
+media de canal >0,5 sigue fallando. Una mejora a ≤4 no necesita excepción.
+`test_runner.py` verifica los tres caminos de fallo para cada par, rechaza
+también pares desplazados con el mismo error y comprueba que una mejora pasa.
+Los requisitos restantes siguen siendo:
 3636 frames para OP1 completo (decisión del dueño tras verificar el original), retorno 1/0, mismo VBlank de salida con Start,
 y diferencia del desfase entre último frame y última entrega XA ≤ intervalo
 medio entre frames consecutivos de la referencia. Una divergencia se conserva
@@ -177,7 +186,7 @@ dentro de un frame y XA de 54,424193 dB. La matriz completa, residuos y
 límites del PCM mezclado están en [reference.md](reference.md); no queda
 ninguna repetición solicitada pendiente, pero la historia sigue abierta.
 
-## Decisiones 3 y 4: resultados vigentes (2026-10-21)
+## Histórico: decisiones 3 y 4 (2026-10-21)
 
 IDCT restaurada: fracción conservada entre pasadas, acumulación de 64 bits y un redondeo final; divisiones negativas explícitas. El oráculo Python calcula el producto completo SᵀAS y regenera 12 hashes sintéticos. Los factores RGB conservados son 1436/−352/−731/1815 divididos por 1024, redondeo al más cercano con mitades hacia arriba; Y+color se satura a −128..127 antes del +128. psx-spx deja precisión y redondeo de color sin especificar.
 
@@ -273,3 +282,82 @@ Cruces: {'movie0_native_asan_identical': True, 'movie0_skip_native_asan_identica
 Evidencia actual bajo build/verification-3-7-owner/: source-sha256.json, spec.sha256, search.py, search-plan.json, search-results.json, full.c, full-channel-metrics.json, full-residual-pixels.json, skip-timing-port.json, reference-stamp-migration.json, final-results.json y logs. Capturas bajo /dw/build/evidence. El informe anterior queda en build/verification-3-7-owner/prior-report.md.
 
 Informe y JSON completos: `build/verification-3-7/{report.md,summary.json}`. No quedaron reruns solicitados pendientes.
+
+## Decisiones 5 y 6: resultados vigentes (2026-10-21)
+
+## Excepción exacta del MDEC
+
+`movie0.toml` contiene `mdec_allowances`: frame, coordenadas desde cero, canal y valores port/referencia. El comparador sólo exime esos pares exactos cuando exceden 4; no los elimina de medias, máximos, hashes o evidencia. Todo otro componente >4 falla, cada par que empeora falla y todas las medias por canal deben seguir ≤0,5. Una mejora ≤4 pasa sin excepción. Los valores no están en constantes de código.
+
+`test_runner.py` verifica los tres caminos de fallo para cada uno de los cuatro pares, además de aceptación exacta, rechazo de pares desplazados con el mismo error y aceptación de mejoras. La IDCT, YUV→RGB y sus vectores no cambian en esta continuación.
+
+| Frame | Canal | Píxel (x,y) | Port / referencia | Error aceptado |
+|---|---|---|---|---|
+| 2318 | B | (144,80) | 181 / 176 | 5/255 |
+| 2587 | B | (224,64) | 53 / 48 | 5/255 |
+| 3439 | B | (176,96) | 24 / 19 | 5/255 |
+| 3453 | B | (176,96) | 21 / 16 | 5/255 |
+
+La comparación completa conserva 3636 cuadros, máximos RGB 4/3/5 y medias globales RGB 0,21875760622937293 / 0,1690876929489824 / 0,2518152853696828. Mayores medias de cuadro RGB: 0,33696614583333334 / 0,284609375 / 0,4080078125, todas ≤0,5. Nativo y ASan aceptan exactamente los cuatro pares y ninguna otra excepción.
+
+## Investigación GPU acotada
+
+Se hizo una sola sonda nativa con observación de ClearImage, DrawSync, VSync y aplicación de input. Los observadores no avanzan tiempo y se retiraron antes de los builds definitivos. `gpu-probe.json`, `gpu-investigation.json` y `observation.patch` conservan la evidencia en `build/verification-3-7-decisions56/`.
+
+El rectángulo del consumidor es (0,0,480,480). El asm USA `_clr` decide por `x&63` y `w&63` en 0x800933c4..0x800933e8: con ancho 480 (resto 32) elige GP0(60h), no el relleno rápido GP0(02h). La vía de rectángulo desactiva máscara, amplía el área de dibujo y pone offset cero, restaurando área/offset después. No se justifica sustituirlo por un coste de fast-fill.
+
+La sonda mide cero trabajo GPU previo al ClearImage final y exactamente 230400 píxeles. No hay área equivocada, cola anterior ni cargo duplicado de esos píxeles. ClearImage cobra entrada 64 y agenda 230400 ciclos; DrawSync cobra 64 dentro de ese plazo y espera los 230336 restantes: total desde el retorno de Pause hasta el retorno de MOV_playMovie: 230464 ciclos. `_sync` USA espera cola PsyQ vacía, DMA2 inactivo y GPUSTAT.26 listo (0x800941c4..0x80094230); no corresponde eliminar su espera por el hecho de que el rasterizador host ya escribió VRAM.
+
+[psx-spx, GPUSTAT](https://psx-spx.consoledev.net/graphicsprocessingunitgpu/#gpu-status-register) respalda la espera durante ejecución, y [Quick Rectangle Fill](https://psx-spx.consoledev.net/graphicsprocessingunitgpu/#quick-rectangle-fill) distingue ese comando del rectángulo renderizado. No aportan una fórmula utilizable para convertir este rectángulo a ciclos de CPU. El coste actual de un ciclo por píxel es una hipótesis sin calibrar; los 1107 ciclos del emulador original no prueban por sí solos el coste del hardware. No se encontró un bug respaldado que autorice corregir fórmula o espera. No se modifican GPU, pad, reloj, MDEC ni costes.
+
+| Evento | Port: ciclo / VBlank / frame presentado | Redux: ciclo / VBlank / iteración |
+|---|---|---|
+| Aplica Start | 176293877 / 120 / 55 | input configurado en 120 |
+| PadRead anterior | 175729153 / 119 / 55 | — |
+| VSync entra | 176858689 / 120 / 55 | — |
+| PadRead ve Start | 176859242 / 121 / 56 | 803688388 / 120 / 45 |
+| Pause entra | 176859370 / 121 / 56 | 803689630 / 120 / 45 |
+| Pause sale | 177956541 / 122 / 56 | 804930242 / 122 / 45 |
+| ClearImage vuelve | 177956605 / 122 / 56 | 804931078 / 122 / 45 |
+| DrawSync vuelve | 178187005 / 123 / 56 | 804931323 / 122 / 45 |
+| Retorno 0 | 178187005 / 123 / 56 | 804931349 / 122 / 45 |
+
+Start se aplica en 120, sin error de un VBlank en el latch. No hay PadRead entre el de 119 y el de 121: la siguiente iteración llega a VSync en 120 y espera a 121 antes de leer. La fase del bucle difiere (56 frente a 45); el primer MDEC ya difiere, VBlank 9 frente a 29. Atribuir cada ciclo previo requiere calibrar CPU/CD/VLC y no queda resuelto por esta sonda. Se detiene aquí la investigación: Start sigue en 123 frente a 122. Pause mantiene la hipótesis de segunda respuesta psx-spx a 2×, 1097107 ciclos más 64 de entrada; 3.10 recalibra fases y costes.
+
+## Reruns secuenciales
+
+| Trabajo | Resultado | Pruebas aprobadas | Segundos | Log |
+|---|---|---:|---:|---|
+| L1-native-headless | PASS | 51/51 | 201.07 | [log](../../build/verification-3-7-decisions56/final-L1-native-headless.log) |
+| L1-native-asan | PASS | 49/49 | 209.46 | [log](../../build/verification-3-7-decisions56/final-L1-native-asan.log) |
+| L1-web | PASS | 34/34 | 525.67 | [log](../../build/verification-3-7-decisions56/final-L1-web.log) |
+| reference_movie0-native-headless | PASS | 1/1 | 443.65 | [log](../../build/verification-3-7-decisions56/final-reference_movie0-native-headless.log) |
+| reference_movie0_skip-native-headless | PASS | 1/1 | 0.25 | [log](../../build/verification-3-7-decisions56/final-reference_movie0_skip-native-headless.log) |
+| scene_movie0_compare-native-headless | PASS | 1/1 | 199.46 | [log](../../build/verification-3-7-decisions56/final-scene_movie0_compare-native-headless.log) |
+| scene_movie0_skip_compare-native-headless | FAIL | 0/1 | 2.57 | [log](../../build/verification-3-7-decisions56/final-scene_movie0_skip_compare-native-headless.log) |
+| scene_movie0_compare-native-asan | PASS | 1/1 | 574.29 | [log](../../build/verification-3-7-decisions56/final-scene_movie0_compare-native-asan.log) |
+| scene_movie0_skip_compare-native-asan | FAIL | 0/1 | 9.03 | [log](../../build/verification-3-7-decisions56/final-scene_movie0_skip_compare-native-asan.log) |
+| scene_title_compare-native-headless | PASS | 1/1 | 100.98 | [log](../../build/verification-3-7-decisions56/final-scene_title_compare-native-headless.log) |
+| reference_newgame_state-native-headless | PASS | 1/1 | 0.14 | [log](../../build/verification-3-7-decisions56/final-reference_newgame_state-native-headless.log) |
+| scene_newgame_state-native-headless | PASS | 1/1 | 313.55 | [log](../../build/verification-3-7-decisions56/final-scene_newgame_state-native-headless.log) |
+| reference_title_audio-native-headless | PASS | 1/1 | 0.18 | [log](../../build/verification-3-7-decisions56/final-reference_title_audio-native-headless.log) |
+| scene_title_audio_compare-native-headless | PASS | 1/1 | 218.34 | [log](../../build/verification-3-7-decisions56/final-scene_title_audio_compare-native-headless.log) |
+| reference_xa_op1-native-headless | PASS | 1/1 | 0.35 | [log](../../build/verification-3-7-decisions56/final-reference_xa_op1-native-headless.log) |
+| scene_xa_op1_compare-native-headless | PASS | 1/1 | 110.44 | [log](../../build/verification-3-7-decisions56/final-scene_xa_op1_compare-native-headless.log) |
+| make-compare | PASS | — | 0.24 | [log](../../build/verification-3-7-decisions56/final-make-compare.log) |
+
+CTest: 147 pruebas, {'Passed': 145, 'Failed': 2}. Los únicos fallos son el VBlank de Start en nativo y ASan. Builds nativo, ASan y web correctos. Sin diagnósticos de sanitizer. `make compare`: Compiled binaries match with target binaries.
+
+## Integridad, audio y pendientes
+
+Todas las comparaciones del port se recapturaron, dos ejecuciones deterministas por escena cuando corresponde. Las funciones de captura del módulo movie.py conservan el mismo AST. Se verificaron la huella anterior y los 7280 archivos de movie0 y los 98 de movie0_skip. Al migrar el sello se omitieron por error los checkpoints resueltos: el adaptador invalidó movie0 e inició una recaptura innecesaria. Se dejó terminar sus dos ejecuciones; todos sus hashes coinciden con la referencia anterior. Se corrigió el sello de movie0_skip antes de su prueba y se reutilizó. Las demás referencias se reutilizaron. cache-invalidation.json y reference_validation en summary.json documentan el incidente; no cambió la evidencia de referencia.
+
+OP1 y Start repiten idénticos metadatos, píxeles y audio entre nativo y ASan. OP1 A/V: error 87181 ≤1128796,8052269602 ciclos; Start A/V: 1003094 ≤1128792,2272727273. XA aislado: 54,42419314227058 dB ≥40, lag cero y misma duración. Registros SPU coinciden. El PCM mezclado de OP1/XA conserva SNR −inf y duración distinta; es diagnóstico no bloqueante y no demuestra paridad del mixer. Title_audio pasa contenido (744 y 612 escrituras), pero conserva diagnósticos no bloqueantes fuera de paridad: SNR mínimo −3,7066586255974574 y 8,492502978433144 dB, ambos <40, con duración distinta; regla B divergente desde VBlank 129/registro 0x000 en segmento 1 y VBlank 0/registro 0x198 en segmento 2. En segmento 1 el desplazamiento máximo es 138708 muestras; en el segundo, el contenido común conserva máximo 15 y media 2,1552287581699345 muestras. Métricas y divergencias completas en summary.json. Start no alcanza una ventana XA de cinco segundos.
+
+El original presenta 3636 cuadros y el port también. El STR contiene 3637, pero el consumidor lee esa cabecera, activa MOVIE_COMPLETED, presenta 3636 y retorna sin enviar 3637 al MDEC. Evidencia conservada: build/verification-3-7-gates/frame-count.json y build/evidence/reference/movie0/headers-{1,2}.jsonl. No queda discrepancia de cuenta tras la corrección del dueño.
+
+Pendiente bloqueante: retorno Start 123/122. Diferido por decisión 5: los cuatro componentes MDEC listados. Hipótesis de costes GPU/CPU/CD y latencias aún no modeladas: 3.10. La antigua excepción de reference_newgame_state a 177,92 s fue SIGTERM de una captura duplicada, sin diagnóstico ASan; evidencia en build/verification-3-7/asan-interruption.txt. No hay reruns solicitados pendientes, cambios nuevos en src/, bytes del exe en fuentes ni uso de código PCSX-Redux.
+
+Cruces automáticos: {'source_unchanged_during_tests': True, 'spec_unchanged': True, 'head_unchanged': True, 'gpu_pad_clock_models_unchanged': True, 'movie0_native_asan_identical': True, 'movie0_skip_native_asan_identical': True, 'raw_pixel_metrics_unchanged': True, 'exactly_four_listed_pairs_accepted': True, 'movie0_all_checks_pass': True, 'reference_hashes_unchanged': True, 'only_remaining_failures_are_skip_vblank': True}.
+
+Capturas y work dirs bajo /dw/build/evidence y /dw/build/verification-3-7-decisions56. Resumen completo de cada test, métricas y huellas: summary.json. El informe anterior está archivado en build/verification-3-7-decisions56/prior-report.md.
