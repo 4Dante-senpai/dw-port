@@ -58,6 +58,8 @@ context:
 2. **Sincronía A/V (opción A):** en cada lado se mide el desfase entre el ciclo del último `PutDispEnv` de `MOV_playMovie` y el ciclo en que el decodificador XA entrega la última muestra del STR. Bloquea si |desfase_port − desfase_referencia| supera la duración media de un frame de video de la referencia (intervalo medio entre `PutDispEnv`).
 3. **Latencia de `CdControlB(CdlPause)` (2026-10-21):** se modela ahora, como costo hipotético en `port/psyq/clock_costs.h` (psx-spx o medición contra Redux), que 3.10 calibra. Es la causa de la salida con Start en el VBlank 121 frente a 122.
 4. **IDCT (2026-10-21):** se vuelve al modelo con 4 frames a 5/255 y se hace una búsqueda acotada más en la conversión YUV→RGB; si no llega a 4/255, se vuelve al dueño con los números.
+5. **Desvío conocido del MDEC (2026-10-21):** la búsqueda sobre los 3636 frames no bajó de 5/255 en cuatro componentes azules (frame 2318 (144,80) 181/176; 2587 (224,64) 53/48; 3439 (176,96) 24/19; 3453 (176,96) 21/16). Se aceptan como desvío conocido listado con su valor exacto: `scene_movie0_compare` exige máx ≤ 4/255 en todo el resto, falla si aparece otro componente fuera de tolerancia o si uno de los cuatro empeora, y las medias siguen ≤ 0,5/255. El residuo pasa a trabajo diferido.
+6. **Costo de GPU tras Pause (2026-10-21):** con la pausa del CD modelada, el port sale en el VBlank 123 porque `ClearImage`/`DrawSync` cuestan 230.464 ciclos frente a 1.107 en el original, y Start se lee un VBlank después. Se investiga en una corrida acotada (¿error del modelo o costo?); si no cierra 122, se vuelve al dueño con los números.
 
 </frozen-after-approval>
 
@@ -92,7 +94,7 @@ context:
 - [ ] `docs/port/mdec.md`, `docs/port/stubs.md`, `docs/port/reference.md`, `gen_stubs.py` -- modelo, atribución, hipótesis y métricas.
 
 **Acceptance Criteria:**
-- Given `run.py movie0 --compare`, when corre OP1 contra la referencia, then todos los frames cumplen máx ≤ 4/255 y media ≤ 0,5/255 por canal, y la sincronía A/V cumple la decisión 2.
+- Given `run.py movie0 --compare`, when corre OP1 contra la referencia, then todos los frames cumplen máx ≤ 4/255 y media ≤ 0,5/255 por canal salvo los cuatro componentes de la decisión 5, que no empeoran, y la sincronía A/V cumple la decisión 2.
 - Given `movie0_skip.toml`, when se pulsa Start en el VBlank k, then `MOV_playMovie` vuelve en el mismo VBlank que en la referencia.
 - Given los stubs de video reemplazados, when corren `title`, `newgame`, `title_audio` y `xa_op1`, then siguen pasando contra sus referencias.
 - Given dos capturas de referencia de `movie0`, when se comparan, then los frames son idénticos byte a byte.
@@ -103,6 +105,7 @@ context:
 ## Spec Change Log
 
 - 2026-10-21, dueño: fila "OP1 completo" 3637 → 3636 frames. Evidencia: dos capturas de Redux muestran que el original lee la cabecera 3637, pone `MOVIE_COMPLETED` mientras decodifica el 3636 y nunca envía el 3637 al MDEC (`build/verification-3-7/report.md`). Decisiones 3 y 4 agregadas tras la investigación de Start (pausa CD de 1.240.612 ciclos en el original frente a 64 en el port) y del IDCT (el redondeo por pasada empeoró OP1 completo a 26 frames, máx 6/255).
+- 2026-10-21, dueño: decisiones 5 (cuatro componentes azules a 5/255 como desvío conocido; AC ajustado) y 6 (investigación acotada del costo de `ClearImage`/`DrawSync` tras Pause).
 
 ## Review Triage Log
 
