@@ -100,3 +100,6 @@
 - source_spec: `docs/implementation-artifacts/spec-3-6-xa-y-sectores-form-2.md`
   summary: Verificar contra `StCdInterrupt` del asm USA si, con el anillo STR lleno, la consola descarta sectores en vez de pausar la lectura como hace el port (medium, sin verificar).
   evidence: El port reintenta el mismo LBA y alarga la película; se resuelve leyendo `asm/us/main/psyq/libcd.s` (StCdInterrupt, 800B3468) o con una escena que llene el anillo en la referencia (3.7/3.10).
+- source_spec: `docs/implementation-artifacts/spec-3-7-mdec-libpress-y-videos-str.md`
+  summary: Redondeo de color del MDEC: cuatro componentes azules de OP1 difieren 5/255 de PCSX-Redux (2318 (144,80), 2587 (224,64), 3439 (176,96), 3453 (176,96)), aceptados como desvío conocido (decisión 5).
+  evidence: psx-spx no especifica la precisión fija de YUV→RGB; las variantes probadas sobre los 3636 frames (`build/verification-3-7-gates/`) no cumplen máximo y media a la vez. Se resuelve con documentación del hardware o pruebas en una consola real.
