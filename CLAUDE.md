@@ -130,6 +130,11 @@ Las ejecuciones de Codex lanzadas por `tools/port/codex-run.sh` ignoran esta sec
    cae solo al local si no responde). Comandos sueltos y capturas largas de un hilo con
    `tools/port/docker_run.sh` local (un hilo es ~15% más rápido acá). Detalles en
    `docs/port/setup.md`.
+6. **Seguimiento de Codex:** cada vez que se lanza `tools/port/codex-run.sh` en segundo plano,
+   armar un monitor con `tools/port/codex-watch.sh` (un bloque cada 10 min) y rearmarlo al
+   vencer hasta que la corrida termine. Con cada bloque, informar al dueño en 2-4 líneas qué
+   hizo Codex, por dónde va respecto de las tareas de la spec y cuánto le falta. Si el bloque
+   dice `SIN ACTIVIDAD`, avisar enseguida.
 
 ## GitLab (gitlab.homelab.local)
 - Para operaciones sobre GitLab (issues, merge requests, ramas, pipelines, jobs, logs)
