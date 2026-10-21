@@ -72,7 +72,7 @@ native-disc:
     - cmake --preset native-headless
     - cmake --build --preset native-headless
     - xvfb-run -a pcsx-redux -version > /dev/null   # reference_title must run, not skip (77)
-    - tools/port/ci/ctest_no_skip.sh --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|scene_|reference_title|reference_newgame_state|reference_xa_op1"
+    - tools/port/ci/ctest_no_skip.sh --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|press_tables_disc|scene_|reference_title|reference_newgame_state|reference_xa_op1|reference_movie0"
 
 # Class B: the whole suite under ASan/UBSan, including the title scene (story 2.15).
 native-asan-disc:

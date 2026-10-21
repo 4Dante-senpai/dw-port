@@ -341,7 +341,7 @@
 
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.6 cerradas; sigue la 3.7 (MDEC, `libpress` y videos STR). El resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.6 cerradas; 3.7 (MDEC, `libpress` y videos STR) en curso en la rama local `story/3-7-mdec-libpress-y-videos-str`: implementación y regresiones hechas; quedan dos gates (2 frames de OP1 a 5/255 y salida con Start en el VBlank 121 frente a 122) y el conteo de frames (el original muestra 3636; corrección de la spec pendiente del dueño). Codex llegó a su límite de uso; reanudación programada para el 2026-10-21 16:41 (`CODEX_RESUME=01a15e3e-b038-7002-b92e-8fc020068143`). El resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 

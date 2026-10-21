@@ -414,3 +414,92 @@ Ver [xa.md](xa.md) para el modelo, atribución, hipótesis y límites.
 La reconstrucción de la imagen usa `tools/port/docker_build.sh`; el job images
 incluye cambios del parche entre sus triggers, pero publicar la imagen requiere
 la autorización indicada en la especificación.
+
+## STR y libpress (3.7): evidencia y límites
+
+Las escenas `movie0` y `movie0_skip` capturan todos los `PutDispEnv` de
+`MOV_playMovie`, sin seleccionar un subconjunto de frames. Véase
+[mdec.md](mdec.md) para el modelo, atribución y gates. En la continuación
+autorizada por el dueño, frames, diffs, trazas y PCM se guardan bajo
+`build/evidence/`, ignorado por Git, para persistir entre contenedores.
+`build/reference/<escena>/audio.json` conserva hashes e identidad de las dos
+ejecuciones de Redux; `build/port/<preset>/scenes/<escena>/audio.json` conserva
+las métricas de comparación y hashes. El gate visual usa el máximo absoluto
+y la media de cada canal, sin alinear ni desplazar frames.
+
+La ejecución local del 2026-10-21 detecta una contradicción con el requisito
+de 3637 frames: **las dos capturas del juego USA original presentan 3636**,
+con retorno 1 y evidencia idéntica byte a byte. El port también presenta
+3636. `MOV_readFrame` marca `MOVIE_COMPLETED` al prefetchear el frame con
+contador 3637; el bucle muestra el frame anterior y termina. No se añade
+un frame artificial ni se modifica el consumidor para satisfacer el número.
+El gate de 3637 se conserva y falla explícitamente.
+
+Con Start relativo en 120 (mantenido hasta 180), Redux retorna 0 en el
+VBlank 122; el port retorna 0 en el 121. El desfase temporal queda abierto;
+en esa primera implementación no se ajustaron costes de CPU, CD ni MDEC.
+La historia no se considera cerrada mientras fallen estos gates.
+
+En la implementación anterior, con la IDCT que conserva la fracción entre pasadas, los 3636 frames comparados
+cumplen la media ≤0,5 por canal. Quedan cuatro frames (2318, 2587, 3439 y
+3453), cada uno con un único componente azul que difiere 5/255; el máximo
+permitido es 4/255. No se relaja ese límite. El peor diff queda fuera del
+repo. El desfase A/V difiere 87 181 ciclos, dentro del intervalo medio de
+1 128 796,81 ciclos; XA obtiene 54,42 dB (mínimo: 40). Ambos retornos
+completos son 1. Las dos ejecuciones nativas repiten píxeles, tiempos y audio.
+
+Verificación local de la implementación anterior: builds `native-headless`, `native-asan` y `web`; L1
+`mdec`, `libpress`, `mdec_vectors`, carga de tablas, consumidor y runner en
+nativo y sanitizers, y los mismos vectores bajo Node/WASM. `make compare`
+produce «Compiled binaries match with target binaries». No se ejecuta
+ningún commit, push ni publicación. Los gates STR anteriores permanecen rojos.
+
+El PCM mezclado sigue siendo diagnóstico según la decisión 4: no cumple
+40 dB y su duración difiere, aunque el flujo XA aislado sí pasa. Estos
+resultados no demuestran paridad del mixer completo.
+
+Antes de la revisión del redondeo documentada más abajo, los hashes de frames, registros SPU y PCM, y el footer temporal eran también
+idénticos entre `native-headless` y `native-asan` para OP1 y Start. Los
+fixtures `reference_movie0` y `reference_movie0_skip` pasaron con
+comprobación de hashes e identidad del adaptador actual.
+
+### Investigación de la cuenta OP1 (2026-10-21)
+
+El original USA **no muestra el frame STR 3637** durante la reproducción
+completa de OP1. Dos sondas de Redux, a Speed=1, registran idénticos bytes
+y ciclos en `build/evidence/reference/movie0/headers-{1,2}.jsonl`:
+lecturas StHEADER 1..3637, entradas MDEC 1..3636 y presentaciones 1..3636,
+sin huecos ni repeticiones. Primera presentación: header 1, ciclo 754 010 018.
+
+| Evento terminal | Header STR | Ciclo Redux | `MOVIE_COMPLETED` |
+|---|---:|---:|---:|
+| Presenta | 3635 | 4 856 057 611 | 0 |
+| Envía al MDEC | 3636 | 4 856 069 147 | 0 |
+| Lee el siguiente StHEADER | 3637 | 4 856 956 789 | 0 |
+| Ejecuta el store de finalización | 3637 | 4 856 956 797 | 0 antes del store |
+| Presenta por última vez | 3636 | 4 857 186 405 | 1 |
+| Epílogo de `MOV_playMovie` | 3636 | 4 858 416 473 | 1 |
+
+El retorno al llamador ocurre en 4 858 416 486, valor 1. `MOV_readFrame`
+compara `header->frameCount >= movie->frameCount` (`src/mov/mov.c:196`);
+el binario original hace `lw` del header en `0x80010528`, compara en
+`0x80010534` y escribe la bandera en `0x80010544`. La tabla original en
+`0x8001094c` contiene inicio 1 y límite 3637. `MOV_playMovie` envía el buffer
+actual al MDEC (`0x80010748`), expande el siguiente frame (`0x80010800`),
+presenta el actual (`0x8001089c`) y recién entonces consulta la bandera
+(`0x800108b4..0x800108bc`). El frame 3637 se expande por VLC, pero nunca
+se envía al MDEC ni se presenta. El C conserva ese mismo orden.
+
+El archivo contiene **3719 headers de frame distintos, consecutivos 1..3719**,
+todos con sus chunks completos. El 3637 sí existe: que no se muestre no
+proviene de un archivo truncado. El STR extraído tiene SHA-256
+`a172fa0eb6ec5ecf703d43275bbc99ee20f0070a36b2b9974ba57a85d54288a5`,
+igual al manifest del disco. Evidencia adicional en
+`build/verification-3-7-gates/{str-headers,str-selected-headers,original-movie-table,frame-count}.json`
+y `MOV-original.asm`. La sonda se conserva en ese directorio y no modifica
+el adaptador versionado ni el código original. La recaptura fue necesaria
+porque se perdieron los archivos de `/tmp`; sus cuatro hashes de referencia
+de la comprobación rápida coinciden con los registrados anteriormente.
+
+No se cambia el consumidor: no hay un bug del port en esta cuenta. El
+requisito congelado de 3637 presentaciones continúa fallando explícitamente.

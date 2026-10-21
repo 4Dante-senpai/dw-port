@@ -11,6 +11,7 @@
 #include <dw/mov.h>
 #include "../psyq.h"
 #include "../clock.h"
+#include "../libpress.h"
 #include "../../backend/cdrom.h"
 #include "../../backend/gpu.h"
 #include "../../backend/spu.h"
@@ -140,7 +141,8 @@ static void reset_with_output_pending(void)
 
 static void streaming(void)
 {
-    unsigned long *bs, *head, *bs2, *head2, run = 9;
+    unsigned long *bs, *head, *bs2, *head2;
+    unsigned long runbuf[128] = {0}, *run = runbuf;
     CdlLOC loc;
     clock_reset();
     spu_reset(); psyq_libcd_reset();
@@ -157,30 +159,32 @@ static void streaming(void)
     ENTRY(CHECK(StGetBackloc(&loc) == 0));
     CHECK(CdPosToInt(&loc) == -149);
     ENTRY(StCdInterrupt()); ENTRY(StUnSetRing());
-    ENTRY(DecDCTReset(0)); ENTRY(DecDCTvlcBuild(NULL));
-    ENTRY(CHECK(DecDCTvlc2(bs, &run, NULL) == 0)); CHECK(run == 0);
-    ENTRY(DecDCTin(&run, 3));
+    DecDCTReset(0);
+    ENTRY(CHECK(DecDCTvlc2(bs, run, MOV_VLC_TABLE) == 0)); CHECK(run[0] == 0x38000000);
+    ENTRY(DecDCTin(run, 3));
     for (int n = 0; n < 3; n++)
         for (int i = 0; i < 10; i++) output[n][i] = 0xDEADBEEF;
     game_thread = pthread_self();
     ENTRY(CHECK(DecDCToutCallback(decoded) == 0));
     uint64_t before = clock_now();
     DecDCTout(&output[0][1], 8);
-    CHECK(clock_now() - before == 3 * CLOCK_PSYQ_ENTRY_CYCLES);
+    CHECK(clock_now() - before == CLOCK_PSYQ_ENTRY_CYCLES);
+    CHECK(callbacks == 0);
+    clock_advance(100000);
     CHECK(callbacks == 3 && max_depth == 1 && depth == 0);
-    ENTRY(CHECK(DecDCToutCallback(NULL) == 0));
-    ENTRY(DecDCTout(&run, 1)); CHECK(run == 0 && callbacks == 3);
+    DecDCToutCallback(NULL);
+    ENTRY(DecDCTout(run, 1)); clock_advance(100000); CHECK(run[0] == 0 && callbacks == 3);
 
     ENTRY(CHECK(DecDCToutCallback(count_reset_callback) == 0));
-    ENTRY(DecDCTReset(0));
-    run = 9;
-    ENTRY(DecDCTout(&run, 1)); CHECK(run == 0 && reset_callbacks == 0);
+    DecDCTReset(0);
+    run[0] = 9;
+    ENTRY(DecDCTout(run, 1)); clock_advance(100000); CHECK(run[0] == 0 && reset_callbacks == 0);
 
     for (int i = 0; i < 8; i++) canceled_output[i] = 0xDEADBEEF;
     ENTRY(CHECK(DecDCToutCallback(reset_with_output_pending) == 0));
-    run = 9;
-    DecDCTout(&run, 1);
-    CHECK(run == 0 && reset_callbacks == 1);
+    run[0] = 9;
+    DecDCTout(run, 1);
+    clock_advance(100000); CHECK(run[0] == 0 && reset_callbacks == 1);
     for (int i = 0; i < 8; i++) CHECK(canceled_output[i] == 0xDEADBEEF);
 }
 
@@ -228,12 +232,25 @@ static void movie(void)
         for (int x = 0; x < 480; x++) CHECK(vram[y * 1024 + x] == 0);
     CHECK(vram[500 * 1024 + 500] != 0); /* Outside the frame remains untouched. */
     /* Verify callback removal; otherwise this would submit another movie slice. */
-    unsigned long word = 1; DecDCTout(&word, 1); CHECK(word == 0 && slices == 20);
+    unsigned long word = 1; DecDCTout(&word, 1); clock_advance(100000); CHECK(word == 0 && slices == 20);
     cdrom_close();
 }
 
 int main(void)
 {
+    const char *names[] = {"mdec_iq", "mdec_coef"};
+    for (unsigned i=0;i<2;i++) {
+        size_t n; libpress_table(names[i],&n); uint32_t *data=calloc(1,n);
+        CHECK(data); data[0]=i?0x60000000:0x40000001;
+        CHECK(!libpress_set_table(names[i],data,n)); free(data);
+    }
+    /* Synthetic compressed VLC table: a literal 0x11000-byte zero table. */
+    size_t n; libpress_table("data_2",&n); uint8_t *data=calloc(1,n); CHECK(data);
+    size_t at=0; data[at++]=0; data[at++]=0; data[at++]=0xf1; data[at++]=0;
+    unsigned remaining=0x11000-1;
+    while(remaining) { unsigned count=remaining>240?240:remaining; data[at++]=count-1; remaining-=count; }
+    data[at++]=0xff; data[at++]=0xff; CHECK(at<=n);
+    CHECK(!libpress_set_table("data_2",data,n)); free(data);
     audio(); cards(); streaming(); movie();
     printf("av_stubs: %s\n", failures ? "FAIL" : "OK");
     return failures != 0;

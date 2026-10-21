@@ -1,3 +1,4 @@
+__attribute__((weak)) void port_scene_movie_xa(void);
 /* libcd: commands, data reads and file search over the CD model (port/backend/cdrom.h) and the
  * virtual clock (AD-8). asm:asm/us/main/psyq/libcd.s (mw_lib41). Not modeled: CD-DA, read errors and retries, the shell-open status. */
 #include <stddef.h>
@@ -81,6 +82,7 @@ static void stream_event(void *arg)
         if ((sector[6]&0x24)==0x24 && (drive_mode&0x40)) {
             spu_sync();
             if (!XaDec_Sector(sector+4)) port_trace("xa rejected coding=0x%02x lba=%u",sector[7],rt.lba);
+            else if (port_scene_movie_xa) port_scene_movie_xa();
         } else if (!cd_stream_sector(sector)) {
             rt.event=clock_schedule(rt.period,stream_event,NULL); return;
         }

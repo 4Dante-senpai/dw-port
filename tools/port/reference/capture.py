@@ -114,6 +114,13 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
                                 dict(checkpoints=segment.get("stop_on", [])), ROOT / "config/us/symbols.txt"), trace=str(output / f"run-{index}-{i}.spu"),
                                 meta=str(output / f"run-{index}-{i}.json"))
                            for i, segment in enumerate(audio, 1)]
+    if scene.get("movie"):
+        directory = output / f"movie-{index}"
+        if directory.exists(): shutil.rmtree(directory)
+        directory.mkdir()
+        config["movie"] = str(directory)
+        config["movie_display"] = _runner.checkpoint_symbols(
+            dict(checkpoints=["PutDispEnv"]), ROOT / "config/us/symbols.txt")[0]["address"]
     if scene.get("state_vars"):
         config.update(state_vars=scene["state_vars"], state_symbols=scene["state_symbols"],
                       state_trace=str(output / f"run-{index}.state"))
@@ -144,6 +151,11 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
     progress = (work / "progress.txt").read_text().strip() if (work / "progress.txt").exists() else "before frame 0"
     if code != 0 or (not audio and not (work / "display.json").exists()):
         raise ValueError(f"run {index}: {code}; last point: {progress}; log: {log}")
+    if scene.get("movie"):
+        for raw in directory.glob("frame-*.raw"):
+            meta = json.loads(raw.with_suffix(".json").read_text())
+            raw.with_suffix(".ppm").write_bytes(to_ppm(raw.read_bytes(), **meta))
+            raw.unlink(); raw.with_suffix(".json").unlink()
     if audio:
         return progress
     meta = json.loads((work / "display.json").read_text())
@@ -169,6 +181,7 @@ def main(argv=None):
     parser.add_argument("--timeout", type=float, default=600)
     parser.add_argument("--max-vblanks", type=int, default=10000)
     args = parser.parse_args(argv)
+    if args.id in ("movie0", "movie0_skip"): args.audio = True
     if args.reuse and (args.update or not (args.state or args.audio)):
         raise ValueError("--reuse requires --state or --audio and cannot be combined with --update")
     if args.audio and (args.state or args.update):

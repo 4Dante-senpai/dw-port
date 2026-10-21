@@ -99,6 +99,15 @@ add_custom_command(OUTPUT ${DW1_GTE_TABLES_H}
     ${CMAKE_SOURCE_DIR}/tools/port/psyq/gte_tables.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
+# Read-only libpress table regions in the user's EXE (metadata only).
+set(DW1_PRESS_TABLES_H ${CMAKE_BINARY_DIR}/generated/dw1_press_tables.h)
+add_custom_command(OUTPUT ${DW1_PRESS_TABLES_H}
+  COMMAND python3 -I -B tools/port/psyq/press_tables.py config/${DW1_VERSION} ${DW1_PRESS_TABLES_H}
+  DEPENDS ${CMAKE_SOURCE_DIR}/config/${DW1_VERSION}/main.yaml
+    ${CMAKE_SOURCE_DIR}/config/${DW1_VERSION}/symbols.txt
+    ${CMAKE_SOURCE_DIR}/tools/port/psyq/press_tables.py
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
 add_compile_options(-std=gnu99 -ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 
 # Native: no PIE, so addresses (and traces) are the same in every run. The OT window starts at
@@ -140,7 +149,7 @@ if(NOT EMSCRIPTEN)
 endif()
 
 # Hardware models (CD over the Pack and GTE).
-add_library(dw1_backend STATIC port/backend/cdrom.c port/backend/gte.c port/backend/spu.c port/backend/xa.c
+add_library(dw1_backend STATIC port/backend/cdrom.c port/backend/gte.c port/backend/spu.c port/backend/xa.c port/backend/mdec.c
   port/backend/gpu_soft/gpu_soft.c)
 target_link_libraries(dw1_backend PUBLIC dw1_pack_lib)
 target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
@@ -148,13 +157,15 @@ target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
 add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c port/psyq/clock.c
   port/psyq/libetc.c port/psyq/libapi.c port/psyq/libc.c port/psyq/libgs.c port/psyq/libcd.c
   port/psyq/libgte.c port/psyq/libgpu.c port/psyq/libsnd.c port/psyq/libspu.c
-  port/psyq/libpress.c port/psyq/libmcrd.c port/psyq/libcd_stream.c port/psyq/stub.c ${DW1_GTE_TABLES_H})
+  port/psyq/libpress.c port/psyq/libmcrd.c port/psyq/libcd_stream.c port/psyq/stub.c ${DW1_GTE_TABLES_H} ${DW1_PRESS_TABLES_H})
 target_include_directories(dw1_psyq PRIVATE ${CMAKE_BINARY_DIR}/generated)
 target_link_libraries(dw1_psyq PUBLIC Threads::Threads dw1_backend)
 # The heap and the CD model store typed data in the uint8_t arena Ps1_Ram, like the game does.
 target_compile_options(dw1_psyq PRIVATE -Wall -Wextra -Werror -fno-strict-aliasing)
 
 enable_testing()
+add_test(NAME press_tables COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/psyq/test_press_tables.py)
+add_test(NAME mdec_vectors COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/video/mdec_vectors.py --check)
 # SPU L1 runs the identical C implementation on native, sanitizers and Node/WASM.
 add_test(NAME spu_vectors COMMAND python3 -I -B
   ${CMAKE_SOURCE_DIR}/tools/port/audio/spu_vectors.py --check)
@@ -162,8 +173,8 @@ add_test(NAME xa_vectors COMMAND python3 -I -B
   ${CMAKE_SOURCE_DIR}/tools/port/audio/xa_vectors.py --check)
 add_test(NAME scene_audio_unit COMMAND python3 -I -B
   ${CMAKE_SOURCE_DIR}/tools/port/scenes/test_audio.py)
-foreach(suite spu xa libspu libsnd cd_stream)
-  if(suite STREQUAL "spu" OR suite STREQUAL "xa")
+foreach(suite spu xa mdec libpress libspu libsnd cd_stream)
+  if(suite STREQUAL "spu" OR suite STREQUAL "xa" OR suite STREQUAL "mdec")
     set(test_source port/backend/tests/test_${suite}.c)
   else()
     set(test_source port/psyq/tests/test_${suite}.c)
@@ -450,6 +461,10 @@ if(NOT EMSCRIPTEN)
     $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   set_tests_properties(gte_tables_disc PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600
     FIXTURES_REQUIRED disc_pack)
+  add_test(NAME press_tables_disc COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/psyq/test_press_tables_disc.sh
+    $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+  set_tests_properties(press_tables_disc PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600
+    FIXTURES_REQUIRED disc_pack)
   get_filename_component(DW1_SCENE_PRESET ${CMAKE_BINARY_DIR} NAME)
   add_test(NAME scene_title COMMAND sh -c
     "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py title --build ${DW1_SCENE_PRESET}")
@@ -482,6 +497,17 @@ if(NOT EMSCRIPTEN)
     ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py xa_op1 --build ${DW1_SCENE_PRESET} --compare-audio)
   set_tests_properties(scene_xa_op1_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
     FIXTURES_REQUIRED "disc_pack;xa_op1_reference" RESOURCE_LOCK newgame_capture)
+  foreach(movie_scene movie0 movie0_skip)
+    add_test(NAME reference_${movie_scene} COMMAND python3 -I -B
+      ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py ${movie_scene} --reuse
+      --max-vblanks 40000 --timeout 3500)
+    set_tests_properties(reference_${movie_scene} PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 7200
+      FIXTURES_SETUP ${movie_scene}_reference RESOURCE_LOCK newgame_capture)
+    add_test(NAME scene_${movie_scene}_compare COMMAND python3 -I -B
+      ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py ${movie_scene} --build ${DW1_SCENE_PRESET} --compare)
+    set_tests_properties(scene_${movie_scene}_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 7200
+      FIXTURES_REQUIRED "disc_pack;${movie_scene}_reference" RESOURCE_LOCK newgame_capture)
+  endforeach()
   add_test(NAME scene_newgame_state COMMAND sh -c
     "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py newgame --build ${DW1_SCENE_PRESET} --state")
   set_tests_properties(scene_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1250
