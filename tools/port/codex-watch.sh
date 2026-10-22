@@ -18,7 +18,12 @@ while true; do
     python3 -I - "$f" "$running" <<'EOF'
 import calendar, json, os, sys, time
 f, running = sys.argv[1], sys.argv[2]
-rows = [json.loads(l) for l in open(f)]
+rows = []
+for line in open(f):
+    try:
+        rows.append(json.loads(line))
+    except json.JSONDecodeError:
+        continue
 calls = sum(1 for r in rows if (r.get("payload") or {}).get("type") in ("custom_tool_call", "function_call"))
 msgs = [c["text"] for r in rows if (r.get("payload") or {}).get("type") == "message"
         and r["payload"].get("role") == "assistant"

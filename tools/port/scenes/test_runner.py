@@ -623,6 +623,7 @@ with tempfile.TemporaryDirectory() as tmp:
     except ValueError: pass
     else: raise AssertionError('non-deterministic movie accepted')
     frame.unlink()
+    assert movie.evidence(actual) == {}
     try: movie.sequence(actual)
     except ValueError: pass
     else: raise AssertionError('missing movie frame accepted')

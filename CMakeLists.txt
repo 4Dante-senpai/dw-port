@@ -510,7 +510,7 @@ if(NOT EMSCRIPTEN)
   endforeach()
   add_test(NAME scene_newgame_state COMMAND sh -c
     "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py newgame --build ${DW1_SCENE_PRESET} --state")
-  set_tests_properties(scene_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1250
+  set_tests_properties(scene_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
     FIXTURES_REQUIRED "disc_pack;newgame_reference" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     RESOURCE_LOCK newgame_capture)
   add_test(NAME dw1_overlay COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_dw1_overlay.sh

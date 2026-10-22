@@ -90,8 +90,10 @@ void DecDCTReset(int mode)
         out_callback = NULL;
         uint32_t command;
         memcpy(&command, mdec_iq, 4);
+        PORT_ASSERT(command >> 29 == 2);
         PORT_ASSERT(mdec_command(command, mdec_iq + 4, 32) == 0);
         memcpy(&command, mdec_coef, 4);
+        PORT_ASSERT(command >> 29 == 3);
         PORT_ASSERT(mdec_command(command, mdec_coef + 4, 32) == 0);
     }
 }

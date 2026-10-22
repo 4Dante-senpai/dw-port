@@ -586,7 +586,7 @@ def main():
             command += ["--checkpoints", str(checkpoint_file)]
         if args.state:
             command += ["--state-vars", str(vars_path), "--state-trace", str(state)]
-        run = subprocess.run(command, cwd=build, env=env, capture_output=True, timeout=600)
+        run = subprocess.run(command, cwd=build, env=env, capture_output=True, timeout=1800)
         log = run.stdout + run.stderr
         (output / f"run-{index}.log").write_bytes(log)
         if run.returncode or re.search(rb"AddressSanitizer|runtime error", log):

@@ -30,12 +30,13 @@ def sequence(directory):
 
 
 def evidence(directory):
-    # CI caches manifests, while external /tmp captures may have been removed.
-    # An absent sequence must invalidate reuse and trigger a fresh capture.
-    if not (directory/'movie.jsonl').is_file(): return {}
-    sequence(directory)
-    return {str(p.relative_to(directory.parent)): digest(p)
-            for p in [directory/'movie.jsonl', *sorted(directory.glob('frame-*.ppm'))]}
+    # Missing or invalid cached sequences must trigger a fresh capture.
+    try:
+        sequence(directory)
+        return {str(p.relative_to(directory.parent)): digest(p)
+                for p in [directory/'movie.jsonl', *sorted(directory.glob('frame-*.ppm'))]}
+    except (OSError, ValueError):
+        return {}
 
 
 def deterministic(first, second):
