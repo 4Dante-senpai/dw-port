@@ -1,0 +1,24 @@
+Historia 3.7 — verificación del orquestador en el PC del dueño (tools/port/remote_run.sh, imagen dw-port:latest), 2026-10-22
+
+Disco: DW1_DISC_DIR=/dw/game_rom/extracted; referencias, frames y trazas fuera del checkout (solo métricas y hashes acá).
+
+Builds native-headless, native-asan y web: OK.
+ctest --preset web: 35/35 pasaron (3 tests con disco omitidos en web: pack_disc, native_title_capture, web_scene_title).
+ctest_no_skip.sh --preset native-headless -j6 (suite completa con disco): 100% tests passed, 0 tests failed out of 68 (2144,2 s).
+  scene_movie0_compare 179,2 s; scene_movie0_skip_compare 2,2 s; scene_title_audio_compare 200,8 s;
+  scene_newgame_state 292,5 s; scene_xa_op1_compare 101,4 s.
+ctest_no_skip.sh --preset native-asan -j6: 65/66; scene_newgame_state cortado por el timeout fijo de 600 s por corrida
+  (newgame ahora decodifica el video real con MDEC: nativo 147,1 s en 3.6, 292,5 s ahora).
+  scene_movie0_compare 504,4 s; scene_movie0_skip_compare 7,7 s; scene_title_audio_compare 847,9 s; scene_xa_op1_compare 415,7 s.
+  Corrección: run.py 600 s -> 1800 s por corrida; CTest TIMEOUT de scene_newgame_state 1250 s -> 3650 s.
+ctest --preset native-asan (serie) pack_disc + reference_newgame_state + scene_newgame_state: 3/3 (scene_newgame_state 1218,3 s).
+
+Gate movie0 (OP1 completo): 3636 frames en port y en las dos capturas del original. Máx. RGB 4/3/5, medias 0,219/0,169/0,252 /255.
+  Únicos componentes > 4/255: los 4 permitidos (decisión 5): frame 2318 (144,80) 181/176; 2587 (224,64) 53/48;
+  3439 (176,96) 24/19; 3453 (176,96) 21/16. A/V dentro del límite contra la referencia (decisión 2).
+Gate movie0_skip (Start): retorno 0 en el VBlank 123 del port frente a 122 de la referencia; skip_vblank_delta = 1 exacto
+  (decisión 7, Historia 3.10 lo lleva a 0). Nativo y ASan.
+XA de OP1: 54,42 dB (umbral 40). title, newgame y title_audio sin cambios.
+make compare (dw-build): Compiled binaries match with target binaries (corrida de Codex; src/ sin cambios desde entonces).
+Revisión: 3 capas Codex, 14 hallazgos: 4 parches (aserción de tablas en DecDCTReset, movie.evidence con caché parcial,
+  codex-watch con línea JSON parcial, STATUS al cierre) y 10 rechazados con evidencia (tabla en la spec).

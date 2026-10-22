@@ -252,6 +252,23 @@
   comparación con disco real 3/3 (Pack, referencia nueva y port); web 3/3, 4 casos de navegador.
   Evidencia: `docs/implementation-artifacts/evidence/story-3-2.log`.
 
+- Historia 3.7 (MDEC, `libpress` y videos STR): `port/backend/mdec` modela el MDEC según psx-spx
+  (RLE, IQ, IDCT que conserva la fracción entre pasadas, YUV→RGB15/24; adaptado de DW2-PC, CC0) y
+  `port/psyq/libpress.c` traduce del asm de DW1 `DecDCTReset/In/Out/vlc2` y sus callbacks; las tablas
+  IQ/IDCT/VLC se cargan del ejecutable del Pack (sin bytes en el repo, AD-12). El fin de cada
+  macroblock es un evento del reloj (decisión 1; 1024 ciclos, hipótesis para 3.10) y `CdlPause`
+  cobra la latencia de psx-spx (decisión 3). `src/mov/mov.c` solo suma `clock_advance(1024)` bajo
+  `DW1_PORT` en `MOV_waitForFlip`. Gates: escena `movie0` (OP1 completo, 3636 frames: el original
+  nunca envía el último al MDEC) dentro de 4/255 máx. y 0,5/255 media por canal, salvo 4 componentes
+  azules a 5/255 aceptados como desvío conocido (decisión 5; medias 0,219/0,169/0,252); A/V contra la
+  referencia (decisión 2); `movie0_skip` (Start) vuelve exactamente 1 VBlank tarde (123 frente a 122:
+  costo GPU de `ClearImage` y fase de `PadRead`), aceptado hasta la Historia 3.10 (decisión 7).
+  Revisión (3 capas Codex): 14 hallazgos, 4 parches y 10 rechazados con evidencia. `newgame` ahora
+  decodifica el video real y tarda el doble; sus timeouts suben (600 s → 1800 s por corrida).
+  Verificación con disco en el PC del dueño: web 35/35 (3 con disco omitidas), nativo 68/68, ASan 66/66 (ver evidencia);
+  `make compare` idéntico; XA de OP1 sigue a 54,42 dB. Diferidos en `deferred-work.md`: residuo de
+  color MDEC y +1 VBlank de Start. Evidencia: `docs/implementation-artifacts/evidence/story-3-7.log`.
+
 - Historia 3.6 (XA y sectores Form 2): en DW1 el XA solo aparece intercalado en los cuatro
   `MOVIE/*.STR` (1 de cada 8 sectores, ADPCM 4 bits estéreo 37,8 kHz). `port/backend/xa` decodifica
   los 8 formatos con el zigzag de psx-spx (adaptado de DW2-PC, CC0) y alimenta la entrada de CD del
@@ -341,7 +358,7 @@
 
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.6 cerradas; 3.7 (MDEC, `libpress` y videos STR) en curso en la rama local `story/3-7-mdec-libpress-y-videos-str`: implementación y regresiones hechas; quedan dos gates (2 frames de OP1 a 5/255 y salida con Start en el VBlank 121 frente a 122) y el conteo de frames (el original muestra 3636; corrección de la spec pendiente del dueño). Codex retomó la sesión `01a15e3e-b038-7002-b92e-8fc020068143` el 2026-10-21 tras su límite de uso. El resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.7 cerradas; sigue la 3.8 (Memory card nativa). El resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 
@@ -356,11 +373,11 @@
 | Funciones PsyQ usadas / cubiertas por DW2-PC | 202 / 81 |
 | Archivos C del juego que compilan a wasm32 en el preset `web` | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
-| Bloques `DW1_PORT` en `src/`/`include/` | 79 apariciones del guard (`docs/port/src-changes.md`) |
-| Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (17 con comportamiento M2: `libpress` y Memory card) / 0 / 11 (de 198) |
+| Bloques `DW1_PORT` en `src/`/`include/` | 94 apariciones del guard (`docs/port/src-changes.md`) |
+| Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (11 con comportamiento M2: Memory card) / 0 / 11 (de 198) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
-| Escenas que funcionan (nativo) | 4 (`xa_op1`: XA de OP1 a 54,42 dB contra la referencia; título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control; `title_audio` con escrituras de voz idénticas en 2 tramos) |
+| Escenas que funcionan (nativo) | 6 (`movie0`: OP1 completo por MDEC, 3636 frames dentro de tolerancia salvo 4 componentes aceptados; `movie0_skip`: salida con Start, +1 VBlank hasta 3.10; `xa_op1`: XA de OP1 a 54,42 dB contra la referencia; título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control; `title_audio` con escrituras de voz idénticas en 2 tramos) |
 | Escenas que funcionan (web) | 1 (título, igual a nativo, Chromium y Firefox) |
 | Llamadas con firma distinta inventariadas / sin resolver | 1031 / 0 (`fnptr_casts.tsv`) |
 
