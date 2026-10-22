@@ -10,6 +10,7 @@
 #include "../../psyq/crt.h"
 #include "../../psyq/libgte.h"
 #include "../pack/sha256.h"
+#include "../card.h"
 
 /* SHA-256 of tools/port/manifest/<version>.tsv, set by CMake: only a Pack built from it opens. */
 #ifndef DW1_MANIFEST_SHA256
@@ -20,6 +21,7 @@ static int usage(const char *argv0)
 {
 	fprintf(stderr, "usage: %s [--headless] [--pack FILE] [--frames N] [--until-overlay]\n"
 	                "  --pack FILE      the Pack of your disc (dw1-pack build); without it the disc is empty\n"
+	                "  --card1 FILE --card2 FILE  native .mcd images; omitted slots are absent\n"
 	                "  --frames N       exit with status 0 after N frames\n"
 	                "  --capture-mark NAME --capture-vblank K --capture FILE  capture after mark + K VBlanks\n"
 	                "  --clock-trace FILE  write deterministic clock events\n"
@@ -38,6 +40,7 @@ int main(int argc, char **argv)
 	PortCapture config = {0};
 	int until_overlay = 0;
 	const char *pack = NULL;
+	const char *cards[2] = {NULL, NULL};
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "--headless"))
 			continue;
@@ -50,6 +53,8 @@ int main(int argc, char **argv)
 			continue;
 		}
 		if (i + 1 < argc) {
+			if (!strcmp(argv[i], "--card1")) { cards[0] = argv[++i]; continue; }
+			if (!strcmp(argv[i], "--card2")) { cards[1] = argv[++i]; continue; }
 			if (!strcmp(argv[i], "--audio-segments")) { config.audio_segments = argv[++i]; continue; }
 			if (!strcmp(argv[i], "--inputs")) { config.inputs = argv[++i]; continue; }
 			if (!strcmp(argv[i], "--checkpoints")) { config.checkpoints = argv[++i]; continue; }
@@ -131,5 +136,9 @@ int main(int argc, char **argv)
 			printf("\n");
 		}
 	}
-	return port_run_game(frames, until_overlay, &config);
+	host_card_open(0, cards[0]);
+	host_card_open(1, cards[1]);
+	int result = port_run_game(frames, until_overlay, &config);
+	host_card_close(0); host_card_close(1);
+	return result;
 }

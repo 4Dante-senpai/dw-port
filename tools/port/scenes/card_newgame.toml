@@ -1,0 +1,30 @@
+id = "card_newgame"
+overlay = "mov"
+mark = "MOV_playMovie"
+inputs_from = "mark"
+capture_vblank = 12000
+card1 = "new"
+state_vars = "card_state_vars.txt"
+checkpoints = ["MOV_playMovie", "runLandingScreen", "runMainMenu", "loadSavegame"]
+window = 1
+# Skip the opening movie with the same Start pulse as movie0_skip.
+inputs = [
+  {after = "MOV_playMovie", vblank = 120, buttons = [3]},
+  {after = "MOV_playMovie", vblank = 180, buttons = []},
+  {after = "runLandingScreen", vblank = 60, buttons = [3]},
+  {after = "runLandingScreen", vblank = 68, buttons = []},
+  {after = "runMainMenu", vblank = 135, buttons = [14]},
+  {after = "runMainMenu", vblank = 143, buttons = []},
+  {after = "runMainMenu", vblank = 195, buttons = [14]},
+  {after = "runMainMenu", vblank = 203, buttons = []},
+  {after = "runMainMenu", vblank = 255, buttons = [14]},
+  {after = "runMainMenu", vblank = 263, buttons = []},
+  {after = "runMainMenu", vblank = 315, buttons = [14]},
+  {after = "runMainMenu", vblank = 323, buttons = []},
+  {after = "runMainMenu", vblank = 395, buttons = [14]},
+  {after = "runMainMenu", vblank = 403, buttons = []},
+  {after = "runMainMenu", vblank = 475, buttons = [14]},
+  {after = "runMainMenu", vblank = 483, buttons = []},
+  {after = "runMainMenu", vblank = 555, buttons = [14]},
+  {after = "runMainMenu", vblank = 563, buttons = []},
+]

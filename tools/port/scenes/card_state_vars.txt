@@ -1,0 +1,13 @@
+# Save payload fields observed at loadSavegame entry and one VBlank after return.
+MONEY u32
+SAVED_STATE u8[412]
+INVENTORY u8[91]
+YEAR u8
+DAY u16
+HOUR u16
+MINUTE u16
+MERIT u16
+MAIN_STATE s8
+# Entity fields assigned by loadSavegame; exclude render/animation pointers.
+TAMER_ENTITY+56 u8[2]
+PARTNER_ENTITY+56 u8[72]

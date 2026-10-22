@@ -64,42 +64,15 @@ static void audio(void)
 
 static void cards(void)
 {
-    unsigned long cmd = 99, result = 99;
-    long data = 0x12345678, files = 23;
-    struct DIRENTRY dir[15];
-    clock_reset();
-    ENTRY(MemCardInit(0)); ENTRY(MemCardStart());
-    ENTRY(CHECK(MemCardSync(1, &cmd, &result) == -1));
-    CHECK(cmd == 99 && result == 99);
-    for (int mode = 0; mode <= 1; mode++) {
-        for (int channel = 0; channel <= 0x10; channel += 0x10) {
-            ENTRY(CHECK(MemCardExist(channel) == 1));
-            ENTRY(CHECK(MemCardSync(mode, &cmd, &result) == 1));
-            CHECK(cmd == McFuncExist && result == McErrCardNotExist);
-            ENTRY(CHECK(MemCardSync(mode, &cmd, &result) == -1));
-            ENTRY(CHECK(MemCardAccept(channel) == 1));
-            ENTRY(CHECK(MemCardSync(mode, &cmd, &result) == 1));
-            CHECK(cmd == McFuncAccept && result == McErrCardNotExist);
-            ENTRY(CHECK(MemCardReadFile(channel, "save", &data, 0, 4) == 1));
-            ENTRY(CHECK(MemCardSync(mode, &cmd, &result) == 1));
-            CHECK(cmd == McFuncReadFile && result == McErrCardNotExist && data == 0x12345678);
-            ENTRY(CHECK(MemCardWriteFile(channel, "save", &data, 0, 4) == 1));
-            ENTRY(CHECK(MemCardSync(mode, &cmd, &result) == 1));
-            CHECK(cmd == McFuncWriteFile && result == McErrCardNotExist && data == 0x12345678);
-            ENTRY(CHECK(MemCardCreateFile(channel, "save", 1) == McErrCardNotExist));
-            ENTRY(CHECK(MemCardDeleteFile(channel, "save") == McErrCardNotExist));
-            ENTRY(CHECK(MemCardFormat(channel) == McErrCardNotExist));
-            memset(dir, 0xA5, sizeof(dir));
-            ENTRY(CHECK(MemCardGetDirentry(channel, "*", dir, &files, 0, 15) == McErrCardNotExist));
-            for (size_t i = 0; i < sizeof(dir); i++) CHECK(((unsigned char *)dir)[i] == 0xA5);
-            CHECK(files == 23);
-        }
-    }
-    ENTRY(CHECK(MemCardExist(0) == 1));
-    ENTRY(CHECK(MemCardSync(0, NULL, NULL) == 1));
-    ENTRY(CHECK(MemCardSync(0, NULL, NULL) == -1));
-    MemCardExist(0); MemCardInit(0);
-    CHECK(MemCardSync(1, NULL, NULL) == -1);
+    unsigned long command = 99, result = 99;
+    clock_reset(); ResetCallback(); MemCardInit(0); MemCardStart();
+    CHECK(MemCardSync(1, &command, &result) == -1);
+    CHECK(command == 99 && result == 99);
+    CHECK(MemCardExist(0) == 1);
+    CHECK(MemCardAccept(0) == 0);
+    CHECK(MemCardSync(0, &command, &result) == 1);
+    CHECK(command == McFuncExist && result == McErrCardNotExist);
+    MemCardStop();
 }
 
 static unsigned long output[3][10];

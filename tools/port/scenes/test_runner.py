@@ -686,3 +686,96 @@ with tempfile.TemporaryDirectory() as tmp:
         improved=left.copy();improved[offset]-=1
         assert not check(improved)['failures']
 print('movie allowances: exact listed pairs pass; unlisted, worsened and mean violations fail')
+
+# Card inputs and scene-specific state declarations are part of reference identity.
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory) / "repo"
+    card_root = Path(directory) / "cards"
+    (root / "tools/port/scenes").mkdir(parents=True)
+    for name in ("tools/port/scenes/run.py", "tools/port/reference/capture.py", "tools/port/reference/capture.lua", "config/us/symbols.txt"):
+        path = root / name; path.parent.mkdir(parents=True, exist_ok=True); path.write_text("fixture")
+    (root / "tools/port/scenes/card_vars.txt").write_text("MONEY u32\n")
+    with patch.object(runner, "ROOT", root), patch.dict(os.environ, {"DW1_CARD_DIR": str(card_root)}):
+        scene = dict(id="continue", card1="save", state_vars="card_vars.txt")
+        source = runner.final_card("port", "save")
+        source.parent.mkdir(parents=True); source.write_bytes(bytes(131072))
+        before = runner.state_fingerprint(scene, "bios")
+        (root / "tools/port/scenes/card_vars.txt").write_text("MONEY u16\n")
+        assert runner.state_fingerprint(scene, "bios") != before
+        before = runner.state_fingerprint(scene, "bios")
+        source.write_bytes(bytes([1]) * 131072)
+        assert runner.state_fingerprint(scene, "bios") != before
+        paths = runner.prepare_cards(scene, "reference", 1)
+        assert paths[0].read_bytes() == source.read_bytes() and not paths[1].exists()
+        runner.export_card(scene, "reference", 1, paths)
+        paths = runner.prepare_cards(scene, "reference", 2)
+        runner.export_card(scene, "reference", 2, paths)
+        paths[0].write_bytes(bytes(131072))
+        try: runner.export_card(scene, "reference", 2, paths)
+        except ValueError: pass
+        else: raise AssertionError("different final card must fail")
+        with patch.dict(os.environ, {"DW1_CARD_DIR": str(root / "cards")}):
+            try: runner.card_root()
+            except ValueError: pass
+            else: raise AssertionError("cards must stay outside checkout")
+# A matching state stamp cannot replace a missing/corrupt export for this preset.
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory) / "repo"
+    scenes = root / "tools/port/scenes"
+    scenes.mkdir(parents=True)
+    (scenes / "card_reuse.toml").write_text('id = "card_reuse"\ncard1 = "new"\ncapture_vblank = 1\n')
+    reference = root / "build/reference/card_reuse/run-1.ppm"
+    reference.parent.mkdir(parents=True)
+    reference.with_suffix(".state").touch()
+    (reference.parent / "state.sha256").write_text("current")
+    missing_pack = root / "missing.pack"
+    with patch.object(runner, "ROOT", root), patch.dict(os.environ, {"DW1_CARD_DIR": str(Path(directory) / "cards")}), \
+         patch.object(sys, "argv", ["run.py", "card_reuse", "--build", "native-asan", "--state", "--pack", str(missing_pack)]), \
+         patch.object(runner, "reference_path", return_value=reference), \
+         patch.object(runner, "state_fingerprint", return_value="current"), \
+         patch.object(runner, "checkpoint_symbols", return_value=[]), patch.object(runner, "state_variables", return_value=[]):
+        for preset in ("native-headless", "native-asan"):
+            card = runner.final_card("reference", "card_reuse", preset)
+            card.parent.mkdir(parents=True, exist_ok=True)
+            card.write_bytes(bytes(131072))
+            card.with_suffix(".sha256").write_text(hashlib.sha256(card.read_bytes()).hexdigest())
+        current = runner.final_card("reference", "card_reuse", "native-asan")
+        for condition in ("valid", "missing", "size", "hash"):
+            current.write_bytes(bytes(131072))
+            if condition == "missing": current.unlink()
+            if condition == "size": current.write_bytes(bytes(64))
+            if condition == "hash": current.write_bytes(bytes([1]) * 131072)
+            with patch.object(runner.subprocess, "run", return_value=SimpleNamespace(returncode=73)) as process:
+                if condition == "valid":
+                    try: runner.main()
+                    except ValueError as error: assert str(missing_pack) in str(error)
+                    else: raise AssertionError("valid cache should continue to Pack validation")
+                    process.assert_not_called()
+                else:
+                    assert runner.main() == 73
+                    command = process.call_args.args[0]
+                    assert command[command.index("--card-build") + 1] == "native-asan"
+print("scene_runner: state reuse requires a valid card export for the current preset OK")
+
+for key, value in (("card1", "../escape"), ("card1", 5), ("state_vars", "../escape.txt"), ("state_vars", [])):
+    try: runner.validate_scene(dict(capture_vblank=1, **{key:value}))
+    except ValueError: pass
+    else: raise AssertionError(f"invalid {key} accepted")
+print("scene_runner: external new/source cards, deterministic export, card/state fingerprint and path validation OK")
+
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    symbols, declarations = root / "symbols", root / "vars"
+    symbols.write_text("ENTITY = 0x80010000;\n")
+    declarations.write_text("ENTITY+56 u8[2]\n")
+    variables = runner.state_variables(declarations, symbols)
+    assert variables[0]["address"] == 0x80010038
+    saved, loaded = root / "saved", root / "loaded"
+    rows = "loadSavegame 0 10 state ENTITY+56[0] 1\nloadSavegame 0 10 state ENTITY+56[1] 2\n"
+    saved.write_text(rows); loaded.write_text(rows.replace(" 10 ", " 20 "))
+    runner.compare_saved_state(saved, loaded, variables, ["loadSavegame"], 0)
+    loaded.write_text(loaded.read_text().replace("[1] 2", "[1] 3"))
+    try: runner.compare_saved_state(saved, loaded, variables, ["loadSavegame"], 0)
+    except ValueError: pass
+    else: raise AssertionError("a changed restored payload must fail")
+print("scene_runner: entity offsets and saved/restored payload comparison OK")
