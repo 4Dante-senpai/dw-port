@@ -571,6 +571,7 @@ para que las cargas y los videos tarden lo mismo que en la consola.
 **When** se mide en cuántos VBlanks llega cada punto de control en el port y en la referencia
 **Then** la diferencia es 0 VBlanks en cada punto, y las constantes quedan en `port/psyq/clock_costs.h` con la Escena que las calibró
 **And** 10 minutos de `native` con reloj de pared dan un conteo de VBlanks que difiere del teórico en < 1 (NFR-1 nativo)
+**And** `movie0_skip` vuelve en el mismo VBlank que la referencia: se calibran el costo de llenado de `ClearImage` tras `CdlPause` y la fase de `PadRead`, y se quita `skip_vblank_delta` de `movie0_skip.toml` (decisión 7 de la Historia 3.7)
 
 ### Story 3.11: Hipótesis pendientes de los overlays
 

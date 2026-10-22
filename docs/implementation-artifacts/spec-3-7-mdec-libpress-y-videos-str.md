@@ -2,7 +2,7 @@
 title: 'Historia 3.7: MDEC, libpress y videos STR'
 type: 'feature'
 created: '2026-10-21'
-status: 'in-progress'
+status: 'in-review'
 baseline_commit: '273ee948d41d421243fe1d70503b0e72bcdcdbd3'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -60,6 +60,7 @@ context:
 4. **IDCT (2026-10-21):** se vuelve al modelo con 4 frames a 5/255 y se hace una búsqueda acotada más en la conversión YUV→RGB; si no llega a 4/255, se vuelve al dueño con los números.
 5. **Desvío conocido del MDEC (2026-10-21):** la búsqueda sobre los 3636 frames no bajó de 5/255 en cuatro componentes azules (frame 2318 (144,80) 181/176; 2587 (224,64) 53/48; 3439 (176,96) 24/19; 3453 (176,96) 21/16). Se aceptan como desvío conocido listado con su valor exacto: `scene_movie0_compare` exige máx ≤ 4/255 en todo el resto, falla si aparece otro componente fuera de tolerancia o si uno de los cuatro empeora, y las medias siguen ≤ 0,5/255. El residuo pasa a trabajo diferido.
 6. **Costo de GPU tras Pause (2026-10-21):** con la pausa del CD modelada, el port sale en el VBlank 123 porque `ClearImage`/`DrawSync` cuestan 230.464 ciclos frente a 1.107 en el original, y Start se lee un VBlank después. Se investiga en una corrida acotada (¿error del modelo o costo?); si no cierra 122, se vuelve al dueño con los números.
+7. **Salida con Start pasa a 3.10 (2026-10-22):** la investigación no halló un error del modelo: `ClearImage` limpia 480×480 (230.400 píxeles, del asm USA) y cuesta 230.464 ciclos sin calibrar frente a 1.107 hasta el retorno original, y `PadRead` ve Start en el VBlank 121 frente a 120. `movie0_skip.toml` acepta exactamente +1 VBlank (`skip_vblank_delta = 1`): el test falla con cualquier otro desfase, incluido 0. La Historia 3.10 calibra el llenado de GPU y la fase de `PadRead`, quita esa línea y exige el mismo VBlank.
 
 </frozen-after-approval>
 
@@ -81,21 +82,21 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `port/backend/mdec.{h,c}` -- MDEC con comandos 1/2/3, IDCT y salida 15/24 bits; atribución CC0.
-- [ ] `port/backend/tests/test_mdec.c` y un script Python de valores esperados -- L1 de la matriz (sintético, EOB, saturación, `stp`).
-- [ ] `tools/port/psyq/` y `CMakeLists.txt` -- generar offsets de `mdec_iq`/`mdec_coef`/`data_2`; test L0 y test clase B de SHA-256 contra el exe.
-- [ ] `port/psyq/libpress.c` -- traducción del asm, carga de tablas desde el Pack y evento de fin de MDEC (decisión 1).
-- [ ] `port/psyq/clock_costs.h` -- costo MDEC como hipótesis, con referencia a 3.10.
-- [ ] `src/mov/mov.c`, `docs/port/src-changes.md`, `tools/port/metrics/isr_spins.tsv` -- yield `DW1_PORT` en `MOV_waitForFlip`; el build PS1 no cambia.
-- [ ] `port/psyq/tests/test_av_stubs.c` -- consumidor con el MDEC real.
-- [ ] `tools/port/reference/capture.lua`, `capture.py` -- captura por frame decodificado y métrica de sincronía.
-- [ ] `tools/port/scenes/{run.py,movie0.toml,movie0_skip.toml,test_runner.py}` -- comparación con tolerancia, sincronía A/V y salida con Start.
-- [ ] `CMakeLists.txt`, `.gitlab-ci.yml` -- L1 en nativo/ASan/web; `reference_movie0`, `scene_movie0_compare` y `scene_movie0_skip_compare` como clase B (lock, skip 77, timeout de 2 h).
-- [ ] `docs/port/mdec.md`, `docs/port/stubs.md`, `docs/port/reference.md`, `gen_stubs.py` -- modelo, atribución, hipótesis y métricas.
+- [x] `port/backend/mdec.{h,c}` -- MDEC con comandos 1/2/3, IDCT y salida 15/24 bits; atribución CC0.
+- [x] `port/backend/tests/test_mdec.c` y un script Python de valores esperados -- L1 de la matriz (sintético, EOB, saturación, `stp`).
+- [x] `tools/port/psyq/` y `CMakeLists.txt` -- generar offsets de `mdec_iq`/`mdec_coef`/`data_2`; test L0 y test clase B de SHA-256 contra el exe.
+- [x] `port/psyq/libpress.c` -- traducción del asm, carga de tablas desde el Pack y evento de fin de MDEC (decisión 1).
+- [x] `port/psyq/clock_costs.h` -- costo MDEC como hipótesis, con referencia a 3.10.
+- [x] `src/mov/mov.c`, `docs/port/src-changes.md`, `tools/port/metrics/isr_spins.tsv` -- yield `DW1_PORT` en `MOV_waitForFlip`; el build PS1 no cambia.
+- [x] `port/psyq/tests/test_av_stubs.c` -- consumidor con el MDEC real.
+- [x] `tools/port/reference/capture.lua`, `capture.py` -- captura por frame decodificado y métrica de sincronía.
+- [x] `tools/port/scenes/{run.py,movie0.toml,movie0_skip.toml,test_runner.py}` -- comparación con tolerancia, sincronía A/V y salida con Start.
+- [x] `CMakeLists.txt`, `.gitlab-ci.yml` -- L1 en nativo/ASan/web; `reference_movie0`, `scene_movie0_compare` y `scene_movie0_skip_compare` como clase B (lock, skip 77, timeout de 2 h).
+- [x] `docs/port/mdec.md`, `docs/port/stubs.md`, `docs/port/reference.md`, `gen_stubs.py` -- modelo, atribución, hipótesis y métricas.
 
 **Acceptance Criteria:**
 - Given `run.py movie0 --compare`, when corre OP1 contra la referencia, then todos los frames cumplen máx ≤ 4/255 y media ≤ 0,5/255 por canal salvo los cuatro componentes de la decisión 5, que no empeoran, y la sincronía A/V cumple la decisión 2.
-- Given `movie0_skip.toml`, when se pulsa Start en el VBlank k, then `MOV_playMovie` vuelve en el mismo VBlank que en la referencia.
+- Given `movie0_skip.toml`, when se pulsa Start en el VBlank k, then `MOV_playMovie` vuelve exactamente 1 VBlank después que en la referencia (decisión 7; la Historia 3.10 lo lleva a 0).
 - Given los stubs de video reemplazados, when corren `title`, `newgame`, `title_audio` y `xa_op1`, then siguen pasando contra sus referencias.
 - Given dos capturas de referencia de `movie0`, when se comparan, then los frames son idénticos byte a byte.
 - Given el build web, when corre el L1, then pasa igual que en nativo.
@@ -106,6 +107,7 @@ context:
 
 - 2026-10-21, dueño: fila "OP1 completo" 3637 → 3636 frames. Evidencia: dos capturas de Redux muestran que el original lee la cabecera 3637, pone `MOVIE_COMPLETED` mientras decodifica el 3636 y nunca envía el 3637 al MDEC (`build/verification-3-7/report.md`). Decisiones 3 y 4 agregadas tras la investigación de Start (pausa CD de 1.240.612 ciclos en el original frente a 64 en el port) y del IDCT (el redondeo por pasada empeoró OP1 completo a 26 frames, máx 6/255).
 - 2026-10-21, dueño: decisiones 5 (cuatro componentes azules a 5/255 como desvío conocido; AC ajustado) y 6 (investigación acotada del costo de `ClearImage`/`DrawSync` tras Pause).
+- 2026-10-22, dueño: decisión 7, la salida con Start en el mismo VBlank pasa a la Historia 3.10; AC ajustado a +1 VBlank exacto.
 
 ## Review Triage Log
 

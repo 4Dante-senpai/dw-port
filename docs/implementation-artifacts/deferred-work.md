@@ -103,3 +103,6 @@
 - source_spec: `docs/implementation-artifacts/spec-3-7-mdec-libpress-y-videos-str.md`
   summary: Redondeo de color del MDEC: cuatro componentes azules de OP1 difieren 5/255 de PCSX-Redux (2318 (144,80), 2587 (224,64), 3439 (176,96), 3453 (176,96)), aceptados como desvío conocido (decisión 5).
   evidence: psx-spx no especifica la precisión fija de YUV→RGB; las variantes probadas sobre los 3636 frames (`build/verification-3-7-gates/`) no cumplen máximo y media a la vez. Se resuelve con documentación del hardware o pruebas en una consola real.
+- source_spec: `docs/implementation-artifacts/spec-3-7-mdec-libpress-y-videos-str.md`
+  summary: `movie0_skip` vuelve 1 VBlank tarde (123 frente a 122), aceptado con `skip_vblank_delta = 1` hasta la Historia 3.10 (decisión 7).
+  evidence: `ClearImage` de 480×480 tras `CdlPause` cuesta 230.464 ciclos en el port frente a 1.107 hasta el retorno original, y `PadRead` ve Start en el VBlank 121 frente a 120 (`build/verification-3-7/report.md`). Criterio agregado a la Historia 3.10 en `epics.md`.
