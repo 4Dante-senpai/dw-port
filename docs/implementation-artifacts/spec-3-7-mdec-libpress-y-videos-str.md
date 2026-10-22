@@ -2,7 +2,7 @@
 title: 'Historia 3.7: MDEC, libpress y videos STR'
 type: 'feature'
 created: '2026-10-21'
-status: 'in-review'
+status: 'done'
 baseline_commit: '273ee948d41d421243fe1d70503b0e72bcdcdbd3'
 route: 'dispatch'
 review_loop_iteration: 0
