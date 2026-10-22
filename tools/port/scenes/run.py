@@ -110,7 +110,69 @@ def compare_capture(capture, scene, scene_id, frame):
     return 0
 
 
+def card_root():
+    """Card payloads stay outside the checkout, including reference captures."""
+    root = Path(os.environ.get("DW1_CARD_DIR", "/tmp/dw1-cards-" + hashlib.sha256(str(ROOT).encode()).hexdigest()[:12])).resolve()
+    if root == ROOT or root.is_relative_to(ROOT):
+        raise ValueError("DW1_CARD_DIR must be outside the repository")
+    return root
+
+
+def final_card(kind, scene_id, build="native-headless"):
+    return card_root() / kind / build / scene_id / "card1.mcd"
+
+
+def card_source(scene, build="native-headless"):
+    if scene.get("_card1_input"):
+        source = Path(scene["_card1_input"]).resolve()
+    elif scene.get("card1", "new") == "new":
+        return None
+    else:
+        source = final_card("port", scene["card1"], build)
+    if source.is_relative_to(ROOT) or not source.is_file() or source.stat().st_size != 131072:
+        raise ValueError(f"missing or invalid external input card: {source}")
+    return source
+
+
+def prepare_cards(scene, kind, index, build="native-headless"):
+    directory = final_card(kind, scene.get("id", "scene"), build).parent / f"run-{index}"
+    directory.mkdir(parents=True, exist_ok=True)
+    source = card_source(scene, build)
+    paths = [directory / f"card{i}.mcd" for i in (1, 2)]
+    for path in paths:
+        path.unlink(missing_ok=True)
+    if source:
+        shutil.copyfile(source, paths[0])
+    return paths
+
+
+def valid_card_export(kind, scene_id, build="native-headless"):
+    card = final_card(kind, scene_id, build)
+    stamp = card.with_suffix(".sha256")
+    return (card.is_file() and card.stat().st_size == 131072 and stamp.is_file()
+            and stamp.read_text().strip() == hashlib.sha256(card.read_bytes()).hexdigest())
+
+
+def export_card(scene, kind, index, paths, build="native-headless"):
+    if paths[0].stat().st_size != 131072:
+        raise ValueError("final card must contain 131072 bytes")
+    digest = hashlib.sha256(paths[0].read_bytes()).hexdigest()
+    if index == 1:
+        final = final_card(kind, scene["id"], build)
+        shutil.copyfile(paths[0], final)
+        final.with_suffix(".sha256").write_text(digest + "\n")
+    elif final_card(kind, scene["id"], build).with_suffix(".sha256").read_text().strip() != digest:
+        raise ValueError("non-deterministic final card")
+    return digest
+
+
 def validate_scene(scene):
+    if "card1" in scene and (not isinstance(scene["card1"], str) or not re.fullmatch(r"[a-z][a-z0-9_]*", scene["card1"])):
+        raise ValueError("card1 must be new or a scene id")
+    if "state_vars" in scene:
+        name = scene["state_vars"]
+        if not isinstance(name, str) or Path(name).name != name or not name.endswith(".txt"):
+            raise ValueError("state_vars must be a scene-local .txt file")
     if type(scene.get("capture_vblank")) is not int or not 0 < scene["capture_vblank"] <= 0xffffffff:
         raise ValueError("capture_vblank must be a positive integer")
     if scene.get("inputs_from", "frame0") not in ("frame0", "mark"):
@@ -198,7 +260,7 @@ def state_variables(path, symbols_path, binary=None):
         line = line.split("#", 1)[0].strip()
         if not line:
             continue
-        match = re.fullmatch(r"([\w.$]+)\s+(u8|s8|u16|s16|u32|s32|ptr)(?:\[([0-9]+)\])?", line)
+        match = re.fullmatch(r"([\w.$]+(?:\+[0-9]+)?)\s+(u8|s8|u16|s16|u32|s32|ptr)(?:\[([0-9]+)\])?", line)
         if not match:
             raise ValueError(f"invalid state variable declaration: {line}")
         name, kind, count = match.groups()
@@ -209,18 +271,20 @@ def state_variables(path, symbols_path, binary=None):
         if name in seen:
             raise ValueError(f"duplicate state variable: {name}")
         seen.add(name)
-        if name not in symbols:
+        base, _, delta = name.partition("+")
+        offset = int(delta or 0)
+        if base not in symbols:
             raise ValueError(f"missing reference symbol: {name}")
-        if not 0x80010000 <= symbols[name] < 0x80200000:
+        if not 0x80010000 <= symbols[base] + offset < 0x80200000:
             raise ValueError(f"state variable is not game RAM: {name}")
-        if symbols[name] + count * width > 0x80200000:
+        if symbols[base] + offset + count * width > 0x80200000:
             raise ValueError(f"state variable exceeds game RAM: {name}")
         if native is not None:
-            if name not in native:
+            if base not in native:
                 raise ValueError(f"missing native symbol: {name}")
-            if count * width > native[name][1]:
+            if offset + count * width > native[base][1]:
                 raise ValueError(f"state variable exceeds native symbol: {name}")
-        variables.append(dict(name=name, type=kind, count=count, address=symbols[name], width=width))
+        variables.append(dict(name=name, type=kind, count=count, address=symbols[base] + offset, width=width))
     if not variables:
         raise ValueError("empty state vars")
     return variables
@@ -236,11 +300,14 @@ def bios_fingerprint(path=None):
 def state_fingerprint(scene, bios_identity=None):
     if bios_identity is None:
         bios_identity = bios_fingerprint()
-    definition = {key: scene.get(key) for key in ("mark", "capture_vblank", "inputs", "inputs_from", "expect_rand", "checkpoints", "window")}
+    definition = {key: scene.get(key) for key in ("mark", "capture_vblank", "inputs", "inputs_from", "expect_rand", "checkpoints", "window", "card1", "state_vars")}
     if "checkpoint_after" in scene:
         definition["checkpoint_after"] = scene["checkpoint_after"]
+    source = card_source(scene, scene.get("_card_build", "native-headless"))
+    if source:
+        definition["card1_sha256"] = hashlib.sha256(source.read_bytes()).hexdigest()
     content = json.dumps([definition, bios_identity], sort_keys=True).encode()
-    for name in ("tools/port/scenes/state_vars.txt", "config/us/symbols.txt",
+    for name in ("tools/port/scenes/" + scene.get("state_vars", "state_vars.txt"), "config/us/symbols.txt",
                  "tools/port/reference/capture.lua", "tools/port/reference/capture.py",
                  "tools/port/scenes/run.py"):
         content += (ROOT / name).read_bytes()
@@ -375,6 +442,18 @@ def compare_state(port, reference, variables, checkpoint, expect_rand=False, che
     return 0
 
 
+def compare_saved_state(saved, loaded, variables, checkpoints, window):
+    """Compare the restored payload after loadSavegame with the saved scene."""
+    snapshots = []
+    for path in (saved, loaded):
+        records = read_checkpoint_state(path, variables, checkpoints, window)
+        snapshots.append({name[2]: value for _, kind, name, value in records
+                          if kind == "state" and name[:2] == ("loadSavegame", window)})
+    if not snapshots[0] or snapshots[0] != snapshots[1]:
+        raise ValueError("saved and loaded card state differs after loadSavegame")
+    print(f"save/load match: {len(snapshots[0])} values after loadSavegame")
+
+
 def run_audio(args, scene, build, checkpoints, pack):
     audio.validate_segments(scene)
     for segment in scene["audio"]:
@@ -387,7 +466,12 @@ def run_audio(args, scene, build, checkpoints, pack):
         print(f"scene {args.id}: no deterministic audio reference; skipped")
         return 77
     record = json.loads(stamp.read_text())
-    if record.get("scene") != dict(scene, resolved_checkpoints=checkpoints):
+    reference_scene = dict(record.get("scene", {}))
+    expected_scene = dict(scene, resolved_checkpoints=checkpoints)
+    # Card directory namespaces do not change the reference audio behavior.
+    reference_scene.pop("_card_build", None)
+    expected_scene.pop("_card_build", None)
+    if reference_scene != expected_scene:
         raise ValueError("stale audio reference scene; run capture.py --audio")
     identity_spec = importlib.util.spec_from_file_location("reference_audio", Path(__file__).parents[1] / "reference/audio.py")
     reference_audio = importlib.util.module_from_spec(identity_spec)
@@ -447,6 +531,8 @@ def run_audio(args, scene, build, checkpoints, pack):
         command = [str(build / "dw1"), "--headless", "--pack", str(pack), "--frames", "40000",
                    "--capture-mark", scene["mark"], "--inputs-from", "mark", "--inputs", str(inputs),
                    "--checkpoints", str(cp_file), "--audio-segments", str(declarations)]
+        cards = prepare_cards(scene, "port", index, args.build)
+        command += ["--card1", str(cards[0]), "--card2", str(cards[1])]
         result = subprocess.run(command, cwd=build, env=environment, capture_output=True, timeout=3500 if scene.get("movie") else 1800)
         log = result.stdout + result.stderr
         (output / f"run-{index}.log").write_bytes(log)
@@ -526,15 +612,17 @@ def main():
     if args.compare_audio:
         audio.validate_segments(scene)
     frame = validate_comparison(scene, args.id) if args.compare and not scene.get("movie") else None
-    vars_path = ROOT / "tools/port/scenes/state_vars.txt"
+    vars_path = ROOT / "tools/port/scenes" / scene.get("state_vars", "state_vars.txt")
+    scene["_card_build"] = args.build
     checkpoints = checkpoint_symbols(scene, ROOT / "config/us/symbols.txt", build / "dw1")
     variables = state_variables(vars_path, ROOT / "config/us/symbols.txt", build / "dw1") if args.state else []
     reference_state = reference_path(args.id).with_suffix(".state")
     stamp = reference_state.parent / "state.sha256"
     if args.state and (not reference_state.is_file() or not stamp.is_file() or
-                       stamp.read_text().strip() != state_fingerprint(scene)):
+                       stamp.read_text().strip() != state_fingerprint(scene) or
+                       ("card1" in scene and not valid_card_export("reference", args.id, args.build))):
         command = [sys.executable, "-I", "-B", str(ROOT / "tools/port/reference/capture.py"), args.id,
-                   "--state", "--max-vblanks", str(max(40000, scene["capture_vblank"] + 9000))]
+                   "--state", "--card-build", args.build, "--max-vblanks", str(max(40000, scene["capture_vblank"] + 9000))]
         if checkpoints:
             command += ["--timeout", "1800"]
         status = subprocess.run(command).returncode
@@ -586,11 +674,15 @@ def main():
             command += ["--checkpoints", str(checkpoint_file)]
         if args.state:
             command += ["--state-vars", str(vars_path), "--state-trace", str(state)]
+        cards = prepare_cards(scene, "port", index, args.build)
+        command += ["--card1", str(cards[0]), "--card2", str(cards[1])]
         run = subprocess.run(command, cwd=build, env=env, capture_output=True, timeout=1800)
         log = run.stdout + run.stderr
         (output / f"run-{index}.log").write_bytes(log)
         if run.returncode or re.search(rb"AddressSanitizer|runtime error", log):
             raise ValueError(f"run {index}: exit {run.returncode}\n{log.decode(errors='replace')}")
+        if "card1" in scene:
+            export_card(scene, "port", index, cards, args.build)
         if not re.search(rf"^\d+ mark {re.escape(scene['mark'])}$", trace.read_text(), re.M):
             raise ValueError(f"run {index}: missing scene mark")
         colors = ppm_colors(capture)
@@ -604,6 +696,12 @@ def main():
         print(f"{clock}: sha256={hashes[1]}")
     if results[0] != results[1]:
         raise ValueError("capture, clock or state trace differs between runs")
+    if "card1" in scene:
+        reference = final_card("reference", args.id, args.build)
+        actual = final_card("port", args.id, args.build)
+        if not reference.is_file() or actual.read_bytes() != reference.read_bytes():
+            raise ValueError(f"final card differs: port={actual}, reference={reference}")
+        print(f"card1: identical 131072 bytes sha256={hashlib.sha256(actual.read_bytes()).hexdigest()}")
     if args.state:
         ref = reference_path(args.id)
         if ref.is_file():
@@ -614,6 +712,10 @@ def main():
                 print(error)
         compare_state(output / "run-1.state", reference_state, variables,
                       scene["capture_vblank"], scene.get("expect_rand", False), scene.get("checkpoints"), scene.get("window", 0))
+        if scene.get("card1", "new") != "new":
+            saved = build / "scenes" / scene["card1"] / "run-1.state"
+            compare_saved_state(saved, output / "run-1.state", variables,
+                                scene["checkpoints"], scene.get("window", 0))
     if args.compare and compare_capture(output / "run-1.ppm", scene, args.id, frame):
         return 1
     print(f"scene_{args.id}: {args.build}: OK (two identical captures and clock traces)")

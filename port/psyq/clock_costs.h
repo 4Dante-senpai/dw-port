@@ -11,4 +11,8 @@
 #define CLOCK_CD_PAUSE_1X_CYCLES 0x21181cu
 #define CLOCK_CD_PAUSE_2X_CYCLES 0x10bd93u
 #define CLOCK_CD_PAUSE_IDLE_CYCLES 0x1df2u
+/* [hypothesis] memory-card command and 128-byte sector costs in CPU cycles.
+ * Story 3.10 must calibrate against OpenBIOS/Redux; never tune per scene. */
+#define CLOCK_CARD_COMMAND_CYCLES 1024u
+#define CLOCK_CARD_SECTOR_CYCLES 33869u
 #endif

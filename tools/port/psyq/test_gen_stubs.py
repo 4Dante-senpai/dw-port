@@ -36,3 +36,10 @@ except ValueError as error:
     assert "cannot generate video stubs" in str(error)
 else:
     raise AssertionError("video stub regression was accepted")
+
+try:
+    classify({"MemCardExist"}, set(), {"MemCardExist": "libmcrd"})
+except ValueError as error:
+    assert "cannot generate card stubs" in str(error)
+else:
+    raise AssertionError("memory card stub regression was accepted")

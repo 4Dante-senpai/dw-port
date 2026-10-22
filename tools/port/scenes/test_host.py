@@ -55,7 +55,7 @@ if len(sys.argv) > 4:
         output = Path(directory)
         inputs, variables = output / "inputs.txt", output / "state_vars.txt"
         inputs.write_text("0 0008\n2 4000\n4 0000\n")
-        variables.write_text("TEST_VALUES s16[2]\nTEST_POINTERS ptr[3]\n")
+        variables.write_text("TEST_VALUES s16[2]\nTEST_POINTERS ptr[3]\nTEST_VALUES+2 s16\n")
         for base in ("frame0", "mark"):
             trace = output / f"{base}.state"
             process = subprocess.run([sys.argv[4], str(output / f"{base}.ppm"), str(inputs),
@@ -63,11 +63,12 @@ if len(sys.argv) > 4:
                                      env=os.environ, timeout=30)
             assert process.returncode == 0, (process.returncode, process.stdout, process.stderr)
             rows = trace.read_text().splitlines()
-            assert len(rows) == 30, rows  # 5 VBlanks * 5 variables + 5 rand calls
+            assert len(rows) == 35, rows  # 5 VBlanks * 6 variables + 5 rand calls
             assert rows[0] == "0 rand 0 20346", rows
             for k in range(1, 6):
                 assert f"{k} state TEST_VALUES[0] -32768" in rows
                 assert f"{k} state TEST_VALUES[1] 32767" in rows
+                assert f"{k} state TEST_VALUES+2[0] 32767" in rows
                 assert f"{k} state TEST_POINTERS[0] 0x80000123" in rows
                 assert f"{k} state TEST_POINTERS[1] TEST_VALUES+2" in rows
                 assert f"{k} state TEST_POINTERS[2] 0" in rows

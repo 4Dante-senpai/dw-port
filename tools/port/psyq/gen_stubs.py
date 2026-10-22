@@ -43,6 +43,9 @@ def classify(undefined, defined_by_port, lib_of):
     video = [name for name in stubs if lib_of.get(name) == "libpress"]
     if video:
         raise ValueError(f"libpress must be implemented, cannot generate video stubs: {video}")
+    cards = [name for name in stubs if lib_of.get(name) == "libmcrd"]
+    if cards:
+        raise ValueError(f"libmcrd must be implemented, cannot generate card stubs: {cards}")
     return used, implemented, host_libc, stubs
 
 

@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-20
+Última actualización: 2026-10-22
 
 ## Modo de operación
 
@@ -252,6 +252,19 @@
   comparación con disco real 3/3 (Pack, referencia nueva y port); web 3/3, 4 casos de navegador.
   Evidencia: `docs/implementation-artifacts/evidence/story-3-2.log`.
 
+- Historia 3.8 (Memory card nativa): `libmcrd` traducida del asm USA sobre una capa de BIOS de tarjeta
+  propia (`port/psyq/bios_card.c`: eventos, dispositivo `bu`, directorio y bloques, adaptada del OpenBIOS
+  MIT de PCSX-Redux) y un modelo de sectores con eventos del reloj (costos de hipótesis para 3.10).
+  `port/host/card.c` guarda el `.mcd` crudo de 131.072 bytes al terminar cada comando de escritura, con
+  temporal + `fsync` + `rename`; `--card1/--card2` en el host nativo; en web la tarjeta sigue ausente
+  (Épica 4). `run.py` le da al port las mismas tarjetas nuevas que a Redux. Escenas `card_newgame`
+  (New Game crea el save en la ranura 1; `.mcd` final idéntico byte a byte al de Redux) y
+  `card_continue` (Redux carga la tarjeta del port; estado tras `loadSavegame` idéntico). Decisión 2 del
+  dueño: `movie0_skip` ahora exige el mismo VBlank que Redux (122 en ambos). CI: timeouts de
+  `native-asan-disc` 4 h y `native-disc` 3 h, en serie. Revisión (3 capas Codex): 18 hallazgos, 4 parches
+  y 14 rechazados con evidencia. Verificación con disco: nativo 75/75 y ASan 73/73 sumando la corrida
+  de `movie0_skip`; web 36/36; `make compare` idéntico. Evidencia: `docs/implementation-artifacts/evidence/story-3-8.log`.
+
 - Historia 3.7 (MDEC, `libpress` y videos STR): `port/backend/mdec` modela el MDEC según psx-spx
   (RLE, IQ, IDCT que conserva la fracción entre pasadas, YUV→RGB15/24; adaptado de DW2-PC, CC0) y
   `port/psyq/libpress.c` traduce del asm de DW1 `DecDCTReset/In/Out/vlc2` y sus callbacks; las tablas
@@ -358,7 +371,7 @@
 
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.7 cerradas; sigue la 3.8 (Memory card nativa). El resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.8 cerradas; sigue la 3.9 (preset `native` con ventana SDL3). El resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 
@@ -374,10 +387,10 @@
 | Archivos C del juego que compilan a wasm32 en el preset `web` | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Bloques `DW1_PORT` en `src/`/`include/` | 94 apariciones del guard (`docs/port/src-changes.md`) |
-| Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (11 con comportamiento M2: Memory card) / 0 / 11 (de 198) |
+| Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (sin comportamiento M2: la Memory card es real desde 3.8) / 0 / 11 (de 198) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
-| Escenas que funcionan (nativo) | 6 (`movie0`: OP1 completo por MDEC, 3636 frames dentro de tolerancia salvo 4 componentes aceptados; `movie0_skip`: salida con Start, +1 VBlank hasta 3.10; `xa_op1`: XA de OP1 a 54,42 dB contra la referencia; título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control; `title_audio` con escrituras de voz idénticas en 2 tramos) |
+| Escenas que funcionan (nativo) | 8 (`card_newgame`: crea el save, `.mcd` idéntico a Redux; `card_continue`: carga el save con estado idéntico; `movie0`: OP1 completo por MDEC, 3636 frames dentro de tolerancia salvo 4 componentes aceptados; `movie0_skip`: salida con Start en el mismo VBlank que la referencia; `xa_op1`: XA de OP1 a 54,42 dB contra la referencia; título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control; `title_audio` con escrituras de voz idénticas en 2 tramos) |
 | Escenas que funcionan (web) | 1 (título, igual a nativo, Chromium y Firefox) |
 | Llamadas con firma distinta inventariadas / sin resolver | 1031 / 0 (`fnptr_casts.tsv`) |
 
