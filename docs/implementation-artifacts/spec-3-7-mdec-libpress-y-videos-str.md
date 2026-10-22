@@ -111,6 +111,23 @@ context:
 
 ## Review Triage Log
 
+| # | Capa | Hallazgo | Veredicto | Ruta | Evidencia |
+|---|---|---|---|---|---|
+| 1 | blind/edge | `DecDCTvlc2` sin límites de entrada/salida | low | rechazado | El asm (0x33C) tampoco los tiene; la matriz exige la misma salida que el asm y el único límite es `break_cnt`. Las entradas vienen del anillo STR del Juego; agregar guardas cambia el contrato. |
+| 2 | blind/edge | entrada VLC extendida en cero no se rechaza | false | rechazado | La tabla sale de `DecDCTvlcBuild` sobre `data_2` del exe; el asm hace lo mismo sin rechazo. |
+| 3 | blind/edge | `DecDCTin` con una salida pendiente | low | rechazado | `DecDCTin` del asm (`libpress.s:364`) llama `MDEC_in` sin esperar la salida; DW1 encadena `DecDCTin` tras `MOV_waitForFlip`, y OP1 completo coincide con la referencia. |
+| 4 | blind | `DecDCTout` cobra un macrobloque entero por lectura parcial | low | rechazado | Costo hipotético que calibra 3.10; DW1 lee slices de 15 macrobloques exactos (`mov.c:103`). |
+| 5 | blind/edge | `read_block` agotado sin EOB devuelve un bloque | low | rechazado | Los streams de `DecDCTvlc2` siempre cierran con EOB y 65 halfwords de relleno; no es alcanzable desde el Juego. |
+| 6 | blind | OP1 no compara la cadencia por frame | low | rechazado | La decisión 2 fija la métrica A/V; la cadencia depende de costos que la spec reserva a 3.10. |
+| 7 | blind/verification-gap | `return` derivado de `MOVIE_COMPLETED` | low | rechazado | `MOV_playMovie` devuelve exactamente `MOVIE_COMPLETED != 0` (`mov.c:284-288`), código matching protegido por `make compare`; solo difiere en el retorno por `CdSearchFile` fallido (`:237`), que ninguna escena alcanza. |
+| 8 | verification-gap | el host web podría no cargar las tablas sin que ningún test lo note | medium | patch | Con tablas en cero, `DecDCTReset(0)` envía comandos de tipo 0 que `mdec_command` acepta en silencio y el video sale negro. Arreglo mínimo: `DecDCTReset(0)` exige que las tablas subidas sean los comandos 2 y 3. |
+| 9 | verification-gap/edge | `--reuse` aborta si falta un frame de la evidencia en caché | medium | patch | `movie.evidence` llama `sequence()`, que lanza `ValueError` antes de invalidar el sello (`audio.py:118`); debe tratarse como evidencia ausente y recapturar. |
+| 10 | edge | `codex-watch.sh` falla si lee una línea JSONL a medio escribir | low | patch | `json.loads` sobre la última línea parcial lanza `JSONDecodeError` y se pierde ese bloque; arreglo directo: ignorar líneas que no parsean. |
+| 11 | edge | `DecDCTout` con tamaño negativo en NDEBUG | low | rechazado | Los presets usan Debug (aborta); DW1 siempre pasa `w*h/2 > 0`. |
+| 12 | blind | `test_mdec.c` no prueba `m_signed` | low | rechazado | El bit 26 no aparece en ningún comando de DW1 (`DecDCTin` solo toca los bits 27 y 25; la cabecera es `0x38000000`). |
+| 13 | blind | faltan vectores de varios macrobloques | low | rechazado | OP1 completo (3636 frames) cubre varios macrobloques por slice contra la referencia; el L1 cubre FIFO parcial. |
+| 14 | blind | `docs/STATUS.md` desactualizado | low | patch | Se actualiza al cerrar la historia (paso de cierre). |
+
 ## Verification
 
 **Commands:**
