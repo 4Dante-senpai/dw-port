@@ -5,6 +5,7 @@
 #include "../../backend/xa.h"
 #include "../psyq.h"
 #include "../clock.h"
+#include "../clock_costs.h"
 #include "../libcd_stream.h"
 #ifdef __EMSCRIPTEN__
 /* Node L1 supplies the worker's positional I/O seam with synthetic MEMFS bytes.
@@ -63,6 +64,36 @@ static void check_playback(int pause)
         CHECK(rendered-before>=128 && !XaDec_Queued());
     }
     spu_set_output(NULL,NULL); StUnSetRing();
+}
+static int pause_event_seen;
+static void pause_event(void *arg)
+{
+    (void)arg;
+    pause_event_seen++;
+}
+static void pause_latency(void)
+{
+    clock_reset(); spu_reset(); psyq_libcd_reset(); CHECK(CdInit());
+    StSetRing(ringbuf,1); StSetStream(1,1,(unsigned long)-1,NULL,NULL);
+    CdlLOC loc; CdIntToPos(26,&loc);
+    for (unsigned state=0;state<3;state++) {
+        if (state) {
+            CdControl(CdlSetloc,(uint8_t *)&loc,NULL);
+            CHECK(CdRead2(state==2 ? 0x1e0 : 0x160));
+        }
+        /* Movie tears down its ring before issuing the blocking Pause. */
+        if (state==2) StUnSetRing();
+        uint64_t cost=state==0 ? CLOCK_CD_PAUSE_IDLE_CYCLES :
+            state==1 ? CLOCK_CD_PAUSE_1X_CYCLES : CLOCK_CD_PAUSE_2X_CYCLES;
+        uint64_t before=clock_now();
+        pause_event_seen=0;
+        clock_schedule(CLOCK_PSYQ_ENTRY_CYCLES+cost-1,pause_event,NULL);
+        CHECK(CdControlB(CdlPause,NULL,NULL));
+        CHECK(clock_now()==before+CLOCK_PSYQ_ENTRY_CYCLES+cost);
+        CHECK(pause_event_seen==1); /* Device events run during the blocking wait. */
+        CHECK(((StHEADER *)ringbuf)->id==0); /* Pending stream was stopped. */
+    }
+    StUnSetRing();
 }
 static void video(unsigned lba, unsigned frame)
 {
@@ -139,6 +170,7 @@ int main(void)
     CdControl(CdlPause,NULL,NULL); clock_advance(CLOCK_HZ);
     for (unsigned i=0;i<sizeof(readbuf);i++) CHECK(((uint8_t *)readbuf)[i]==0x5a);
     CHECK(CdRead(1,readbuf,CdlModeSpeed)); CHECK(CdReadSync(0,NULL)==0);
+    pause_latency();
     check_playback(1);
     check_playback(0);
     uint8_t sector[CDROM_SECTOR_SIZE1];

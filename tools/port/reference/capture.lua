@@ -14,6 +14,42 @@ local checkpointIndex = 1
 local snapshot, enterCheckpoints
 local audio, audioIndex = nil, 1
 local audioFinishedTick
+local movie, movieFrames, movieOrigin
+local function movieStart()
+    if not c.movie then return end
+    movieFrames, movieOrigin = 0, ticks
+    movie = assert(io.open(c.movie .. '/movie.jsonl','w'))
+    assert(movie:write(string.format('{"event":"start","cycle":%.0f}\n',tonumber(PCSX.getCPUCycles()))))
+    breakpoints.movieReturn=PCSX.addBreakpoint(tonumber(PCSX.getRegisters().GPR.n.ra),'Exec',4,'DW1 movie finish',function()
+        assert(movie:write(string.format('{"event":"end","cycle":%.0f,"vblank":%d,"return":%d}\n',
+            tonumber(PCSX.getCPUCycles()),ticks-movieOrigin,tonumber(PCSX.getRegisters().GPR.n.v0))))
+        assert(movie:close()); movie=nil
+        breakpoints.movieReturn:disable()
+        return true
+    end)
+end
+if c.movie then
+    breakpoints.movieDisplay=PCSX.addBreakpoint(c.movie_display,'Exec',4,'DW1 movie display',function()
+        if not movie then return true end
+        if breakpoints.movieDisplayReturn then breakpoints.movieDisplayReturn:disable() end
+        breakpoints.movieDisplayReturn=PCSX.addBreakpoint(tonumber(PCSX.getRegisters().GPR.n.ra),'Exec',4,'DW1 movie pixels',function()
+            if movie then
+                movieFrames=movieFrames+1
+                local shot=PCSX.GPU.takeScreenShot()
+                local stem=string.format('%s/frame-%04d',c.movie,movieFrames)
+                local raw=assert(io.open(stem..'.raw','wb')); assert(raw:write(tostring(shot.data))); assert(raw:close())
+                local meta=assert(io.open(stem..'.json','w'))
+                assert(meta:write(string.format('{"width":%d,"height":%d,"bpp":%d}',shot.width,shot.height,shot.bpp==0 and 16 or 24)))
+                assert(meta:close())
+                assert(movie:write(string.format('{"event":"frame","index":%d,"cycle":%.0f,"vblank":%d}\n',
+                    movieFrames,tonumber(PCSX.getCPUCycles()),ticks-movieOrigin)))
+            end
+            breakpoints.movieDisplayReturn:disable()
+            return true
+        end)
+        return true
+    end)
+end
 local function audioEnd(reason)
     if not audio then return end
     assert(not audio.waitNote, 'missing new note-on audio anchor')
@@ -40,6 +76,7 @@ local function audioCheckpoint(label)
         audio.waitNote = audio.anchor == 'note_on'
         audio.pending, audio.first, audio.addresses = {}, {}, 0
         if audio.finish == audio.start then
+            movieStart()
             local ra=tonumber(PCSX.getRegisters().GPR.n.ra)
             breakpoints.audioReturn=PCSX.addBreakpoint(ra, 'Exec', 4, 'DW1 movie return', function()
                 audioEnd('return')

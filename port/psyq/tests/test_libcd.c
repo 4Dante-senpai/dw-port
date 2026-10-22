@@ -13,6 +13,7 @@
 #include "../../backend/spu.h"
 #include "../../host/pack/sha256.h"
 #include "../clock.h"
+#include "../clock_costs.h"
 #include "../overlay.h"
 #include "../ps1mem.h"
 #include "../psyq.h"
@@ -194,6 +195,21 @@ static void read_form2(void)
 	for (int i = 0; i < 2 * 2048; i++)
 		ok &= buf[i] == raw(27 + i / 2048, 24 + i % 2048);
 	CHECK(ok);
+}
+
+static void pause_read(void)
+{
+    for (int speed=0;speed<2;speed++) {
+        reset(1);
+        start_read(25,1,speed ? CdlModeSpeed : 0);
+        uint64_t before=clock_now();
+        CHECK(CdControlB(CdlPause,NULL,NULL)==1);
+        CHECK(clock_now()-before==CLOCK_PSYQ_ENTRY_CYCLES+
+            (speed ? CLOCK_CD_PAUSE_2X_CYCLES : CLOCK_CD_PAUSE_1X_CYCLES));
+        CHECK(CdReadSync(1,NULL)==-1);
+        clock_advance(SEEK+SECTOR_1X);
+        CHECK(buf[0]==0xaa); /* The pending sector stays canceled during Pause. */
+    }
 }
 
 static uint64_t callback_cycle;
@@ -385,6 +401,7 @@ int main(void)
 	search();
 	read_form1();
 	read_form2();
+    pause_read();
 	callback();
 	restart();
 	empty_disc();

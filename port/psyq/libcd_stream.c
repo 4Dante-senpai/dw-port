@@ -14,7 +14,8 @@ static int ended;
 static uint32_t last_frame;
 static CdlLOC last_loc;
 static StHEADER terminal = {.frameCount = 0x7fffffff, .width = 320, .height = 240};
-static unsigned long terminal_data;
+/* Empty v2 frame: copied header, DC terminator, and refill padding. */
+static unsigned long terminal_data[4] = {0x38000000, 0x00020001, 0x00007fc0, 0};
 static void (*first_cb)(void), (*end_cb)(void);
 static StHEADER *header(uint32_t slot) { return (StHEADER *)(ring + slot * 32); }
 static uint8_t *data(uint32_t slot) { return ring + size * 32 + slot * 2016; }
@@ -142,7 +143,7 @@ unsigned long StGetNext(unsigned long **addr, unsigned long **head)
         return 0;
     }
     if (ended && header(consumer)->id!=4) {
-        *addr=&terminal_data; *head=(unsigned long *)&terminal; return 0;
+        *addr=terminal_data; *head=(unsigned long *)&terminal; return 0;
     }
     return 1;
 }

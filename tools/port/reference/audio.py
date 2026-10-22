@@ -11,10 +11,18 @@ import wave
 _spec = importlib.util.spec_from_file_location("scene_audio", Path(__file__).parents[1] / "scenes/audio.py")
 compare = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(compare)
-def evidence(scene):
-    return {f"run-{run}-{segment}.{suffix}" for run in (1,2)
+_movie_spec = importlib.util.spec_from_file_location("scene_movie", Path(__file__).parents[1] / "scenes/movie.py")
+movie = importlib.util.module_from_spec(_movie_spec)
+_movie_spec.loader.exec_module(movie)
+
+def evidence(scene, output=None):
+    names = {f"run-{run}-{segment}.{suffix}" for run in (1,2)
             for segment in range(1,len(scene["audio"])+1)
             for suffix in (("spu","wav","xa.wav") if scene.get("xa") else ("spu","wav"))}
+
+    if scene.get("movie") and output:
+        for run in (1,2): names.update(movie.evidence(output / f"movie-{run}"))
+    return names
 
 
 def xa_to_wav(raw, output, start_cycle, end_cycle):
@@ -78,12 +86,14 @@ def fingerprint(scene, bios, emulator, root):
     files = [root / "tools/port/reference" / name for name in ("capture.py", "capture.lua", "audio.py")]
     files += [root / "tools/port/scenes/audio.py",
               root / "tools/port/reference/pcsx-redux-pcm-tap.patch", bios, Path(emulator)]
+    if scene.get("movie"): files.append(root / "tools/port/scenes/movie.py")
     source = (root / "config/us/symbols.txt").read_text()
     overlay=root / f"config/us/symbols_{scene.get('overlay', '')}.txt"
     if scene.get("overlay") and overlay.is_file(): source += "\n" + overlay.read_text()
     symbols = {name: int(address, 16) for name, address in re.findall(
         r"^([\w.$]+)\s*=\s*(0x[0-9a-fA-F]+);", source, re.M)}
     names = {"VSync", scene["mark"]}
+    if scene.get("movie"): names.add("PutDispEnv")
     names.update(label.split("#")[0] for label in scene.get("checkpoints", []))
     for segment in scene["audio"]:
         names.update(segment.get("stop_on", []))
@@ -105,7 +115,7 @@ def capture_audio(args, scene, symbols, emulator, cue, bios, adapter):
     if args.reuse and stamp.is_file():
         record = json.loads(stamp.read_text())
         if (record.get("fingerprint") == identity and record.get("output") == str(output)
-                and set(record.get("hashes", {})) == evidence(scene)
+                and set(record.get("hashes", {})) == evidence(scene, output)
                 and all((output / name).is_file() and digest(output / name) == value
                         for name, value in record.get("hashes", {}).items())
                 ):
@@ -145,6 +155,11 @@ def capture_audio(args, scene, symbols, emulator, cue, bios, adapter):
         if not scene.get("xa") and not compare.read_trace(output / f"run-1-{i}.spu"):
             raise ValueError(f"empty reference SPU trace in segment {i}")
         compare.read_pcm(output / f"run-1-{i}.wav")
+    if scene.get("movie"):
+        for index in (1,2):
+            movie.finish_reference(output / f"movie-{index}",output / f"run-{index}.xa")
+            hashes.update(movie.evidence(output / f"movie-{index}"))
+        movie.deterministic(output / "movie-1",output / "movie-2")
     stamp.parent.mkdir(parents=True, exist_ok=True)
     stamp.write_text(json.dumps(dict(fingerprint=identity, bios=str(bios.resolve()), scene=scene, output=str(output), hashes=hashes), indent=2) + "\n")
     print(f"reference_{args.id}: two byte-identical traces and PCM segments; {stamp}")

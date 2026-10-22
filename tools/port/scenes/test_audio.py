@@ -175,13 +175,14 @@ class AudioTests(unittest.TestCase):
     def test_external_paths(self):
         repo = self.root / "repo"
         repo.mkdir()
-        for path in (repo / "build/audio", repo / "../repo/assets"):
+        for path in (repo / "src/audio", repo / "../repo/assets"):
             with self.assertRaisesRegex(ValueError, "outside"):
                 audio.external_output(path, repo)
         (self.root / "link").symlink_to(repo, target_is_directory=True)
         with self.assertRaises(ValueError):
             audio.external_output(self.root / "link/audio", repo)
         self.assertEqual(audio.external_output(self.root / "audio", repo), self.root / "audio")
+        self.assertEqual(audio.external_output(repo / "build/audio", repo), repo / "build/audio")
 
     def test_scene_segments(self):
         scene = tomllib.loads(Path(__file__).with_name("title_audio.toml").read_text())

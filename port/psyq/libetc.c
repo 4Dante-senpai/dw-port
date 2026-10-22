@@ -11,6 +11,7 @@
 
 /* Frame-end hook of the runtime (crt.c); absent in unit tests. */
 __attribute__((weak)) void port_frame_done(void);
+__attribute__((weak)) void port_scene_movie_timing(const char *event, unsigned value);
 
 int Vcount; /* VBlanks counted by the VBlank trap; read by VSync(-1) */
 static int intr_started; /* asm: intrEnv+0 -- startIntr already ran */
@@ -52,6 +53,7 @@ unsigned long PadRead(int id)
 {
 	clock_psyq_entry();
 	(void)id;
+	if (port_scene_movie_timing) port_scene_movie_timing("PadRead", ~pad_buf);
 	return ~pad_buf;
 }
 

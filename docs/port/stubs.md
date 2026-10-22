@@ -1,6 +1,6 @@
 # Stubs M2 con comportamiento definido
 
-Quedan 17 entradas del juego con comportamiento M2 o parcial. Las entradas M2
+Quedan 11 entradas del juego con comportamiento M2 o parcial. Las entradas M2
 avanzan el reloj una vez; las parciales pueden llamar APIs del reloj/SPU.
 Este inventario no implica paridad audiovisual.
 El diagnóstico de `title_audio` sobre `e303346` y la corrección de fase
@@ -22,12 +22,6 @@ no introduce stubs ni cambia el criterio de aceptación.
 | `MemCardFormat` | Devuelve McErrCardNotExist; salidas intactas. | 3.8 |
 | `MemCardGetDirentry` | Devuelve McErrCardNotExist; salidas intactas. | 3.8 |
 | `MemCardSync` | Sin comando: -1; con comando: 1, McFunc y McErrCardNotExist, sin espera. | 3.8 |
-| `DecDCTReset` | Reinicia callback y salida pendiente. | 3.7 |
-| `DecDCTin` | Acepta entrada sin decodificar. | 3.7 |
-| `DecDCTvlc2` | Éxito (0); cabecera run-level vacía. | 3.7 |
-| `DecDCTvlcBuild` | No construye tablas VLC; el STR ya se lee del Pack. | 3.7 |
-| `DecDCToutCallback` | Instala o elimina callback; devuelve 0. | 3.7 |
-| `DecDCTout` | Llena size longs de ceros; callbacks iterativos en el hilo del juego, sin recursión. | 3.7 |
 
 `libds` no tiene funciones llamadas por el Juego; no se agregan entradas.
 
@@ -62,9 +56,11 @@ consulta -1 para iniciar Exist y 1 para consumir su resultado.
 
 Video: `CdRead2` y el anillo `St*` consumen sectores reales del Pack y publican
 frames STR completos; el audio intercalado se decodifica y alimenta al SPU.
-Ver [xa.md](xa.md). `libpress` conserva la salida negra hasta 3.7.
+Ver [xa.md](xa.md). Las seis entradas de `libpress` usan el decodificador
+MDEC y VLC; ya no son stubs M2. Tablas del Pack, atribución, costes
+provisionales y límites se documentan en [mdec.md](mdec.md).
 El ancho 320 se convierte en 480 palabras VRAM para RGB24; 20 slices de
-24×240 completan el frame. Los callbacks iterativos no introducen recursión.
+24×240 completan el frame. Los callbacks son eventos del reloj sin recursión.
 
 `av_stubs` conserva la prueba del consumidor original `MOV_playMovie(0)` con
 el Pack sintético sin frames válidos: EOF produce el frame terminal negro,

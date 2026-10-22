@@ -5,6 +5,7 @@
 #include "ps1mem.h"
 #include "../backend/spu.h"
 #include "../backend/xa.h"
+#include "../backend/gpu.h"
 #include <stdlib.h>
 #include <string.h>
 #ifndef __EMSCRIPTEN__
@@ -55,7 +56,7 @@ static FILE *audio_open(const char *path, const char *mode)
     if (!lstat(path, &info) && S_ISLNK(info.st_mode)) fail("audio file must not be a symlink");
     if (!realpath(DW1_SOURCE_ROOT, root)) fail("cannot resolve repository root");
     if (!realpath(path, resolved)) {
-        if (errno != ENOENT || path[0] != '/') fail("audio path must be absolute and outside the repository");
+        if (errno != ENOENT || path[0] != '/') fail("audio path must be absolute and outside repository sources");
         strcpy(parent, path); /* Declaration paths are limited to 1023 bytes. */
         char *slash = strrchr(parent, '/');
         if (!slash || !slash[1]) fail("invalid audio path");
@@ -64,11 +65,63 @@ static FILE *audio_open(const char *path, const char *mode)
         if (!realpath(parent, resolved)) fail("cannot resolve audio directory");
     }
     size_t length = strlen(root);
-    if (!strncmp(root, resolved, length) && (!resolved[length] || resolved[length] == '/'))
-        fail("audio evidence must be outside the repository");
+    if (!strncmp(root, resolved, length) && (!resolved[length] || resolved[length] == '/')) {
+        /* The owner permits persistent evidence in the ignored build tree.
+         * Check the resolved path so aliases into sources remain forbidden. */
+        const char *relative = resolved + length;
+        if (strncmp(relative, "/build", 6) || (relative[6] && relative[6] != '/'))
+            fail("audio evidence must be outside repository sources (build is allowed)");
+    }
     return fopen(path, mode);
 }
 int port_scene_audio_complete(void) { return audio_count && audio_index == audio_count; }
+static FILE *movie_trace;
+static char movie_directory[1024];
+static unsigned movie_frames, movie_origin;
+static uint64_t movie_xa_cycle;
+void port_scene_movie_timing(const char *event, unsigned value)
+{
+    if (movie_trace && getenv("DW1_MOVIE_TIMING_TRACE"))
+        fprintf(stderr, "movie-timing %s %llu %u %u %u\n", event,
+                (unsigned long long)clock_now(), clock_vblanks()-movie_origin,
+                movie_frames, value);
+}
+static void movie_function_timing(void *function, const char *event)
+{
+    if (!movie_trace || !getenv("DW1_MOVIE_TIMING_TRACE")) return;
+    const char *names[] = {"MOV_decodeFrame", "MOV_waitForFlip", "MOV_onSliceDecoded"};
+    for (unsigned i=0; i<sizeof(names)/sizeof(names[0]); i++)
+        if (function==dlsym(RTLD_DEFAULT,names[i])) {
+            char name[80]; snprintf(name,sizeof(name),"%s:%s",names[i],event);
+            port_scene_movie_timing(name,0);
+        }
+}
+
+/* Observation only: the last sample of a sector is delivered at this CD event. */
+void port_scene_movie_xa(void)
+{
+    if (movie_trace) movie_xa_cycle = clock_now();
+}
+void port_scene_movie_display(int x, int y, int width, int height)
+{
+    if (!movie_trace) return;
+    if (width != 320 || height != 240) fail("unexpected movie display dimensions");
+    char path[1200];
+    snprintf(path,sizeof(path),"%s/frame-%04u.ppm",movie_directory,++movie_frames);
+    FILE *file=audio_open(path,"wb");
+    if (!file) fail("cannot open movie frame");
+    fprintf(file,"P6\n%d %d\n255\n",width,height);
+    const uint8_t *vram=(const uint8_t *)gpu_vram();
+    for(int row=0;row<height;row++) {
+        const uint8_t *src=vram+((y+row)&511)*2048;
+        for(int col=0;col<width*3;col++)
+            if(fputc(src[(x*2+col)&2047],file)==EOF) fail("cannot write movie frame");
+    }
+    if(fclose(file)) fail("cannot close movie frame");
+    fprintf(movie_trace,"{\"event\":\"frame\",\"index\":%u,\"cycle\":%llu,\"vblank\":%u}\n",
+            movie_frames,(unsigned long long)clock_now(),clock_vblanks()-movie_origin);
+}
+
 static void audio_end(const char *reason)
 {
     AudioSegment *segment = &audio_segments[audio_index];
@@ -148,11 +201,30 @@ void port_scene_enter(void *function)
 void __cyg_profile_func_enter(void *function, void *caller)
 {
     (void)caller;
+    movie_function_timing(function,"enter");
+    if (getenv("DW1_MOVIE_CAPTURE") && function==dlsym(RTLD_DEFAULT,"MOV_playMovie")) {
+        const char *directory=getenv("DW1_MOVIE_CAPTURE");
+        if(strlen(directory)>=sizeof(movie_directory)) fail("movie output path too long");
+        strcpy(movie_directory,directory);
+        char path[1200]; snprintf(path,sizeof(path),"%s/movie.jsonl",directory);
+        movie_trace=audio_open(path,"w"); if(!movie_trace) fail("cannot open movie trace");
+        movie_frames=0; movie_xa_cycle=0; movie_origin=clock_vblanks();
+        fprintf(movie_trace,"{\"event\":\"start\",\"cycle\":%llu}\n",(unsigned long long)clock_now());
+    }
     port_scene_enter(function);
 }
 void __cyg_profile_func_exit(void *function, void *caller)
 {
     (void)caller;
+    movie_function_timing(function,"exit");
+    if (movie_trace && function==dlsym(RTLD_DEFAULT,"MOV_playMovie")) {
+        const int *completed=dlsym(RTLD_DEFAULT,"MOVIE_COMPLETED");
+        fprintf(movie_trace,"{\"event\":\"end\",\"cycle\":%llu,\"vblank\":%u,\"return\":%d,\"xa_cycle\":%llu}\n",
+            (unsigned long long)clock_now(),clock_vblanks()-movie_origin,
+            completed && *completed==1,(unsigned long long)movie_xa_cycle);
+        if(fclose(movie_trace)) fail("cannot close movie trace");
+        movie_trace=NULL;
+    }
     if (audio_trace && audio_index<audio_count) {
         AudioSegment *segment=&audio_segments[audio_index];
         if (!strcmp(segment->start,segment->finish) && function==dlsym(RTLD_DEFAULT,segment->start))
@@ -445,4 +517,5 @@ void port_scene_finish(void) {}
 int port_scene_complete(void) { return 0; }
 int port_scene_audio_complete(void) { return 0; }
 void port_scene_enter(void *function) { (void)function; }
+void port_scene_movie_timing(const char *event, unsigned value) { (void)event; (void)value; }
 #endif
