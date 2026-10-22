@@ -64,15 +64,33 @@ with tempfile.TemporaryDirectory() as directory:
     assert high.returncode == 0, (high.stdout, high.stderr)
     rows = (output/"2.spu").read_text().splitlines()[1:-1]
     assert rows[0] == "0 0 114 0400" and rows[-2].endswith("18a 0002"), rows
-    # Direct CLI use must enforce the same external-evidence policy as Python.
+    # Direct CLI use must enforce the same source exclusion as Python.
     repo = Path(__file__).resolve().parents[3]
     alias = output / "repo"
     alias.symlink_to(repo, target_is_directory=True)
-    for path in (repo / "build/forbidden-audio.spu", alias / "build/forbidden-audio.spu"):
+    for path in (repo / "src/forbidden-audio.spu", alias / "src/forbidden-audio.spu"):
         segments.write_text(f"AUDIO_START AUDIO_FINISH 0 {path} {output}/1.wav\n"
                             f"AUDIO_MUSIC - 2 {output}/2.spu {output}/2.wav\n")
         result = subprocess.run([sys.argv[1], str(checkpoints), str(segments)], env=environment,
                                 capture_output=True, text=True, timeout=30)
-        assert result.returncode == 1 and "outside the repository" in result.stderr, result.stderr
+        assert result.returncode == 1 and "outside repository sources" in result.stderr, result.stderr
+        assert not path.exists()
+    with tempfile.TemporaryDirectory(dir=repo / "build") as persistent:
+        persistent = Path(persistent)
+        for directory in (persistent, alias / persistent.relative_to(repo)):
+            path = directory / "allowed.spu"
+            segments.write_text(f"AUDIO_START AUDIO_FINISH 0 {path} {output}/1.wav\n"
+                                f"AUDIO_MUSIC - 2 {output}/2.spu {output}/2.wav\n")
+            result = subprocess.run([sys.argv[1], str(checkpoints), str(segments)], env=environment,
+                                    capture_output=True, text=True, timeout=30)
+            assert result.returncode == 0, (result.stdout, result.stderr)
+            assert path.read_text().startswith("# dw1-spu-trace-v1\n")
+        source_alias = persistent / "sources"
+        source_alias.symlink_to(repo / "src", target_is_directory=True)
+        path = source_alias / "forbidden-audio.spu"
+        segments.write_text(f"AUDIO_START AUDIO_FINISH 0 {path} {output}/1.wav\n")
+        result = subprocess.run([sys.argv[1], str(checkpoints), str(segments)], env=environment,
+                                capture_output=True, text=True, timeout=30)
+        assert result.returncode == 1 and "outside repository sources" in result.stderr, result.stderr
         assert not path.exists()
 print("scene_audio_runtime: disjoint checkpoints, independent origins, automatic stop, WAV lengths: OK")

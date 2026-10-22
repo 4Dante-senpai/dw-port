@@ -1,3 +1,4 @@
+__attribute__((weak)) void port_scene_movie_display(int x, int y, int width, int height);
 #include "psyq.h"
 #include "clock.h"
 #include "ps1mem.h"
@@ -213,6 +214,7 @@ DISPENV *PutDispEnv(DISPENV *e)
         memcmp(&e->isinter, &last_disp.isinter, 4)) e->pad0 = 0; /* USA NTSC */
     last_disp = *e;
     gpu_set_display(e->disp.x, e->disp.y, e->disp.w, e->disp.h, e->isrgb24);
+    if (e->isrgb24 && port_scene_movie_display) port_scene_movie_display(e->disp.x,e->disp.y,e->disp.w,e->disp.h);
     return e;
 }
 /* asm:asm/us/main/psyq/libgpu.s PutDrawEnv / SetDrawEnv2 / get_tw */

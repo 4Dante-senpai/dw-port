@@ -583,3 +583,106 @@ with tempfile.TemporaryDirectory() as directory:
         result=runner.audio.compare_pcm(actual,expected,whole_window=True)
     assert len(result["windows"])==1 and result["compared_frames"]==264600
 print("scene_runner: timestamped XA tap validation and full-window SNR OK")
+
+# Movie gates apply to every RGB channel and use delivery cycles, not wall time.
+movie_spec = importlib.util.spec_from_file_location('movie', Path(__file__).with_name('movie.py'))
+movie = importlib.util.module_from_spec(movie_spec)
+movie_spec.loader.exec_module(movie)
+with tempfile.TemporaryDirectory() as tmp:
+    root=Path(tmp); actual=root/'port'; reference=root/'ref'
+    for directory in (actual,reference):
+        directory.mkdir()
+        rows=[dict(event='start',cycle=0),dict(event='frame',index=1,cycle=1000,vblank=2),
+              dict(event='frame',index=2,cycle=2000,vblank=4),
+              dict(event='end',cycle=2200,vblank=4,**{'return':1,'xa_cycle':1700})]
+        (directory/'movie.jsonl').write_text('\n'.join(map(json.dumps,rows))+'\n')
+        for i in (1,2): (directory/f'frame-{i:04d}.ppm').write_bytes(b'P6\n320 240\n255\n'+bytes(230400))
+    assert not movie.evidence(root/'absent')
+    scene=dict(expected_frames=2,expected_return=1)
+    assert not movie.compare(actual,reference,scene,root/'diff')['failures']
+    movie.deterministic(actual,reference)
+    frame=actual/'frame-0002.ppm'
+    frame.write_bytes(b'P6\n320 240\n255\n'+b'\x04'+bytes(230399))
+    assert not movie.compare(actual,reference,scene,root/'diff')['failures']
+    frame.write_bytes(b'P6\n320 240\n255\n'+b'\x05'+bytes(230399))
+    result=movie.compare(actual,reference,scene,root/'diff')
+    assert result['failures'] and result['worst_frame']==2
+    assert (root/'diff/worst-frame-0002.ppm').is_file()
+    frame.write_bytes(b'P6\n320 240\n255\n'+b'\x01\x00\x00'*76800)
+    assert movie.compare(actual,reference,scene,root/'diff')['frames'][1]['channel_means']==[1,0,0]
+    assert movie.compare(actual,reference,scene,root/'diff')['failures']
+    frame.write_bytes((reference/frame.name).read_bytes())
+    rows[-1]['xa_cycle']=1
+    (actual/'movie.jsonl').write_text('\n'.join(map(json.dumps,rows))+'\n')
+    assert any('A/V' in f for f in movie.compare(actual,reference,scene,root/'diff')['failures'])
+    rows[-1].update(xa_cycle=1700,vblank=5)
+    rows[-1]['return']=0
+    (actual/'movie.jsonl').write_text('\n'.join(map(json.dumps,rows))+'\n')
+    assert any('skip VBlank' in f for f in movie.compare(actual,reference,dict(expected_return=0),root/'diff')['failures'])
+    try: movie.deterministic(actual,reference)
+    except ValueError: pass
+    else: raise AssertionError('non-deterministic movie accepted')
+    frame.unlink()
+    assert movie.evidence(actual) == {}
+    try: movie.sequence(actual)
+    except ValueError: pass
+    else: raise AssertionError('missing movie frame accepted')
+    # Start gates return timing; decoding more frames before Start is diagnostic.
+    rows=[json.loads(line) for line in (reference/'movie.jsonl').read_text().splitlines()]
+    rows[-1]['return']=0
+    (reference/'movie.jsonl').write_text('\n'.join(map(json.dumps,rows))+'\n')
+    (actual/'movie.jsonl').write_text('\n'.join(map(json.dumps,[rows[0],rows[1],rows[-1]]))+'\n')
+    assert not movie.compare(actual,reference,dict(expected_return=0),root/'diff')['failures']
+    # An accepted skip delta must match exactly: on time, or later than listed, both fail.
+    skip=dict(expected_return=0,skip_vblank_delta=1)
+    assert any('skip VBlank' in f for f in movie.compare(actual,reference,skip,root/'diff')['failures'])
+    for late,ok in [(1,True),(2,False)]:
+        (actual/'movie.jsonl').write_text('\n'.join(map(json.dumps,[rows[0],rows[1],dict(rows[-1],vblank=rows[-1]['vblank']+late)]))+'\n')
+        assert ok == (not movie.compare(actual,reference,skip,root/'diff')['failures'])
+print('movie: per-channel tolerance, worst diff, complete sequence, determinism, return, skip VBlank and A/V bounds OK')
+
+# Scene-owned allowances preserve all three failure paths from owner decision 5.
+import tomllib
+listed = tomllib.loads(Path(__file__).with_name('movie0.toml').read_text())['mdec_allowances']
+with tempfile.TemporaryDirectory() as tmp:
+    root=Path(tmp); actual=root/'port'; reference=root/'ref'
+    header=b'P6\n320 240\n255\n'
+    rows=[dict(event='start',cycle=0),dict(event='frame',index=1,cycle=1000,vblank=2),
+          dict(event='frame',index=2,cycle=2000,vblank=4),
+          dict(event='end',cycle=2200,vblank=4,**{'return':1,'xa_cycle':1700})]
+    for directory in (actual,reference):
+        directory.mkdir()
+        (directory/'movie.jsonl').write_text('\n'.join(map(json.dumps,rows))+'\n')
+        (directory/'frame-0001.ppm').write_bytes(header+bytes(230400))
+    for item in listed:
+        item=dict(item,frame=2)
+        scene=dict(expected_frames=2,expected_return=1,mdec_allowances=[item])
+        offset=(item['y']*320+item['x'])*3+'RGB'.index(item['channel'])
+        left=bytearray(230400);right=bytearray(230400)
+        left[offset]=item['port'];right[offset]=item['reference']
+        (reference/'frame-0002.ppm').write_bytes(header+right)
+        def check(data):
+            (actual/'frame-0002.ppm').write_bytes(header+data)
+            return movie.compare(actual,reference,scene,root/'diff')
+        result=check(left)
+        assert not result['failures'] and result['accepted_mdec_allowances']==[dict(item,error=5)]
+        # Failure 1: a different component exceeds four, even in the same pixel.
+        other=left.copy();other[offset-1]=5
+        assert any('unexpected=' in f for f in check(other)['failures'])
+        # Failure 2: a listed component worsens beyond its listed error.
+        worse=left.copy();worse[offset]+=1
+        assert any('unexpected=' in f for f in check(worse)['failures'])
+        # Failure 3: an accepted pair cannot exempt the per-channel mean.
+        mean=left.copy();mean[0::3]=bytes([1])*76800
+        result=check(mean)
+        assert result['accepted_mdec_allowances'] and result['frames'][1]['channel_means'][0]==1
+        assert result['failures'] and result['worst_frame']==2
+        # The allowance is an exact pair, not a blanket five-unit tolerance.
+        shifted=left.copy();shifted[offset]+=1
+        changed=right.copy();changed[offset]+=1
+        (reference/'frame-0002.ppm').write_bytes(header+changed)
+        assert check(shifted)['failures']
+        (reference/'frame-0002.ppm').write_bytes(header+right)
+        improved=left.copy();improved[offset]-=1
+        assert not check(improved)['failures']
+print('movie allowances: exact listed pairs pass; unlisted, worsened and mean violations fail')

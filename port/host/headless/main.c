@@ -1,4 +1,5 @@
 /* Native headless host: runs the game without a window (tests, AD-14). */
+#include "../../psyq/libpress.h"
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -102,7 +103,7 @@ int main(int argc, char **argv)
 			fprintf(stderr, "dw1: %s\n", err);
 			return 1;
 		}
-		if (libgte_load_tables(err, sizeof(err)) != 0) {
+		if (libgte_load_tables(err, sizeof(err)) != 0 || libpress_load_tables(err, sizeof(err)) != 0) {
 			fprintf(stderr, "dw1: %s\n", err);
 			cdrom_close();
 			return 1;
@@ -115,6 +116,17 @@ int main(int argc, char **argv)
 			uint8_t digest[32];
 			Sha256_Init(&hash); Sha256_Update(&hash, data, size); Sha256_Final(&hash, digest);
 			printf("port: libgte table %s sha256 ", names[i]);
+			for (unsigned j = 0; j < sizeof(digest); j++) printf("%02x", digest[j]);
+			printf("\n");
+		}
+		const char *press_names[] = {"mdec_iq", "mdec_coef", "data_2"};
+		for (unsigned i = 0; i < sizeof(press_names) / sizeof(press_names[0]); i++) {
+			size_t size;
+			const void *data = libpress_table(press_names[i], &size);
+			Sha256 hash;
+			uint8_t digest[32];
+			Sha256_Init(&hash); Sha256_Update(&hash, data, size); Sha256_Final(&hash, digest);
+			printf("port: libpress table %s sha256 ", press_names[i]);
 			for (unsigned j = 0; j < sizeof(digest); j++) printf("%02x", digest[j]);
 			printf("\n");
 		}

@@ -167,3 +167,13 @@ desde esa llamada (`build/title-watch.log`). La inicialización evita ejecutar
 comandos GPU derivados de memoria indeterminada; la rama PS1 conserva la
 declaración original. `scene_title` y `scene_title_compare` pasan también en
 ASan, con cero píxeles RGB555 distintos respecto de la referencia.
+
+
+## Historia 3.7: espera de DMA MDEC
+
+`src/mov/mov.c`: bajo `DW1_PORT` se incluye el reloj del port y se llama
+`clock_advance(1024)` dentro de `MOV_waitForFlip`. Permite despachar las
+terminaciones asíncronas de `DecDCTout` y sus callbacks de slices. La rama
+PS1 mantiene exactamente el bucle original. El inventario `isr_spins.tsv`
+retira esa fila porque el bucle ya contiene una llamada explícita.
+Costes sin calibrar: [mdec.md](mdec.md), historia 3.10.

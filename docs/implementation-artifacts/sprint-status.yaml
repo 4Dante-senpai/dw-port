@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-11-2026 12:35
-last_updated: 2026-10-20
+last_updated: 2026-10-22
 project: dw-port
 project_key: NOKEY
 tracking_system: file-system
@@ -60,7 +60,7 @@ development_status:
   3-4-spu-emulado-y-libspu: done
   3-5-libsnd-de-dw1-y-traza-de-audio: done
   3-6-xa-y-sectores-form-2: done
-  3-7-mdec-libpress-y-videos-str: backlog
+  3-7-mdec-libpress-y-videos-str: done
   3-8-memory-card-nativa: backlog
   3-9-preset-native-con-ventana-sdl3: backlog
   3-10-calibración-de-costos-y-ritmo-nativo: backlog

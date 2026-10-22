@@ -29,3 +29,10 @@ for compiler, abi in [('clang', ['-m32']), ('emcc', [])]:
         '-fsyntax-only', '-'], input=source, text=True, capture_output=True)
     assert result.returncode == 0, result.stderr
 print('test_gen_stubs: typed definitions match native and wasm prototypes')
+
+try:
+    classify({"DecDCTin"}, set(), {"DecDCTin": "libpress"})
+except ValueError as error:
+    assert "cannot generate video stubs" in str(error)
+else:
+    raise AssertionError("video stub regression was accepted")
