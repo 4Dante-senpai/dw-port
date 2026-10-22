@@ -1,27 +1,18 @@
 # Stubs M2 con comportamiento definido
 
-Quedan 11 entradas del juego con comportamiento M2 o parcial. Las entradas M2
-avanzan el reloj una vez; las parciales pueden llamar APIs del reloj/SPU.
-Este inventario no implica paridad audiovisual.
+No quedan entradas del juego con marcadores `stub-m2:`. Las once entradas
+de tarjeta se reemplazaron en 3.8 por la traducción del asm USA y el dispositivo
+BIOS `bu`. Este inventario no implica paridad audiovisual completa.
 El diagnóstico de `title_audio` sobre `e303346` y la corrección de fase
 de RCnt2 se registran en [audio-parity.md](audio-parity.md); no cambian este
 inventario ni cierran la comparación clase B. La investigación sobre
 `b97a378` añade cobertura L1 del recálculo de voces conservadas entre SEQ;
 no introduce stubs ni cambia el criterio de aceptación.
 
-| Función | Comportamiento M2 | Historia de reemplazo |
-|---|---|---|
-| `MemCardInit` | Reinicia el comando pendiente; tarjeta ausente. | 3.8 |
-| `MemCardStart` | Tarjeta ausente; no inicia trabajo. | 3.8 |
-| `MemCardExist` | Registra McFuncExist y devuelve 1; no accede al buffer. | 3.8 |
-| `MemCardAccept` | Registra McFuncAccept y devuelve 1; no accede al buffer. | 3.8 |
-| `MemCardReadFile` | Registra McFuncReadFile y devuelve 1; no accede al buffer. | 3.8 |
-| `MemCardWriteFile` | Registra McFuncWriteFile y devuelve 1; no accede al buffer. | 3.8 |
-| `MemCardCreateFile` | Devuelve McErrCardNotExist; salidas intactas. | 3.8 |
-| `MemCardDeleteFile` | Devuelve McErrCardNotExist; salidas intactas. | 3.8 |
-| `MemCardFormat` | Devuelve McErrCardNotExist; salidas intactas. | 3.8 |
-| `MemCardGetDirentry` | Devuelve McErrCardNotExist; salidas intactas. | 3.8 |
-| `MemCardSync` | Sin comando: -1; con comando: 1, McFunc y McErrCardNotExist, sin espera. | 3.8 |
+El build nativo registra 198 símbolos PsyQ usados: 187 implementados, 11 de
+libc del Host y 0 stubs generados. Web registra 199/187/12/0 y ASan
+197/187/10/0. `psyq_functions.tsv` identifica biblioteca y símbolo; no mide
+comportamiento. `gen_stubs.py` rechaza generar stubs de `libmcrd` o `libpress`.
 
 `libds` no tiene funciones llamadas por el Juego; no se agregan entradas.
 
@@ -47,12 +38,12 @@ así que su contador de implementadas no mide la retirada de estos stubs M2.
 Atribución, diferencias defensivas respecto del asm e hipótesis en
 [libsnd.md](libsnd.md). No se afirma paridad de audio ni se cierra 3.5.
 
-Tarjeta: se conserva únicamente la convención de comando/resultado de
-`reference/dw2-pc/psyq/libmcrd.c` (CC0, atribución en el código). El último comando
-registrado se consume una vez por `MemCardSync`, en ambos modos, con resultado
-de tarjeta ausente; los punteros de salida nulos se permiten. `MemCardInit` borra
-el comando. No hay acceso a archivos ni a buffers de lectura/escritura. El menú
-consulta -1 para iniciar Exist y 1 para consumir su resultado.
+Tarjeta: `libmcrd` traduce las máquinas de estados, reintentos y callbacks del
+asm USA; también implementa Open/ReadData/WriteData/Callback. La capa BIOS
+adapta OpenBIOS MIT y termina los sectores mediante eventos del reloj.
+El Host persiste cada comando de escritura con temporal, fsync y rename.
+Sin rutas y en web se informa ausencia. Modelo, atribución, evidencia de save y
+Continue, y costos pendientes de calibración: [memcard.md](memcard.md).
 
 Video: `CdRead2` y el anillo `St*` consumen sectores reales del Pack y publican
 frames STR completos; el audio intercalado se decodifica y alimenta al SPU.

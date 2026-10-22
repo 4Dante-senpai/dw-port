@@ -157,12 +157,15 @@ target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
 add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c port/psyq/clock.c
   port/psyq/libetc.c port/psyq/libapi.c port/psyq/libc.c port/psyq/libgs.c port/psyq/libcd.c
   port/psyq/libgte.c port/psyq/libgpu.c port/psyq/libsnd.c port/psyq/libspu.c
-  port/psyq/libpress.c port/psyq/libmcrd.c port/psyq/libcd_stream.c port/psyq/stub.c ${DW1_GTE_TABLES_H} ${DW1_PRESS_TABLES_H})
+  port/psyq/card_image.c port/psyq/bios_card.c port/psyq/libpress.c port/psyq/libmcrd.c port/psyq/libcd_stream.c port/psyq/stub.c ${DW1_GTE_TABLES_H} ${DW1_PRESS_TABLES_H})
 target_include_directories(dw1_psyq PRIVATE ${CMAKE_BINARY_DIR}/generated)
 target_link_libraries(dw1_psyq PUBLIC Threads::Threads dw1_backend)
 # The heap and the CD model store typed data in the uint8_t arena Ps1_Ram, like the game does.
 target_compile_options(dw1_psyq PRIVATE -Wall -Wextra -Werror -fno-strict-aliasing)
 
+if(NOT EMSCRIPTEN)
+  target_sources(dw1_psyq PRIVATE port/host/card.c)
+endif()
 enable_testing()
 add_test(NAME press_tables COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/psyq/test_press_tables.py)
 add_test(NAME mdec_vectors COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/video/mdec_vectors.py --check)
@@ -173,7 +176,7 @@ add_test(NAME xa_vectors COMMAND python3 -I -B
   ${CMAKE_SOURCE_DIR}/tools/port/audio/xa_vectors.py --check)
 add_test(NAME scene_audio_unit COMMAND python3 -I -B
   ${CMAKE_SOURCE_DIR}/tools/port/scenes/test_audio.py)
-foreach(suite spu xa mdec libpress libspu libsnd cd_stream)
+foreach(suite spu xa mdec libpress libspu libsnd cd_stream card)
   if(suite STREQUAL "spu" OR suite STREQUAL "xa" OR suite STREQUAL "mdec")
     set(test_source port/backend/tests/test_${suite}.c)
   else()
@@ -196,6 +199,15 @@ foreach(suite spu xa mdec libpress libspu libsnd cd_stream)
 endforeach()
 
 if(NOT EMSCRIPTEN)
+  add_executable(test_card_host port/psyq/tests/test_card_host.c)
+  target_link_libraries(test_card_host dw1_psyq)
+  target_compile_options(test_card_host PRIVATE -Wall -Wextra -Werror)
+  add_test(NAME card_host COMMAND test_card_host)
+  add_executable(test_card_cli port/psyq/tests/test_card_cli.c)
+  target_link_libraries(test_card_cli dw1_psyq)
+  target_compile_options(test_card_cli PRIVATE -Wall -Wextra -Werror)
+  add_test(NAME card_cli COMMAND test_card_cli)
+  set_tests_properties(card_cli PROPERTIES TIMEOUT 30)
   add_executable(test_gpu port/backend/tests/test_gpu.c)
   target_link_libraries(test_gpu dw1_backend)
   target_compile_options(test_gpu PRIVATE -Wall -Wextra -Werror)
@@ -513,6 +525,19 @@ if(NOT EMSCRIPTEN)
   set_tests_properties(scene_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
     FIXTURES_REQUIRED "disc_pack;newgame_reference" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     RESOURCE_LOCK newgame_capture)
+  foreach(card_scene card_newgame card_continue)
+    add_test(NAME reference_${card_scene} COMMAND python3 -I -B
+      ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py ${card_scene} --state --reuse
+      --card-build ${DW1_SCENE_PRESET} --max-vblanks 40000 --timeout 1800)
+    set_tests_properties(reference_${card_scene} PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+      FIXTURES_SETUP ${card_scene}_reference RESOURCE_LOCK newgame_capture)
+    add_test(NAME scene_${card_scene}_compare COMMAND python3 -I -B
+      ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py ${card_scene} --build ${DW1_SCENE_PRESET} --state)
+    set_tests_properties(scene_${card_scene}_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+      FIXTURES_REQUIRED "disc_pack;${card_scene}_reference" RESOURCE_LOCK newgame_capture)
+  endforeach()
+  set_tests_properties(scene_card_newgame_compare PROPERTIES FIXTURES_SETUP card_newgame_saved)
+  set_tests_properties(reference_card_continue PROPERTIES FIXTURES_REQUIRED card_newgame_saved)
   add_test(NAME dw1_overlay COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_dw1_overlay.sh
     $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   set_tests_properties(dw1_overlay PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600

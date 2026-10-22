@@ -36,10 +36,37 @@ conservan intérprete y debugger; el timeout sigue siendo por pasada. Si una fal
 se espera a la otra antes de salir y el error identifica su log; no queda sello válido.
 Cada corrida del título dura unos 2-3 minutos con el intérprete. Sin `.cue`, emulador o Xvfb, el script
 sale con 77 (`skipped`); ante un error o una diferencia, con 1. Las capturas `run-N.ppm`, los logs
-y `work-N/` (display crudo, progreso, configuración portable y tarjetas vacías) quedan en
+y `work-N/` (display crudo, progreso y configuración portable) quedan en
 `build/reference/<id>/`, o bajo `DW1_REFERENCE_DIR` si se lo define fuera del repo (`--out`).
 `--timeout` fija los segundos por corrida (por defecto, 600) y `--max-vblanks` el límite de
 VBlanks desde el arranque (por defecto, 10000).
+
+Las tarjetas se crean fuera del repositorio: por defecto en
+`/tmp/dw1-cards-<hash de la ruta del clon>/`, configurable con `DW1_CARD_DIR`
+(también debe quedar fuera). Cada pasada parte de dos tarjetas nuevas,
+igual que el port. `card1 = "new"` hace explícita esa entrada;
+`card1 = "card_newgame"` copia la tarjeta final del **port** de esa escena
+para ambos ejecutables. Las salidas se separan por preset nativo/ASan.
+`capture.py --card1 /ruta/entrada.mcd` permite una entrada cruda externa.
+Se exportan la copia final externa y su SHA-256; solo los hashes se escriben
+en el árbol de evidencia. El runner compara los bytes finales con Redux.
+La reutilización exige que siga existiendo la copia final y coincida su hash.
+
+`state_vars = "card_state_vars.txt"` selecciona declaraciones por escena,
+sin cambiar el archivo global. Se admite `SYMBOL+56 u8[2]` para campos de
+entidades, verificando límites del símbolo nativo y la RAM de referencia.
+El contenido de ese archivo y el hash de la tarjeta de entrada forman parte
+de la huella de referencia.
+
+```sh
+DW1_DISC_DIR=/private/disc python3 -I -B tools/port/scenes/run.py card_newgame --build native-headless --state
+DW1_DISC_DIR=/private/disc python3 -I -B tools/port/scenes/run.py card_continue --build native-headless --state
+```
+
+Los fixtures CTest encadenan referencia New Game, comparación del port,
+referencia Continue y comparación Continue. Usan el lock `newgame_capture`,
+skip 77 sin disco y comparación del estado restaurado contra el guardado.
+Detalles del modelo y evidencia: [memcard.md](memcard.md).
 
 ## Punto de captura e inputs
 
@@ -432,6 +459,11 @@ autorizada por el dueño, frames, diffs, trazas y PCM se guardan bajo
 ejecuciones de Redux; `build/port/<preset>/scenes/<escena>/audio.json` conserva
 las métricas de comparación y hashes. El gate visual usa el máximo absoluto
 y la media de cada canal, sin alinear ni desplazar frames.
+
+El selector interno `_card_build` separa las rutas de tarjetas por preset y
+se excluye de la comparación de metadatos de audio: una referencia vigente
+puede verificarse tanto en nativo como en ASan. Se conservan las comprobaciones
+de escena, identidad del emulador/BIOS/adaptadores y hashes de toda la evidencia.
 
 La ejecución local del 2026-10-21 detecta una contradicción con el requisito
 de 3637 frames: **las dos capturas del juego USA original presentan 3636**,

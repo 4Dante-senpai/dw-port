@@ -418,7 +418,18 @@ void port_scene_prepare(const PortCapture *value)
         else if (!strcmp(spec, "u8") || !strcmp(spec, "s8")) var.width = 1;
         else fail("invalid state variable type");
         strcpy(var.type, spec);
-        var.address = dlsym(RTLD_DEFAULT, var.name);
+        char base[128];
+        strcpy(base, var.name);
+        char *plus = strchr(base, '+');
+        unsigned long offset = 0;
+        if (plus) {
+            *plus++ = 0;
+            char *end;
+            errno = 0;
+            offset = strtoul(plus, &end, 10);
+            if (errno || !*plus || *end || offset > PS1_RAM_SIZE) fail("invalid state variable offset");
+        }
+        var.address = dlsym(RTLD_DEFAULT, base);
         if (!var.address) {
             fprintf(stderr, "scene: missing native symbol: %s\n", var.name);
             exit(1);
@@ -426,8 +437,9 @@ void port_scene_prepare(const PortCapture *value)
         Dl_info info;
         const ElfW(Sym) *symbol;
         if (!dladdr1(var.address, &info, (void **)&symbol, RTLD_DL_SYMENT) ||
-            !symbol || var.width * var.count > symbol->st_size)
+            !symbol || offset + var.width * var.count > symbol->st_size)
             fail("state variable exceeds native symbol");
+        var.address = (uint8_t *)var.address + offset;
         Variable *next = realloc(variables, (variable_count + 1) * sizeof(*variables));
         if (!next) fail("cannot allocate state vars");
         variables = next;

@@ -121,17 +121,18 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
         config["movie"] = str(directory)
         config["movie_display"] = _runner.checkpoint_symbols(
             dict(checkpoints=["PutDispEnv"]), ROOT / "config/us/symbols.txt")[0]["address"]
-    if scene.get("state_vars"):
-        config.update(state_vars=scene["state_vars"], state_symbols=scene["state_symbols"],
+    if scene.get("_state_vars"):
+        config.update(state_vars=scene["_state_vars"], state_symbols=scene["state_symbols"],
                       state_trace=str(output / f"run-{index}.state"))
     script = work / "capture.lua"
     script.write_text("DW1_CAPTURE = " + lua_literal(config) + "\n" +
                       (ROOT / "tools/port/reference/capture.lua").read_text())
+    cards = _runner.prepare_cards(scene, "reference", index, scene.get("_card_build", "native-headless"))
     command = ["xvfb-run", "-a", "-n", str(100 * index + 99), emulator, "-no-ui", "-portable", str(work),
                "-interpreter", "-softgpu", "-debugger", "-no-fastboot",
                "-2mb", "-1mbvram", "-no-trace", "-no-pcdrv", "-noupdate",
                "-no-webserver", "-no-gdb", "-iso", str(cue), "-bios", str(bios),
-               "-memcard1", str(work / "card1.mcd"), "-memcard2", str(work / "card2.mcd"),
+               "-memcard1", str(cards[0]), "-memcard2", str(cards[1]),
                "-dofile", str(script), "-run"]
     log = output / f"run-{index}.log"
     with log.open("wb") as stream:
@@ -151,6 +152,10 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
     progress = (work / "progress.txt").read_text().strip() if (work / "progress.txt").exists() else "before frame 0"
     if code != 0 or (not audio and not (work / "display.json").exists()):
         raise ValueError(f"run {index}: {code}; last point: {progress}; log: {log}")
+    if "card1" in scene:
+        # The emulator flushes both cards when PCSX.quit exits; export only after wait().
+        digest = hashlib.sha256(cards[0].read_bytes()).hexdigest()
+        (output / f"run-{index}.card1.sha256").write_text(digest + "\n")
     if scene.get("movie"):
         for raw in directory.glob("frame-*.raw"):
             meta = json.loads(raw.with_suffix(".json").read_text())
@@ -162,7 +167,7 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
     capture = output / f"run-{index}.ppm"
     capture.write_bytes(to_ppm((work / "display.raw").read_bytes(), **meta))
     colors = ppm_colors(capture)
-    if colors <= 16 and not scene.get("state_vars"):
+    if colors <= 16 and not scene.get("_state_vars"):
         raise ValueError(f"run {index}: only {colors} colors; log: {log}")
     digest = hashlib.sha256(capture.read_bytes()).hexdigest()
     print(f"{capture}: {meta['width']}x{meta['height']} colors={colors} sha256={digest}")
@@ -174,6 +179,8 @@ def main(argv=None):
     parser.add_argument("id", choices=sorted(p.stem for p in (ROOT / "tools/port/scenes").glob("*.toml")))
     parser.add_argument("--update", action="store_true")
     parser.add_argument("--state", action="store_true")
+    parser.add_argument("--card1", type=Path, help="existing raw input card outside the repository")
+    parser.add_argument("--card-build", default="native-headless", choices=["native-headless", "native-asan"])
     parser.add_argument("--audio", action="store_true")
     parser.add_argument("--reuse", action="store_true", help="reuse a valid deterministic state/audio capture")
     parser.add_argument("--bios", type=Path)
@@ -200,10 +207,14 @@ def main(argv=None):
         raise ValueError("audio scenes require --audio")
     if args.audio and not scene.get("audio"):
         raise ValueError("--audio requires an audio scene")
+    scene["_card_build"] = args.card_build
+    if args.card1:
+        scene["_card1_input"] = str(args.card1)
+        scene.setdefault("card1", "new")
     scene["resolved_checkpoints"] = _runner.checkpoint_symbols(scene, ROOT / "config/us/symbols.txt")
     symbols = resolve_symbols(ROOT / "config/us/symbols.txt", scene["mark"], scene.get("overlay"))
     if args.state:
-        scene["state_vars"] = _runner.state_variables(ROOT / "tools/port/scenes/state_vars.txt", ROOT / "config/us/symbols.txt")
+        scene["_state_vars"] = _runner.state_variables(ROOT / "tools/port/scenes" / scene.get("state_vars", "state_vars.txt"), ROOT / "config/us/symbols.txt")
         source = (ROOT / "config/us/symbols.txt").read_text()
         scene["state_symbols"] = pointer_symbols(source)
         rand = re.search(r"^rand\s*=\s*(0x[0-9a-fA-F]+)", source, re.M)
@@ -235,6 +246,7 @@ def main(argv=None):
     stamp = output / "state.sha256"
     expected = scene.get("reference_sha256")
     if (args.reuse and stamp.is_file() and stamp.read_bytes().strip() == fingerprint.encode()
+            and ("card1" not in scene or _runner.valid_card_export("reference", args.id, args.card_build))
             and all((output / name).is_file() for name in ("run-1.state", "run-2.state", "run-1.ppm"))
             and (args.bios or not expected or hashlib.sha256((output / "run-1.ppm").read_bytes()).hexdigest() == expected)):
         print(f"reference_{args.id}: cached")
@@ -248,13 +260,19 @@ def main(argv=None):
         runs = [executor.submit(run_once, emulator, cues[0].resolve(), bios, scene, symbols,
                                 output, index, args.timeout, args.max_vblanks) for index in (1, 2)]
         hashes = [run.result() for run in runs]
+    if "card1" in scene:
+        card_paths = [_runner.final_card("reference", args.id, args.card_build).parent / f"run-{index}" / "card1.mcd" for index in (1, 2)]
+        if card_paths[0].read_bytes() != card_paths[1].read_bytes():
+            raise ValueError("non-deterministic reference cards")
+        for index in (1, 2):
+            _runner.export_card(scene, "reference", index, [card_paths[index-1]], args.card_build)
     if hashes[0] != hashes[1]:
         raise ValueError(f"non-deterministic captures: {hashes[0]} != {hashes[1]}")
     if args.state:
         first, second = output / "run-1.state", output / "run-2.state"
         if first.read_bytes() != second.read_bytes():
             raise ValueError(f"non-deterministic state traces: {first} != {second}")
-        records = _runner.read_state(first, scene["state_vars"], scene["capture_vblank"],
+        records = _runner.read_state(first, scene["_state_vars"], scene["capture_vblank"],
                                      scene.get("checkpoints"), scene.get("window", 0))
         calls = sum(row[1] == "rand" for row in records)
         if scene.get("expect_rand") and calls < 16:

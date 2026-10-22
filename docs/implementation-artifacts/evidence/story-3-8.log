@@ -1,0 +1,24 @@
+Historia 3.8 — verificación del orquestador en el PC del dueño (tools/port/remote_run.sh, imagen dw-port:latest), 2026-10-22
+
+Disco: DW1_DISC_DIR=/dw/game_rom/extracted; referencias, tarjetas, frames y trazas fuera del checkout (solo métricas y hashes acá).
+
+Tarjeta nueva del port == tarjeta que crea PCSX-Redux para un archivo inexistente:
+  131072 bytes, SHA-256 78b6d4ac9ab4d23caf7e5f04f83539bf5d994cccfb0a709d14ac53d05c8e21ef (test L1 `card`).
+Clase A (sin disco): native-headless y native-asan L1 verdes (card, card_host, card_cli, scene_runner, av_stubs y resto);
+  ctest --preset web: 36/36 (3 con disco omitidas: pack_disc, native_title_capture, web_scene_title).
+Clase B, ctest_no_skip.sh -j6 (suite completa con disco, sin omisiones):
+  native-headless 74/75 y native-asan 72/73; el único fallo era scene_movie0_skip_compare con la excepción
+  vieja skip_vblank_delta = 1 (port y Redux ya salían ambos en el VBlank 122).
+  Tras la decisión 2 del dueño (igualdad exacta, sin skip_vblank_delta):
+  reference_movie0_skip + scene_movie0_skip_compare: 4/4 en native-headless y 4/4 en native-asan (failed checks=0).
+Escenas de tarjeta (nativo y ASan): reference_card_newgame, scene_card_newgame_compare (estado por checkpoint
+  idéntico y card1.mcd final del port idéntico byte a byte al de Redux, 131072 bytes), reference_card_continue,
+  scene_card_continue_compare (Redux carga la tarjeta escrita por el port; variables de card_state_vars.txt
+  idénticas entre port y Redux tras loadSavegame y con las del guardado).
+Corte por SIGKILL (L1 card_host): puntos "during-temp" y "before-rename"; la tarjeta queda anterior o nueva.
+Siguen verdes: title, title_compare, newgame_state, title_audio, xa_op1, movie0 (3636 frames), movie0_skip.
+make compare (dw-build): Compiled binaries match with target binaries. Sin cambios en src/ ni include/.
+Revisión: 3 capas Codex, 18 hallazgos: 4 parches (recaptura si falta la tarjeta de referencia del preset,
+  tests de commit fallido, de --card2 y de directorios corruptos) y 14 rechazados con evidencia (tabla en la spec).
+CI: native-asan-disc 2 h -> 4 h (en serie; el pipeline 125 se cortó a las 2 h con recaptura completa),
+  native-disc 2 h -> 3 h.
