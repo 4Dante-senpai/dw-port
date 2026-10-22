@@ -91,6 +91,8 @@ context:
 
 ## Implementation Notes
 
+- Imagen hecha por el orquestador (Codex no tiene Docker): `tools/port/Dockerfile` instala SDL3 3.4.16 i686 en `/opt/sdl3/native32` (`ENV SDL3_NATIVE32_PREFIX`), con X11, Wayland, PulseAudio, ALSA, offscreen y dummy, y las dev libs `:i386`. `dw-port:latest` ya está reconstruida. Del primer task falta solo el chequeo en `tools/port/env_check`.
+
 ## Spec Change Log
 
 ## Review Triage Log

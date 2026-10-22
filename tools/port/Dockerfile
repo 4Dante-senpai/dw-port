@@ -137,6 +137,29 @@ COPY --from=pcsx-redux /out/ /usr/local/
 RUN ln -s /usr/local/libexec/pcsx-redux /usr/local/bin/pcsx-redux && ldconfig && \
     xvfb-run -a pcsx-redux -version
 
+# SDL3 i686 for the windowed native preset (story 3.9, AD-3), with X11, Wayland and PulseAudio so
+# the window and audio reach WSLg. Last, so the emulator layers above keep their cache.
+# Stage ARGs do not cross FROM: same pin as the toolchain stage's SDL3_VERSION.
+ARG SDL3_VERSION=3.4.16
+RUN dpkg --add-architecture i386 && apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libasound2-dev:i386 libpulse-dev:i386 libudev-dev:i386 libdbus-1-dev:i386 \
+    libx11-dev:i386 libxext-dev:i386 libxrandr-dev:i386 libxcursor-dev:i386 libxi-dev:i386 \
+    libxss-dev:i386 libxtst-dev:i386 libxinerama-dev:i386 libxfixes-dev:i386 \
+    libdrm-dev:i386 libgbm-dev:i386 libdecor-0-dev:i386 libxkbcommon-dev:i386 \
+    libwayland-dev:i386 libegl-dev:i386 libgl-dev:i386 libgl1-mesa-dri:i386 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    git clone --depth 1 --branch release-${SDL3_VERSION} https://github.com/libsdl-org/SDL.git /tmp/sdl3-src && \
+    PKG_CONFIG_LIBDIR=/usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig \
+    cmake -S /tmp/sdl3-src -B /tmp/sdl3-native32 -G Ninja -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_LIBRARY_ARCHITECTURE=i386-linux-gnu \
+        -DCMAKE_INSTALL_PREFIX=/opt/sdl3/native32 -DSDL_TESTS=OFF -DSDL_EXAMPLES=OFF && \
+    cmake --build /tmp/sdl3-native32 && \
+    cmake --install /tmp/sdl3-native32 && \
+    test -f /opt/sdl3/native32/lib/cmake/SDL3/SDL3Config.cmake && \
+    rm -rf /tmp/sdl3-native32 /tmp/sdl3-src
+ENV SDL3_NATIVE32_PREFIX=/opt/sdl3/native32
+
 # Writable by any uid so tools/port/docker_run.sh can run as the host user
 RUN chmod -R a+rwX /opt/emsdk/upstream/emscripten/cache /dw/.venv
 
