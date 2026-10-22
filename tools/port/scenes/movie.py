@@ -103,8 +103,10 @@ def compare(actual, reference, scene, diff_dir):
     for label, end in [('port',ae),('reference',re_)]:
         if end['return'] != scene['expected_return']:
             failures.append(f'{label} return={end["return"]}')
-    if scene['expected_return'] == 0 and ae['vblank'] != re_['vblank']:
-        failures.append(f'skip VBlank: port={ae["vblank"]}, reference={re_["vblank"]}')
+    # skip_vblank_delta: owner-accepted exact port-reference offset (decision 7, until story 3.10).
+    delta = scene.get('skip_vblank_delta', 0)
+    if scene['expected_return'] == 0 and ae['vblank'] - re_['vblank'] != delta:
+        failures.append(f'skip VBlank: port={ae["vblank"]}, reference={re_["vblank"]}, accepted delta={delta}')
     metrics=[]
     worst=None
     worst_score=(-1,-1)

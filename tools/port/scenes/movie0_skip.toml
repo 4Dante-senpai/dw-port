@@ -6,6 +6,9 @@ mark = "MOV_playMovie"
 inputs_from = "mark"
 inputs = [{ after = "MOV_playMovie", vblank = 120, buttons = [3] }, { after = "MOV_playMovie", vblank = 180, buttons = [] }]
 capture_vblank = 6000
+# Owner decision 7: the port returns exactly one VBlank late (uncalibrated GPU fill cost after
+# CdlPause and PadRead phase); story 3.10 calibrates them and removes this line.
+skip_vblank_delta = 1
 expect_rand = false
 checkpoints = ["MOV_playMovie", "runLandingScreen"]
 window = 0

@@ -632,6 +632,12 @@ with tempfile.TemporaryDirectory() as tmp:
     (reference/'movie.jsonl').write_text('\n'.join(map(json.dumps,rows))+'\n')
     (actual/'movie.jsonl').write_text('\n'.join(map(json.dumps,[rows[0],rows[1],rows[-1]]))+'\n')
     assert not movie.compare(actual,reference,dict(expected_return=0),root/'diff')['failures']
+    # An accepted skip delta must match exactly: on time, or later than listed, both fail.
+    skip=dict(expected_return=0,skip_vblank_delta=1)
+    assert any('skip VBlank' in f for f in movie.compare(actual,reference,skip,root/'diff')['failures'])
+    for late,ok in [(1,True),(2,False)]:
+        (actual/'movie.jsonl').write_text('\n'.join(map(json.dumps,[rows[0],rows[1],dict(rows[-1],vblank=rows[-1]['vblank']+late)]))+'\n')
+        assert ok == (not movie.compare(actual,reference,skip,root/'diff')['failures'])
 print('movie: per-channel tolerance, worst diff, complete sequence, determinism, return, skip VBlank and A/V bounds OK')
 
 # Scene-owned allowances preserve all three failure paths from owner decision 5.
