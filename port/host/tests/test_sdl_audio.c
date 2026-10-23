@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 int sdl_headless;
+int port_capture_active(void) { return 0; }
 static SpuOutput output;
 static void *output_arg;
 /* Capture exactly the callback registration used by the SPU backend. */

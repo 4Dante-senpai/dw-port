@@ -1,0 +1,43 @@
+diff --git a/src/gpu/soft/gpu.cc b/src/gpu/soft/gpu.cc
+index b5caf21..41b8943 100644
+--- a/src/gpu/soft/gpu.cc
++++ b/src/gpu/soft/gpu.cc
+@@ -373,7 +373,37 @@ void PCSX::SoftGPU::impl::polyExec(Poly<shading, shape, textured, blend, modulat
+                     prim->tpage.raw |= 0x200;
+                 }
+                 texturePage(&prim->tpage);
+-                if constexpr (shape == Shape::Quad) {
++                if (modulation == Modulation::On && m_ditherMode) {
++                    // dw1-port: the console also dithers texture-modulated flat polygons (psx-spx;
++                    // DuckStation IsDitheringEnabled), so draw them as gouraud with one colour.
++                    const int32_t c = prim->colors[0];
++                    const auto tri = [&](int16_t xa, int16_t ya, int a, int16_t xb, int16_t yb, int b, int16_t xc,
++                                         int16_t yc, int d) {
++                        switch (m_globalTextTP) {
++                            case GPU::TexDepth::Tex4Bits:
++                                drawPoly3TG<TexMode::Clut4>(xa, ya, xb, yb, xc, yc, prim->u[a], prim->v[a], prim->u[b],
++                                                            prim->v[b], prim->u[d], prim->v[d], prim->clutX(),
++                                                            prim->clutY(), c, c, c);
++                                break;
++                            case GPU::TexDepth::Tex8Bits:
++                                drawPoly3TG<TexMode::Clut8>(xa, ya, xb, yb, xc, yc, prim->u[a], prim->v[a], prim->u[b],
++                                                            prim->v[b], prim->u[d], prim->v[d], prim->clutX(),
++                                                            prim->clutY(), c, c, c);
++                                break;
++                            case GPU::TexDepth::Tex16Bits:
++                                drawPoly3TG<TexMode::Direct15>(xa, ya, xb, yb, xc, yc, prim->u[a], prim->v[a],
++                                                               prim->u[b], prim->v[b], prim->u[d], prim->v[d], 0, 0, c, c,
++                                                               c);
++                                break;
++                        }
++                    };
++                    if constexpr (shape == Shape::Quad) {
++                        tri(x1, y1, 1, x3, y3, 3, x2, y2, 2);
++                        tri(x0, y0, 0, x1, y1, 1, x2, y2, 2);
++                    } else {
++                        tri(x0, y0, 0, x1, y1, 1, x2, y2, 2);
++                    }
++                } else if constexpr (shape == Shape::Quad) {
+                     // Decompose into two triangles using the (1,3,2)+(0,1,2)
+                     // PSX vertex split that drawPolyFlat4 and drawPoly4TG
+                     // already use. drawPoly3T carries the same pixel-centre

@@ -97,7 +97,7 @@
       },
       "filter": {
         "include": {
-          "name": "^(sdl_.*|audio_rate|native_sdl_title_capture)$"
+          "name": "^(sdl_.*|audio_rate|sjis_literals|native_sdl_title_capture|scene_naming_compare)$"
         }
       }
     }

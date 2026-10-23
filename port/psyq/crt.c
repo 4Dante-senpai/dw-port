@@ -44,6 +44,11 @@ static long frames;
 static long watchdog_frames;
 
 static PortCapture capture_config;
+int port_capture_active(void)
+{
+    return capture_config.mark || capture_config.capture || capture_config.audio_segments;
+}
+
 static int marked;
 static uint32_t mark_vblank;
 static FILE *clock_trace;

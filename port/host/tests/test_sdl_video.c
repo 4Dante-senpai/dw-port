@@ -5,6 +5,8 @@
 #include <stdio.h>
 
 int sdl_headless;
+uint32_t clock_vblanks(void) { return 0; }
+int port_capture_active(void) { return 0; }
 static void pixel(SDL_Surface *surface, int x, int y, Uint8 red, Uint8 green, Uint8 blue)
 {
     Uint8 r, g, b, a;
