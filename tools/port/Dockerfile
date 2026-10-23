@@ -140,6 +140,7 @@ RUN ln -s /usr/local/libexec/pcsx-redux /usr/local/bin/pcsx-redux && ldconfig &&
 # SDL3 i686 for the windowed native preset (story 3.9, AD-3), with X11, Wayland and PulseAudio so
 # the window and audio reach WSLg. Last, so the emulator layers above keep their cache.
 # Stage ARGs do not cross FROM: same pin as the toolchain stage's SDL3_VERSION.
+# libglib2.0-dev:i386 accepts any python3; pin amd64 or apt swaps the venv's interpreter to i386.
 ARG SDL3_VERSION=3.4.16
 RUN dpkg --add-architecture i386 && apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -147,8 +148,10 @@ RUN dpkg --add-architecture i386 && apt-get update && \
     libx11-dev:i386 libxext-dev:i386 libxrandr-dev:i386 libxcursor-dev:i386 libxi-dev:i386 \
     libxss-dev:i386 libxtst-dev:i386 libxinerama-dev:i386 libxfixes-dev:i386 \
     libdrm-dev:i386 libgbm-dev:i386 libdecor-0-dev:i386 libxkbcommon-dev:i386 \
-    libwayland-dev:i386 libegl-dev:i386 libgl-dev:i386 libgl1-mesa-dri:i386 && \
+    libwayland-dev:i386 libegl-dev:i386 libgl-dev:i386 libgl1-mesa-dri:i386 \
+    python3:amd64 python3-minimal:amd64 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    python3 -c 'import struct; assert struct.calcsize("P") == 8, "python3 must stay amd64"' && \
     git clone --depth 1 --branch release-${SDL3_VERSION} https://github.com/libsdl-org/SDL.git /tmp/sdl3-src && \
     PKG_CONFIG_LIBDIR=/usr/lib/i386-linux-gnu/pkgconfig:/usr/share/pkgconfig \
     cmake -S /tmp/sdl3-src -B /tmp/sdl3-native32 -G Ninja -DCMAKE_BUILD_TYPE=Release \

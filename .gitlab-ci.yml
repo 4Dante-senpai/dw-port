@@ -49,6 +49,9 @@ native:
     - cmake --preset native-headless
     - cmake --build --preset native-headless
     - ctest --preset native-headless --output-on-failure
+    - cmake --preset native
+    - cmake --build --preset native
+    - ctest --preset native --output-on-failure
 
 # Class A: WASM build plus the disc-free L1 suite under Node.
 web-objects:
@@ -71,6 +74,9 @@ native-disc:
   script:
     - cmake --preset native-headless
     - cmake --build --preset native-headless
+    - cmake --preset native
+    - cmake --build --preset native
+    - tools/port/ci/ctest_no_skip.sh --preset native --output-on-failure
     - xvfb-run -a pcsx-redux -version > /dev/null   # reference_title must run, not skip (77)
     - tools/port/ci/ctest_no_skip.sh --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|press_tables_disc|scene_|reference_title|reference_newgame_state|reference_xa_op1|reference_movie0|reference_card_"
 

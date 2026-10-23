@@ -71,6 +71,9 @@ static void capture_vblank(void)
 {
 	spu_sync();
 	port_scene_tick();
+#ifndef __EMSCRIPTEN__
+	if (!capture_config.inputs && plat_input_vblank) plat_input_vblank();
+#endif
 	if (capture_config.audio_segments) {
 		if (port_scene_audio_complete()) {
 			port_scene_finish();
@@ -166,6 +169,9 @@ static void watchdog(void *arg)
 static void *game_thread(void *arg)
 {
 	(void)arg;
+#ifndef __EMSCRIPTEN__
+	if (plat_game_init) plat_game_init();
+#endif
 #ifdef __EMSCRIPTEN__
     if (web_prepare()) web_finish(1);
     volatile int stack_probe = 0;
@@ -222,6 +228,7 @@ int port_run_game(long frame_count, int until_overlay, const PortCapture *config
 #ifdef __EMSCRIPTEN__
     pthread_detach(thread);
 #else
+    if (plat_main_loop) return plat_main_loop(thread);
     pthread_join(thread, NULL);
 #endif
 	return 0;
