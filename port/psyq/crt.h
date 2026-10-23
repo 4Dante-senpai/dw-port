@@ -19,6 +19,8 @@ typedef struct {
  * until_overlay, when the first overlay has been loaded. With a capture requested, either
  * limit instead exits with status 1 unless the capture has completed. NULL config disables capture. */
 int port_run_game(long frame_count, int until_overlay, const PortCapture *config);
+/* Scene captures run independently of wall time. */
+int port_capture_active(void);
 void port_scene_mark(const char *name);
 
 /* Called by VSync when a frame ends. */

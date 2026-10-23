@@ -2,13 +2,20 @@
 #include "../plat.h"
 #include "../audio_rate.h"
 #include "../../backend/spu.h"
+#include "../../psyq/crt.h"
 #include <stdio.h>
 static AudioRate rate;
 static SDL_AudioStream *stream;
 static unsigned device_rate;
 static void produce(const int16_t *pcm, unsigned frames, void *arg)
 {
-    (void)arg; audio_rate_push(&rate, pcm, frames);
+    (void)arg;
+    /* Virtual time outruns the wall clock while the game loads without presenting: wait for the
+     * device to drain instead of dropping samples, bounded in case the device stalls. */
+    for (int ms = 0; ms < 100 && !port_capture_active() &&
+         audio_rate_level(&rate) > AUDIO_RATE_TARGET + AUDIO_RATE_DEADBAND; ms++)
+        SDL_Delay(1);
+    audio_rate_push(&rate, pcm, frames);
 }
 static void SDLCALL consume(void *arg, SDL_AudioStream *audio, int additional, int total)
 {
@@ -41,7 +48,13 @@ void plat_game_init(void)
 {
     if (!sdl_headless && stream) spu_set_output(produce, NULL);
 }
-void sdl_audio_quit(void) { SDL_DestroyAudioStream(stream); stream = NULL; }
+void sdl_audio_quit(void)
+{
+    if (!stream) return;
+    SDL_DestroyAudioStream(stream); stream = NULL;
+    fprintf(stderr, "dw1: audio_rate overflows=%u underruns=%u\n",
+            atomic_load(&rate.overflows), atomic_load(&rate.underruns));
+}
 
 #ifdef DW1_SDL_TEST
 unsigned sdl_audio_test_level(void) { return audio_rate_level(&rate); }

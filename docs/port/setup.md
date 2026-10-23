@@ -384,3 +384,5 @@ un getter que falla ante cualquier acceso a `navigator.storage` en los pthreads.
 PPM en `Module.capture` y el resultado final en `Module.finished` (0 éxito).
 Los PPM y Packs solo quedan en `build/`; los JSON del título contienen hashes,
 modo de prueba y conteos. No hay selector ni constructor de Pack en el navegador.
+
+El build del port genera copias de todas las fuentes del Juego con literales CP932 en escapes octales (`tools/port/sjis_literals.py`), conservando la ruta original mediante `#line` y sin modificar `src/`.

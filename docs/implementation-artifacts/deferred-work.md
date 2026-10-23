@@ -106,3 +106,11 @@
 - source_spec: `docs/implementation-artifacts/spec-3-7-mdec-libpress-y-videos-str.md`
   summary: `movie0_skip` vuelve 1 VBlank tarde (123 frente a 122), aceptado con `skip_vblank_delta = 1` hasta la Historia 3.10 (decisión 7).
   evidence: `ClearImage` de 480×480 tras `CdlPause` cuesta 230.464 ciclos en el port frente a 1.107 hasta el retorno original, y `PadRead` ve Start en el VBlank 121 frente a 120 (`build/verification-3-7/report.md`). Criterio agregado a la Historia 3.10 en `epics.md`.
+
+- source_spec: `docs/implementation-artifacts/spec-e3-ritmo-y-texto-sjis-nativo.md`
+  summary: Modo acelerado opcional para la versión web.
+  evidence: Decisión del dueño (2026-10-23): durante el desarrollo el juego corre siempre a velocidad normal; esta corrección solo ajusta el ritmo por VBlanks.
+
+- source_spec: `docs/implementation-artifacts/spec-e3-ritmo-y-texto-sjis-nativo.md`
+  summary: El modelo 3D de Jijimon en `naming` difiere de la referencia en 663 píxeles (hasta 12 niveles RGB555), declarado como excepción de región `[190, 167, 254, 220]`.
+  evidence: Con la referencia parcheada para el dithering de texturas planas moduladas, la interfaz coincide exacta y solo queda el modelo. Las magnitudes descartan el dithering; falta investigar el rasterizado de polígonos texturados 3D o la GTE frente a PCSX-Redux (primera escena que compara 3D).
