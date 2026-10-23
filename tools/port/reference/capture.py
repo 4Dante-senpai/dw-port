@@ -180,7 +180,7 @@ def main(argv=None):
     parser.add_argument("--update", action="store_true")
     parser.add_argument("--state", action="store_true")
     parser.add_argument("--card1", type=Path, help="existing raw input card outside the repository")
-    parser.add_argument("--card-build", default="native-headless", choices=["native-headless", "native-asan"])
+    parser.add_argument("--card-build", default="native-headless", choices=["native-headless", "native-asan", "native"])
     parser.add_argument("--audio", action="store_true")
     parser.add_argument("--reuse", action="store_true", help="reuse a valid deterministic state/audio capture")
     parser.add_argument("--bios", type=Path)

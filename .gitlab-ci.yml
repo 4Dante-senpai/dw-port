@@ -11,7 +11,7 @@ variables:
   GIT_SUBMODULE_PATHS: external/psyq_headers
 
 default:
-  image: $CI_REGISTRY_IMAGE/dw-port@sha256:fd5b68d52149ab302578f04b19bcc40260be0040de985a04784528e14e2cc1f6
+  image: $CI_REGISTRY_IMAGE/dw-port@sha256:d5e39fc94a9df557988b043b6a1910b92082d96a187e05af1776ee1620b8b044
   before_script:
     - git config --global --add safe.directory "$CI_PROJECT_DIR"
     - git fetch --quiet https://github.com/jype0/dw_decomp.git main:refs/remotes/upstream/main
@@ -49,6 +49,9 @@ native:
     - cmake --preset native-headless
     - cmake --build --preset native-headless
     - ctest --preset native-headless --output-on-failure
+    - cmake --preset native
+    - cmake --build --preset native
+    - ctest --preset native --output-on-failure
 
 # Class A: WASM build plus the disc-free L1 suite under Node.
 web-objects:
@@ -71,6 +74,9 @@ native-disc:
   script:
     - cmake --preset native-headless
     - cmake --build --preset native-headless
+    - cmake --preset native
+    - cmake --build --preset native
+    - tools/port/ci/ctest_no_skip.sh --preset native --output-on-failure
     - xvfb-run -a pcsx-redux -version > /dev/null   # reference_title must run, not skip (77)
     - tools/port/ci/ctest_no_skip.sh --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|press_tables_disc|scene_|reference_title|reference_newgame_state|reference_xa_op1|reference_movie0|reference_card_"
 

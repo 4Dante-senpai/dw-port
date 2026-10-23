@@ -18,7 +18,7 @@ matching**: `cc_mips.dll` de CodeWarrior for PlayStation Release 4 (regla 2 de `
 | Imagen | Dockerfile | Contenido |
 |---|---|---|
 | `dw-build:latest` | `Dockerfile` (upstream, sin cambios) | Ubuntu 24.04, binutils/gcc `mipsel-linux-gnu`, Python + splat/spimdisasm, clang |
-| `dw-port:latest` | `tools/port/Dockerfile` (`FROM dw-build`) | + CMake 3.28, Ninja 1.11, LLD, Clang 18, `gcc-multilib` (build nativo i686, AD-3), **emsdk 6.0.10**, **SDL3 3.4.16** nativo (`/opt/sdl3/native`) y Emscripten estático (`/opt/sdl3/web`), p7zip |
+| `dw-port:latest` | `tools/port/Dockerfile` (`FROM dw-build`) | + CMake 3.28, Ninja 1.11, LLD, Clang 18, `gcc-multilib` (build nativo i686, AD-3), **emsdk 6.0.10**, **SDL3 3.4.16** x64 (`/opt/sdl3/native`), i686 (`/opt/sdl3/native32`) y Emscripten estático (`/opt/sdl3/web`), p7zip |
 
 Versiones fijadas como `ARG` en `tools/port/Dockerfile` (`EMSDK_VERSION`, `SDL3_VERSION`). La base
 `ubuntu:noble` de upstream no está fijada por digest (pendiente para build reproducible).
@@ -27,6 +27,34 @@ Versiones fijadas como `ARG` en `tools/port/Dockerfile` (`EMSDK_VERSION`, `SDL3_
 tools/port/docker_build.sh            # construye dw-build y luego dw-port
 tools/port/docker_run.sh <comando>    # corre <comando> en dw-port con el repo en /dw, como el usuario del host
 ```
+
+### Ventana nativa SDL3 (historia 3.9)
+
+```sh
+tools/port/docker_run.sh sh -c 'cmake --preset native && cmake --build --preset native && ctest --preset native'
+tools/port/docker_run.sh --gui build/port/native/dw1 --pack game_rom/us.pack
+```
+
+`native` hereda las flags i686 de `native-headless` y busca SDL3 3.4.16 en
+`$SDL3_NATIVE32_PREFIX`. `env_check.sh` compila, enlaza y ejecuta también el smoke
+i686 con `-m32`. El preset de tests `native` selecciona las pruebas SDL y audio,
+sin repetir toda la suite L1; `native_sdl_title_capture` agrega automáticamente
+el fixture del Pack y sale con 77 si faltan datos privados.
+
+`--gui` comparte los sockets disponibles de X11, Wayland y PulseAudio con el
+contenedor. En WSLg usa `/tmp/.X11-unix`, `WAYLAND_DISPLAY`, `XDG_RUNTIME_DIR`
+y `PULSE_SERVER`, con valores por defecto bajo `/mnt/wslg`. Si no encuentra
+ninguno, avisa. Si existen, también comparte `/dev/input` con la regla de
+cgroup `c 13:* rmw` y `/run/udev` en solo lectura para detectar gamepads.
+En WSL, primero hay que adjuntar el gamepad USB a la distribución con
+`usbipd-win`; WSLg por sí solo no expone el dispositivo USB.
+
+Sin pantalla, correr con `SDL_VIDEODRIVER=offscreen SDL_AUDIODRIVER=dummy`.
+`run.py title --build native` configura esos drivers, conserva la ruta de
+captura de `crt.c` y verifica el SHA-256 de `title.toml` en dos corridas.
+`build/port/native/dw1 --headless ...` acepta la misma CLI y corre sin SDL.
+Si falla el audio, el juego continúa con un aviso; un fallo de video sale con 1.
+Controles y límites del controlador de audio: [controls.md](controls.md).
 
 `.dockerignore` deja fuera del contexto todo menos `requirements.txt`, así la imagen del disco
 nunca se envía al daemon.

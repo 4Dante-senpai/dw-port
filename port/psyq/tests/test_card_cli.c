@@ -1,6 +1,7 @@
 /* Exercise the real headless CLI and Host with a disc-free game entry. */
 #define main card_cli_main
 #define DW1_MANIFEST_SHA256 "0000000000000000000000000000000000000000000000000000000000000000"
+#include "../../host/native_cli.c"
 #include "../../host/headless/main.c"
 #undef main
 #include "../psyq.h"

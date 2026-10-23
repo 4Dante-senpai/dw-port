@@ -10,7 +10,18 @@
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_C_FLAGS": "-m32",
         "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "DW1_HOST": "headless"
+      }
+    },
+    {
+      "name": "native",
+      "displayName": "Native i686, SDL3 window",
+      "inherits": "native-headless",
+      "binaryDir": "${sourceDir}/build/port/native",
+      "cacheVariables": {
+        "DW1_HOST": "sdl",
+        "CMAKE_PREFIX_PATH": "$env{SDL3_NATIVE32_PREFIX}"
       }
     },
     {
@@ -47,6 +58,10 @@
     {
       "name": "native-asan",
       "configurePreset": "native-asan"
+    },
+    {
+      "name": "native",
+      "configurePreset": "native"
     }
   ],
   "testPresets": [
@@ -72,6 +87,18 @@
       "configurePreset": "web",
       "output": {
         "outputOnFailure": true
+      }
+    },
+    {
+      "name": "native",
+      "configurePreset": "native",
+      "output": {
+        "outputOnFailure": true
+      },
+      "filter": {
+        "include": {
+          "name": "^(sdl_.*|audio_rate|native_sdl_title_capture)$"
+        }
       }
     }
   ]
