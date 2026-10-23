@@ -2,7 +2,7 @@
 title: 'Historia 3.9: Preset native con ventana SDL3'
 type: 'feature'
 created: '2026-10-22'
-status: 'in-progress'
+status: 'done'
 baseline_commit: '2fe8fab0a0100a6b19fde9688f07563b69dc56d8'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -63,7 +63,7 @@ context:
 - `port/host/web/present_gl.c:43-60` -- patrón de presentación: `gpu_read_display(display,&w,&h)` (XRGB) y luego la textura. En SDL: el hilo del Juego copia el display a un doble buffer con mutex y espera la fecha límite de pared (acumulador 1001/60000 s; si se atrasa más de unos frames, resincroniza). El hilo principal sube una textura `SDL_PIXELFORMAT_XRGB8888` y presenta con `SDL_SetRenderLogicalPresentation` en letterbox entero o 4:3 y escalado nearest.
 - `port/psyq/libetc.c:46` `port_pad_latch(wire)` y `port/psyq/scene.c:271-291` -- el latch de Escena usa el observador de VBlank. El input en vivo se aplica en el mismo punto: un observador del Host lee un `_Atomic uint16_t` que escribe el hilo principal, salvo que haya `--inputs`.
 - `port/backend/spu.h:30-33` `spu_set_output(fn,arg)` -- productor: 44.100 Hz estéreo s16, se llama desde el hilo del Juego en `spu_sync`. El consumidor es el callback de `SDL_OpenAudioDeviceStream` a la frecuencia nativa del dispositivo.
-- `port/host/audio_rate.{c,h}` (nuevo) -- ring SPSC lock-free + resampler lineal + controlador proporcional con banda muerta (objetivo ~3 VBlanks de latencia, ajuste máximo ±0,5 %). API: `push(pcm,frames)` y `pull(out,frames,device_rate)`, más contadores (`underruns`, nivel). Sin SDL.
+- `port/host/audio_rate.{c,h}` (nuevo) -- ring SPSC lock-free + resampler lineal + controlador proporcional con banda muerta (objetivo ~3 VBlanks de latencia, ajuste máximo ±2 %). API: `push(pcm,frames)` y `pull(out,frames,device_rate)`, más contadores (`underruns`, nivel). Sin SDL.
 - `tools/port/Dockerfile:64-81` -- SDL3 x64 y web. Agregar el build i686 (`-DCMAKE_C_FLAGS=-m32`, prefix `/opt/sdl3/native32`, `ENV SDL3_NATIVE32_PREFIX`) y las dev libs `:i386` de X11, Wayland y PulseAudio (decisión 1).
 - `tools/port/scenes/run.py:598,531,668` -- `--build` acepta `native`. Para ese build no pasa `--headless`, y sí `SDL_VIDEODRIVER=offscreen`/`SDL_AUDIODRIVER=dummy`.
 - `.gitlab-ci.yml:47-76` -- jobs `native` (clase A) y `native-disc` (clase B): agregar build y test del preset `native`.
@@ -72,16 +72,16 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `tools/port/Dockerfile` -- SDL3 3.4.16 i686 + dev libs `:i386` (X11, Wayland, PulseAudio; decisión 1); `tools/port/env_check` verifica que `SDL3Config` i686 linkee con `-m32`.
-- [ ] `port/host/audio_rate.{c,h}` + `port/host/tests/test_audio_rate.c` -- módulo C puro y L1: dispositivo simulado al 101 % y al 99 % (y 100 %), 10 minutos simulados a 48 kHz, productor por VBlank exacto (44.100×1001/60000). Assert: nivel dentro de la banda después del primer segundo, 0 underruns, ratio acotado. También corre en `native-headless`, `native-asan` y `web` (Node).
-- [ ] `port/host/native_cli.{c,h}` + `port/host/headless/main.c` -- parser y arranque compartidos; headless queda igual en comportamiento.
-- [ ] `port/host/sdl/{main.c,video.c,input.c,audio.c}` (o menos archivos si alcanza) -- ventana, presentación con ritmo de pared, teclado + `SDL_Gamepad` según `docs/port/controls.md`, audio por `audio_rate`.
-- [ ] `port/psyq/crt.c`, `port/host/plat.h` -- hook del loop principal y observador de input del Host.
-- [ ] `CMakeLists.txt`, `CMakePresets.json` -- preset y target `native`. Tests: `sdl_frame0` (offscreen/dummy, `--frames 120`, sale con 0), `audio_rate`, `native_sdl_title_capture` (clase B, skip 77 sin disco: `run.py title --build native` con hash igual al de `title.toml`).
-- [ ] `tools/port/scenes/run.py` + `test_runner.py` -- build `native`.
-- [ ] `.gitlab-ci.yml` -- build/test `native` en clase A y B.
-- [ ] `tools/port/docker_run.sh` -- opción `--gui` (WSLg: X11, Wayland, PulseAudio), ignorada con aviso si los sockets no existen.
-- [ ] `docs/port/setup.md`, `docs/port/controls.md` -- uso con `--gui`, controles.
+- [x] `tools/port/Dockerfile` -- SDL3 3.4.16 i686 + dev libs `:i386` (X11, Wayland, PulseAudio; decisión 1); `tools/port/env_check` verifica que `SDL3Config` i686 linkee con `-m32`.
+- [x] `port/host/audio_rate.{c,h}` + `port/host/tests/test_audio_rate.c` -- módulo C puro y L1: dispositivo simulado al 101 % y al 99 % (y 100 %), 10 minutos simulados a 48 kHz, productor por VBlank exacto (44.100×1001/60000). Assert: nivel dentro de la banda después del primer segundo, 0 underruns, ratio acotado. También corre en `native-headless`, `native-asan` y `web` (Node).
+- [x] `port/host/native_cli.{c,h}` + `port/host/headless/main.c` -- parser y arranque compartidos; headless queda igual en comportamiento.
+- [x] `port/host/sdl/{main.c,video.c,input.c,audio.c}` (o menos archivos si alcanza) -- ventana, presentación con ritmo de pared, teclado + `SDL_Gamepad` según `docs/port/controls.md`, audio por `audio_rate`.
+- [x] `port/psyq/crt.c`, `port/host/plat.h` -- hook del loop principal y observador de input del Host.
+- [x] `CMakeLists.txt`, `CMakePresets.json` -- preset y target `native`. Tests: `sdl_frame0` (offscreen/dummy, `--frames 120`, sale con 0), `audio_rate`, `native_sdl_title_capture` (clase B, skip 77 sin disco: `run.py title --build native` con hash igual al de `title.toml`).
+- [x] `tools/port/scenes/run.py` + `test_runner.py` -- build `native`.
+- [x] `.gitlab-ci.yml` -- build/test `native` en clase A y B.
+- [x] `tools/port/docker_run.sh` -- opción `--gui` (WSLg: X11, Wayland, PulseAudio), ignorada con aviso si los sockets no existen.
+- [x] `docs/port/setup.md`, `docs/port/controls.md` -- uso con `--gui`, controles.
 
 **Acceptance Criteria:**
 - Given la imagen `dw-port` reconstruida, when `cmake --preset native && cmake --build --preset native`, then `build/port/native/dw1` es ELF i386 enlazado a SDL3 3.4.16 i686.
@@ -91,11 +91,31 @@ context:
 
 ## Implementation Notes
 
+- Implementación de Codex: `port/host/{audio_rate,native_cli}.{c,h}`, `port/host/sdl/{main,video,input,audio}.c`, hooks débiles en `plat.h` (`plat_native_present`, `plat_game_init`, `plat_input_vblank`, `plat_main_loop`) llamados desde `crt.c`, preset `native` (`DW1_HOST=sdl`), `docker_run.sh --gui`, CI y documentación (`docs/port/controls.md`, `setup.md`).
+- Las cinco fallas de clase B de headless/ASan que vio Codex (y `reference_capture_unit` con `wrong ELF class`) las causaba la imagen: las dev libs `:i386` arrastraban `python3:i386` (`libglib2.0-dev:i386`) y la venv quedaba en 32 bits. El Dockerfile fija `python3:amd64` y verifica punteros de 64 bits. Con la imagen corregida, la clase B en el PC del dueño da native-headless 76/76, native-asan 74/74 y native 11/11 (`evidence/story-3-9.log`).
+
 - Imagen hecha por el orquestador (Codex no tiene Docker): `tools/port/Dockerfile` instala SDL3 3.4.16 i686 en `/opt/sdl3/native32` (`ENV SDL3_NATIVE32_PREFIX`), con X11, Wayland, PulseAudio, ALSA, offscreen y dummy, y las dev libs `:i386`. `dw-port:latest` ya está reconstruida. Del primer task falta solo el chequeo en `tools/port/env_check`.
 
 ## Spec Change Log
 
+- 2026-10-22, paso 3: el Code Map limitaba el ajuste a ±0,5 %, pero la matriz congelada exige compensar un consumo del 99 % y del 101 % (ratio 1/0,99 y 1/1,01). Codex respetó el límite y el test falló con 112 underruns al 101 %. Se corrigió el Code Map a ±2 %, con ganancia de 5·10⁻⁵ por frame (`AUDIO_RATE_MAX_ADJUST`, `AUDIO_RATE_GAIN`). `test_audio_rate` ahora exige 0 underruns y la banda 735–3680 al 99 % y al 101 % (nivel 1030–2921). KEEP: la simulación racional por VBlank con callbacks independientes de 256 frames.
+
 ## Review Triage Log
+
+| # | Capa | Hallazgo | Veredicto | Ruta | Evidencia |
+|---|---|---|---|---|---|
+| 1 | blind | `docs/port/verification-3-9.md` dice ±0,5 % y fallos al ±1 % | medium | patch | Quedó desactualizado después del Spec Change Log; la evidencia pasa a `evidence/story-3-9.log` y el archivo se borra. |
+| 2 | blind/edge | `SDL_Quit()` corre antes de `shutdown_host` (atexit), que destruye el stream ya cerrado | low | patch | `native_cli_run` vuelve cuando `port_run_game` falla antes del hilo (`crt.c:205-213`), y entonces el `atexit` usa un stream de un subsistema cerrado. Arreglo directo: `sdl_audio_quit()` antes de `SDL_Quit`. |
+| 3 | blind/edge | `SDL_EVENT_QUIT` hace `exit(0)` con el hilo del Juego vivo y puede cortar una escritura de tarjeta | low | rechazado | El commit es temporal + `rename` por comando (3.8, L1 `card_host` con SIGKILL). Un corte deja la tarjeta anterior o la nueva, igual que apagar la consola mientras guarda; la matriz congelada lo acepta. Coordinar la parada agrega estado. |
+| 4 | blind | sin repintado ante exposición o cambio de tamaño si no llega un frame | low | rechazado | El Juego presenta en cada VSync (59,94 Hz), así que `pending` se renueva cada ~16,7 ms. Arreglarlo agrega manejo de eventos. |
+| 5 | blind/verif | el hash del título no pasa por la textura SDL; un cambio de canal o pitch no se detecta | medium | patch | `native_sdl_title_capture` usa `gpu_read_display` (`crt.c:91`). Agregar una prueba con un patrón conocido que lea el renderer después de `sdl_video_draw`. |
+| 6 | blind/verif | el teclado (alias, combinación con gamepad, foco) no tiene prueba | medium | patch | `test_sdl_input.c` solo prueba el gamepad virtual: si se borra el bucle de teclado, todo sigue verde. |
+| 7 | blind | falta una prueba concurrente del ring SPSC | low | rechazado | `push` publica `write` con release después de copiar y `pull` lee `write` con acquire antes de leer muestras (`audio_rate.c:17-31`). Un test con hilos no aporta determinismo. |
+| 8 | blind | falta verificar la cadencia de `plat_native_present` | low | rechazado | Es la medición de 10 minutos de pared de la Historia 3.10, que el frozen deja fuera de 3.9. |
+| 9 | blind | `docker_run.sh --gui` no pasa dispositivos de gamepad al contenedor | medium | patch | Sin `/dev/input` ni `/run/udev`, SDL no ve joysticks dentro del contenedor y el gamepad del dueño no funciona con `--gui`. En WSL además hace falta `usbipd` para conectar el USB. |
+| 10 | verif | la conexión SPU → stream SDL no tiene prueba observable | medium | patch | Si se borra `spu_set_output(produce, NULL)` (`sdl/audio.c:42`), todos los tests siguen verdes. |
+| 11 | edge | falla `SDL_InitSubSystem(SDL_INIT_GAMEPAD)` sin aviso | low | patch | `main.c:40` ignora el retorno. El arreglo es una línea en stderr, como en el audio. |
+| 12 | edge | `WAYLAND_DISPLAY` absoluto se concatena con `XDG_RUNTIME_DIR` | low | rechazado | WSLg usa `wayland-0` relativo. Soportar una ruta absoluta agrega una rama para un caso que el uso documentado no tiene. |
 
 ## Design Notes
 
