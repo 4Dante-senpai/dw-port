@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-22
+Última actualización: 2026-10-23
 
 ## Modo de operación
 
@@ -252,6 +252,18 @@
   comparación con disco real 3/3 (Pack, referencia nueva y port); web 3/3, 4 casos de navegador.
   Evidencia: `docs/implementation-artifacts/evidence/story-3-2.log`.
 
+- Historia 3.9 (preset `native` con ventana SDL3): binario i686 con `DW1_HOST=sdl` sobre SDL3 3.4.16
+  i686 (`/opt/sdl3/native32` en la imagen). Ventana 640x480 redimensionable con letterbox y escalado
+  nearest; el hilo del Juego presenta a 59,94 Hz de pared y el hilo principal dibuja. Teclado al estilo
+  DuckStation y gamepad posicional, muestreados por VBlank (`port_pad_latch`); los `--inputs` de una escena
+  tienen prioridad. Audio SPU a la frecuencia del dispositivo con un remuestreador propio (AD-10: ajuste
+  máximo ±2 %, 0 underruns al 99 % y al 101 %). CLI compartida con headless (`native_cli`). `docker_run.sh --gui`
+  para WSLg (X11, Wayland, Pulse, `/dev/input`). Controles en `docs/port/controls.md`. La imagen fija
+  `python3:amd64`, porque las dev libs `:i386` lo cambiaban a 32 bits. Revisión (3 capas Codex): 12 hallazgos,
+  7 parches y 5 rechazados. Verificación con disco: headless 76/76, ASan 74/74, native 11/11; título SDL
+  idéntico a `title.toml`; web verde; `make compare` idéntico. Sin probar: ventana, audio y gamepad físicos.
+  Evidencia: `docs/implementation-artifacts/evidence/story-3-9.log`.
+
 - Historia 3.8 (Memory card nativa): `libmcrd` traducida del asm USA sobre una capa de BIOS de tarjeta
   propia (`port/psyq/bios_card.c`: eventos, dispositivo `bu`, directorio y bloques, adaptada del OpenBIOS
   MIT de PCSX-Redux) y un modelo de sectores con eventos del reloj (costos de hipótesis para 3.10).
@@ -371,7 +383,7 @@
 
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.8 cerradas; sigue la 3.9 (preset `native` con ventana SDL3). El resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.9 cerradas; sigue la 3.10 (calibración de costos y ritmo nativo). El resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 

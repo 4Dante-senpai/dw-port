@@ -1,0 +1,34 @@
+Historia 3.9 — verificación del orquestador en el PC del dueño (tools/port/remote_run.sh, imagen dw-port:latest 62573f37f978), 2026-10-22/23
+
+Disco: DW1_DISC_DIR=/dw/game_rom/extracted; referencias y capturas fuera del checkout (solo métricas y hashes acá).
+
+Imagen: SDL3 3.4.16 i686 en /opt/sdl3/native32 (X11, Wayland, PulseAudio, ALSA, offscreen, dummy).
+  Primera imagen (4290dc40cf73): las dev libs :i386 arrastraban python3:i386 (libglib2.0-dev:i386 acepta
+  cualquier python3) y la venv quedó con intérprete de 32 bits. Síntomas: reference_capture_unit con
+  "wrong ELF class: ELFCLASS64" y cinco fallos de clase B (title_audio, xa_op1, movie0, movie0_skip,
+  card_continue). Corrección: python3:amd64 fijado en el Dockerfile y assert de puntero de 64 bits en el build.
+  Con la imagen corregida: "py bits 64" y los cinco pasan.
+
+Binario: build/port/native/dw1 ELF32 Intel 80386, enlazado contra /opt/sdl3/native32/lib/libSDL3.so.0;
+  native-headless sin SDL. env_check: SDL 3.4.16 en x64, i686 y WASM/Node.
+make compare (dw-build): Compiled binaries match with target binaries. Sin cambios en src/ ni include/.
+Builds: native-headless, native-asan, native y web configuran y compilan (cmake --fresh).
+Clase A: ctest --preset web verde; solo omite los 3 tests con disco (pack_disc, native_title_capture, web_scene_title).
+Clase B, ctest_no_skip.sh -j6 (suite completa con disco, sin omisiones):
+  native-headless 76/76, native-asan 74/74, native 11/11.
+  native: audio_rate, sdl_frame0, sdl_input, sdl_quit, sdl_cli, sdl_native_hooks, sdl_scene_input_precedence,
+  sdl_video, sdl_audio, pack_disc y native_sdl_title_capture (124 s).
+Título SDL (offscreen/dummy) == título headless == reference_sha256 de title.toml:
+  561323665a33d833c89339030f6a8c60e4a395add2cff467d1d47e92dd46260d
+
+Audio (test_audio_rate, 36.000 VBlanks = 600,6 s, productor 44.100×1001/60000, callbacks de 256 frames):
+  47.520 / 48.000 / 48.480 Hz declarados y deriva no declarada ±0,4 %: 0 underruns, 0 descartes.
+  Consumo real al 101 % y al 99 % con 48 kHz nominal: 0 underruns, nivel 1030–2282 y 2176–2921 frames
+  (banda exigida 735–3680). Ajuste máximo ±2 %, ganancia 5·10⁻⁵ por frame (Spec Change Log).
+Pruebas SDL: 120 frames offscreen/dummy; sin video exit 1; sin audio continúa; --headless con drivers inválidos;
+  SDL_EVENT_QUIT; teclado (alias, combinación con gamepad, pérdida de foco); gamepad virtual posicional, gatillos
+  y reconexión; patrón conocido leído del renderer (RGB, pitch, escalado nearest); SPU -> ring del stream;
+  --inputs de la escena tiene prioridad sobre el input en vivo.
+docker_run.sh --gui: probado con docker simulado y sockets Unix (X11, Wayland, Pulse, /dev/input, /run/udev).
+No probado: ventana física en WSLg, gamepad y dispositivo de audio físicos.
+Revisión: 3 capas Codex, 12 hallazgos agrupados: 7 parches y 5 rechazados con evidencia (tabla en la spec), 0 diferidos.
