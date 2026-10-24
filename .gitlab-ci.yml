@@ -11,7 +11,7 @@ variables:
   GIT_SUBMODULE_PATHS: external/psyq_headers
 
 default:
-  image: $CI_REGISTRY_IMAGE/dw-port@sha256:d5e39fc94a9df557988b043b6a1910b92082d96a187e05af1776ee1620b8b044
+  image: $CI_REGISTRY_IMAGE/dw-port@sha256:423f2c139431f42cd80eaebb724d7acbecf0f07cf93c39ffcead1603d6d41725
   before_script:
     - git config --global --add safe.directory "$CI_PROJECT_DIR"
     - git fetch --quiet https://github.com/jype0/dw_decomp.git main:refs/remotes/upstream/main
@@ -78,7 +78,7 @@ native-disc:
     - cmake --build --preset native
     - tools/port/ci/ctest_no_skip.sh --preset native --output-on-failure
     - xvfb-run -a pcsx-redux -version > /dev/null   # reference_title must run, not skip (77)
-    - tools/port/ci/ctest_no_skip.sh --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|press_tables_disc|scene_|reference_title|reference_newgame_state|reference_xa_op1|reference_movie0|reference_card_"
+    - tools/port/ci/ctest_no_skip.sh --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|press_tables_disc|scene_|reference_title|reference_naming|reference_newgame_state|reference_xa_op1|reference_movie0|reference_card_"
 
 # Class B: the whole suite under ASan/UBSan, including the title scene (story 2.15).
 native-asan-disc:

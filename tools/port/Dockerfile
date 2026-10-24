@@ -122,6 +122,13 @@ RUN cd /tmp/pcsx && git apply --check /tmp/dw1-pcm-tap.patch && \
     PKG_CONFIG_PATH=/opt/sdl3/native/lib/pkgconfig make -j3 CPPFLAGS_Release="-O1 -g0" && \
     strip pcsx-redux && cp pcsx-redux /out/libexec/
 
+# The console dithers texture-modulated flat polygons (menus and text); Redux's flat path does not.
+COPY tools/port/reference/pcsx-redux-flat-texture-dither.patch /tmp/dw1-flat-dither.patch
+RUN cd /tmp/pcsx && git apply --check /tmp/dw1-flat-dither.patch && \
+    git apply /tmp/dw1-flat-dither.patch && \
+    PKG_CONFIG_PATH=/opt/sdl3/native/lib/pkgconfig make -j3 CPPFLAGS_Release="-O1 -g0" && \
+    strip pcsx-redux && cp pcsx-redux /out/libexec/
+
 # Match the measured SCPH-1001 rand startup seed (206 calls before New Game).
 # Keep this after the expensive emulator layer; rebuild only OpenBIOS.
 RUN cd /tmp/pcsx && \

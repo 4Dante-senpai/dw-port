@@ -252,6 +252,22 @@
   comparación con disco real 3/3 (Pack, referencia nueva y port); web 3/3, 4 casos de navegador.
   Evidencia: `docs/implementation-artifacts/evidence/story-3-2.log`.
 
+- Corrección E3 (ritmo nativo y texto Shift-JIS), tras la prueba manual de la 3.9: la ventana
+  ritmaba un período por frame y DW1 usa `VSync(3)`, así que corría 3 veces más rápido y desbordaba
+  el audio. Ahora la pared sigue los VBlanks virtuales y, durante las cargas, el productor de audio
+  espera al dispositivo en vez de descartar muestras (juego real: 0 desbordes y 0 underruns a 1200
+  frames, pared 25,52 s contra 25,51 s virtuales). El build del port compila copias de las fuentes con
+  literales CP932 (`tools/port/sjis_literals.py`), porque Clang no soporta `-fexec-charset`; la grilla
+  de nombres ya no muestra "△". PCSX-Redux se parchea para aplicar dithering a polígonos texturados
+  planos con modulación, como el hardware. Escena `naming` exacta salvo 663 px del modelo 3D
+  (diferido). Con disco: native 15/15, headless 79/79, ASan 77/77, web 38/38; `make compare` idéntico.
+  Reapertura: segfault al tocar una máquina del gimnasio (`addFileReadRequest` copiaba `*loc` con
+  `loc = NULL` en las cargas por nombre); arreglado detrás de `DW1_PORT` y cubierto por `overlay_probe`.
+  El binario nativo imprime un backtrace al crashear (resolver con `llvm-symbolizer-18`). Mismos totales.
+  Segunda reapertura: segfault en el primer combate contra Agumon (`handleBattleStart` leía
+  `ENTITY_TABLE[i]` NULL en batallas predefinidas); arreglado detrás de `DW1_PORT`.
+  Spec: `docs/implementation-artifacts/spec-e3-ritmo-y-texto-sjis-nativo.md`.
+
 - Historia 3.9 (preset `native` con ventana SDL3): binario i686 con `DW1_HOST=sdl` sobre SDL3 3.4.16
   i686 (`/opt/sdl3/native32` en la imagen). Ventana 640x480 redimensionable con letterbox y escalado
   nearest; el hilo del Juego presenta a 59,94 Hz de pared y el hilo principal dibuja. Teclado al estilo
@@ -402,7 +418,7 @@
 | Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (sin comportamiento M2: la Memory card es real desde 3.8) / 0 / 11 (de 198) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
-| Escenas que funcionan (nativo) | 8 (`card_newgame`: crea el save, `.mcd` idéntico a Redux; `card_continue`: carga el save con estado idéntico; `movie0`: OP1 completo por MDEC, 3636 frames dentro de tolerancia salvo 4 componentes aceptados; `movie0_skip`: salida con Start en el mismo VBlank que la referencia; `xa_op1`: XA de OP1 a 54,42 dB contra la referencia; título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control; `title_audio` con escrituras de voz idénticas en 2 tramos) |
+| Escenas que funcionan (nativo) | 9 (`card_newgame`: crea el save, `.mcd` idéntico a Redux; `card_continue`: carga el save con estado idéntico; `movie0`: OP1 completo por MDEC, 3636 frames dentro de tolerancia salvo 4 componentes aceptados; `movie0_skip`: salida con Start en el mismo VBlank que la referencia; `xa_op1`: XA de OP1 a 54,42 dB contra la referencia; título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control; `naming`: grilla de nombres exacta salvo el modelo 3D; `title_audio` con escrituras de voz idénticas en 2 tramos) |
 | Escenas que funcionan (web) | 1 (título, igual a nativo, Chromium y Firefox) |
 | Llamadas con firma distinta inventariadas / sin resolver | 1031 / 0 (`fnptr_casts.tsv`) |
 
