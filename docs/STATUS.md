@@ -264,6 +264,8 @@
   Reapertura: segfault al tocar una máquina del gimnasio (`addFileReadRequest` copiaba `*loc` con
   `loc = NULL` en las cargas por nombre); arreglado detrás de `DW1_PORT` y cubierto por `overlay_probe`.
   El binario nativo imprime un backtrace al crashear (resolver con `llvm-symbolizer-18`). Mismos totales.
+  Segunda reapertura: segfault en el primer combate contra Agumon (`handleBattleStart` leía
+  `ENTITY_TABLE[i]` NULL en batallas predefinidas); arreglado detrás de `DW1_PORT`.
   Spec: `docs/implementation-artifacts/spec-e3-ritmo-y-texto-sjis-nativo.md`.
 
 - Historia 3.9 (preset `native` con ventana SDL3): binario i686 con `DW1_HOST=sdl` sobre SDL3 3.4.16
