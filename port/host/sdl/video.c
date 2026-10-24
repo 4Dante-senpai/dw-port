@@ -1,6 +1,8 @@
 #include "host.h"
 #include "../plat.h"
 #include "../../backend/gpu.h"
+#include "../../psyq/clock.h"
+#include "../../psyq/crt.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +17,7 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static uint32_t pixels[2][640 * 480];
 static int front, width = 320, height = 240, pending;
 static uint64_t deadline, remainder;
+static uint32_t last_vblank;
 static uint64_t monotonic_ns(void)
 {
     struct timespec now;
@@ -39,10 +42,20 @@ void plat_native_present(long frame)
     pthread_mutex_lock(&mutex);
     front = back; width = w; height = h; pending = 1;
     pthread_mutex_unlock(&mutex);
+    if (port_capture_active()) return;
+    uint32_t vblank = clock_vblanks();
+    uint32_t elapsed = vblank - last_vblank;
+    last_vblank = vblank;
     uint64_t now = monotonic_ns();
-    if (!deadline || now > deadline + 4 * 16683334u) deadline = now;
-    remainder += 1001000000000ull;
+    /* Anchor at the first frame: the audio producer already paced the boot before it. */
+    if (!deadline) { deadline = now; return; }
+    remainder += (uint64_t)elapsed * 1001000000000ull;
     deadline += remainder / 60000; remainder %= 60000;
+    /* Drop a missed deadline rather than catch up after a debugger pause. */
+    if (now > deadline && now - deadline > 4 * 1001000000000ull / 60000) {
+        deadline = now;
+        remainder = 0;
+    }
     struct timespec due = {deadline / 1000000000, deadline % 1000000000};
     while (clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &due, NULL) == EINTR) {}
 }

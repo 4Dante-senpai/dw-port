@@ -2,10 +2,13 @@
 #include "../psyq/libpress.h"
 #include "native_cli.h"
 #include <errno.h>
+#include <execinfo.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../backend/cdrom.h"
 #include "../psyq/crt.h"
@@ -114,8 +117,32 @@ int native_cli_parse(int argc, char **argv, NativeCli *options)
 	return 0;
 }
 
+#if !__has_feature(address_sanitizer) /* ASan reports crashes better */
+/* A crash in a windowed session leaves no trace otherwise: print the faulting address and the raw
+ * frames, then die with the same signal. Resolve them with llvm-symbolizer-18 --obj=dw1: GNU
+ * addr2line 2.42 names the generated sjis/ copy instead of the #line source of clang's DWARF 5. */
+static void crash(int sig, siginfo_t *info, void *context)
+{
+	(void)context;
+	void *frames[64];
+	char line[96];
+	int n = snprintf(line, sizeof(line), "dw1: signal %d at address %p; backtrace:\n", sig, info->si_addr);
+	if (n > 0) (void)!write(2, line, (size_t)n);
+	backtrace_symbols_fd(frames, backtrace(frames, 64), 2);
+	signal(sig, SIG_DFL);
+	raise(sig);
+}
+#endif
+
 int native_cli_run(const NativeCli *options)
 {
+#if !__has_feature(address_sanitizer)
+	struct sigaction action = {.sa_sigaction = crash, .sa_flags = SA_SIGINFO};
+	sigaction(SIGSEGV, &action, NULL);
+	sigaction(SIGBUS, &action, NULL);
+	sigaction(SIGILL, &action, NULL);
+	sigaction(SIGFPE, &action, NULL);
+#endif
 	const char *pack = options->pack;
 	const char *const *cards = options->cards;
 	if (pack) {
