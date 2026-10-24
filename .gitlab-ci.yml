@@ -11,7 +11,7 @@ variables:
   GIT_SUBMODULE_PATHS: external/psyq_headers
 
 default:
-  image: $CI_REGISTRY_IMAGE/dw-port@sha256:d5e39fc94a9df557988b043b6a1910b92082d96a187e05af1776ee1620b8b044
+  image: $CI_REGISTRY_IMAGE/dw-port@sha256:423f2c139431f42cd80eaebb724d7acbecf0f07cf93c39ffcead1603d6d41725
   before_script:
     - git config --global --add safe.directory "$CI_PROJECT_DIR"
     - git fetch --quiet https://github.com/jype0/dw_decomp.git main:refs/remotes/upstream/main
