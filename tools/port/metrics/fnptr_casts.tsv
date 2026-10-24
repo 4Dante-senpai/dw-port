@@ -262,9 +262,9 @@ non-prototype	src/main/battle_ui.c	523	14	(MAIN_D_80124C0C[i * 2 + 1], 0, (i * 2
 non-prototype	src/main/battle_ui.c	530	14	(MAIN_D_80124C54, 0, 240);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/btl.c	198	14	(0x196, id);	DW1_PORT direct ABI correction
 non-prototype	src/main/btl.c	218	16	(&entity->entity, (uint8_t)anim);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/btl.c	396	16	(&TAMER_ENTITY.entity, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/btl.c	400	18	(&e->entity, 0x21);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/btl.c	406	17	(ENTITY_TABLE[1], 0x24);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/btl.c	402	16	(&TAMER_ENTITY.entity, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/btl.c	406	18	(&e->entity, 0x21);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/btl.c	412	17	(ENTITY_TABLE[1], 0x24);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/bubble.c	664	15	(0x802, instanceId);	DW1_PORT direct ABI correction
 non-prototype	src/main/buff_model.c	97	21	(0x501, 0);	DW1_PORT direct ABI correction
 non-prototype	src/main/butterfly.c	138	15	(0x80e, instanceId);	DW1_PORT direct ABI correction

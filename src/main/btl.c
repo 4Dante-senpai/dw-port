@@ -260,6 +260,12 @@ int32_t handleBattleStart(id)
 			if (j != 3) {
 				continue;
 			}
+#ifdef DW1_PORT
+			/* Empty slot: the PS1 reads RAM near 0 and isInvisible(NULL) skips it below. */
+			if (ENTITY_TABLE[i] == NULL) {
+				continue;
+			}
+#endif
 			if (ENTITY_TABLE[i]->isOnScreen == 0) {
 				ENTITY_TABLE[i]->isOnMap = 0;
 			}
