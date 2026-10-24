@@ -261,6 +261,9 @@
   de nombres ya no muestra "△". PCSX-Redux se parchea para aplicar dithering a polígonos texturados
   planos con modulación, como el hardware. Escena `naming` exacta salvo 663 px del modelo 3D
   (diferido). Con disco: native 15/15, headless 79/79, ASan 77/77, web 38/38; `make compare` idéntico.
+  Reapertura: segfault al tocar una máquina del gimnasio (`addFileReadRequest` copiaba `*loc` con
+  `loc = NULL` en las cargas por nombre); arreglado detrás de `DW1_PORT` y cubierto por `overlay_probe`.
+  El binario nativo imprime un backtrace al crashear (resolver con `llvm-symbolizer-18`). Mismos totales.
   Spec: `docs/implementation-artifacts/spec-e3-ritmo-y-texto-sjis-nativo.md`.
 
 - Historia 3.9 (preset `native` con ventana SDL3): binario i686 con `DW1_HOST=sdl` sobre SDL3 3.4.16

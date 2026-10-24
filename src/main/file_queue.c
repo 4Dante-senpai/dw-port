@@ -247,7 +247,13 @@ int32_t addFileReadRequest(char *path, uint8_t *buffer, uint8_t *isRunning,
 	slot->targetBuffer = buffer;
 	slot->finishCallback = callback;
 	slot->finishCallbackParam = callbackParam;
+#ifdef DW1_PORT
+	/* Path requests pass NULL (size -1): the PS1 reads RAM at 0 and the tick replaces pos. */
+	if (loc != NULL)
+		slot->pos = *loc;
+#else
 	slot->pos = *loc;
+#endif
 	slot->size = size;
 
 	if (FILE_READ_QUEUE_HEAD == NULL) {

@@ -90,6 +90,7 @@ context:
 - Orquestador: Codex se cortó por el límite de 90 min durante ASan y no llegó a informar. Un diagnóstico temporal (sin dithering en polígonos texturados planos del port, no commiteado) dejó toda la interfaz exacta. Por decisión del dueño se agregó `tools/port/reference/pcsx-redux-flat-texture-dither.patch`, una capa del `Dockerfile` y su entrada en `.dockerignore`: Redux dibuja esos polígonos por el camino Gouraud con color único cuando hay dithering y modulación. Con la imagen nueva, la referencia de `title` no cambió (`561323…`) y `naming` pasó a `83623016…`; la interfaz coincide exacta. Quedan 663 px del modelo 3D de Jijimon (hasta 12 niveles, no dithering), declarados como excepción de región y diferidos en `deferred-work.md`.
 - `naming` termina con un solo Cross después de abrir la caja (nombre "A_"), no con dos: alcanza para mostrar la grilla y una letra elegida.
 - El ritmo por VBlank no alcanzaba para el audio: con el juego real, `sdl_frame0` daba `overflows=142443` en el arranque y `dw1 --frames 1200` sumaba otras 80612 muestras perdidas. Mientras el Juego carga sin presentar frames, el reloj virtual avanza más rápido que la pared y el SPU llena el anillo de 186 ms. Ahora `produce` (`port/host/sdl/audio.c`) espera a que el dispositivo drene cuando el nivel supera `AUDIO_RATE_TARGET + AUDIO_RATE_DEADBAND`, con un tope de 100 ms por si el dispositivo se detiene, y no espera en corridas de Escena. No cambian el remuestreo ni las constantes. El primer `present` solo fija el ancla, porque el boot ya lo ritmó el audio; si no, el arranque esperaba 3,3 s de más. `sdl_frame0` falla si aparece `overflows=[1-9]`.
+- Reapertura tras la prueba manual: tocar una máquina del gimnasio terminaba con segfault (exit 139). `loadTrainingLibrary` carga su overlay asíncrono con `loadDynamicLibrary`, que llama a `addFileReadRequestPath` con `loc = NULL` y `size = -1`; `addFileReadRequest` (`src/main/file_queue.c`) copiaba `*loc` sin mirar. La PS1 lee la RAM en 0 sin fallar y el tick reemplaza `pos` al buscar el archivo por nombre. La misma ruta usan batalla (`btl.c:391`), ENDI y `model.c:3635`. Arreglo detrás de `DW1_PORT`: solo copia `*loc` si no es NULL (`docs/port/src-changes.md`). `overlay_probe` ahora encola una carga por nombre y exige `path_request=OK`. Además, `native_cli.c` instala un handler de SIGSEGV/SIGBUS/SIGILL/SIGFPE (salvo bajo ASan) que imprime la dirección y los frames antes de morir con la misma señal, para que un crash en la ventana deje rastro. Los frames se resuelven con `llvm-symbolizer-18 --obj=dw1`: GNU `addr2line` 2.42 lee mal el DWARF 5 de Clang y nombra la copia de `sjis/`, aunque la tabla de líneas apunta a `src/` gracias al `#line`.
 
 ## Spec Change Log
 
@@ -108,6 +109,7 @@ context:
 | 9 | blind/verif | `sdl_pacing` no exige underruns = 0 | medium | patch | El reclamo del dueño era el audio entrecortado. Ahora exige `overflows=0 underruns=0`; pasó 3 veces seguidas (relación 1,0143). |
 | 10 | blind | el parche de Redux no tiene vectores independientes | low | rechazado | No hay hardware para generar vectores. Hay acuerdo cruzado: el port, que sigue psx-spx/DuckStation, coincide exacto en la interfaz, y la referencia de `title` no cambió. |
 | 11 | orquestador | el juego real desborda el audio durante las cargas aunque `sdl_pacing` dé 0 | high | patch | `dw1 --frames 1200`: antes `overflows=223055`, pared 25,69 s; después `overflows=0 underruns=0`, pared 25,52 s contra 25,51 s virtuales. `sdl_frame0` ahora exige 0 desbordes. |
+| 12 | dueño | segfault al tocar una máquina del gimnasio: `addFileReadRequest` desreferencia `loc = NULL` en las cargas por nombre | high | patch | Backtrace del handler nuevo: `addFileReadRequest` ← `addFileReadRequestPath` ← `loadDynamicLibrary` ← `loadTrainingLibrary`. Guarda `#ifdef DW1_PORT`; `overlay_probe` da `path_request=OK` (sin el cambio, segfault); `make compare` idéntico. |
 
 ## Design Notes
 
@@ -122,9 +124,9 @@ context:
 - `make compare` en `dw-build` -- expected: `Compiled binaries match with target binaries`.
 
 **Evidencia final (2026-10-23, daemon remoto, corridas seriales con `ctest_no_skip.sh` y disco):**
-- `native` 15/15, `native-headless` 79/79, `native-asan` 77/77, `web` 38/38; sin omisiones ni fallos. `scene_naming_compare` pasa en headless y en `native` contra la referencia parcheada (`83623016…`, 663 px del modelo 3D en excepción de región).
+- `native` 15/15, `native-headless` 79/79, `native-asan` 77/77, `web` 38/38; sin omisiones ni fallos. Repetido tras el arreglo de `file_queue.c` y el handler de crash, con los mismos totales. `scene_naming_compare` pasa en headless y en `native` contra la referencia parcheada (`83623016…`, 663 px del modelo 3D en excepción de región).
 - `sjis_literals`: 6 pruebas correctas. El ejecutable contiene `82 4f 82 50 82 51 82 52 82 53 00` para `MAIN_D_80130738` (`０１２３４`).
 - `sdl_pacing`: pared 10,138 s / virtual 10,010 s = 1,0128; `overflows=0 underruns=0`; captura sin espera de pared en 0,655 s.
 - Juego real con `SDL_AUDIODRIVER=dummy`: a 30/120/600/1200 frames, `overflows=0 underruns=0`; en el frame 1199, 25,52 s de pared contra 25,51 s virtuales.
 - Las referencias `title`, audio del título, XA, `movie0` y `movie0_skip` conservan sus hashes con la imagen nueva de Redux.
-- `make compare`: `Compiled binaries match with target binaries` (sin cambios en `src/`).
+- `make compare`: `Compiled binaries match with target binaries`, con el cambio de `src/main/file_queue.c` detrás de `DW1_PORT`.
