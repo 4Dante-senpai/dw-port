@@ -1,6 +1,7 @@
 /* Linked with every game object (unresolved symbols ignored, no game code runs; the game's own
  * main is bypassed with -Wl,--wrap=main): prints the size of each overlay data section and
- * checks the image layout and the translated addresses in static game data. */
+ * checks the image layout and the translated addresses in static game data. The only game code it
+ * runs is the file queue, to queue a path request. */
 #include <stdio.h>
 
 #include "../overlay.h"
@@ -21,6 +22,9 @@ extern char *BOSS_EFE_TMD;
 extern unsigned long *ENDI_FADE_CLUT_BUFFER;
 extern unsigned char *ARRAY_SECTION_START;
 extern int MAIN_D_801349E4;
+void initFileReadQueueTable(void);
+int addFileReadRequestPath(char *path, unsigned char *buffer, unsigned char *isRunning,
+                           void *callback, void *callbackParam);
 
 static int addresses_ok(void)
 {
@@ -61,7 +65,13 @@ int __wrap_main(void)
 	/* The whole image, with every game object, fits in the OT window (AD-5). */
 	int image_ok = ps1_in_window(_end - 1);
 	int addr_ok = addresses_ok();
+	/* Async overlay loads queue a request by path with a NULL CdlLOC (training, battle). */
+	unsigned char running = 0;
+	initFileReadQueueTable();
+	int queue_ok = addFileReadRequestPath(REL_BIN_FILES[9], REL_BIN_OFFSETS[9], &running, NULL,
+	                                      NULL) == 0 && running == 1;
+	printf("path_request=%s\n", queue_ok ? "OK" : "FAIL");
 	printf("overlays_with_data=%d expected=%d image_end=%p in_window=%d addresses=%s\n",
 	       with_data, DW1_OVERLAY_UNITS, (void *)_end, image_ok, addr_ok ? "OK" : "FAIL");
-	return !(with_data == DW1_OVERLAY_UNITS && image_ok && addr_ok);
+	return !(with_data == DW1_OVERLAY_UNITS && image_ok && addr_ok && queue_ok);
 }
