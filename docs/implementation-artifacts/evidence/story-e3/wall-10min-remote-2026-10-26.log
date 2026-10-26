@@ -1,0 +1,5 @@
+native_wall_10min: wall pacing failed: vblanks=36006, wall_ns=600084086083, rate=16934400/282199, resynchronizations=1
+port: wall vblanks=36006 nanoseconds=600084086083 resynchronizations=1 rate_num=16934400 rate_den=282199
+dw1: pacing resynchronization vblank=32058 late_ns=71185164
+dw1: audio_rate overflows=0 underruns=10
+native_wall: vblanks=36006 wall=600.084086083s expected=36010.276249611 resynchronizations=1
