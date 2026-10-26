@@ -9,6 +9,9 @@
 #include <dw/sound.h>
 #include <dw/types.h>
 #include <dw/version.h>
+#ifdef DW1_PORT
+#include "../../port/psyq/clock.h"
+#endif
 
 #define VAB_MAX_PROGRAMS	128
 #define VAB_TONES_PER_PROGRAM	16
@@ -397,21 +400,39 @@ int32_t readVHBFile(int32_t vabId, char *filename, uint8_t *buffer)
 
 	concatStrings3(pathBuf, str, VHB_EXT);
 	readFile(pathBuf, buffer);
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_VHB_COPY_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 	memcpy(VHB_HEADER_ADDR[vabId],
 	       &buffer[(((VhbFileHeader *)buffer)->vhOffset >> 2) << 2],
 	       ((VhbFileHeader *)buffer)->vbOffset - ((VhbFileHeader *)buffer)->vhOffset);
 
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_VHB_CLOSE_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 	SsVabClose(vabId);
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_VHB_HEAD_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 	if ((vabid = SsVabOpenHeadSticky(VHB_HEADER_ADDR[vabId], vabId,
 					 VHB_SOUNDBUFFER_START[vabId])) < 0) {
 		return -1;
 	}
 
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_VHB_BODY_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 	if (SsVabTransBody(&buffer[((VhbFileHeader *)buffer)->vbOffset], vabid) != vabid) {
 		return -1;
 	}
 
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_VHB_WAIT_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 	SsVabTransCompleted(SS_WAIT_COMPLETED);
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_VHB_ADDR_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 	addr = SsUtGetVBaddrInSB(vabid);
 
 	return vabid;
@@ -518,19 +539,40 @@ int32_t initializeMusic(void)
 {
 	SpuReverbAttr attr;
 
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_MUSIC_RESET_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 	ResetCallback();
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_MUSIC_INIT_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 	SsInit();
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_MUSIC_TABLE_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 	SsSetTableSize(SEQ_TABLE, 1, 1);
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_MUSIC_TICK_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 	SsSetTickMode(SS_TICK240);
 
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_MUSIC_BANK_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 	if (readVHBFile(0, "SOUND\\SS", GENERAL_BUFFER) == -1) {
 		return 0;
 	}
 
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_MUSIC_NEXT_BANK_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 	if (readVHBFile(1, "SOUND\\SL", GENERAL_BUFFER) == -1) {
 		return 0;
 	}
 
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_MUSIC_START_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 	SsStart();
 	SsSetMVol(127, 127);
 

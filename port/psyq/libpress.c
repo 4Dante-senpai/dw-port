@@ -13,6 +13,11 @@ __attribute__((weak)) void port_scene_movie_timing(const char *event, unsigned v
 static uint8_t mdec_iq[DW1_PRESS_MDEC_IQ_SIZE];
 static uint8_t mdec_coef[DW1_PRESS_MDEC_COEF_SIZE];
 static uint8_t data_2[DW1_PRESS_DATA_2_SIZE];
+static uint64_t cpu_work(unsigned instructions, unsigned memory_accesses)
+{
+    return (uint64_t)instructions*CLOCK_CPU_INSTRUCTION_CYCLES +
+        (uint64_t)memory_accesses*CLOCK_CPU_MEMORY_ACCESS_CYCLES;
+}
 static const struct Table {
     const char *name;
     uint8_t *data;
@@ -120,14 +125,12 @@ void DecDCTout(unsigned long *buf, int size)
     PORT_ASSERT(size >= 0 && (!size || buf));
     if (out_event) {
         PORT_ASSERT(!clock_in_handler());
-        clock_wait_until(output_idle, NULL);
+        clock_wait_cost(output_idle, NULL, CLOCK_COST_MDEC);
     }
     out_buffer = buf;
     out_words = size;
     if (port_scene_movie_timing) port_scene_movie_timing("MDEC:out", size);
-    unsigned mb_words = ((decode_command >> 27) & 3) == 2 ? 192 : 128;
-    uint64_t count = ((unsigned)size + mb_words - 1) / mb_words;
-    out_event = clock_schedule((count ? count : 1) * CLOCK_MDEC_MACROBLOCK_CYCLES,
+    out_event = clock_schedule((uint64_t)(unsigned)size * 4 * CLOCK_MDEC_OUTPUT_BYTE_CYCLES,
                                output_done, NULL);
 }
 
@@ -144,7 +147,7 @@ int DecDCToutCallback(void (*func)())
  * LZ byte expansion followed by a four-halfword XOR predictor. */
 void DecDCTvlcBuild(unsigned short *table)
 {
-    clock_psyq_entry();
+    uint64_t cycles=cpu_work(8,0); /* USA 800E9BC0..9BDC. */
     uint8_t *dst = (uint8_t *)table;
     size_t src = 0, pos = 0;
     unsigned distance = 0;
@@ -152,15 +155,22 @@ void DecDCTvlcBuild(unsigned short *table)
     for (;;) {
         PORT_ASSERT(src < sizeof(data_2));
         unsigned code = data_2[src++];
+        cycles+=cpu_work(6,1);
         if (code >= 0xf0) {
+            cycles+=cpu_work(2,0);
             distance = 0;
             if (code != 0xf0) {
+                cycles+=cpu_work(5,1);
                 PORT_ASSERT(src < sizeof(data_2));
                 distance = ((code << 8) | data_2[src++]) - 0xf0ff;
             }
+            cycles+=cpu_work(2,0);
             if (distance == 0xf00) break;
         } else {
             size_t count = code + 1;
+            /* Literal and back-reference loops both execute six instructions,
+             * a byte read and a byte write per output byte (9C08/9C30). */
+            cycles+=cpu_work(8,0)+count*cpu_work(6,2);
             PORT_ASSERT(pos + count <= 0x11000);
             for (size_t i = 0; i < count; i++) {
                 if (distance) {
@@ -176,6 +186,9 @@ void DecDCTvlcBuild(unsigned short *table)
     }
     PORT_ASSERT(pos == 0x11000);
     for (unsigned i = 4; i < 0x8800; i++) table[i] ^= table[i - 4];
+    cycles+=cpu_work(4,0)+(0x8800u-4u)*cpu_work(8,3);
+    clock_advance_cost(cycles,CLOCK_COST_CPU);
+    if (port_scene_movie_timing) port_scene_movie_timing("VLC:build_cpu",cycles);
 }
 
 static uint16_t halfword(const void *p)
@@ -193,6 +206,7 @@ typedef struct {
     uint16_t *out;
     uint32_t bits, used, quant, block;
     uint32_t dc[3];
+    uint64_t cycles;
 } VlcState;
 static VlcState vlc;
 
@@ -202,6 +216,7 @@ static void consume(unsigned n)
     vlc.bits <<= n & 31;
     vlc.used += n;
     if (vlc.used & 16) {
+        vlc.cycles+=cpu_work(4,1);
         vlc.used &= 15;
         vlc.bits |= (uint32_t)halfword(vlc.next) << vlc.used;
         vlc.next += 2;
@@ -214,68 +229,97 @@ static void consume(unsigned n)
  * defaults to 0xffffff halfwords; the unreachable-in-DW1 continuation is retained. */
 int DecDCTvlc2(unsigned long *bs, unsigned long *buf, unsigned short *table)
 {
-    clock_psyq_entry();
     const uint8_t *base = (const uint8_t *)table + 0x800;
     uintptr_t limit;
     if (bs) {
         const uint8_t *src = (const uint8_t *)bs;
         memset(&vlc, 0, sizeof(vlc));
+        vlc.cycles=cpu_work(29,9);
         memcpy(buf, bs, 4);
         vlc.out = (uint16_t *)(buf + 1);
         vlc.quant = (uint32_t)halfword(src + 4) << 10;
         vlc.block = halfword(src + 6) >= 3 ? 1 : 0;
+        if (vlc.block) vlc.cycles+=cpu_work(1,0);
         vlc.bits = (uint32_t)halfword(src + 8) << 16 | halfword(src + 10);
         vlc.next = src + 12;
     }
+    else vlc.cycles=cpu_work(21,10); /* Continuation restore, 9884..98D4. */
     limit = (uintptr_t)vlc.out - 2u + 0x1fffffeu;
     if (!bs) goto ac;
     for (;;) {
         unsigned dc = vlc.bits >> 22;
+        vlc.cycles+=cpu_work(5,0); /* DC prefix and terminal test. */
         if (dc == (vlc.block ? 0x3ffu : 0x1ffu)) break;
         if (!vlc.block) {
+            vlc.cycles+=cpu_work(7,1); /* 9A18..9A40, excluding refill. */
             consume(10);
         } else {
+            vlc.cycles+=cpu_work(15,2); /* 9948..9974, 999C..99A8. */
+            if (vlc.block>=3) vlc.cycles+=cpu_work(1,0);
             const uint8_t *entry = base - (vlc.block < 3 ? 0x400 : 0x800) + (vlc.bits >> 24) * 4;
             unsigned prefix = halfword(entry), n = halfword(entry + 2);
             consume(prefix);
             int delta = 0;
             if (n) {
+                vlc.cycles+=cpu_work(6,0);
                 delta = vlc.bits >> (32 - n);
-                if (!(vlc.bits & 0x80000000u)) delta -= (1u << n) - 1;
+                if (!(vlc.bits & 0x80000000u)) {
+                    vlc.cycles+=cpu_work(3,0);
+                    delta -= (1u << n) - 1;
+                }
                 consume(n);
             }
             unsigned channel = vlc.block < 3 ? vlc.block - 1 : 2;
+            vlc.cycles+=cpu_work(vlc.block==1 ? 8 : vlc.block==2 ? 7 : 4,0);
+            vlc.cycles+=cpu_work(7,1);
             vlc.dc[channel] += (uint32_t)delta;
             dc = (vlc.dc[channel] * 4) & 1023;
-            if (++vlc.block == 7) vlc.block = 1;
+            if (++vlc.block == 7) { vlc.block = 1; vlc.cycles+=cpu_work(2,0); }
         }
         *vlc.out++ = (uint16_t)(vlc.quant | dc);
-        if ((int32_t)((uintptr_t)(vlc.out - 1) - limit) >= 0) return 1;
+        vlc.cycles+=cpu_work(3,0);
+        if ((int32_t)((uintptr_t)(vlc.out - 1) - limit) >= 0) {
+            clock_advance_cost(vlc.cycles+cpu_work(13,9),CLOCK_COST_CPU);
+            return 1;
+        }
 ac:;
         for (;;) {
+            vlc.cycles+=cpu_work(7,1);
             unsigned index = vlc.bits >> 19;
             uint32_t entry = table_word(base + index * 8), extra = 0;
             if (!entry) {
+                vlc.cycles+=cpu_work(12,1);
                 consume(8);
                 entry = table_word(base + 0x10000 + (vlc.bits >> 23) * 4);
-            } else extra = table_word(base + index * 8 + 4);
+            } else { vlc.cycles+=cpu_work(1,1); extra = table_word(base + index * 8 + 4); }
+            vlc.cycles+=cpu_work(5,0);
             consume(entry & 255);
             uint16_t codes[3] = {entry >> 16, extra & 65535, extra >> 16};
             int eob = 0;
             for (unsigned i = 0; i < 3; i++) {
                 unsigned code = codes[i];
                 if (i && !code) break;
+                vlc.cycles+=cpu_work(i==0 ? 4 : i==1 ? 4 : 3,0);
                 if (code == 0x7c1f) {
+                    vlc.cycles+=cpu_work(9,2);
                     code = vlc.bits >> 16;
+                    /* The escape path reads one halfword unconditionally;
+                     * consume accounts that same refill, so remove it here. */
+                    vlc.cycles-=cpu_work(4,1);
                     consume(16);
-                }
+                } else vlc.cycles+=cpu_work(2,1);
                 *vlc.out++ = code;
                 if (code == 0xfe00) { eob = 1; break; }
+                if (codes[i]==0x7c1f) break;
+                vlc.cycles+=cpu_work(i==0 ? 2 : i==1 ? 3 : 2,0);
             }
             if (eob) break;
         }
     }
     /* The delay slot makes this 65 padding halfwords, not 64. */
     for (unsigned i = 0; i < 65; i++) *vlc.out++ = 0xfe00;
+    vlc.cycles+=cpu_work(269,65);
+    clock_advance_cost(vlc.cycles,CLOCK_COST_CPU);
+    if (port_scene_movie_timing) port_scene_movie_timing("VLC:decode_cpu",vlc.cycles);
     return 0;
 }

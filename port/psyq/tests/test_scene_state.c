@@ -25,20 +25,22 @@ int dw1_game_main(void)
     gpu_fill(0, 0, 1, 1, 0xff);
     TEST_POINTERS[0] = Ps1_Ram + 0x123;
     TEST_POINTERS[1] = &TEST_VALUES[1];
-    port_frame_done(); /* origin = 0 */
+    port_vsync_return(); /* first VSync return establishes frame 0 */
+    port_frame_done();
+    unsigned origin = clock_vblanks();
     check(PadRead(0) == (from_mark ? 0u : 0x800u));
-    clock_advance(clock_vblank_cycle(3) - clock_now());
+    clock_advance(clock_vblank_cycle(origin + 3) - clock_now());
     port_scene_mark("test");
     if (checkpoint_mode) TEST_CHECKPOINT();
     for (unsigned k = 0; k < 5; k++) {
         rand();
-        clock_advance(clock_vblank_cycle(4 + k) - clock_now());
+        clock_advance(clock_vblank_cycle(origin + 4 + k) - clock_now());
         unsigned relative = from_mark ? k + 1 : k + 4;
         unsigned expected = relative < 2 ? 0x800 : relative < 4 ? 0x40 : 0;
         if (checkpoint_mode) expected = k == 0 ? 0x800 : 0;
         check(PadRead(0) == expected);
         if (checkpoint_mode && k == 2) TEST_CHECKPOINT();
-        if (k == 0) PadInit(0); /* held override must return on the next latch */
+        if (k == 0) PadInit(1); /* held override must return on the next latch */
     }
     return 1; /* capture exits first */
 }

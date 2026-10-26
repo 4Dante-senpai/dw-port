@@ -19,6 +19,30 @@ static int failures;
 	} \
 } while (0)
 
+static void bios_libc_costs(void)
+{
+	char bytes[668], copy[92];
+	uint64_t start = clock_now();
+	CHECK(psyq_memset(bytes, 'a', sizeof bytes) == bytes);
+	CHECK(clock_now() - start == 62239 && bytes[667] == 'a');
+	start = clock_now();
+	CHECK(psyq_memcpy(copy, bytes, sizeof copy) == copy);
+	CHECK(clock_now() - start == 10443 && !memcmp(copy, bytes, sizeof copy));
+	start = clock_now();
+	CHECK(psyq_strcmp("abx", "aby") < 0);
+	CHECK(clock_now() - start == 497);
+	start = clock_now();
+	CHECK(psyq_strcmp("abcde", "abcde") == 0);
+	CHECK(clock_now() - start == 1009);
+	const char *path = "abc\\defg";
+	start = clock_now();
+	CHECK(psyq_strrchr(path, '\\') == path + 3);
+	CHECK(clock_now() - start == 1622);
+	CHECK(psyq_strrchr(path, '\0') == path + strlen(path));
+	const char high_bytes[] = { (char)0x80, 'a', (char)0x80, 0 };
+	CHECK(psyq_strrchr(high_bytes, 128) == high_bytes + 2);
+}
+
 static void random_sequences(void)
 {
 	/* Independent golden generation (Python, not the implementation under test):
@@ -165,7 +189,8 @@ static void pad_state(void)
 	CHECK(clock_now() == CLOCK_PSYQ_ENTRY_CYCLES);
 	uint64_t before = clock_now();
 	PadInit(0);
-	CHECK(clock_now() == before + 2 * CLOCK_PSYQ_ENTRY_CYCLES); /* includes ResetCallback */
+	CHECK(clock_now() == before + CLOCK_PSYQ_ENTRY_CYCLES + CLOCK_IRQ_SETUP_CYCLES + CLOCK_PAD_INIT_CPU_CYCLES +
+          clock_vblanks() * CLOCK_VBLANK_NOPAD_CPU_CYCLES);
 	before = clock_now();
 	CHECK(PadRead(0) == 0);
 	CHECK(clock_now() == before + CLOCK_PSYQ_ENTRY_CYCLES);
@@ -178,22 +203,26 @@ static void pad_state(void)
 	CHECK(PadRead(-1) == 0);
 	CHECK(ResetCallback() == 0); /* PadInit already started interrupts */
 	VSyncCallback(callback);
+	unsigned vcount = Vcount;
 	VSync(0);
-	CHECK(Vcount == 1 && callback_count == 1);
+	CHECK(Vcount == (int)vcount + 1 && callback_count == 1);
 	PadInit(1); /* subsequent initialization preserves the callback environment */
 	CHECK(PadRead(0) == 0);
 	VSync(0);
-	CHECK(Vcount == 2 && callback_count == 2);
+	CHECK(Vcount == (int)vcount + 2 && callback_count == 2);
 	psyq_libetc_reset();
 	CHECK(PadRead(0) == 0xFFFFFFFFu);
 	PadInit(0);
 	CHECK(PadRead(0) == 0);
+	vcount = Vcount;
 	VSync(0);
-	CHECK(Vcount == 1 && callback_count == 2); /* first ResetCallback clears old callbacks */
+	CHECK(Vcount == (int)vcount + 1 && callback_count == 2); /* first ResetCallback clears old callbacks */
 }
 
 int main(void)
 {
+	clock_reset();
+	bios_libc_costs();
 	clock_reset();
 	random_sequences();
 	heap_addresses();

@@ -77,6 +77,7 @@ native-disc:
     - cmake --preset native
     - cmake --build --preset native
     - tools/port/ci/ctest_no_skip.sh --preset native --output-on-failure
+    # native_wall_10min is included by the native preset (serial, 900 s timeout).
     - xvfb-run -a pcsx-redux -version > /dev/null   # reference_title must run, not skip (77)
     - tools/port/ci/ctest_no_skip.sh --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|press_tables_disc|scene_|reference_title|reference_naming|reference_newgame_state|reference_xa_op1|reference_movie0|reference_card_"
 

@@ -2,6 +2,7 @@
 #include "clock.h"
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 
 /* asm: asm/us/main/psyq/libsnd.s: _ss_score, DW1's 0xb0-byte SEP record.
  * Pointers remain native; named ranges preserve the retail offsets. */
@@ -47,8 +48,8 @@ static void vh_put32(unsigned char *p, uint32_t v) { vh_put16(p, v); vh_put16(p 
  * for irq=0, so the alternate SsStart2 interrupt-chain branch is unreachable. */
 void SsEnd(void)
 {
-    clock_psyq_entry();
-    if (tick.manual || tick.irq == 0x7f) return;
+    if (tick.manual || tick.irq == 0x7f) { clock_psyq_entry(); return; }
+    clock_advance_cost(CLOCK_SOUND_END_ACTIVE_CPU_CYCLES, CLOCK_COST_CPU);
     tick.half = 0;
     if (tick.vsync) { VSyncCallback(NULL); tick.vsync = 0; }
     else InterruptCallback(6, NULL);
@@ -68,12 +69,14 @@ void SsInit(void)
     vm_init();
     open_mask = 0;
     tick.rate = 60;
+    clock_advance_cost(CLOCK_SOUND_INIT_CPU_CYCLES +
+        vm_flush_cpu_delta, CLOCK_COST_CPU);
 }
 
 /* asm: asm/us/main/psyq/libsnd.s: SsQuit. */
 void SsQuit(void)
 {
-    clock_psyq_entry();
+    clock_advance_cost(CLOCK_SOUND_QUIT_CPU_CYCLES, CLOCK_COST_CPU);
     SpuQuit();
 }
 
@@ -81,6 +84,7 @@ void SsQuit(void)
 void SsSeqCalledTbyT(void)
 {
     if (vm_busy) return;
+    uint64_t cpu_start = clock_now();
     vm_busy = 1;
     vm_flush();
     for (int s = 0; s < seq_count; s++) {
@@ -101,6 +105,10 @@ void SsSeqCalledTbyT(void)
         }
     }
     vm_busy = 0;
+    uint64_t cpu_budget = CLOCK_SOUND_TICK_IDLE_CYCLES + vm_flush_cpu_delta;
+    uint64_t cpu_elapsed = clock_now() - cpu_start;
+    if (cpu_elapsed < cpu_budget)
+        clock_advance_cost(cpu_budget - cpu_elapsed, CLOCK_COST_CPU);
 }
 
 /* asm: asm/us/main/psyq/libsnd.s: _SsSeqCalledTbyT_1per2. */
@@ -128,9 +136,14 @@ void SsStart(void)
         if (tick.mode < 70) { target = 0x204cc0 / tick.mode; tick.half = 1; }
         else target = 0x409980 / tick.mode;
     }
+    clock_advance_cost(CLOCK_SOUND_START_SETUP_CYCLES, CLOCK_COST_CPU);
     ResetRCnt(RCntCNT2);
     SetRCnt(RCntCNT2, target, RCntMdINTR);
+    if (getenv("DW1_DEVICE_PROBE")) fprintf(stderr, "sound-start cycle=%llu target=%u\n", (unsigned long long)clock_now(), target);
     InterruptCallback(6, tick.half ? snd_half_tick : SsSeqCalledTbyT);
+    psyq_irq_cpu_cost(6, CLOCK_SOUND_IRQ_VERIFY_CYCLES,
+        CLOCK_SOUND_IRQ_ENTRY_CYCLES, CLOCK_SOUND_IRQ_RETURN_CYCLES);
+    clock_advance_cost(CLOCK_SOUND_START_RETURN_CYCLES, CLOCK_COST_CPU);
 }
 
 /* asm: asm/us/main/psyq/libsnd.s: SsSeqClose -> _SsClose. */
@@ -161,10 +174,14 @@ void SsSeqStop(short id)
  * are deliberately not closed by this entry, as in DW1. */
 void SsVabClose(short id)
 {
-    clock_psyq_entry();
-    if ((unsigned short)id >= 16 || banks[id].used != 1) return;
+    if ((unsigned short)id >= 16 || banks[id].used != 1) {
+        clock_advance_cost(CLOCK_VAB_CLOSE_UNUSED_CPU_CYCLES, CLOCK_COST_CPU);
+        return;
+    }
+    clock_advance_cost(CLOCK_VAB_CLOSE_SETUP_CPU_CYCLES, CLOCK_COST_CPU);
     SpuFree(banks[id].start);
     banks[id].used = 0;
+    clock_advance_cost(CLOCK_VAB_CLOSE_RETURN_CPU_CYCLES, CLOCK_COST_CPU);
 }
 
 /* asm: asm/us/main/psyq/libsnd.s: SsUtAllKeyOff. The argument is unused. */
@@ -223,6 +240,8 @@ void SsSetTableSize(char *table, short seqs, short seps)
     clock_psyq_entry();
     /* Retail writes outside _ss_score for seqs > 32. Reject invalid storage. */
     if (!table || seqs < 0 || seqs > 32 || seps < 0) return;
+    if (seqs == 1 && seps == 1)
+        clock_advance_cost(CLOCK_SOUND_TABLE_ONE_CPU_CYCLES, CLOCK_COST_CPU);
     seq_count = seqs;
     sep_count = seps;
     for (int s = 0; s < seqs; s++) scores[s] = (SndSeq *)table + s * seps;
@@ -241,7 +260,8 @@ void SsSetTableSize(char *table, short seqs, short seps)
 /* asm: asm/us/main/psyq/libsnd.s: SsSetTickMode; jtbl_80114BA8. */
 void SsSetTickMode(long mode)
 {
-    clock_psyq_entry();
+    if (mode == 2) clock_advance_cost(CLOCK_SOUND_TICK_240_SETUP_CPU_CYCLES,CLOCK_COST_CPU);
+    else clock_psyq_entry();
     long video = GetVideoMode();
     tick.manual = !!(mode & 0x1000);
     tick.mode = tick.manual ? mode & 0xfff : mode;
@@ -314,6 +334,14 @@ static short vab_open_sticky(unsigned char *data, short id, uint32_t addr)
         total += (uint32_t)vh16(sizes + i * 2) << shift;
         vh_put16(b->programs + (i / 2) * 16 + 12 + (i & 1) * 2, (addr + total) >> 3);
     }
+    if (max_programs == 128) {
+        unsigned count = samples + 1;
+        clock_advance_cost(CLOCK_VAB_HEADER_FIXED_CPU_CYCLES +
+            max_programs * CLOCK_VAB_PROGRAM_CPU_CYCLES +
+            index * CLOCK_VAB_USED_PROGRAM_CPU_CYCLES + CLOCK_VAB_SCAN_CPU_CYCLES +
+            ((count + 1) / 2) * CLOCK_VAB_SAMPLE_EVEN_CPU_CYCLES +
+            (count / 2) * CLOCK_VAB_SAMPLE_ODD_CPU_CYCLES, CLOCK_COST_CPU);
+    }
     b->total = total;
     b->used = 2;
     return id;
@@ -326,6 +354,7 @@ fail:
 /* asm: asm/us/main/psyq/libsnd.s: SsVabOpenHeadSticky. */
 short SsVabOpenHeadSticky(unsigned char *data, short vabid, unsigned long addr)
 {
+    if (getenv("DW1_DEVICE_PROBE")) fprintf(stderr,"vab-head %llu\n",(unsigned long long)clock_now());
     clock_psyq_entry();
     return vab_open_sticky(data, vabid, addr);
 }
@@ -341,7 +370,9 @@ short SsVabTransBody(unsigned char *data, short vabid)
     }
     SpuSetTransferMode(0);
     SpuSetTransferStartAddr(banks[vabid].start);
+    clock_advance_cost(CLOCK_VAB_BODY_SETUP_CPU_CYCLES, CLOCK_COST_CPU);
     SpuWrite(data, banks[vabid].total);
+    clock_advance_cost(CLOCK_VAB_BODY_RETURN_CPU_CYCLES, CLOCK_COST_CPU);
     banks[vabid].used = 1;
     return vabid;
 }
@@ -349,14 +380,16 @@ short SsVabTransBody(unsigned char *data, short vabid)
 /* asm: asm/us/main/psyq/libsnd.s: SsVabTransCompleted. */
 short SsVabTransCompleted(short mode)
 {
-    clock_psyq_entry();
-    return (short)SpuIsTransferCompleted(mode);
+    clock_advance_cost(CLOCK_VAB_COMPLETED_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+    short done = (short)SpuIsTransferCompleted(mode);
+    clock_advance_cost(CLOCK_VAB_COMPLETED_RETURN_CPU_CYCLES, CLOCK_COST_CPU);
+    return done;
 }
 
 /* asm: asm/us/main/psyq/libsnd.s: SsUtGetVBaddrInSB. */
 unsigned long SsUtGetVBaddrInSB(short vabid)
 {
-    clock_psyq_entry();
+    clock_advance_cost(CLOCK_VAB_GET_ADDR_CPU_CYCLES, CLOCK_COST_CPU);
     if ((unsigned short)vabid >= 16 || banks[vabid].used != 1) return 0xfffffffful;
     return banks[vabid].start;
 }

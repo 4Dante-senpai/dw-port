@@ -18,6 +18,8 @@ static uint32_t pixels[2][640 * 480];
 static int front, width = 320, height = 240, pending;
 static uint64_t deadline, remainder;
 static uint32_t last_vblank;
+static uint64_t anchor;
+static uint32_t anchor_vblank, resynchronizations;
 static uint64_t monotonic_ns(void)
 {
     struct timespec now;
@@ -32,6 +34,40 @@ int sdl_video_init(void)
     renderer = SDL_CreateRenderer(window, NULL);
     return renderer != NULL;
 }
+static void pace(void)
+{
+    if (sdl_headless || port_capture_active()) return;
+    uint32_t vblank = clock_vblanks();
+    uint32_t elapsed = vblank - last_vblank;
+    last_vblank = vblank;
+    uint64_t now = monotonic_ns();
+    /* Frame 0 is the first VSync return, including nonblocking queries. */
+    if (!deadline) { anchor = deadline = now; anchor_vblank = vblank; return; }
+    remainder += (uint64_t)elapsed * CLOCK_VBLANK_NUM * 1000000000ull;
+    deadline += remainder / CLOCK_VBLANK_DEN; remainder %= CLOCK_VBLANK_DEN;
+    /* Drop a missed deadline rather than catch up after a debugger pause. */
+    if (now > deadline && now - deadline > 4ull * CLOCK_VBLANK_NUM * 1000000000ull / CLOCK_VBLANK_DEN) {
+        resynchronizations++;
+        fprintf(stderr, "dw1: pacing resynchronization vblank=%u late_ns=%llu\n",
+                vblank - anchor_vblank, (unsigned long long)(now - deadline));
+        deadline = now;
+        remainder = 0;
+    }
+    struct timespec due = {deadline / 1000000000, deadline % 1000000000};
+    while (clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &due, NULL) == EINTR) {}
+}
+void plat_native_wall_begin(void)
+{
+    pace();
+}
+void plat_native_wall_finish(void)
+{
+    pace();
+    if (anchor) printf("port: wall vblanks=%u nanoseconds=%llu resynchronizations=%u rate_num=%u rate_den=%u\n",
+                       clock_vblanks() - anchor_vblank,
+                       (unsigned long long)(monotonic_ns() - anchor), resynchronizations,
+                       CLOCK_VBLANK_DEN, CLOCK_VBLANK_NUM);
+}
 void plat_native_present(long frame)
 {
     (void)frame;
@@ -42,22 +78,7 @@ void plat_native_present(long frame)
     pthread_mutex_lock(&mutex);
     front = back; width = w; height = h; pending = 1;
     pthread_mutex_unlock(&mutex);
-    if (port_capture_active()) return;
-    uint32_t vblank = clock_vblanks();
-    uint32_t elapsed = vblank - last_vblank;
-    last_vblank = vblank;
-    uint64_t now = monotonic_ns();
-    /* Anchor at the first frame: the audio producer already paced the boot before it. */
-    if (!deadline) { deadline = now; return; }
-    remainder += (uint64_t)elapsed * 1001000000000ull;
-    deadline += remainder / 60000; remainder %= 60000;
-    /* Drop a missed deadline rather than catch up after a debugger pause. */
-    if (now > deadline && now - deadline > 4 * 1001000000000ull / 60000) {
-        deadline = now;
-        remainder = 0;
-    }
-    struct timespec due = {deadline / 1000000000, deadline % 1000000000};
-    while (clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &due, NULL) == EINTR) {}
+    pace();
 }
 void sdl_video_draw(void)
 {

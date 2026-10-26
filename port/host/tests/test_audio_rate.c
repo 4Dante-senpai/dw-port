@@ -1,4 +1,5 @@
 #include "../audio_rate.h"
+#include "../../psyq/clock.h"
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
@@ -17,7 +18,7 @@ static void simulate(unsigned hz, unsigned speed)
     uint64_t produced = 0, callbacks = 0;
     unsigned low = AUDIO_RATE_CAPACITY, high = 0;
     for (uint64_t vb = 1; vb <= 36000; vb++) {
-        uint64_t until = vb * 44100 * 1001 / 60000;
+        uint64_t until = vb * 44100 * CLOCK_VBLANK_NUM / CLOCK_VBLANK_DEN;
         unsigned count = (unsigned)(until - produced);
         for (unsigned i = 0; i < count; i++) {
             pcm[2*i] = (int16_t)(((int)((produced + i) % 256) - 128) * 90);
@@ -26,7 +27,7 @@ static void simulate(unsigned hz, unsigned speed)
         assert(audio_rate_push(&rate, pcm, count) == count);
         produced = until;
         /* Simulate a declared hardware frequency, optionally with hidden drift. */
-        while ((callbacks + 1) * 256 * 60000 * 10000ull <= vb * 1001 * hz * speed) {
+        while ((callbacks + 1) * 256 * CLOCK_VBLANK_DEN * 10000ull <= vb * CLOCK_VBLANK_NUM * hz * speed) {
             audio_rate_pull(&rate, output, 256, hz);
             for (unsigned i = 0; i < 256; i++) assert(abs(output[2*i] + output[2*i+1]) <= 1);
             assert(fabs(rate.ratio - 1) <= AUDIO_RATE_MAX_ADJUST + 1e-12);
@@ -41,7 +42,7 @@ static void simulate(unsigned hz, unsigned speed)
         }
     }
     assert(atomic_load(&rate.underruns) == 0 && atomic_load(&rate.overflows) == 0);
-    printf("audio_rate: 600.6 s, device=%u Hz, clock=%u/10000, level=%u..%u, underruns=0\n", hz, speed, low, high);
+    printf("audio_rate: 36000 VBlanks, device=%u Hz, clock=%u/10000, level=%u..%u, underruns=0\n", hz, speed, low, high);
 }
 
 static void edges(void)

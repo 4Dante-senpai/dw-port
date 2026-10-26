@@ -97,7 +97,7 @@ static int has_event(void *arg)
 static int get_event(int r)
 {
 	if (!has_event((void *)(intptr_t)r)) {
-		clock_wait_until(has_event, (void *)(intptr_t)r);
+		clock_wait_cost(has_event, (void *)(intptr_t)r, CLOCK_COST_CARD);
 	}
 	int code = (flags[r][0] + 2 * flags[r][1] + 4 * flags[r][2] + 8 * flags[r][3]) >> 1;
 	for (int i = 0; i < 4; i++) {
@@ -347,6 +347,7 @@ static void _card_stop(void)
 /* asm: MemCardInit/_card_open/InitCARD/StartCARD/_bu_init. */
 void MemCardInit(long flag)
 {
+	uint64_t setup_start = clock_now();
 	clock_psyq_entry();
 	(void)flag;
 	first = 0;
@@ -355,12 +356,16 @@ void MemCardInit(long flag)
 	card.command = card.result = card.ready = 0;
 	card.fd = -1;
 	bios_card_init();
+	uint64_t setup_elapsed = clock_now() - setup_start;
+	if (setup_elapsed < CLOCK_CARD_INIT_CPU_CYCLES)
+		clock_advance_cost(CLOCK_CARD_INIT_CPU_CYCLES - setup_elapsed, CLOCK_COST_CPU);
 	bios_bu_init();
 }
 /* asm: MemCardStart */
 void MemCardStart(void)
 {
 	clock_psyq_entry();
+	clock_advance_cost(CLOCK_CARD_START_CPU_CYCLES, CLOCK_COST_CPU);
 	UserFuncInit();
 	card.command = card.result = card.ready = 0;
 	card.fd = -1;
@@ -419,7 +424,7 @@ long MemCardSync(long mode, unsigned long *command, unsigned long *result)
 		return -1;
 	}
 	if (!mode && !card.ready) {
-		clock_wait_until(completed, NULL);
+		clock_wait_cost(completed, NULL, CLOCK_COST_CARD);
 	}
 	if (command) {
 		*command = card.ready ? regs[0] : card.command;

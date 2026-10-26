@@ -142,19 +142,21 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
 - **Binds:** NFR-1, FR-5, FR-6, FR-7, FR-15, `libetc`/`libcd`/`libgpu`/`libpress`/`libmcrd`/`libsnd` del port
 - **Prevents:** cuelgues en encuestas, callbacks en otro hilo o en momentos variables, y que cada librería tenga su propia noción del tiempo.
 - **Rule:**
-  - **Dueño del tiempo.** `clock.c` es el único dueño del tiempo. Lleva un contador de ciclos virtuales del CPU de PS1 (33.868.800 Hz) y una cola de eventos ordenada: VBlank cada 1/59,94 s (acumulador racional, sin deriva), root counters con el período que programa `SetRCnt`, y fin de operación de CD, GPU, MDEC y memory card.
+  - **Dueño del tiempo.** `clock.c` es el único dueño del tiempo. Lleva un contador de ciclos virtuales del CPU de PS1 (33.868.800 Hz) y una cola de eventos ordenada: VBlank cada 564398/33868800 s (60,0087172527 Hz medidos en Redux; `docs/port/clock-calibration.md`) (acumulador racional, sin deriva), root counters con el período que programa `SetRCnt`, y fin de operación de CD, GPU, MDEC y memory card.
   - **Avance.** Toda entrada a una función PsyQ avanza el reloj una cantidad fija de ciclos y despacha los eventos vencidos. Eso incluye las de encuesta: `CdReadSync(1)`, `CdSync(1)`, `DrawSync(1)`, `VSync(-1)`, `TestEvent`, `MemCardSync(1)`, `StGetNext`. Una espera bloqueante salta directamente al próximo evento que la satisface.
   - **Callbacks.** Los callbacks del juego (`VSyncCallback`, `CdReadCallback`, `DrawSyncCallback`, `DecDCToutCallback`, eventos de root counter y memory card) corren solo en el hilo del juego, al despachar su evento.
   - **Costos.**
-    - CD: 75 sectores/s a 1× y 150 a 2× (según `CdlModeSpeed`), con acumulador fraccional, más un seek fijo por operación.
-    - GPU: `DrawSync` termina tras un costo en ciclos proporcional a lo transferido o dibujado; nunca se redondea a VBlank.
-    - MDEC: costo por macrobloque.
-    - Las constantes iniciales se calibran en M3 contra el Emulador de referencia; se pueden ajustar los números, no la forma.
+    - CD: cadencia de Redux de 13333/6666 µs por sector a 1×/2×, FIFO de comandos, transición de velocidad y seek por distancia física en LBA. El transporte STR conserva plazos absolutos de sector aunque una IRQ demore su entrega. La búsqueda usa la geometría ISO verificada y el caché de directorios; los costos de CPU de PsyQ se contabilizan aparte.
+    - GPU: latencia por bloques/palabras y dirección del DMA, según los comandos observados en Redux. El rasterizador software de esa referencia ejecuta GP0 directo sin latencia de píxeles; `DrawSync` espera el DMA pendiente. Nunca se redondea a VBlank.
+    - MDEC: latencia por bytes de salida del DMA. El VLC es trabajo de CPU: se cuentan las ramas y accesos de su algoritmo nativo con costos del intérprete fijado de Redux, sin ejecutar instrucciones MIPS en el port.
+    - Tarjeta: el BIOS alterna puertos por VBlank; el sector finaliza según operación de lectura/escritura. Los intervalos se midieron con transacciones SIO0 de OpenBIOS.
+    - CPU: las rutinas BIOS de memoria/cadenas y los bucles de inicialización y búsqueda de archivos cobran trabajo medido por operación y tamaño. El cierre de música cobra las ramas de desregistro de IRQ/eventos y del banco SPU según su estado. El servicio de IRQ de VBlank, pad, tarjeta, Timer 2, CD y SPU conserva el trabajo de CPU interrumpido; una espera de dispositivo conserva su deadline. La prioridad y la ventana de verificación de Timer 2 determinan cuándo se atiende el pad. El latch de entrada no se desplaza. Los sondeos C de CdReadSync y VSync cobran sus ramas medidas: los plazos físicos siguen corriendo y las IRQ se despachan en la siguiente rama, incluidos los reintentos de la lectura estable de Timer 1. ReadN separa confirmación FIFO, arranque y seek. Todo se ejecuta como C nativo, sin interpretar instrucciones MIPS.
+    - Las constantes iniciales se calibran en M3 contra el Emulador de referencia; se pueden ajustar los números y la forma del modelo si la descomposición por fuente lo justifica, sin ajustes por Escena (decisión 3.10).
   - **`VSync(n)` con semántica PsyQ.** `VSync(0)` espera el próximo VBlank, `VSync(n>1)` espera n VBlanks desde el retorno del `VSync` anterior, `VSync(1)` devuelve las líneas horizontales y `VSync(-1)` devuelve el contador de VBlanks.
   - **Spins sin PsyQ.** Los loops del juego que esperan un flag escrito por un callback sin llamar a PsyQ (por ejemplo `MOV_waitForFlip`) los inventaría `tools/port/metrics/isr_spins.py`. Cada uno recibe un bloque `DW1_PORT` con `port_yield()` o se lista como no aplicable.
   - **Reloj de pared.** Solo pausa el hilo del juego en `VSync` para alinear el VBlank virtual con el real; nunca decide el orden de eventos.
     - En headless no se pausa nunca.
-    - Si el juego llega tarde, se recupera hasta 3 VBlanks sin pausar. Más allá, se rebasa el deadline y se cuenta un "frame perdido" (métrica de NFR-2).
+    - Si el juego llega tarde, se recupera sin pausar. Con más de 4 VBlanks de atraso, se rebasa el deadline y se cuenta una resincronización (métrica de NFR-2); la aceptación de diez minutos exige cero.
     - Al pausar o al ocultar la pestaña (FR-15) se detiene el reloj de pared y, al volver, se rebasa el deadline.
   - **Input.** Se muestrea una vez por VBlank y se aplica en el latch de ese VBlank.
 
@@ -176,7 +178,7 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
 - **Rule:**
   - **SPU.** El Backend emula el SPU: 24 voces ADPCM, ADSR, reverb y entrada de CD/XA. Parte de `dw2-pc/backend/psxspu.c`.
   - **`libsnd`/`libspu`.** Se traducen del asm de DW1 (`mw_lib41`), con DW2-PC solo como guía. Escriben registros SPU como en la consola, con su tick a la tasa que pide el juego (`SS_TICK240` es un root counter de AD-8).
-  - **Precisión de muestra.** Antes de cada escritura a un registro SPU, y al cerrar cada VBlank, el SPU se ejecuta hasta el tiempo virtual actual. Usa un acumulador exacto de 44.100 × 1001/60000 muestras por VBlank. Las muestras (44.100 Hz estéreo s16) van a `plat_audio_push()`.
+  - **Precisión de muestra.** Antes de cada escritura a un registro SPU, y al cerrar cada VBlank, el SPU se ejecuta hasta el tiempo virtual actual. Usa un acumulador exacto de 44.100 × CLOCK_VBLANK_NUM/CLOCK_VBLANK_DEN muestras por VBlank. Las muestras (44.100 Hz estéreo s16) van a `plat_audio_push()`.
   - **XA.** Se decodifica en el Backend y entra al SPU por la entrada de CD.
   - **Deriva.** El Host es el único dueño: remuestrea a la frecuencia del dispositivo con un ratio ajustado según el nivel del ring buffer, con banda muerta. El juego nunca ajusta el VBlank por audio.
   - **Volumen.** El volumen general (FR-7) se aplica en el Host.
@@ -399,8 +401,10 @@ graph LR
 - **Punteros absolutos en `CHDAT/*.MMD`:** riesgo bajo. `loadMMD` (`src/main/model.c:3356`) usa offsets relativos. Se confirma en M2 leyendo el cargador de animaciones; si hay punteros absolutos, se agrega un AD.
 - **`SHOP_REL.BIN` en USA** (hipótesis): se valida en M3. No cambia AD-6, porque el archivo se lee igual.
 - **16:9 por Escena (FR-14):** viabilidad en M5 con el Renderer WebGL2. Las Escenas no viables se marcan en su `.toml`.
-- **Constantes de costo de AD-8 y tolerancias de AD-15:** se calibran en M3 con el Emulador de referencia. La forma de las reglas no cambia.
+- **Constantes de costo de AD-8 y tolerancias de AD-15:** se calibran en M3 con el Emulador de referencia. La forma también puede calibrarse con evidencia por fuente y sin ajustes por Escena (3.10).
 - **Paralelismo interno del Backend** (rasterizador multi-hilo, render HD): M5. Solo dentro del Backend y sin cambiar el orden de eventos de AD-8.
 - **Service worker y versionado del deploy (FR-16):** historia de M4/M7, dentro de las versiones de formato de AD-11 y AD-13.
 - **Operación del deploy** (dominio, TLS, monitoreo): M7. Publicar es decisión del dueño.
 - **Merge periódico de `upstream/main`:** cadencia en la épica de decomp; el check es L0a.
+
+- **Memlog 2026-10-24, 3.10 (en curso):** el sondeo NTSC sin disco de Redux registra 144485888 ciclos en 256 VBlanks: período 564398 ciclos, tasa 60,0087172527 Hz. Reloj virtual y SDL comparten esa razón. La calibración de costos y la aceptación de las Escenas siguen pendientes; evidencia en `docs/port/clock-calibration.md`.

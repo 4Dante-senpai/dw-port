@@ -533,7 +533,7 @@ uint16_t spu_read16(uint32_t off) {
 void spu_dma_write(const uint32_t *src, uint32_t words) {
     spu_sync();
     assert(words <= (SPU_RAM_SIZE - transfer_addr) / 4);
-    transfer_due = (transfer_due > clock_now() ? transfer_due : clock_now()) + (uint64_t)words * 16; /* hypothesis: 4 CPU cycles/byte */
+    transfer_due = (transfer_due > clock_now() ? transfer_due : clock_now()) + CLOCK_SPU_DMA_CYCLES((uint64_t)words * 4);
     uint32_t i;
     for (i = 0; i < words; i++) {
         uint32_t w = src[i];
@@ -548,7 +548,7 @@ void spu_dma_write(const uint32_t *src, uint32_t words) {
 void spu_dma_read(uint32_t *dst, uint32_t words) {
     spu_sync();
     assert(words <= (SPU_RAM_SIZE - transfer_addr) / 4);
-    transfer_due = (transfer_due > clock_now() ? transfer_due : clock_now()) + (uint64_t)words * 16;
+    transfer_due = (transfer_due > clock_now() ? transfer_due : clock_now()) + CLOCK_SPU_DMA_CYCLES((uint64_t)words * 4);
     uint32_t i;
     for (i = 0; i < words; i++) {
         uint32_t w = 0;

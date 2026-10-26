@@ -18,6 +18,9 @@ OPENBIOS = Path("/usr/local/share/pcsx-redux/openbios.bin")
 _audio_spec = importlib.util.spec_from_file_location("scene_audio", Path(__file__).with_name("audio.py"))
 audio = importlib.util.module_from_spec(_audio_spec)
 _audio_spec.loader.exec_module(audio)
+_timing_spec = importlib.util.spec_from_file_location("scene_timing", Path(__file__).with_name("timing.py"))
+timing = importlib.util.module_from_spec(_timing_spec)
+_timing_spec.loader.exec_module(timing)
 
 
 def read_ppm(path):
@@ -306,9 +309,12 @@ def state_fingerprint(scene, bios_identity=None):
     source = card_source(scene, scene.get("_card_build", "native-headless"))
     if source:
         definition["card1_sha256"] = hashlib.sha256(source.read_bytes()).hexdigest()
-    content = json.dumps([definition, bios_identity], sort_keys=True).encode()
+    emulator = shutil.which("pcsx-redux")
+    emulator_identity = hashlib.sha256(Path(emulator).read_bytes()).hexdigest() if emulator else "pcsx-redux"
+    content = json.dumps([definition, bios_identity, emulator_identity], sort_keys=True).encode()
     for name in ("tools/port/scenes/" + scene.get("state_vars", "state_vars.txt"), "config/us/symbols.txt",
                  "tools/port/reference/capture.lua", "tools/port/reference/capture.py",
+                 "tools/port/reference/hardware.lua",
                  "tools/port/scenes/run.py"):
         content += (ROOT / name).read_bytes()
     return hashlib.sha256(content).hexdigest()
@@ -487,6 +493,8 @@ def run_audio(args, scene, build, checkpoints, pack):
     hashes = record.get("hashes", {})
     required = {f"run-{run}-{segment}.{suffix}" for run in (1, 2)
                 for segment in range(1,len(scene["audio"])+1) for suffix in (("spu", "wav", "xa.wav") if scene.get("xa") else ("spu", "wav"))}
+    required.update(f"run-{i}.{kind}.jsonl" for i in (1, 2)
+                    for kind in ("timing", "hardware"))
     if scene.get("movie"):
         for index in (1,2): required.update(reference_audio.movie.evidence(reference / f"movie-{index}"))
     if set(hashes) != required:
@@ -519,6 +527,7 @@ def run_audio(args, scene, build, checkpoints, pack):
         for path in paths:
             path.unlink(missing_ok=True)
         environment = dict(os.environ)
+        environment["DW1_TIMING_TRACE"] = str(output / f"run-{index}.timing.jsonl")
         if scene.get("xa"):
             environment["DW1_XA_WAV"] = str(output / f"run-{index}-1.xa.wav")
         if scene.get("movie"):
@@ -540,10 +549,14 @@ def run_audio(args, scene, build, checkpoints, pack):
         (output / f"run-{index}.log").write_bytes(log)
         if result.returncode or re.search(rb"AddressSanitizer|runtime error", log):
             raise ValueError(f"audio run {index} failed: exit {result.returncode}; {output}/run-{index}.log")
-        all_hashes.append([hashlib.sha256(path.read_bytes()).hexdigest() for path in paths])
+        all_hashes.append([hashlib.sha256(path.read_bytes()).hexdigest()
+                           for path in [*paths, output / f"run-{index}.timing.jsonl"]])
     if all_hashes[0] != all_hashes[1]:
         raise ValueError("non-deterministic native SPU trace/PCM")
     metrics, failures = [], []
+    timing_report = timing.compare(output / "run-1.timing.jsonl", reference / "run-1.timing.jsonl",
+                                   scene["mark"], scene.get("checkpoints", []),
+                                   strict=scene.get("movie", False))
     video = None
     if scene.get("movie"):
         reference_audio.movie.deterministic(output / "movie-1", output / "movie-2")
@@ -587,7 +600,7 @@ def run_audio(args, scene, build, checkpoints, pack):
         if isinstance(value, list):
             return [finite_metrics(item) for item in value]
         return value
-    report.write_text(json.dumps(finite_metrics(dict(hashes=all_hashes[0], segments=metrics, video=video)),
+    report.write_text(json.dumps(finite_metrics(dict(hashes=all_hashes[0], segments=metrics, video=video, timing=timing_report)),
                                  indent=2, allow_nan=False) + "\n")
     if failures:
         raise ValueError("; ".join(failures[:8]) + (f"; {len(failures)} failed checks (see {report})" if len(failures)>8 else ""))
@@ -626,7 +639,7 @@ def main():
         command = [sys.executable, "-I", "-B", str(ROOT / "tools/port/reference/capture.py"), args.id,
                    "--state", "--card-build", args.build, "--max-vblanks", str(max(40000, scene["capture_vblank"] + 9000))]
         if checkpoints:
-            command += ["--timeout", "1800"]
+            command += ["--timeout", "7200"]
         status = subprocess.run(command).returncode
         if status: return status
     pack = args.pack.resolve() if args.pack else build / "us.pack"
@@ -662,7 +675,9 @@ def main():
         state = output / f"run-{index}.state"
         for path in (capture, trace, clock, state):
             path.unlink(missing_ok=True)
-        env = dict(os.environ, DW1_TRACE=str(trace))
+        timing_path = output / f"run-{index}.timing.jsonl"
+        timing_path.unlink(missing_ok=True)
+        env = dict(os.environ, DW1_TRACE=str(trace), DW1_TIMING_TRACE=str(timing_path))
         if args.build == "native":
             env.update(SDL_VIDEODRIVER="offscreen", SDL_AUDIODRIVER="dummy")
         if args.build == "native-asan":
@@ -690,9 +705,13 @@ def main():
         if not re.search(rf"^\d+ mark {re.escape(scene['mark'])}$", trace.read_text(), re.M):
             raise ValueError(f"run {index}: missing scene mark")
         colors = ppm_colors(capture)
-        if colors <= 16 and not args.state:
+        # A measured checkpoint can be black (e.g. before the map is drawn).
+        # Its exact pinned reference hash still proves the capture is correct.
+        matches_reference = args.compare and hashlib.sha256(capture.read_bytes()).hexdigest() == scene["reference_sha256"]
+        if colors <= 16 and not args.state and not matches_reference:
             raise ValueError(f"run {index}: only {colors} colors")
-        hashes = tuple(hashlib.sha256(path.read_bytes()).hexdigest() for path in ((capture, clock, state) if args.state else (capture, clock)))
+        hashes = tuple(hashlib.sha256(path.read_bytes()).hexdigest() for path in
+                       ((capture, clock, state, timing_path) if args.state else (capture, clock, timing_path)))
         if not clock.stat().st_size:
             raise ValueError("empty clock trace")
         results.append(hashes)
@@ -702,6 +721,9 @@ def main():
         raise ValueError("SDL title capture differs from title.toml reference_sha256")
     if results[0] != results[1]:
         raise ValueError("capture, clock or state trace differs between runs")
+    if args.compare or args.state:
+        timing.compare(output / "run-1.timing.jsonl", reference_path(args.id).with_suffix(".timing.jsonl"),
+                       scene["mark"], scene.get("checkpoints", []), strict=args.id in ("title", "map_load"))
     if "card1" in scene:
         reference = final_card("reference", args.id, args.build)
         actual = final_card("port", args.id, args.build)

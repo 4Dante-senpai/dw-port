@@ -20,6 +20,21 @@ static const PortCapture *config;
 static FILE *input, *trace;
 static int have_origin, have_mark, pending;
 static uint32_t origin, mark, event_k, previous_k;
+static FILE *timing;
+static uint64_t origin_cycle, origin_costs[CLOCK_COST_COUNT];
+static void timing_point(const char *event, const char *label)
+{
+    if (!timing || !have_origin) return;
+    uint64_t totals[CLOCK_COST_COUNT];
+    clock_cost_snapshot(totals);
+    fprintf(timing, "{\"event\":\"%s\",\"label\":\"%s\",\"vblank\":%u,\"cycle\":%llu,\"costs\":{",
+            event, label, clock_vblanks() - origin,
+            (unsigned long long)(clock_now() - origin_cycle));
+    for (unsigned i = 0; i < CLOCK_COST_COUNT; i++)
+        fprintf(timing, "%s\"%s\":%llu", i ? "," : "", clock_cost_names[i],
+                (unsigned long long)(totals[i] - origin_costs[i]));
+    if (fputs("}}\n", timing) < 0 || fflush(timing)) { perror("scene: timing trace"); exit(1); }
+}
 static unsigned buttons, held, rand_index;
 static int have_previous;
 typedef struct { char name[128]; char type[8]; unsigned count, width; void *address; } Variable;
@@ -194,14 +209,32 @@ void port_scene_enter(void *function)
         cp->reached = 1;
         cp->start = clock_vblanks();
         next_checkpoint++;
+        timing_point("checkpoint", cp->label);
         audio_enter(cp->label);
         if (trace) snapshot(cp->label, 0);
+    }
+}
+/* Optional calibration observation; never advances the virtual clock. */
+static void cpu_function_probe(void *function, const char *event)
+{
+    const char *names = getenv("DW1_CPU_PROBE");
+    Dl_info symbol;
+    if (names && dladdr(function, &symbol) && symbol.dli_sname &&
+        strstr(names, symbol.dli_sname))
+    {
+        fprintf(stderr, "cpu-function %s %s %llu %u", symbol.dli_sname, event,
+                (unsigned long long)clock_now(), clock_vblanks());
+        const char *vars[] = {"SCRIPT_STATE_2", "POLLED_INPUT", "INPUT_PENDING_MASK", "MAIN_D_80135028", "NAMING_SELECTOR", "CURRENT_MENU", "TARGET_MENU", "MAIN_MENU_TICKS", "CONNECTED_CARDS", "NEW_CARDS", "MEMORY_CARD_ERROR"};
+        for(unsigned i=0;i<11;i++) { const unsigned short *v=dlsym(RTLD_DEFAULT,vars[i]); fprintf(stderr," %u",v?*v:0); }
+        fputc('\n',stderr);
     }
 }
 void __cyg_profile_func_enter(void *function, void *caller)
 {
     (void)caller;
+    clock_game_function_enter(function);
     movie_function_timing(function,"enter");
+    cpu_function_probe(function, "enter");
     if (getenv("DW1_MOVIE_CAPTURE") && function==dlsym(RTLD_DEFAULT,"MOV_playMovie")) {
         const char *directory=getenv("DW1_MOVIE_CAPTURE");
         if(strlen(directory)>=sizeof(movie_directory)) fail("movie output path too long");
@@ -216,7 +249,9 @@ void __cyg_profile_func_enter(void *function, void *caller)
 void __cyg_profile_func_exit(void *function, void *caller)
 {
     (void)caller;
+    clock_game_function_exit(function);
     movie_function_timing(function,"exit");
+    cpu_function_probe(function, "exit");
     if (movie_trace && function==dlsym(RTLD_DEFAULT,"MOV_playMovie")) {
         const int *completed=dlsym(RTLD_DEFAULT,"MOVIE_COMPLETED");
         fprintf(movie_trace,"{\"event\":\"end\",\"cycle\":%llu,\"vblank\":%u,\"return\":%d,\"xa_cycle\":%llu}\n",
@@ -278,6 +313,8 @@ static void latch(void)
             if (!event->applied && cp->reached && clock_vblanks() - cp->start >= event->k) {
                 held = event->mask;
                 event->applied = 1;
+                if (getenv("DW1_INPUT_TIMING"))
+                    fprintf(stderr,"input %u %s %u %u\n",clock_vblanks()-origin,cp->label,event->k,held);
             }
         }
         port_pad_latch((uint16_t)held);
@@ -292,6 +329,11 @@ static void latch(void)
 }
 void port_scene_prepare(const PortCapture *value)
 {
+    const char *timing_path = getenv("DW1_TIMING_TRACE");
+    if (timing_path) {
+        timing = fopen(timing_path, "w");
+        if (!timing) fail("cannot open timing trace");
+    }
     config = value;
     if (config->audio_segments) {
         FILE *file = fopen(config->audio_segments, "r");
@@ -452,11 +494,19 @@ void port_scene_prepare(const PortCapture *value)
 }
 void port_scene_origin(void)
 {
-    if (!have_origin) { have_origin = 1; origin = clock_vblanks(); latch(); }
+    if (!have_origin) {
+        have_origin = 1; origin = clock_vblanks(); origin_cycle = clock_now();
+        clock_cost_snapshot(origin_costs);
+        timing_point("frame0", "frame0");
+        latch();
+    }
 }
 void port_scene_start(void)
 {
-    if (!have_mark) { have_mark = 1; mark = clock_vblanks(); rand_index = 0; }
+    if (!have_mark) {
+        have_mark = 1; mark = clock_vblanks(); rand_index = 0;
+        timing_point("mark", config->mark);
+    }
 }
 static void pointer_value(uint32_t value)
 {
@@ -503,6 +553,7 @@ static void snapshot(const char *label, unsigned relative)
 }
 void port_scene_tick(void)
 {
+    if (have_origin && clock_vblanks() - origin <= 8) timing_point("vblank", "vblank");
     latch();
     if (audio_trace && audio_segments[audio_index].window &&
         clock_vblanks() - audio_segments[audio_index].origin >= audio_segments[audio_index].window)
@@ -517,10 +568,16 @@ void port_scene_tick(void)
 }
 void port_scene_finish(void)
 {
+    if (timing && fclose(timing)) fail("cannot close timing trace");
+    timing = NULL;
     if (trace && fclose(trace)) fail("cannot close state trace");
     trace = NULL;
 }
 #else
+void __cyg_profile_func_enter(void *function, void *caller)
+{ (void)caller; clock_game_function_enter(function); }
+void __cyg_profile_func_exit(void *function, void *caller)
+{ (void)caller; clock_game_function_exit(function); }
 void port_scene_prepare(const PortCapture *config) { (void)config; }
 void port_scene_origin(void) {}
 void port_scene_start(void) {}

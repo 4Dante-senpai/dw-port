@@ -96,27 +96,27 @@ static void transfers(void)
     uint32_t src[]={0x12345678,0x90abcdef}, dst[2]={0};
     spu_write16(0x1a6,0x202); spu_dma_write(src,2); CHECK(!spu_transfer_completed()); CHECK(spu_read16(0x1ae)&0x400);
     CHECK(spu_ram[0x1010]==0x78 && spu_ram[0x1017]==0x90);
-    clock_advance(31); CHECK(!spu_transfer_completed()); clock_advance(1); CHECK(spu_transfer_completed());
+    clock_advance(1); CHECK(spu_transfer_completed());
     spu_write16(0x1a6,0x202); spu_dma_read(dst,2); CHECK(!memcmp(src,dst,sizeof(src)));
-    clock_advance(32); CHECK(spu_transfer_completed());
+    clock_advance(1); CHECK(spu_transfer_completed());
     reset();
-    spu_dma_write(src,2); clock_advance(8);
-    spu_dma_write(src,1); spu_dma_read(dst,1);
-    clock_advance(24); CHECK(!spu_transfer_completed()); /* first DMA deadline */
-    clock_advance(16); CHECK(!spu_transfer_completed()); /* second DMA deadline */
-    clock_advance(15); CHECK(!spu_transfer_completed());
-    clock_advance(1); CHECK(spu_transfer_completed()); /* all 4 words */
-    clock_advance(10); spu_dma_write(src,1);
-    clock_advance(15); CHECK(!spu_transfer_completed());
-    clock_advance(1); CHECK(spu_transfer_completed()); /* idle starts at now */
+    /* Serialized requests use the Redux DMA4 rate: two words per cycle. */
+    spu_dma_write(src,2);
+    spu_dma_write(src,2); spu_dma_read(dst,2);
+    clock_advance(2); CHECK(!spu_transfer_completed());
+    clock_advance(1); CHECK(spu_transfer_completed());
+    clock_advance(10); spu_dma_write(src,2);
+    CHECK(!spu_transfer_completed());
+    clock_advance(1); CHECK(spu_transfer_completed());
 }
 static void timing(void)
 {
     reset(); voice(0x2c0f,0x1fc0); clock_advance(768*3+767);
     spu_write16(8,0x2d0f); CHECK(spu_read16(12)==21); CHECK(spu_samples()==3);
     samples(1); CHECK(spu_read16(12)==27);
+    /* Redux: 35964 fields * 564398 cycles / 768 cycles per sample. */
     reset(); uint64_t target=clock_vblank_cycle(35964);
-    clock_advance(target); CHECK(spu_samples()==26459973); CHECK(spu_samples()==target/768);
+    clock_advance(target); CHECK(spu_samples()==26429700); CHECK(spu_samples()==target/768);
     reset();
     /* Split the same interval at non-sample and non-VBlank boundaries. */
     while(clock_now()<target) {
@@ -124,7 +124,7 @@ static void timing(void)
         if(n>target-clock_now()) n=target-clock_now();
         clock_advance(n); spu_read16(0x1ae);
     }
-    CHECK(spu_samples()==26459973);
+    CHECK(spu_samples()==26429700);
     /* Cross signed-int rollover without rendering billions of silent frames. */
     reset(); samples((1u << 31) + 4); spu_set_output(collect,NULL); samples(64);
     CHECK(last[0]==0 && last[1]==0);

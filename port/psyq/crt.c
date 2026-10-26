@@ -52,6 +52,10 @@ int port_capture_active(void)
 static int marked;
 static uint32_t mark_vblank;
 static FILE *clock_trace;
+#ifndef __EMSCRIPTEN__
+static uint32_t frame0_vblank;
+static int have_frame0;
+#endif
 
 void port_scene_mark(const char *name)
 {
@@ -77,10 +81,19 @@ static void capture_vblank(void)
 	spu_sync();
 	port_scene_tick();
 #ifndef __EMSCRIPTEN__
+	if (have_frame0 && capture_config.vblank_limit &&
+	    clock_vblanks() - frame0_vblank >= capture_config.vblank_limit) {
+		if (plat_native_wall_finish) plat_native_wall_finish();
+		printf("port: reached VBlank %u after frame 0\n", clock_vblanks() - frame0_vblank);
+		exit(0);
+	}
+#endif
+#ifndef __EMSCRIPTEN__
 	if (!capture_config.inputs && plat_input_vblank) plat_input_vblank();
 #endif
 	if (capture_config.audio_segments) {
-		if (port_scene_audio_complete()) {
+		if (port_scene_audio_complete() &&
+		    (!capture_config.checkpoints || port_scene_complete())) {
 			port_scene_finish();
 			if (clock_trace && fclose(clock_trace)) exit(1);
 			puts("port: audio segments captured");
@@ -127,10 +140,21 @@ static void capture_vblank(void)
 #endif
 }
 
-/* A frame ends when VSync(0/n) returns (AD-15 frame 0 is the first one). */
-void port_frame_done(void)
+/* AD-15 includes nonblocking VSync calls made inside PsyQ (set_alarm). */
+void port_vsync_return(void)
 {
 	port_scene_origin();
+#ifndef __EMSCRIPTEN__
+	if (!have_frame0) {
+        have_frame0 = 1; frame0_vblank = clock_vblanks();
+        if (plat_native_wall_begin) plat_native_wall_begin();
+    }
+#endif
+}
+
+/* Only a blocking VSync presents a frame. */
+void port_frame_done(void)
+{
 	plat_present(frames);
 	frames++;
 	if (frame_limit > 0 && frames >= frame_limit) {
@@ -174,6 +198,7 @@ static void watchdog(void *arg)
 static void *game_thread(void *arg)
 {
 	(void)arg;
+	clock_advance(CLOCK_BOOT_SCAN_PHASE_CYCLES);
 #ifndef __EMSCRIPTEN__
 	if (plat_game_init) plat_game_init();
 #endif

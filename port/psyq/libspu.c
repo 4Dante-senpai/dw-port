@@ -4,6 +4,7 @@
 #include "clock.h"
 #include "../backend/spu.h"
 #include <string.h>
+#include <stdlib.h>
 
 #include "spu_reverb.inc"
 /* asm: asm/us/main/data/psyq/libspu.data.s, _spu_rev_startaddr. */
@@ -24,6 +25,7 @@ static int transfer_event = -1;
 static uint64_t transfer_due;
 static uint16_t center_notes[24];
 static int spu_started;
+int psyq_spu_dma_irq_active(void) { return spu_started; }
 static int allocated_at_or_after(uint32_t addr);
 
 void psyq_libspu_reset(void)
@@ -48,10 +50,12 @@ void psyq_libspu_reset(void)
  * Preserve the mode-0 special 128-byte clear. */
 static long clear_work_area(long mode)
 {
+    if (getenv("DW1_DEVICE_PROBE")) fprintf(stderr, "spu-clear cycle=%llu mode=%ld allocated=%d\n", (unsigned long long)clock_now(), mode, mode >= 0 && mode < 10 ? allocated_at_or_after((uint32_t)reverb_start[mode] * 8) : -1);
     if ((unsigned long)mode >= 10) return -1;
     uint32_t start = mode ? (uint32_t)reverb_start[mode] * 8 : 0x7ff80;
     if (allocated_at_or_after((uint32_t)reverb_start[mode] * 8)) return -1;
     uint32_t remaining = SPU_RAM_SIZE - start;
+    clock_advance_cost(CLOCK_SPU_CLEAR_FIXED_CPU_CYCLES, CLOCK_COST_CPU);
     const uint32_t zeros[256] = {0};
     while (remaining) {
         uint32_t size = remaining > sizeof(zeros) ? sizeof(zeros) : remaining;
@@ -59,7 +63,8 @@ static long clear_work_area(long mode)
         spu_write16(0x1a6, transfer_start);
         spu_dma_write(zeros, size / 4);
         /* WaitEvent in the asm: the transfer completes on the virtual clock. */
-        clock_advance((uint64_t)size * 4);
+        clock_advance_cost(CLOCK_SPU_DMA_CYCLES(size), CLOCK_COST_SPU);
+        clock_advance_cost(CLOCK_SPU_CLEAR_CHUNK_CPU_CYCLES, CLOCK_COST_CPU);
         remaining -= size;
         start += size;
     }
@@ -68,7 +73,6 @@ static long clear_work_area(long mode)
 /* asm: asm/us/main/psyq/libspu.s: SpuClearReverbWorkArea (public entry). */
 long SpuClearReverbWorkArea(long mode)
 {
-    clock_psyq_entry();
     return clear_work_area(mode);
 }
 
@@ -299,7 +303,9 @@ long SpuMalloc(long size)
 /* asm: asm/us/main/psyq/libspu.s: SpuFree. Unknown addresses are ignored. */
 void SpuFree(unsigned long addr)
 {
-    clock_psyq_entry();
+    if (mem_list && (mem_list[0].addr & BLOCK_TAIL))
+        clock_advance_cost(CLOCK_SPU_FREE_EMPTY_CPU_CYCLES, CLOCK_COST_CPU);
+    else clock_psyq_entry();
     for (int i = 0; mem_list && i < block_count; i++) {
         if (mem_list[i].addr & BLOCK_TAIL) break;
         if (mem_list[i].addr == addr) { mem_list[i].addr = addr | BLOCK_FREE; break; }
@@ -352,11 +358,13 @@ static void transfer_irq(void *arg)
     (void)arg;
     transfer_event = -1;
     if (!spu_started) return;
+    clock_advance_cost(CLOCK_SPU_DMA_IRQ_CPU_CYCLES, CLOCK_COST_CPU);
     spu_write16(0x1aa, spu_read16(0x1aa) & ~0x30);
 }
 
 unsigned long SpuWrite(unsigned char *addr, unsigned long size)
 {
+    if (getenv("DW1_DEVICE_PROBE")) fprintf(stderr,"spu-write %llu %lu\n",(unsigned long long)clock_now(),size);
     clock_psyq_entry();
     if (size > 0x7eff0) size = 0x7eff0;
     spu_write16(0x1a6, transfer_start);
@@ -369,6 +377,7 @@ unsigned long SpuWrite(unsigned char *addr, unsigned long size)
         }
         spu_write16(0x1aa, control);
     } else {
+        clock_advance_cost(CLOCK_SPU_WRITE_SETUP_CYCLES, CLOCK_COST_CPU);
         spu_write16(0x1aa, (spu_read16(0x1aa) & ~0x30) | 0x20);
         unsigned long rounded = (size + 63) & ~63ul;
         for (unsigned long i = 0; i < rounded; i += 64) {
@@ -382,22 +391,44 @@ unsigned long SpuWrite(unsigned char *addr, unsigned long size)
         }
         clock_cancel(transfer_event);
         if (transfer_due < clock_now()) transfer_due = clock_now();
-        transfer_due += (uint64_t)rounded * 4;
+        transfer_due += CLOCK_SPU_DMA_CYCLES(rounded);
         transfer_event = clock_schedule(transfer_due - clock_now(), transfer_irq, NULL);
+        clock_advance_cost(CLOCK_SPU_WRITE_RETURN_CYCLES, CLOCK_COST_CPU);
     }
     transfer_available = 0;
+    if (getenv("DW1_DEVICE_PROBE")) fprintf(stderr,"spu-write-end %llu\n",(unsigned long long)clock_now());
     return size;
 }
 
 /* asm: asm/us/main/psyq/libspu.s: SpuIsTransferCompleted. */
-static int transfer_done(void *arg) { (void)arg; return spu_transfer_completed(); }
 long SpuIsTransferCompleted(long flag)
 {
-    clock_psyq_entry();
-    if (transfer_mode == 1 || transfer_available == 1) return 1;
-    if (flag == 1) clock_wait_until(transfer_done, NULL);
-    int done = spu_transfer_completed();
+    if (getenv("DW1_DEVICE_PROBE")) fprintf(stderr,"spu-wait %llu\n",(unsigned long long)clock_now());
+    if (transfer_mode == 1 || transfer_available == 1) {
+        clock_psyq_entry();
+        return 1;
+    }
+    int done;
+    if (flag == 1) {
+        clock_advance_cost(CLOCK_SPU_TRANSFER_POLL_SETUP_CYCLES, CLOCK_COST_CPU);
+        unsigned first = 1;
+        do {
+            /* TestEvent reads the event flag before its return path. An IRQ
+             * during that path publishes the event for the next iteration. */
+            done = spu_transfer_completed();
+            clock_advance_cost(done ? CLOCK_SPU_TRANSFER_POLL_SUCCESS_CYCLES :
+                CLOCK_SPU_TRANSFER_POLL_FAIL_CYCLES, CLOCK_COST_CPU);
+            if (!done) clock_advance_cost(first ? CLOCK_SPU_TRANSFER_POLL_FIRST_LOOP_CYCLES :
+                CLOCK_SPU_TRANSFER_POLL_LOOP_CYCLES, CLOCK_COST_CPU);
+            first = 0;
+        } while (!done);
+        clock_advance_cost(CLOCK_SPU_TRANSFER_POLL_RETURN_CYCLES, CLOCK_COST_CPU);
+    } else {
+        clock_psyq_entry();
+        done = spu_transfer_completed();
+    }
     if (done) transfer_available = 1;
+    if (getenv("DW1_DEVICE_PROBE")) fprintf(stderr,"spu-wait-end %llu\n",(unsigned long long)clock_now());
     return done;
 }
 
@@ -554,14 +585,19 @@ long SpuSetNoiseClock(long value)
 void SpuStart(void)
 {
     clock_psyq_entry();
-    if (!spu_started) spu_started = 1;
+    if (!spu_started) {
+        clock_advance_cost(CLOCK_SPU_START_FIRST_CPU_CYCLES, CLOCK_COST_CPU);
+        spu_started = 1;
+    }
 }
 
 /* asm: asm/us/main/psyq/libspu.s: SpuQuit. Detaching the DMA callback
  * does not turn off voices, mute the chip, or discard sound RAM. */
 void SpuQuit(void)
 {
-    clock_psyq_entry();
+    if (spu_started)
+        clock_advance_cost(CLOCK_SPU_QUIT_ACTIVE_CPU_CYCLES, CLOCK_COST_CPU);
+    else clock_psyq_entry();
     spu_started = 0;
 }
 
@@ -603,4 +639,5 @@ void SpuInit(void)
     reverb_on = 0; reverb_offset = reverb_start[0];
     spu_write16(0x1a2, reverb_offset);
     mem_list = NULL; block_count = last_block = 0;
+    clock_advance_cost(CLOCK_SPU_INIT_CPU_CYCLES, CLOCK_COST_CPU);
 }
