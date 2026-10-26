@@ -524,8 +524,12 @@ with tempfile.TemporaryDirectory() as directory:
         path = root / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text('# fixture\n')
-    scene = dict(mark='target', capture_vblank=1, inputs=[])
-    (root / 'tools/port/scenes/title.toml').write_text('mark="target"\ncapture_vblank=1\ninputs=[]\n')
+    sample = b'P6\n1 1\n255\n\0\0\0'
+    sample_hash = hashlib.sha256(sample).hexdigest()
+    scene = dict(mark='target', capture_vblank=1, inputs=[], reference_sha256=sample_hash)
+    scene_text = f'mark="target"\ncapture_vblank=1\ninputs=[]\nreference_sha256="{sample_hash}"\n'
+    scene_path = root / 'tools/port/scenes/title.toml'
+    scene_path.write_text(scene_text)
     build = root / 'build/port/native-headless'
     build.mkdir(parents=True)
     (build / 'us.pack').touch()
@@ -534,8 +538,13 @@ with tempfile.TemporaryDirectory() as directory:
     stamp = reference.parent / 'state.sha256'
     variables = [dict(name='counter', type='u8', count=1)]
     rows = '1 state counter[0] 42\n'
-    for mode in ('valid', 'missing', 'stale'):
+    for mode in ('valid', 'missing', 'stale', 'different', 'informative', 'no-reason', 'bad-hash', 'malformed'):
         captures, hosts = [], []
+        declaration = ''
+        if mode in ('informative', 'no-reason'):
+            declaration = 'image_informative = {pixels=1, box=[0,0,0,0]' + (', reason="pending measured parity"' if mode == 'informative' else '') + '}\n'
+        scene_path.write_text(scene_text + declaration)
+        reference.with_suffix('.ppm').write_bytes(sample if mode != 'bad-hash' else sample[:-1] + b'\xff')
         def execute(command, **kwargs):
             if str(root / 'tools/port/reference/capture.py') in command:
                 captures.append(command)
@@ -549,7 +558,7 @@ with tempfile.TemporaryDirectory() as directory:
             write_timing(reference.with_suffix('.timing.jsonl'), 'target')
             Path(kwargs['env']['DW1_TRACE']).write_text('1 mark target\n')
             flag('--clock-trace').write_text('1 -1\n')
-            flag('--capture').write_bytes(b'P6\n1 1\n255\n\0\0\0')
+            flag('--capture').write_bytes(b'invalid' if mode == 'malformed' else sample[:-1] + b'\xff' if mode in ('different', 'informative') else sample)
             flag('--state-trace').write_text(rows)
             return subprocess.CompletedProcess(command, 0, b'', b'')
         with patch.object(runner, 'ROOT', root), patch.dict(os.environ, {}, clear=True), \
@@ -559,10 +568,23 @@ with tempfile.TemporaryDirectory() as directory:
             reference.write_text(rows)
             stamp.write_text(runner.state_fingerprint(scene) if mode != 'stale' else 'obsolete')
             if mode == 'missing': reference.unlink()
-            assert runner.main() == 0
-            assert len(captures) == (0 if mode == 'valid' else 1), mode
+            try:
+                result = runner.main()
+            except ValueError as error:
+                assert mode in ('no-reason', 'bad-hash', 'malformed'), (mode, error)
+                if mode == 'no-reason':
+                    assert 'image_informative' in str(error)
+                    assert not hosts and not captures
+            else:
+                assert mode not in ('no-reason', 'bad-hash', 'malformed'), mode
+                assert result == (1 if mode == 'different' else 0), mode
+                if mode in ('different', 'informative'):
+                    assert (build / 'scenes/title/diff.ppm').is_file()
+            if mode in ('no-reason', 'bad-hash', 'malformed'):
+                continue
+            assert len(captures) == (1 if mode in ('missing', 'stale') else 0), mode
             assert len(hosts) == 2, mode
-print('scene_runner: main --state valid/missing/stale cached references without disc: OK')
+print('scene_runner: main --state cached references; exact/different/informative images; invalid reason/hash/PPM: OK')
 
 # XA has one function-return window, includes global SPU registers, and never
 # accepts a matching prefix when the movie tails have different lengths.
@@ -759,7 +781,7 @@ with tempfile.TemporaryDirectory() as directory:
     root = Path(directory) / "repo"
     scenes = root / "tools/port/scenes"
     scenes.mkdir(parents=True)
-    (scenes / "card_reuse.toml").write_text('id = "card_reuse"\ncard1 = "new"\ncapture_vblank = 1\n')
+    (scenes / "card_reuse.toml").write_text('id = "card_reuse"\ncard1 = "new"\ncapture_vblank = 1\nreference_sha256 = "' + '0'*64 + '"\n')
     reference = root / "build/reference/card_reuse/run-1.ppm"
     reference.parent.mkdir(parents=True)
     reference.with_suffix(".state").touch()

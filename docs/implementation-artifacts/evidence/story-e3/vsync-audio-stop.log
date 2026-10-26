@@ -1,0 +1,21 @@
+E3 first overflow cycle=6784604 vblank=12 last_vsync=2 level=8004 frames=223
+build/port/native/dw1[0x81a6ad4]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce837]
+build/port/native/dw1[0x81a86bc]
+build/port/native/dw1[0x81acaac]
+build/port/native/dw1(clock_advance+0x6f)[0x81ac9af]
+build/port/native/dw1(clock_advance_cost+0x7c)[0x81acc0c]
+build/port/native/dw1(CdInit+0x89)[0x81b5e59]
+build/port/native/dw1(dw1_game_main+0x5e)[0x80fa3fe]
+build/port/native/dw1[0x81a8618]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xf46c8e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xf4760246]
+dw1: audio_rate overflows=63613 underruns=6
+port: libgte table rsin_tbl sha256 f3c96402945a33c125f918b4487421c4798141c8b958927fd8437eecadc601d7
+port: libgte table SQRT sha256 45ca1b7b619b33961c03c82243b8baf59fc50c49b4d7eefc94b76edbd417a5c8
+port: libgte table rcossin_tbl sha256 b40c47b014ca8650c539760fd4c519cabce6f091628566ca0dd22318bb2c5b7a
+port: libgte table ratan_tbl sha256 423668b6164114405675398f08d4623fee2dad1a203d0e4958d4b70341969d02
+port: libpress table mdec_iq sha256 22b0a18f9c1e01de3f659ebb2fc3c27b2806ed56cca4b98013c76fdd44158f77
+port: libpress table mdec_coef sha256 391ecd19658b4284a26410762115804676432e1b350c369ecbf75d1ccf0bfa79
+port: libpress table data_2 sha256 86bfa7f158814c9ab59bcd5138347853f1e238652d01eb6f684ed6ae0982b4e3
+port: reached frame 119 at cycle 340910590
