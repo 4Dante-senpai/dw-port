@@ -19,7 +19,7 @@ local timing = c.timing_trace and assert(io.open(c.timing_trace, 'w'))
 local costNames = {'cd','gpu','mdec','card','psyq','wait','cpu','spu'}
 local costs, costBase, costStack = {}, {}, {}
 for _, name in ipairs(costNames) do costs[name], costBase[name] = 0, 0 end
-local hardwarePoint
+local hardwarePoint, shopFinish
 local costCycle, originCycle
 local function accountCycles()
     local cycle = tonumber(PCSX.getCPUCycles())
@@ -208,6 +208,12 @@ if c.hardware_trace then
     hardwarePoint = dofile(c.hardware_adapter)(c.hardware_trace, breakpoints, guarded, function()
         return #costStack > 0 and costStack[#costStack].source or 'cpu'
     end, c.hardware_map_load, c.hardware_irq)
+end
+if c.shop_probe then
+    shopFinish = dofile(c.shop_probe.adapter)(c.shop_probe, breakpoints, guarded, function()
+        assert(origin and originCycle, 'SHOP probe before frame 0')
+        return ticks-origin, tonumber(PCSX.getCPUCycles())-originCycle
+    end)
 end
 if c.audio then
     -- The write breakpoint fires before the store. The pinned core can expose the
@@ -459,6 +465,7 @@ local onVsync = guarded(function()
                      shot.width, shot.height, shot.bpp == 0 and 16 or 24)))
         assert(file:close())
         if state then assert(state:close()) end
+        if shopFinish then shopFinish() end
         progress('captured')
         PCSX.quit(0)
     elseif ticks >= c.max_vblanks then

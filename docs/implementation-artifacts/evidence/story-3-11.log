@@ -1,0 +1,279 @@
+Historia 3.11 — evidencia automática, 2026-10-26 UTC
+Solo metadatos: direcciones, tamaños, conteos y hashes; sin bytes del disco.
+Build: cmake --build --preset native-headless -j 2 (exit 0).
+Redux SHA-256: 59e9d967691373faf6591c59bd52d5a8ec0c08bebf7122b78e224688e0124561
+OpenBIOS SHA-256: 4ddea14132380f1aa6c303e45b417e1ead628d5c8c78ad678dcf2f9404832189
+
+Sonda: DW1_DISC_DIR=/dw/game_rom/extracted DW1_REFERENCE_DIR=/tmp/dw-reference
+python3 tools/port/reference/capture.py map_load --shop-probe --state --out /tmp/dw-reference/map_load --max-vblanks 40000
+Ciclos/VBlanks desde frame 0; stack = ámbitos instrumentados hasta el llamador del juego.
+Resumen de la primera corrida:
+event=check vblank=1138 cycle=641791486 map=218 ra=0x800ef1f8 stack=newGameScene(ra=0x800ee97c) > checkShopMap(ra=0x800ef1f8)
+event=load vblank=1138 cycle=641791809 lib=11 ra=0x800ff980 destination=0x80080800 file_size=32272 async=0 stack=newGameScene(ra=0x800ee97c) > checkShopMap(ra=0x800ef1f8) > loadDynamicLibrary(ra=0x800ff980)
+event=read_file vblank=1138 cycle=641791847 ra=0x800e6228 destination=0x80080800 file_size=32272 stack=newGameScene(ra=0x800ee97c) > checkShopMap(ra=0x800ef1f8) > loadDynamicLibrary(ra=0x800ff980) > readFile(ra=0x800e6228)
+event=cd_read vblank=1138 cycle=642019276 ra=0x800a3474 destination=0x80080800 sectors=16 transfer_size=32768 stack=newGameScene(ra=0x800ee97c) > checkShopMap(ra=0x800ef1f8) > loadDynamicLibrary(ra=0x800ff980) > readFile(ra=0x800e6228) > CdRead(ra=0x800a3474)
+event=check_loaded vblank=1171 cycle=660530961 ra=0x800ef1f8 trigger_0x29=0
+event=check vblank=9535 cycle=5381370524 map=204 ra=0x800d5df0 stack=loadMap(ra=0x801028fc) > checkShopMap(ra=0x800d5df0)
+event=skip vblank=9535 cycle=5381370854 ra=0x800d5df0 trigger_0x29=0
+event=summary vblank=9536 cycle=5381555041 kind=Exec count=0 loads=1 start=0x80080840 end_exclusive=0x80088610
+event=access vblank=9536 cycle=5381555041 kind=Read pc=0x800e9a5c count=2224461
+event=access vblank=9536 cycle=5381555041 kind=Read pc=0x800e9a9c count=919956
+event=access vblank=9536 cycle=5381555041 kind=Read pc=0x800e9aac count=2224497
+event=access vblank=9536 cycle=5381555041 kind=Read pc=0x800e9c0c count=9387
+event=access vblank=9536 cycle=5381555041 kind=Read pc=0x800e9c7c count=5618
+event=access vblank=9536 cycle=5381555041 kind=Read pc=0x800e9c80 count=5614
+event=summary vblank=9536 cycle=5381555041 kind=Read count=5389533 loads=1 start=0x80080840 end_exclusive=0x80088610
+
+Análisis estático: python3 tools/port/metrics/shop_overlay.py (exit 0)
+{
+  "main_sha256": "341817d3b2091c4c3e83c74ec71157ef6ccf664f27edf855406d8a8dfbadbe66",
+  "shop_sha256": "3b2656d608faca5d0cca8e8e3682fc312920105de3335fd01f71dbc7502c5036",
+  "shop_size": 32272,
+  "asm_verified_words": 134296,
+  "text_words": 134296,
+  "direct_targets": [
+    {
+      "pc": "0x800aadac",
+      "kind": "jal",
+      "target": "0x80084644",
+      "target_symbols": [
+        "DOOA_tick"
+      ]
+    },
+    {
+      "pc": "0x800de7bc",
+      "kind": "jal",
+      "target": "0x80084644",
+      "target_symbols": [
+        "DOOA_tick"
+      ]
+    },
+    {
+      "pc": "0x800de800",
+      "kind": "jal",
+      "target": "0x80084644",
+      "target_symbols": [
+        "DOOA_tick"
+      ]
+    },
+    {
+      "pc": "0x800dec30",
+      "kind": "jal",
+      "target": "0x80084810",
+      "target_symbols": [
+        "DOOA_getSequenceState"
+      ]
+    },
+    {
+      "pc": "0x800dec48",
+      "kind": "jal",
+      "target": "0x80084810",
+      "target_symbols": [
+        "DOOA_getSequenceState"
+      ]
+    },
+    {
+      "pc": "0x80105ddc",
+      "kind": "jal",
+      "target": "0x80081a80",
+      "target_symbols": [
+        "initTournamentSchedule"
+      ]
+    }
+  ],
+  "address_candidates": [
+    {
+      "lui": "0x800a51e8",
+      "pc": "0x800a51f8",
+      "kind": "addiu",
+      "address": "0x8008788c"
+    }
+  ],
+  "data_candidates": [
+    {
+      "pc": "0x8012b994",
+      "section": ".data",
+      "owner": "utils2",
+      "target": "0x80080800"
+    },
+    {
+      "pc": "0x8012b998",
+      "section": ".data",
+      "owner": "utils2",
+      "target": "0x80080800"
+    }
+  ],
+  "loadShopLibrary": {
+    "address": "0x800ff9ac",
+    "lib_11": true,
+    "async_1": true,
+    "calls_loadDynamicLibrary": true
+  },
+  "comparison": {
+    "main_start": "0x80106d28",
+    "main_end": "0x8010cb3c",
+    "main_words": 6021,
+    "overlay_start": "0x80080840",
+    "overlay_end": "0x80088060",
+    "overlay_words": 7688,
+    "normalized_matching_words": 18,
+    "minimum_run_words": 16,
+    "runs": [
+      {
+        "main_pc": "0x8010bf94",
+        "shop_pc": "0x800871e4",
+        "words": 18
+      }
+    ]
+  },
+  "limitations": [
+    "Normalized runs mask J/JAL targets, RAM LUI/low relocations within four instructions and GP-relative offsets; they are structural matches, not proof of equivalent behavior.",
+    "Overlay code end is inferred from the final JR RA; data containing that opcode could extend the bound.",
+    "Linear address candidates do not resolve arbitrary computed pointers or indirect calls."
+  ]
+}
+
+Comparación: DW1_DISC_DIR=/dw/game_rom/extracted DW1_REFERENCE_DIR=/tmp/dw-reference python3 tools/port/scenes/run.py map_load --build native-headless --compare (exit 0)
+/dw/build/port/native-headless/scenes/map_load/run-1.ppm: sha256=12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884 colors=1
+/dw/build/port/native-headless/scenes/map_load/run-1.clock: sha256=b5fdce5296e25b7bf1f02b6f7464d219bc683751a941cdb671c3a154446d77b8
+/dw/build/port/native-headless/scenes/map_load/run-2.ppm: sha256=12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884 colors=1
+/dw/build/port/native-headless/scenes/map_load/run-2.clock: sha256=b5fdce5296e25b7bf1f02b6f7464d219bc683751a941cdb671c3a154446d77b8
+checkpoint ref port diff
+mark:MOV_playMovie 482 482 +0
+checkpoint:MOV_playMovie 482 482 +0
+checkpoint:runLandingScreen 642 642 +0
+checkpoint:runMainMenu 848 848 +0
+checkpoint:newGameScene 1138 1138 +0
+checkpoint:checkShopMap 1138 1138 +0
+checkpoint:newGameStateMachine 1319 1319 +0
+checkpoint:setupNameSelectorBox 1595 1595 +0
+checkpoint:setupNameSelectorBox#2 1976 1976 +0
+checkpoint:unloadNewGameScene 2501 2501 +0
+checkpoint:loadMap 9413 9413 +0
+checkpoint:checkShopMap#2 9535 9535 +0
+checkpoint:checkArenaMap 9535 9535 +0
+scene map_load: RGB555 reference match (0 excepted pixels)
+scene_map_load: native-headless: OK (two identical captures and clock traces)
+
+CTest: ctest --preset native-headless -R 'shop_overlay_unit|reference_capture_unit|scene_(runner|flags|state_unit|timing_unit|audio_unit|audio_runtime)$' (exit 0)
+Test project /dw/build/port/native-headless
+    Start  7: scene_audio_unit
+1/9 Test  #7: scene_audio_unit .................   Passed    3.79 sec
+    Start  8: scene_timing_unit
+2/9 Test  #8: scene_timing_unit ................   Passed    0.11 sec
+    Start 46: pack
+3/9 Test #46: pack .............................   Passed    0.03 sec
+    Start 51: scene_runner
+4/9 Test #51: scene_runner .....................   Passed    6.29 sec
+    Start 52: scene_flags
+5/9 Test #52: scene_flags ......................   Passed    0.18 sec
+    Start 53: scene_state_unit
+6/9 Test #53: scene_state_unit .................   Passed    0.34 sec
+    Start 54: scene_audio_runtime
+7/9 Test #54: scene_audio_runtime ..............   Passed    0.21 sec
+    Start 81: shop_overlay_unit
+8/9 Test #81: shop_overlay_unit ................   Passed    0.13 sec
+    Start 82: reference_capture_unit
+9/9 Test #82: reference_capture_unit ...........   Passed   23.36 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Total Test time (real) =  34.46 sec
+
+Sonda completada: capture.py exit 0. Dos capturas y trazas temporales/hardware idénticas.
+Sonda SHOP: dos JSONL idénticos, comprobados byte a byte. SHA-256=3ee5663fc5f6b6a8b812798e438f78fef3f2b30dbb770e7a922240f3b5d2ed19
+Trazas originales de la sonda conservadas en /tmp/dw-reference/story-3-11-probe/ (fuera del repo).
+/tmp/dw-reference/map_load/run-1.ppm: 320x240 colors=1 sha256=12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884
+/tmp/dw-reference/map_load/run-2.ppm: 320x240 colors=1 sha256=12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884
+reference_map_load: OK sha256=12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884
+
+Referencia final sin sonda SHOP: primera traza temporal idéntica byte a byte a la de la sonda. SHA-256=41db299e470c863720c44e4e09b713c0e57679900cab03f0220cf3e3264d8be9
+
+Verificación final dentro del contenedor (exit 0, sin omisiones):
+DW1_DISC_DIR=/dw/game_rom/extracted DW1_REFERENCE_DIR=/tmp/dw-reference ctest --preset native-headless -R 'map_load|reference_capture_unit|shop_overlay_unit|scene_(runner|flags|state_unit|timing_unit|audio_unit|audio_runtime)$'
+Test project /dw/build/port/native-headless
+      Start  7: scene_audio_unit
+ 1/12 Test  #7: scene_audio_unit .................   Passed    1.95 sec
+      Start  8: scene_timing_unit
+ 2/12 Test  #8: scene_timing_unit ................   Passed    0.08 sec
+      Start 46: pack
+ 3/12 Test #46: pack .............................   Passed    0.02 sec
+      Start 51: scene_runner
+ 4/12 Test #51: scene_runner .....................   Passed    3.93 sec
+      Start 52: scene_flags
+ 5/12 Test #52: scene_flags ......................   Passed    0.09 sec
+      Start 53: scene_state_unit
+ 6/12 Test #53: scene_state_unit .................   Passed    0.18 sec
+      Start 54: scene_audio_runtime
+ 7/12 Test #54: scene_audio_runtime ..............   Passed    0.11 sec
+      Start 55: pack_disc
+ 8/12 Test #55: pack_disc ........................   Passed   35.07 sec
+      Start 63: reference_map_load
+ 9/12 Test #63: reference_map_load ...............   Passed  911.17 sec
+      Start 64: scene_map_load_compare
+10/12 Test #64: scene_map_load_compare ...........   Passed  158.62 sec
+      Start 81: shop_overlay_unit
+11/12 Test #81: shop_overlay_unit ................   Passed    0.07 sec
+      Start 82: reference_capture_unit
+12/12 Test #82: reference_capture_unit ...........   Passed   12.17 sec
+
+100% tests passed, 0 tests failed out of 12
+
+Total Test time (real) = 1123.47 sec
+
+Salida del comparador de estado en CTest:
+64/83 Testing: scene_map_load_compare
+64/83 Test: scene_map_load_compare
+Command: "/dw/.venv/bin/python3" "-I" "-B" "/dw/tools/port/scenes/run.py" "map_load" "--build" "native-headless" "--state"
+Directory: /dw/build/port/native-headless
+"scene_map_load_compare" start time: Oct 26 13:18 UTC
+Output:
+----------------------------------------------------------
+/dw/build/port/native-headless/scenes/map_load/run-1.ppm: sha256=12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884 colors=1
+/dw/build/port/native-headless/scenes/map_load/run-1.clock: sha256=b5fdce5296e25b7bf1f02b6f7464d219bc683751a941cdb671c3a154446d77b8
+/dw/build/port/native-headless/scenes/map_load/run-2.ppm: sha256=12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884 colors=1
+/dw/build/port/native-headless/scenes/map_load/run-2.clock: sha256=b5fdce5296e25b7bf1f02b6f7464d219bc683751a941cdb671c3a154446d77b8
+checkpoint ref port diff
+mark:MOV_playMovie 482 482 +0
+checkpoint:MOV_playMovie 482 482 +0
+checkpoint:runLandingScreen 642 642 +0
+checkpoint:runMainMenu 848 848 +0
+checkpoint:newGameScene 1138 1138 +0
+checkpoint:checkShopMap 1138 1138 +0
+checkpoint:newGameStateMachine 1319 1319 +0
+checkpoint:setupNameSelectorBox 1595 1595 +0
+checkpoint:setupNameSelectorBox#2 1976 1976 +0
+checkpoint:unloadNewGameScene 2501 2501 +0
+checkpoint:loadMap 9413 9413 +0
+checkpoint:checkShopMap#2 9535 9535 +0
+checkpoint:checkArenaMap 9535 9535 +0
+informative frame comparison:
+scene map_load: RGB555 reference match (0 excepted pixels)
+state match: 12 checkpoints, window 1, 15 variables, 0 rand calls
+scene_map_load: native-headless: OK (two identical captures and clock traces)
+<end of output>
+Test time = 158.62 sec
+----------------------------------------------------------
+Test Passed.
+"scene_map_load_compare" end time: Oct 26 13:20 UTC
+"scene_map_load_compare" time elapsed: 00:02:38
+
+Hashes de referencia finales, iguales en ambas corridas:
+timing.jsonl sha256=41db299e470c863720c44e4e09b713c0e57679900cab03f0220cf3e3264d8be9
+state sha256=1577488a0ba31e6e2a8a9a82baba6694bacc3beb9653cafc0cfa3b4a5bb87919
+ppm sha256=12c810bd25efe1a7484387cd3d5a8503ce7cc341d61768b99a85c39a0ecca884
+
+Límite: map_load no entra a una tienda; script 0x23 cubierto solo de forma estática. No se demuestra que SHOP sea inútil en toda la partida.
+No se modificó src/ ni REL_BIN_OFFSETS. No se hicieron commits.
+
+Revisión de análisis y validación de SHOP — 2026-10-26 UTC
+python3 -I -B tools/port/metrics/test_shop_overlay.py: 6 tests, OK
+python3 -I -B tools/port/reference/test_capture.py: 50 tests, OK
+python3 -B tools/port/metrics/shop_overlay.py: exit 0, disco USA verificado contra asm.
+Candidatos de dirección: 0 -> 1 tras conservar registros hasta terminar el delay slot.
+0x800a51e8 / 0x800a51f8 -> 0x8008788c (DOOA_REINCARNATION_SEQ + 0x24 en asm).
+Sin cambios: 6 destinos directos, 2 candidatos de datos, 18 palabras normalizadas coincidentes.
+
+Verificación final tras los patches de review (remote_run.sh, 2026-10-26):
+ctest --preset native-headless -j 8 -R "map_load|reference_capture_unit|shop_overlay_unit|pack_disc|scene_(runner|flags|state_unit|timing_unit|audio_unit|audio_runtime)$"
+100% tests passed, 0 tests failed out of 12 (reference_map_load 608.77 s, scene_map_load_compare 116.36 s)
