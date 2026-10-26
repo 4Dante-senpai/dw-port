@@ -751,3 +751,7 @@ inputs = [
   {after = "gameLoop", vblank = 9990, buttons = [14]},
   {after = "gameLoop", vblank = 10006, buttons = []},
 ]
+
+# Existing reference: two identical captures; measurement at HEAD 73ffac1.
+reference_sha256 = "48322f1c664daf07af2ff168782280ddd4a7bd918468988a16102b12f736e508"
+image_informative = { reason = "Pending Jijimon 3D model image parity.", pixels = 402, box = [87, 46, 217, 121] }

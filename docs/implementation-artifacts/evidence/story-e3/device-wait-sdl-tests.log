@@ -1,0 +1,27 @@
+Test project /dw/build/port/native
+    Start 36: clock
+1/4 Test #36: clock ............................   Passed    2.38 sec
+    Start 43: sdl_pacing
+2/4 Test #43: sdl_pacing .......................***Failed   15.40 sec
+port: reached frame 299 at cycle 338641295
+dw1: audio_rate overflows=0 underruns=0
+
+sdl_pacing: wall=10.141s virtual=9.999s ratio=1.0142; audio_rate overflows=0 underruns=0
+Traceback (most recent call last):
+  File "/dw/tools/port/test_sdl_pacing.py", line 41, in <module>
+    assert elapsed < virtual * .5, f'capture waited for wall time: {elapsed:.3f}s'
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: capture waited for wall time: 5.225s
+
+    Start 45: sdl_frame0
+3/4 Test #45: sdl_frame0 .......................   Passed    8.13 sec
+    Start 49: sdl_audio
+4/4 Test #49: sdl_audio ........................   Passed    0.05 sec
+
+75% tests passed, 1 tests failed out of 4
+
+Total Test time (real) =  25.97 sec
+
+The following tests FAILED:
+	 43 - sdl_pacing (Failed)
+Errors while running CTest
