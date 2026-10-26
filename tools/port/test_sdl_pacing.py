@@ -40,3 +40,19 @@ with tempfile.TemporaryDirectory() as directory:
     assert match[0] in capture.stdout, 'capture changed virtual progress'
     assert elapsed < virtual * .5, f'capture waited for wall time: {elapsed:.3f}s'
     print(f'sdl_pacing: capture bypassed wall pacing ({elapsed:.3f}s)')
+
+# Exercise the production resynchronization branch with and without a real stall.
+for stalled in (False, True):
+    env = dict(os.environ, SDL_VIDEODRIVER='offscreen', SDL_AUDIODRIVER='dummy')
+    env.pop('DW1_TEST_HOST_STALL', None)
+    if stalled:
+        env['DW1_TEST_HOST_STALL'] = '1'
+    run = subprocess.run([sys.argv[1], '--vblanks', '30'], env=env,
+                         capture_output=True, text=True, timeout=5)
+    log = run.stdout + run.stderr
+    print(log)
+    counters = re.search(r'wall vblanks=30 nanoseconds=\d+ resynchronizations=(\d+)', log)
+    assert run.returncode == 0 and counters, f'missing wall counters: {log}'
+    count = int(counters[1])
+    assert count == int(stalled), f'expected {int(stalled)} resynchronizations: {log}'
+    assert log.count('pacing resynchronization vblank=') == count, log

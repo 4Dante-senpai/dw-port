@@ -8,11 +8,15 @@
 #define SUBHEADER 8u
 
 static Pack *pack;
+#include "cd_geometry.h"
+static int usa_geometry;
 
 int cdrom_open(const char *path, const char *manifest_sha256, char *err, size_t errlen)
 {
 	cdrom_close();
 	pack = pack_open(path, manifest_sha256, err, errlen);
+	usa_geometry = pack && manifest_sha256 && !strcmp(manifest_sha256,
+        "2750890c75ab70d3d0e134ccc4569d2737ff0e4769fc2cf3d87a8a2e745b20d3");
 	return pack != NULL ? 0 : -1;
 }
 
@@ -20,6 +24,36 @@ void cdrom_close(void)
 {
 	pack_close(pack);
 	pack = NULL;
+    usa_geometry = 0;
+}
+
+uint32_t cdrom_directory_lba(const char *path)
+{
+    if (!usa_geometry) return 0;
+    const char *base = strrchr(path, '\\');
+    size_t length = base ? (size_t)(base-path) : 0;
+    for (unsigned i=0; i<sizeof(iso_directories)/sizeof(iso_directories[0]); i++)
+        if (strlen(iso_directories[i].path)==length &&
+            !strncmp(path, iso_directories[i].path, length)) return iso_directories[i].lba;
+    return 0;
+}
+
+uint32_t cdrom_path_table_lba(void) { return usa_geometry ? ISO_PATH_TABLE_LBA : 0; }
+
+void cdrom_iso_copy_counts(uint32_t lba, unsigned *copies, unsigned *bytes)
+{
+    *copies = *bytes = 0;
+    if (!usa_geometry) return;
+    if (lba == ISO_PATH_TABLE_LBA) {
+        *copies = ISO_PATH_TABLE_ENTRIES; *bytes = ISO_PATH_TABLE_NAME_BYTES;
+        return;
+    }
+    for (unsigned i=0; i<sizeof(iso_directories)/sizeof(iso_directories[0]); i++)
+        if (iso_directories[i].lba == lba) {
+            *copies = iso_directories[i].entries - 2;
+            *bytes = iso_directories[i].name_bytes;
+            return;
+        }
 }
 
 const PackEntry *cdrom_find_path(const char *path)

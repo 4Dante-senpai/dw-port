@@ -23,6 +23,13 @@ void cdrom_close(void);
 const PackEntry *cdrom_find_path(const char *path);
 const PackEntry *cdrom_find_lba(uint32_t lba);
 
+/* Verified ISO geometry for the USA manifest, or 0 for an unknown disc.
+ * Directory metadata is not part of the file-only Pack index. */
+uint32_t cdrom_directory_lba(const char *path);
+uint32_t cdrom_path_table_lba(void);
+/* Copies performed while filling PsyQ's ISO caches (metadata only). */
+void cdrom_iso_copy_counts(uint32_t lba, unsigned *copies, unsigned *bytes);
+
 /* Read a file region; returns -1 without a Pack, for an absent file or an invalid range. */
 int cdrom_read_file(const PackEntry *entry, uint32_t offset, void *out, uint32_t size);
 

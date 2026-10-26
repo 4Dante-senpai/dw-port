@@ -142,6 +142,25 @@ _Static_assert(sizeof(BiosDir) == 40, "PsyQ DIRENTRY ABI");
 static Entry dirs[2][15];
 static uint8_t buffer[2][128];
 static int fresh[2], running;
+static uint32_t card_epoch;
+static int sync_sector_pending, sync_sector_port;
+uint32_t bios_card_vblank_cpu_cycles(void)
+{
+    if (!running) return 0;
+    uint32_t cpu = CLOCK_CARD_VBLANK_IDLE_CPU_CYCLES;
+    if (sync_sector_pending &&
+        ((clock_vblanks() - card_epoch) & 1u) == (unsigned)sync_sector_port)
+        cpu += CLOCK_CARD_VBLANK_TRANSFER_CPU_CYCLES;
+    return cpu;
+}
+/* The OpenBIOS SIO0 driver services port 1 first, then alternates. */
+static uint64_t sector_delay(int port, int write)
+{
+    uint32_t next = clock_vblanks() + 1;
+    if (((next - card_epoch) & 1u) != (unsigned)port) next++;
+    return clock_vblank_cycle(next) + (write ? CLOCK_CARD_WRITE_PHASE_CYCLES :
+           CLOCK_CARD_READ_PHASE_CYCLES) - clock_now();
+}
 static int32_t broken[2][20];
 static struct {
 	int used, port, block, offset, length;
@@ -195,8 +214,12 @@ static int sector_complete(void *arg)
 static void sector_sync(int port, int sector, uint8_t *data, int write)
 {
 	Sector transfer = { .port = port, .sector = sector, .data = data, .write = write };
-	clock_schedule(CLOCK_CARD_SECTOR_CYCLES, transfer_sector, &transfer);
-	clock_wait_until(sector_complete, &transfer);
+	sync_sector_pending = 1;
+    sync_sector_port = port;
+	clock_schedule(sector_delay(port, write), transfer_sector, &transfer);
+	clock_wait_cost(sector_complete, &transfer, CLOCK_COST_CARD);
+    sync_sector_pending = 0;
+    clock_advance_cost(CLOCK_CARD_RETURN_CYCLES, CLOCK_COST_CPU);
 }
 static void write_entry(int p, int i)
 {
@@ -338,6 +361,15 @@ static int bu_init(int p)
 	}
 	return 1;
 }
+/* OpenBIOS device.c: buDevInit reads only the header on an established
+ * card. A new-card response reloads the TOC through buInit. */
+static int bu_dev_init(int p)
+{
+    if (!card_image_data(p)) return 0;
+    if (fresh[p]) return bu_init(p);
+    sector_sync(p, 0, buffer[p], 0);
+    return buffer[p][0] == 'M' && buffer[p][1] == 'C';
+}
 void bios_bu_init(void)
 {
 	for (int p = 0; p < 2; p++) {
@@ -350,6 +382,8 @@ void bios_card_init(void)
 	memset(&op, 0, sizeof(op));
 	memset(files, 0, sizeof(files));
 	fresh[0] = fresh[1] = 1;
+    sync_sector_pending = 0;
+    card_epoch = clock_vblanks();
 	running = 1;
 }
 void bios_card_stop(void)
@@ -434,7 +468,7 @@ static void sector_done(void *unused)
 			}
 		}
 		if (++op.sector < 36) {
-			op.event = clock_schedule(CLOCK_CARD_SECTOR_CYCLES, sector_done, 0);
+			op.event = clock_schedule(sector_delay(p, op.write), sector_done, 0);
 			return;
 		}
 		finish(4);
@@ -464,7 +498,7 @@ static void sector_done(void *unused)
 	op.data += 128;
 	op.sector++;
 	if (--op.count) {
-		op.event = clock_schedule(CLOCK_CARD_SECTOR_CYCLES, sector_done, 0);
+		op.event = clock_schedule(sector_delay(p, op.write), sector_done, 0);
 	} else {
 		finish(4);
 	}
@@ -477,8 +511,9 @@ static int start(int kind, int chan)
 	}
 	op.kind = kind;
 	op.port = p;
+	op.write = kind == 3;
 	op.sector = 0;
-	op.event = clock_schedule(CLOCK_CARD_COMMAND_CYCLES + CLOCK_CARD_SECTOR_CYCLES, sector_done, 0);
+	op.event = clock_schedule(CLOCK_CARD_COMMAND_CYCLES + sector_delay(p, kind == 3), sector_done, 0);
 	return 1;
 }
 /* asm: libmcrd.s:_card_info/_card_load/_card_write BIOS trampolines. */
@@ -509,7 +544,7 @@ int bios_bu_open(const char *path, unsigned mode)
 	if (p < 0 || op.kind || !card_image_data(p)) {
 		return -1;
 	}
-	if (!(mode & 0x8000) && !bu_init(p)) {
+	if (!(mode & 0x8000) && !bu_dev_init(p)) {
 		return -1;
 	}
 	int i = find(p, path + 5, 0);
@@ -603,7 +638,7 @@ int bios_bu_io(int fd, void *data, int size, int write)
 int bios_bu_erase(const char *path)
 {
 	int p = path_port(path);
-	if (p < 0 || op.kind || !bu_init(p)) {
+	if (p < 0 || op.kind || !bu_dev_init(p)) {
 		return 0;
 	}
 	int first = find(p, path + 5, 0);
@@ -669,7 +704,7 @@ BiosDir *bios_bu_next(BiosDir *out)
 BiosDir *bios_bu_first(const char *path, BiosDir *out)
 {
 	int p = path_port(path);
-	if (p < 0 || op.kind || !bu_init(p)) {
+	if (p < 0 || op.kind || !bu_dev_init(p)) {
 		return 0;
 	}
 	enum_port = p;

@@ -8,6 +8,9 @@
 #include <dw/main.h>
 
 #include "common.h"
+#ifdef DW1_PORT
+#include "../../port/psyq/clock.h"
+#endif
 
 static void empty_800a31f0(char *path)
 {
@@ -18,6 +21,10 @@ int32_t lookupFileTable(FileLookup *lookup, char *path)
 	char *filename;
 	FileEntry *entry;
 
+#ifdef DW1_PORT
+	clock_advance_cost(CLOCK_GAME_FILE_LOOKUP_FIXED_CYCLES, CLOCK_COST_CPU);
+#endif
+
 	entry = (FileEntry *)&FILE_OFFSET_TABLE;
 	if (NULL == (filename = strrchr(path, '\\'))) {
 		filename = path;
@@ -26,6 +33,9 @@ int32_t lookupFileTable(FileLookup *lookup, char *path)
 	}
 
 	for (; entry->size != 0; ++entry) {
+#ifdef DW1_PORT
+		clock_advance_cost(CLOCK_GAME_FILE_LOOKUP_ENTRY_CYCLES, CLOCK_COST_CPU);
+#endif
 		if (!strcmp(filename, entry->filename)) {
 			lookup->size = entry->size;
 			CdIntToPos(entry->sector, &lookup->pos);
@@ -85,11 +95,21 @@ int32_t readFile(char *path, void *buffer)
 	if (lookupFileTable(&lookup, path) != 0) {
 		do {
 			do {
+#ifdef DW1_PORT
+				do {
+					clock_advance_cost(CLOCK_GAME_READ_FILE_CONTROL_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+				} while (CdControl(CdlSetloc, (u_char *)&lookup.pos, NULL) == 0);
+				clock_advance_cost(CLOCK_GAME_READ_FILE_READ_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#else
 				while (CdControl(CdlSetloc,
 						 (u_char *)&lookup.pos,
 						 NULL) == 0);
+#endif
 			} while (CdRead(((lookup.size + 0x7ff) & ~0x7ff) >> 11,
 					(u_long *)buffer, CdlModeSpeed) == 0);
+#ifdef DW1_PORT
+			clock_advance_cost(CLOCK_GAME_READ_FILE_POLL_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 			while ((result = CdReadSync(0, NULL)) > 0);
 		} while (result != 0);
 	}
@@ -145,6 +165,9 @@ int32_t readFileSectors(char *path, void *buffer, int32_t offset,
 						 (u_char *)&lookup.pos,
 						 NULL) == 0);
 			} while (CdRead(sectors, buffer, CdlModeSpeed) == 0);
+#ifdef DW1_PORT
+			clock_advance_cost(CLOCK_GAME_READ_FILE_POLL_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+#endif
 			while ((result = CdReadSync(0, NULL)) > 0);
 		} while (result != 0);
 	}

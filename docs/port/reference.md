@@ -30,10 +30,10 @@ DW1_DISC_DIR=/private/disc python3 -I -B tools/port/reference/capture.py newgame
 python3 -I -B tools/port/reference/test_capture.py
 ```
 
-Las dos pasadas se ejecutan en paralelo, cada una con su directorio portable y Xvfb.
+Las dos pasadas se ejecutan en serie, cada una con su directorio portable y Xvfb.
 Los displays iniciales son 199 y 299, con búsqueda automática si están ocupados. Se
-conservan intérprete y debugger; el timeout sigue siendo por pasada. Si una falla,
-se espera a la otra antes de salir y el error identifica su log; no queda sello válido.
+conservan intérprete y debugger; el timeout de 7200 s sigue siendo por pasada. Si una falla,
+se detiene la captura y el error identifica su log; no queda sello válido.
 Cada corrida del título dura unos 2-3 minutos con el intérprete. Sin `.cue`, emulador o Xvfb, el script
 sale con 77 (`skipped`); ante un error o una diferencia, con 1. Las capturas `run-N.ppm`, los logs
 y `work-N/` (display crudo, progreso y configuración portable) quedan en
@@ -141,13 +141,16 @@ contar ejecuciones ajenas. Estas APIs se comprobaron en las fuentes del SHA fija
 
 ## Estado y semilla de rand
 
-`--reuse` exige `--state` y rechaza `--update`. Después de comprobar disco, emulador,
+`--reuse` exige `--state` o `--audio` (implícito en las películas) y rechaza `--update`. Después de comprobar disco, emulador,
 Xvfb y BIOS, compara `state.sha256` con la huella actual y exige `run-1.state`,
 `run-2.state` y `run-1.ppm`. Si hay `reference_sha256`, comprueba además el SHA-256
 de esa PPM. Si todo coincide, imprime `reference_<id>: cached` y termina sin lanzar
 el emulador ni borrar archivos. Una huella distinta, archivos faltantes o un pin
 distinto provocan una captura completa; el sello se escribe solo tras validar
 determinismo, trazas y pin. Sin `--reuse`, se recaptura siempre.
+La huella de estado incluye el SHA-256 del ejecutable Redux, del BIOS y de los
+adaptadores. Reconstruir el emulador invalida también las referencias de estado;
+no basta con conservar la misma revisión de su código fuente.
 
 El fixture CTest `reference_newgame_state` usa `--reuse`. En CI, únicamente
 `native-disc` y `native-asan-disc` guardan `build/reference/` en la caché local del

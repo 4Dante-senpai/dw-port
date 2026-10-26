@@ -94,11 +94,6 @@
       "configurePreset": "native",
       "output": {
         "outputOnFailure": true
-      },
-      "filter": {
-        "include": {
-          "name": "^(sdl_.*|audio_rate|sjis_literals|native_sdl_title_capture|scene_naming_compare)$"
-        }
       }
     }
   ]

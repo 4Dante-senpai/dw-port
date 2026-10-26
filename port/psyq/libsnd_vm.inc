@@ -157,18 +157,22 @@ static void vm_clear_voice(int voice)
 
 /* asm: asm/us/main/psyq/libsnd.s: _SsVmFlush. ENVX history uses the first
  * 15 slots in the auto-off intersection, exactly as in the retail loop. */
+static int vm_flush_cpu_delta;
 static void vm_flush(void)
 {
+    vm_flush_cpu_delta = 0;
     env_index = (env_index + 1) & 15;
     env_history[env_index] = 0;
     for (int i = 0; i < vm_max; i++) {
         SpuGetVoiceEnvelope(i, &voices[i].env);
         if (!voices[i].env) env_history[env_index] |= 1u << i;
+        else vm_flush_cpu_delta -= CLOCK_SOUND_ENV_ACTIVE_SAVING_CYCLES;
     }
     if (!vm_auto_off) {
         uint32_t silent = 0xffffffff;
         for (int i = 0; i < 15; i++) silent &= env_history[i];
         for (int i = 0; i < vm_max; i++) if (silent & (1u << i)) {
+            vm_flush_cpu_delta += CLOCK_SOUND_SILENT_VOICE_CYCLES;
             if (voices[i].status == 2) {
                 /* The signed low halfword is sign-extended by DW1. */
                 uint32_t mask = i < 16 ? (uint32_t)(int32_t)(int16_t)(1u << i) : 1u << i;

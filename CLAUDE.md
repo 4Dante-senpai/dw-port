@@ -12,7 +12,7 @@ compilando el código C descompilado del juego. **No es un emulador**:
   (no hay CPU emulada). Todo el código del juego llega al navegador como C compilado.
 
 Objetivo final: el usuario abre una URL, selecciona su propia imagen del disco (`.bin/.cue`),
-el navegador la valida y empaqueta localmente, y el juego corre a 59.94 Hz con audio, video,
+el navegador la valida y empaqueta localmente, y el juego corre a 60.0087172527 Hz (Redux: 564398 ciclos/VBlank; ver `docs/port/clock-calibration.md`) con audio, video,
 input (teclado y gamepad) y partidas guardadas persistentes.
 
 ## Fuentes
@@ -90,7 +90,7 @@ Targets de build (CMake + Ninja para el port, Makefile upstream para matching):
 - **M3 Paridad nativa:** video, audio, CD/XA, MDEC, memcard; comparación de frames contra DuckStation.
 - **M4 Web:** mismo código en Emscripten; renderer software presentado vía WebGL; input teclado y
   Gamepad API; audio con AudioWorklet; saves en IndexedDB; pack construido en el navegador.
-- **M5 Renderer WebGL2 y rendimiento:** escalado de resolución, opción sin wobble, 59.94 Hz estables.
+- **M5 Renderer WebGL2 y rendimiento:** escalado de resolución, opción sin wobble, 60.0087172527 Hz (Redux: 564398 ciclos/VBlank; ver `docs/port/clock-calibration.md`) estables.
 - **M6 Jugabilidad completa:** partida de inicio a fin, tests de regresión por escena.
 - **M7 Deploy:** contenedor nginx con `Cross-Origin-Opener-Policy: same-origin` y
   `Cross-Origin-Embedder-Policy: require-corp`, en el servidor propio.

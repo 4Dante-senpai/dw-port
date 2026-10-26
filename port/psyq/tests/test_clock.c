@@ -10,8 +10,11 @@
 
 #include "../clock.h"
 #include "../psyq.h"
+extern void port_pad_latch(uint16_t buttons);
 
 static int failures;
+static unsigned vsync_returns;
+void port_vsync_return(void) { vsync_returns++; }
 #define CHECK(cond)                                                                        \
 	do {                                                                                   \
 		if (!(cond)) {                                                                     \
@@ -50,13 +53,17 @@ static int aborts(void (*fn)(void))
 static void no_drift(void)
 {
 	reset();
-	/* 10 minutes = 35964 VBlanks (+ a fraction) at 60000/1001 Hz. */
+	/* Redux's measured period, independently expressed in CPU cycles. */
 	uint64_t ten_min = 600ull * CLOCK_HZ;
+	uint32_t expected = ten_min / 564398u;
 	clock_advance(ten_min);
-	CHECK(clock_vblanks() == 35964);
-	CHECK(clock_vblank_cycle(35964) == 35964ull * 33868800u * 1001u / 60000u);
-	CHECK(clock_vblank_cycle(35964) <= ten_min && clock_vblank_cycle(35965) > ten_min);
-	CHECK(Vcount == 35964);
+	CHECK(clock_vblanks() == expected);
+	CHECK(clock_vblank_cycle(expected) == (uint64_t)expected * 564398u);
+	CHECK(clock_vblank_cycle(expected) <= ten_min && clock_vblank_cycle(expected + 1) > ten_min);
+	CHECK(Vcount == (int)expected);
+	CHECK(clock_vblank_cycle(UINT32_MAX) == (uint64_t)UINT32_MAX * 564398u);
+	CHECK(clock_lines(24ull * 3600 * CLOCK_HZ) ==
+	      24ull * 3600 * CLOCK_HZ * CLOCK_LINES_PER_FRAME / 564398u);
 }
 
 static void vsync_semantics(void)
@@ -65,7 +72,10 @@ static void vsync_semantics(void)
 	clock_advance(clock_vblank_cycle(1) / 2); /* mid frame 1 */
 	CHECK(VSync(-1) == 0);
 	VSync(0);
-	CHECK(Vcount == 1 && clock_now() == clock_vblank_cycle(1));
+	/* The pending VBlank is dispatched nine cycles into the counter-check
+     * branch. That already-taken branch repeats the 19-cycle timeout block,
+     * then returns through the 22-cycle check/epilogue and 60-cycle tail. */
+    CHECK(Vcount == 1 && clock_now() == clock_vblank_cycle(1) + CLOCK_VBLANK_NOPAD_CPU_CYCLES + 9 + 19 + 22 + 60);
 	VSync(0);
 	CHECK(Vcount == 2);
 	/* VSync(3): 3 VBlanks after the last return (VBlank 2), called right away. */
@@ -116,7 +126,7 @@ static void root_counter(void)
 	rcnt_hits = 0;
 	InterruptCallback(6, on_rcnt2);
 	CHECK(SetRCnt(RCntCNT2, 1000, RCntMdINTR) == 1);
-	uint64_t t0 = clock_now(); /* counting starts when SetRCnt returns */
+	uint64_t t0 = clock_now() - CLOCK_RCNT2_RETURN_CPU_CYCLES; /* mode write */
 	clock_advance(8 * 1000 * 10);
 	CHECK(rcnt_hits == 10);
 	CHECK(rcnt_last == t0 + 8 * 1000 * 10);
@@ -256,11 +266,11 @@ static void late_root_counter(void)
 	rcnt_hits = 0;
 	InterruptCallback(6, on_rcnt2);
 	SetRCnt(RCntCNT2, 1000, RCntMdINTR);
-	uint64_t origin = clock_now();
+	uint64_t origin = clock_now() - CLOCK_RCNT2_RETURN_CPU_CYCLES;
 	/* Cross three targets while masked, including a partial /8 tick. One
 	 * pending IRQ is delivered; the next target retains its original phase. */
-	clock_schedule(7990, delay_counter, (void *)(uintptr_t)17013);
-	clock_advance(7990);
+	clock_schedule(7990 - CLOCK_RCNT2_RETURN_CPU_CYCLES, delay_counter, (void *)(uintptr_t)17013);
+	clock_advance(7990 - CLOCK_RCNT2_RETURN_CPU_CYCLES);
 	clock_advance(0);
 	CHECK(rcnt_hits == 1 && rcnt_last == origin + 25003);
 	CHECK(GetRCnt(RCntCNT2) == (1003 + CLOCK_PSYQ_ENTRY_CYCLES) / 8);
@@ -323,7 +333,7 @@ static void target_zero(void)
 	rcnt_hits = 0;
 	InterruptCallback(6, on_rcnt2);
 	SetRCnt(RCntCNT2, 0, RCntMdINTR);
-	clock_advance(8 * 0x10000 - 1);
+	clock_advance(8 * 0x10000 - CLOCK_RCNT2_RETURN_CPU_CYCLES - 1);
 	CHECK(rcnt_hits == 0);
 	clock_advance(1);
 	CHECK(rcnt_hits == 1);
@@ -365,8 +375,102 @@ static void owner_thread(void)
 	CHECK(WIFSIGNALED(status) && WTERMSIG(status) == SIGABRT);
 }
 
+static void cost_callback(void *arg)
+{
+	(void)arg;
+	clock_psyq_entry();
+}
+static void cost_accounting(void)
+{
+	reset();
+	uint64_t before[CLOCK_COST_COUNT], after[CLOCK_COST_COUNT];
+	clock_cost_snapshot(before);
+	clock_schedule(10, cost_callback, NULL);
+	clock_advance_cost(1000, CLOCK_COST_CD);
+	clock_cost_snapshot(after);
+	CHECK(after[CLOCK_COST_CD] - before[CLOCK_COST_CD] == 1000 - CLOCK_PSYQ_ENTRY_CYCLES);
+	CHECK(after[CLOCK_COST_PSYQ] - before[CLOCK_COST_PSYQ] == CLOCK_PSYQ_ENTRY_CYCLES);
+	uint64_t sum = 0;
+	for (unsigned i = 0; i < CLOCK_COST_COUNT; i++) sum += after[i];
+	CHECK(sum == clock_now());
+	/* The same IRQ interrupts a CPU loop rather than a drive deadline:
+	 * all 1000 cycles of foreground work must still execute. */
+	uint64_t start = clock_now();
+	clock_schedule(10, cost_callback, NULL);
+	clock_advance_cost(1000, CLOCK_COST_CPU);
+	CHECK(clock_now() == start + 1064);
+	clock_reset();
+	clock_cost_snapshot(after);
+	for (unsigned i = 0; i < CLOCK_COST_COUNT; i++) CHECK(after[i] == 0);
+}
+
+static void first_vsync_origin(void)
+{
+	reset();
+	vsync_returns = 0;
+	uint64_t before = clock_now();
+	VSync(-1);
+	CHECK(vsync_returns == 1 && clock_now() - before == 82);
+	VSync(1);
+	CHECK(vsync_returns == 2);
+	VSync(0);
+	CHECK(vsync_returns == 3);
+}
+
+static void pad_observer(void) { port_pad_latch(0x4000); }
+static void sound_callback(void) { clock_advance_cost(6403, CLOCK_COST_CPU); }
+static void sound_irq(void *arg) { (void)arg; psyq_raise_irq(6); }
+static void pad_irq_publication(void)
+{
+	/* OpenBIOS checks VBlank once, before the PsyQ timer callback. A
+	 * VBlank first seen inside that callback gets ACKed without a pad poll.
+	 * After trapIntr's last I_STAT loop read, VBlank enters BIOS again and
+	 * publishes the new packet even while the old exception is returning. */
+	const unsigned offsets[] = {1000, 2000, 8830};
+	for (unsigned i = 0; i < sizeof offsets / sizeof offsets[0]; i++) {
+		reset();
+		PadInit(0);
+		port_pad_latch(0);
+		InterruptCallback(6, sound_callback);
+		psyq_irq_cpu_cost(6, 1230, 2394, 230);
+		clock_set_vblank_observer(pad_observer);
+		uint64_t vb = clock_vblank_cycle(clock_vblanks() + 1);
+		clock_schedule(vb - clock_now() - offsets[i], sound_irq, NULL);
+		clock_advance(vb - clock_now() + 20000);
+		CHECK(PadRead(0) == (i == 1 ? 0u : 0x40u));
+		clock_advance(clock_vblank_cycle(clock_vblanks() + 1) - clock_now());
+		CHECK(PadRead(0) == 0x40u);
+		clock_set_vblank_observer(NULL);
+	}
+}
+
+static uint64_t branch_seen[2], branch_epoch[2];
+static void branch_event(void *arg)
+{
+    unsigned index = (uintptr_t)arg;
+    branch_seen[index] = clock_now();
+    branch_epoch[index] = clock_poll_boundary();
+    if (!index) clock_advance_cost(30, CLOCK_COST_CPU);
+}
+static void polling_branch_dispatch(void)
+{
+    clock_reset();
+    clock_schedule(10, branch_event, (void *)0);
+    clock_schedule(20, branch_event, (void *)1);
+    clock_poll_branch(15);
+    CHECK(branch_seen[0] == 15 && branch_seen[1] == 45);
+    CHECK(branch_epoch[0] == 15 && branch_epoch[1] == 15);
+    CHECK(clock_now() == 45 && clock_poll_boundary() == 0);
+    clock_poll_branch(7);
+    CHECK(clock_now() == 52);
+}
+
 int main(void)
 {
+    polling_branch_dispatch();
+	pad_irq_publication();
+	first_vsync_origin();
+	cost_accounting();
 	no_drift();
 	vsync_semantics();
 	polling_terminates();

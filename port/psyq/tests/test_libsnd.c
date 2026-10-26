@@ -115,9 +115,10 @@ static void transfer(void)
     CHECK(SpuWrite(vb, 80) == 80);
     CHECK(memcmp(spu_ram + 0x1018, vb, 128) == 0); /* BCR transfers two blocks. */
     CHECK(spu_ram[0x1098] == 0xcc);
-    CHECK(SpuIsTransferCompleted(0) == 0);
+    /* 128 bytes take 16 DMA cycles: completion precedes SpuWrite's return. */
+    CHECK(SpuIsTransferCompleted(0) == 1);
     CHECK(SpuIsTransferCompleted(1) == 1);
-    CHECK(clock_now() == start + CLOCK_PSYQ_ENTRY_CYCLES + 128 * 4);
+    CHECK(clock_now() == start + 5736); /* 474 setup/return + 5134 IRQ + two 64-cycle polls. */
     CHECK((spu_read16(0x1aa) & 0x30) == 0);
     CHECK(SpuSetTransferMode(1) == 1);
     CHECK(SpuSetTransferStartAddr(0x2000) == 0x2000);
@@ -151,7 +152,7 @@ static void init_pending_dma(void)
     CHECK(spu_transfer_completed() && SpuIsTransferCompleted(0) == 1);
     CHECK(spu_read16(0x1aa) == 0xc000); /* Old completion cannot restore DMA mode. */
     CHECK(SpuSetTransferStartAddr(0x6000) == 0x6000);
-    CHECK(SpuWrite(vb, 64) == 64 && SpuIsTransferCompleted(0) == 0);
+    CHECK(SpuWrite(vb, 64) == 64 && SpuIsTransferCompleted(0) == 1);
     CHECK(SpuIsTransferCompleted(1) == 1 && !memcmp(spu_ram + 0x6000, vb, 64));
 }
 
@@ -171,8 +172,8 @@ static void banks(void)
     SsVabClose(0); /* Closing a header-only bank leaves the reservation held. */
     CHECK(SsVabTransBody(vb, 0) == 0);
     CHECK(SsUtGetVBaddrInSB(0) == 0x3000);
-    CHECK(SsVabOpenHeadSticky(vh, 1, 0x4000) == -1); /* DMA still pending. */
-    CHECK(SsVabTransCompleted(0) == 0);
+    CHECK(SsVabOpenHeadSticky(vh, 1, 0x4000) == -1); /* Occupied bank. */
+    CHECK(SsVabTransCompleted(0) == 1);
     CHECK(SsVabTransCompleted(1) == 1);
     CHECK(memcmp(spu_ram + 0x3000, vb, 128) == 0);
     CHECK(SsVabOpenHeadSticky(vh, 0, 0x4000) == -1); /* Occupied slot. */
@@ -220,6 +221,13 @@ static void sequence_records(void)
     unsigned char *table = (unsigned char *)seq_table;
     memset(table, 0xa5, sizeof(seq_table));
     SsSetTableSize((char *)table, 2, 2);
+    /* Settle the ENVX history independently of earlier DMA/voice tests. */
+    spu_reset();
+    for (int i = 0; i < 16; i++) SsSeqCalledTbyT();
+    /* Reserved mask bits must not consume CPU as if they were open scores. */
+    uint64_t quiet = clock_now();
+    SsSeqCalledTbyT();
+    CHECK(clock_now() - quiet == 6403u);
     for (unsigned record = 0; record < 4; record++) {
         unsigned char *q = table + record * 0xb0;
         CHECK(q[0x22] == 255 && q[0x23] == 0 && q[0x21] == 0xa5);
@@ -368,9 +376,9 @@ static void tick_clock(void)
     SsSetTickMode(2); SsStart();
     FILE *trace = tmpfile(); CHECK(trace != NULL);
     CHECK(spu_capture_begin(trace, NULL) == 0);
-    /* SsStart installs its callback one PsyQ entry after programming RCnt2.
+    /* SsStart returns 725 cycles after programming RCnt2.
      * Mask the first target: dispatch latency must not shift later ticks. */
-    clock_schedule(0x44e8 * 8 - CLOCK_PSYQ_ENTRY_CYCLES - 8, mask_audio_tick, NULL);
+    clock_schedule(0x44e8 * 8 - 725 - 8, mask_audio_tick, NULL);
     clock_advance(CLOCK_HZ);
     CHECK(spu_capture_end() == 0);
     rewind(trace);
@@ -425,14 +433,19 @@ static void tick_modes(void)
         fclose(trace); SsEnd();
         if (mode == 1) {
             CHECK(count == clock_vblanks() - vblank);
-            unsigned due = (clock_vblank_cycle(vblank + 1) - start) / 768;
+            unsigned due = (clock_vblank_cycle(vblank + 1) - start +
+                            CLOCK_VBLANK_NOPAD_CPU_CYCLES + 26 * CLOCK_PSYQ_ENTRY_CYCLES) / 768;
             CHECK(first >= due && first <= due + 3);
-            CHECK(second - first == 735 || second - first == 736);
+            unsigned samples = ((uint64_t)CLOCK_HZ * CLOCK_VBLANK_NUM / CLOCK_VBLANK_DEN) / 768;
+            CHECK(second - first == samples || second - first == samples + 1);
         } else {
             CHECK(count == (mode == 0 ? 120 : 60));
-            unsigned due = mode == 0 ? 367 : 735;
-            CHECK(first >= due && first <= due + 3);
-            CHECK(second - first >= due && second - first <= due + 1);
+            /* RCnt2 phase, measured IRQ entry, then 26 SPU entries before
+             * the key-on write. Sample indices round at the capture origin. */
+            unsigned interval = mode == 0 ? 282240 : 564480;
+            unsigned due = (interval - 725 + 2404 + 26 * 64) / 768;
+            CHECK(first >= due && first <= due + 1);
+            CHECK(second - first >= interval / 768 && second - first <= interval / 768 + 1);
         }
     }
 }

@@ -165,7 +165,7 @@ void MOV_waitForFlip(MovieEnv *env, int32_t unused)
 
 	while (env->flipPending == 0) {
 #ifdef DW1_PORT
-		clock_advance(1024);
+		clock_advance(CLOCK_MOVIE_FLIP_POLL_CYCLES);
 #endif
 		if (--timeout == 0) {
 			env->flipPending = 1;
@@ -188,6 +188,9 @@ u_long *MOV_readFrame(MovieEnv *env, MovieEntry *movie)
 	retries = 2000;
 
 	while (StGetNext(&addr, (u_long **)&header) != 0) {
+#ifdef DW1_PORT
+		clock_advance_cost(CLOCK_MOVIE_READ_POLL_CYCLES, CLOCK_COST_CPU);
+#endif
 		if (--retries == 0) {
 			return NULL;
 		}

@@ -15,6 +15,67 @@ local snapshot, enterCheckpoints
 local audio, audioIndex = nil, 1
 local audioFinishedTick
 local movie, movieFrames, movieOrigin
+local timing = c.timing_trace and assert(io.open(c.timing_trace, 'w'))
+local costNames = {'cd','gpu','mdec','card','psyq','wait','cpu','spu'}
+local costs, costBase, costStack = {}, {}, {}
+for _, name in ipairs(costNames) do costs[name], costBase[name] = 0, 0 end
+local hardwarePoint
+local costCycle, originCycle
+local function accountCycles()
+    local cycle = tonumber(PCSX.getCPUCycles())
+    local source = #costStack > 0 and costStack[#costStack].source or 'cpu'
+    if costCycle and cycle >= costCycle then
+        local delta=cycle-costCycle
+        costs[source] = costs[source] + delta
+        if #costStack>0 then costStack[#costStack].own=costStack[#costStack].own+delta end
+    end
+    costCycle = cycle
+    return cycle
+end
+local function timingPoint(event, label)
+    if not timing or not origin then return end
+    local cycle = accountCycles()
+    if hardwarePoint then hardwarePoint(event,label) end
+    local fields = {}
+    for _, name in ipairs(costNames) do
+        fields[#fields+1] = string.format('"%s":%.0f', name, costs[name]-costBase[name])
+    end
+    assert(timing:write(string.format('{"event":"%s","label":"%s","vblank":%d,"cycle":%.0f,"costs":{%s}}\n',
+        event,label,ticks-origin,cycle-originCycle,table.concat(fields,','))))
+    assert(timing:flush())
+end
+if timing then
+    for _, entry in ipairs(c.timing_functions or {}) do
+        breakpoints['cost_' .. entry.address] = PCSX.addBreakpoint(entry.address,'Exec',4,'DW1 cost',function()
+            accountCycles()
+            local ra = tonumber(PCSX.getRegisters().GPR.n.ra)
+            local source=entry.source
+            -- VSync(-1) is a counter query inside CD polling loops, not a wait.
+            if entry.name=='VSync' and bit.tobit(PCSX.getRegisters().GPR.n.a0)<0 then source='psyq' end
+            costStack[#costStack+1] = {source=source, ra=ra, name=entry.name, start=costCycle, own=0,
+                a0=tonumber(PCSX.getRegisters().GPR.n.a0)}
+            local key = 'cost_return_' .. ra
+            if not breakpoints[key] then
+                breakpoints[key] = PCSX.addBreakpoint(ra,'Exec',4,'DW1 cost return',function()
+                    -- Tail calls share their caller's return address. Close every
+                    -- such scope, or all later CPU time leaks into the outer API.
+                    while #costStack > 0 and costStack[#costStack].ra == ra do
+                        accountCycles()
+                        local span=costStack[#costStack]
+                        if hardwarePoint and (costCycle-span.start>=4096 or span.name=='PadRead' or span.name=='newGameStateMachine') then
+                            hardwarePoint('function_span',span.name or span.source,
+                                string.format(',"start":%.0f,"elapsed":%.0f,"own":%.0f,"a0":%.0f,"result":%.0f',
+                                    span.start,costCycle-span.start,span.own,span.a0,tonumber(PCSX.getRegisters().GPR.n.v0)))
+                        end
+                        table.remove(costStack)
+                    end
+                    return true
+                end)
+            end
+            return true
+        end)
+    end
+end
 local function movieStart()
     if not c.movie then return end
     movieFrames, movieOrigin = 0, ticks
@@ -143,6 +204,11 @@ local function guarded(fn)
         return message
     end
 end
+if c.hardware_trace then
+    hardwarePoint = dofile(c.hardware_adapter)(c.hardware_trace, breakpoints, guarded, function()
+        return #costStack > 0 and costStack[#costStack].source or 'cpu'
+    end, c.hardware_map_load, c.hardware_irq)
+end
 if c.audio then
     -- The write breakpoint fires before the store. The pinned core can expose the
     -- current instruction at rawPC or rawPC-4; match its effective address, never
@@ -194,6 +260,11 @@ local function input(k)
                     if cp.label == event.after and cp.start and ticks - cp.start >= event.vblank then
                         held = event.buttons
                         event.applied = true
+                        if hardwarePoint then
+                            local mask=0
+                            for _, button in ipairs(held) do mask=bit.bor(mask,bit.lshift(1,button)) end
+                            hardwarePoint('input',event.after,string.format(',"relative":%d,"mask":%d',event.vblank,mask))
+                        end
                         break
                     end
                 end
@@ -209,6 +280,15 @@ local function input(k)
     local pad = PCSX.SIO0.slots[1].pads[1]
     for button = 0, 15 do pad.clearOverride(button) end
     for _, button in ipairs(held) do pad.setOverride(button) end
+    if c.input_diagnostics and hardwarePoint then
+        local mask=0
+        for button=0,15 do if pad.getButton(button) then mask=bit.bor(mask,bit.lshift(1,button)) end end
+        local ram=ffi.cast('const uint8_t*',PCSX.getMemPtr())
+        hardwarePoint('pad_latch','pad',string.format(',"mask":%d,"packet":%d,"raw_pad":%d',mask,
+            tonumber(ram[0x135450])+256*tonumber(ram[0x135451])+65536*tonumber(ram[0x135452])+16777216*tonumber(ram[0x135453]),
+            -- Verified s_padBuffer1 in the installed, seed-patched OpenBIOS.
+            tonumber(ram[0xaea8])+256*tonumber(ram[0xaea9])+65536*tonumber(ram[0xaeaa])+16777216*tonumber(ram[0xaeab])))
+    end
 end
 progress('before frame 0')
 -- AD-15 frame 0: return of the game's first VSync call (nothing calls VSync before main).
@@ -221,6 +301,11 @@ breakpoints.vsync = PCSX.addBreakpoint(c.vsync, 'Exec', 4, 'DW1 first VSync', gu
         breakpoints.returned = PCSX.addBreakpoint(ra, 'Exec', 4, 'DW1 frame 0', guarded(function()
             if not origin then
                 origin = ticks
+                if timing then
+                    originCycle = accountCycles()
+                    for _, name in ipairs(costNames) do costBase[name] = costs[name] end
+                    timingPoint('frame0', 'frame0')
+                end
                 progress('frame 0')
                 if c.inputs_from ~= 'mark' then input(0) end
                 breakpoints.returned:disable()
@@ -234,6 +319,7 @@ breakpoints.mark = PCSX.addBreakpoint(c.mark, 'Exec', 4, 'DW1 scene mark', guard
     if not mark then
         assert(origin, 'scene mark reached before frame 0')
         mark = ticks
+        timingPoint('mark', c.mark_name or 'mark')
         progress('mark')
         if #checkpoints == 0 then breakpoints.mark:disable() end
     end
@@ -322,6 +408,7 @@ enterCheckpoints = function(address)
         if armed and cp.hits == cp.occurrence then
             assert(checkpoints[checkpointIndex] == cp, 'checkpoint out of order: ' .. cp.label)
             cp.start = ticks
+            timingPoint('checkpoint', cp.label)
             checkpointIndex = checkpointIndex + 1
             audioCheckpoint(cp.label)
             snapshot(cp.label, 0)
@@ -339,6 +426,7 @@ for address, _ in pairs(byAddress) do
 end
 local onVsync = guarded(function()
     ticks = ticks + 1
+    if origin and ticks-origin <= 256 then timingPoint('vblank', 'vblank') end
     if audio and audio.vblanks and ticks-audio.tick >= audio.vblanks then audioEnd("vblanks") end
     local base = c.inputs_from == 'mark' and mark or (c.inputs_from ~= 'mark' and origin or nil)
     if base then input(ticks - base) end
@@ -354,7 +442,8 @@ local onVsync = guarded(function()
     if c.audio and audioIndex > #c.audio then
         -- Let the asynchronous mixer flush through the recorded end cycle.
         -- These later VBlanks belong to neither segment.
-        if ticks - audioFinishedTick >= (c.audio_drain_vblanks or 0) then
+        if ticks - audioFinishedTick >= (c.audio_drain_vblanks or 0) and
+           (#checkpoints == 0 or complete()) then
             progress('audio captured')
             PCSX.quit(0)
         end

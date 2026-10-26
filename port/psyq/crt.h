@@ -12,6 +12,7 @@ typedef struct {
 	const char *state_trace;
 	const char *checkpoints;
 	const char *audio_segments;
+	unsigned long vblank_limit; /* Stop N VBlanks after frame 0; independent of capture. */
 } PortCapture;
 
 /* Starts the game on its own thread (static stack in the OT window) and waits. With
@@ -22,6 +23,9 @@ int port_run_game(long frame_count, int until_overlay, const PortCapture *config
 /* Scene captures run independently of wall time. */
 int port_capture_active(void);
 void port_scene_mark(const char *name);
+
+/* Called on every VSync return, including nonblocking queries (AD-15). */
+void port_vsync_return(void);
 
 /* Called by VSync when a frame ends. */
 void port_frame_done(void);

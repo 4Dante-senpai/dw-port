@@ -159,8 +159,9 @@ static void arm(int rc)
  * sys/8 for counter 2 and HBlank for counter 1 unless RCntMdSC). Returns 1, or 0 if spec > 2. */
 long SetRCnt(unsigned long spec, unsigned short target, long mode)
 {
-	clock_psyq_entry();
 	int rc = spec & 0xFFFF;
+	if (rc == 2) clock_advance_cost(CLOCK_RCNT2_MODE_WRITE_CPU_CYCLES, CLOCK_COST_CPU);
+	else clock_psyq_entry();
 	if (rc >= 3)
 		return 0;
 	uint16_t hw = 0x48;
@@ -180,6 +181,7 @@ long SetRCnt(unsigned long spec, unsigned short target, long mode)
 	counters[rc].mode = hw;
 	counters[rc].target = target;
 	arm(rc);
+	if (rc == 2) clock_advance_cost(CLOCK_RCNT2_RETURN_CPU_CYCLES, CLOCK_COST_CPU);
 	return 1;
 }
 
