@@ -36,7 +36,7 @@ del stack (`src/main/main.c:3534-3539`, `InitHeap3`).
 | 8 | `DOO2_REL.BIN` | `0x80070000` | `0x8007B6EC` | 46828 | 18 | `dooa/dooa.c:365` (async) |
 | 9 | `DOOA_REL.BIN` | `0x80080000` | `0x800878AC` | 30892 | 28 | `main/partner.c:654`, `murd/murd.c:788` |
 | 10 | `TRN_REL.BIN` | `0x80088800` | `0x8008F3D4` | 27604 | 45 | `main/map.c:5460` (entrenamiento) |
-| 11 | `SHOP_REL.BIN` | `0x80080800` (\*\*) | `0x80088610` | 32272 | 65 (\*\*) | `main/script_common.c:3076, 3084` |
+| 11 | `SHOP_REL.BIN` | `0x80080800` | `0x80088610` | 32272 | 65 (en `main`) | `checkShopMap` desde `newGameScene` confirmado; `loadShopLibrary` estático. Ver evidencia 3.11 abajo. |
 | 12 | `DGET_REL.BIN` | `0x80080800` | `0x80081CF8` | 5368 | 13 | `main/script_common.c:3097` |
 | 13 | `TRN2_REL.BIN` | `0x80088800` | `0x8008DCC0` | 21696 | 40 | `main/map.c:5466` |
 | 14 | `MURD_REL.BIN` | `0x8007C000` | `0x8007E960` | 10592 | 15 | `main/tamer.c:1703, 1738` |
@@ -46,12 +46,98 @@ del stack (`src/main/main.c:3534-3539`, `InitHeap3`).
 (\*) `vs` incluye 3 archivos (`vs_intro`, `vs_combat`, `vs_select`) que en USA están linkeados en
 `main`, no en `VS_REL.BIN`.
 
-(\*\*) **Hipótesis a validar:** en USA el código de `shop/script_menu.c` está linkeado dentro de
-`main` (`config/us/main.yaml:132`, `config/us/main.ld:156`) y `shop_START` es una constante
-`0x80080800` (`src/main/utils2.c:24`), mientras que en EU `SHOP` es un overlay de verdad
-(`config/eu/overlay.ld:185`). `SHOP_REL.BIN` existe en el disco USA y se sigue cargando; falta
-confirmar si en USA su contenido se usa o es un resto. Validar con un breakpoint de lectura en
-`0x80080800` en el emulador de referencia.
+### SHOP USA: resultado de la historia 3.11
+
+`map_load` **sí carga** `SHOP_REL.BIN`, de forma síncrona, desde
+`newGameScene → checkShopMap(0xda) → loadDynamicLibrary(11) → readFile → CdRead`.
+La sonda automática `tools/port/reference/shop.lua`, integrada en `capture.py`,
+observa la carga real y el rango semiabierto `0x80080840–0x80088610` hasta el final
+de la Escena. Los ciclos y VBlanks siguientes parten del retorno del primer
+`VSync` del juego (frame 0), no de la marca `MOV_playMovie`.
+
+| Evento | VBlank | Ciclo | `ra` |
+|---|---:|---:|---|
+| `checkShopMap(0xda)` desde `newGameScene` | 1138 | 641791486 | `0x800ef1f8` |
+| `loadDynamicLibrary(11)` | 1138 | 641791809 | `0x800ff980` |
+| `readFile` a `0x80080800` | 1138 | 641791847 | `0x800e6228` |
+| `CdRead`, 16 sectores, 32768 bytes con padding | 1138 | 642019276 | `0x800a3474` |
+| Retorno de `checkShopMap`, trigger `0x29` desactivado | 1171 | 660530961 | `0x800ef1f8` |
+| `checkShopMap(0xcc)` desde `loadMap` | 9535 | 5381370524 | `0x800d5df0` |
+| Retorno sin carga: `0xcc` no está en `SHOP_MAPS`; trigger desactivado | 9535 | 5381370854 | `0x800d5df0` |
+
+El archivo mide 32272 bytes; la transferencia CD incluye el padding del último
+sector. Las dos corridas de la sonda produjeron JSONL idénticos. Solo hubo
+**una carga**, **cero ejecuciones** y **5389533 lecturas** de la región, hasta
+VBlank 9536, ciclo 5381555041. La traza temporal coincide también con la
+referencia final sin la sonda. No se debe describir como una región sin lecturas:
+
+| PC lector | Función (asm USA `psyq/libpress.s`) | Lecturas |
+|---|---|---:|
+| `0x800e9a5c` | `DecDCTvlc2` | 2224461 |
+| `0x800e9a9c` | `DecDCTvlc2` | 919956 |
+| `0x800e9aac` | `DecDCTvlc2` | 2224497 |
+| `0x800e9c0c` | `DecDCTvlcBuild` | 9387 |
+| `0x800e9c7c` | `DecDCTvlcBuild` | 5618 |
+| `0x800e9c80` | `DecDCTvlcBuild` | 5614 |
+
+La atribución al video se apoya en esos PCs y en `src/mov/mov.c`: `MOV_playMovie`
+construye la tabla y `MOV_decodeFrame` la consulta. `MOV_VLC_TABLE` ocupa
+`0x80072424–0x80083428` (`config/us/symbols_mov.txt`), superpuesto con SHOP;
+además, cargar MOV pisa `0x80010000–0x80083428`. Estos conteos observan la región
+física durante toda la Escena, también después de reutilizarla; **no prueban que
+las lecturas consuman datos originales de SHOP**.
+
+El análisis estático reproducible `tools/port/metrics/shop_overlay.py` verifica
+las 134296 palabras de texto de `main` contra el asm USA y lista:
+
+- Seis `jal` dentro del rango compartido: `0x800aadac`, `0x800de7bc` y
+  `0x800de800` llaman a `DOOA_tick` (`0x80084644`); `0x800dec30` y `0x800dec48`
+  a `DOOA_getSequenceState` (`0x80084810`); `0x80105ddc` a
+  `initTournamentSchedule` de DGET (`0x80081a80`). Ninguna identifica una entrada
+  de la tienda de `main`.
+- Un candidato lineal al rango: `lui` en `0x800a51e8` y `addiu` en
+  `0x800a51f8`, en el delay slot de `jal applyMMD`, forman `0x8008788c`.
+  El asm lo identifica como `DOOA_REINCARNATION_SEQ + 0x24`.
+  Dos palabras de datos,
+  `0x8012b994` y `0x8012b998`, contienen `0x80080800`: las entradas SHOP y DGET
+  de `REL_BIN_OFFSETS`. El análisis no resuelve todos los punteros calculados.
+- `shop/script_menu` está en `main`, `0x80106d28–0x8010cb3c` (6021 instrucciones).
+  Comparado con el código de SHOP desde `+0x40` hasta el último `jr ra` y su delay
+  slot (7688 palabras), solo coincide una secuencia normalizada de al menos 16
+  instrucciones: 18 palabras en `main:0x8010bf94` / `SHOP:0x800871e4`.
+  Se enmascaran destinos J/JAL, pares de relocación RAM separados por hasta
+  cuatro instrucciones y offsets de GP; las constantes ordinarias se conservan.
+  **El comparador no confirma que sea una copia reubicada**, ni esa coincidencia
+  demuestra equivalencia.
+  El límite de código del overlay se infiere del último retorno, como declara
+  el informe; no sustituye un mapa de símbolos propio de ese archivo USA.
+
+Resultado acotado: la carga de SHOP persiste en USA y no se observa ejecución
+suya en `map_load`; la región se reutiliza para video. No hay base para eliminar
+la carga ni declarar el archivo inútil en toda la partida. `map_load` no entra
+a una tienda. `loadShopLibrary` (comando de script `0x23`) queda cubierto **solo
+por análisis estático**: encola `loadDynamicLibrary(11, …, 1, …)`; no se ejecutó
+ese comando en esta investigación. No se cambió `src/` ni `REL_BIN_OFFSETS`.
+
+Reproducción dentro del contenedor, con el disco privado y salidas externas:
+
+```sh
+export DW1_DISC_DIR=/dw/game_rom/extracted
+export DW1_REFERENCE_DIR=/tmp/dw-reference
+python3 tools/port/reference/capture.py map_load --shop-probe --state \
+  --out "$DW1_REFERENCE_DIR/map_load" --max-vblanks 40000
+python3 tools/port/metrics/shop_overlay.py
+cmake --build --preset native-headless -j 2
+python3 tools/port/scenes/run.py map_load --build native-headless --compare
+ctest --preset native-headless -R 'map_load|reference_capture_unit|shop_overlay_unit|scene_(runner|flags|state_unit|timing_unit|audio_unit|audio_runtime)$'
+```
+
+Los JSONL detallados quedan fuera del repo. El resumen versionado, los hashes,
+la comparación de checkpoints (incluidos `checkShopMap` y `checkShopMap#2`) y
+los resultados de tests están en
+`docs/implementation-artifacts/evidence/story-3-11.log`. Se conserva el hash
+visual fijado de `map_load`: agregar observadores no altera el juego ni el
+punto final de captura.
 
 Observación del linker script (Historia 2.4): en USA `dget_START` también vale `0x80080800`
 (`config/us/overlay.ld`), así que `SHOP` y `DGET` usan la misma región; `shop_START` no sale del

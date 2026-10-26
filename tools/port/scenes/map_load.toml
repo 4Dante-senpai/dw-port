@@ -5,7 +5,7 @@ overlay = "mov"
 mark = "MOV_playMovie"
 inputs_from = "mark"
 capture_vblank = 12000
-checkpoints = ["MOV_playMovie", "runLandingScreen", "runMainMenu", "newGameScene", "newGameStateMachine", "setupNameSelectorBox", "setupNameSelectorBox#2", "unloadNewGameScene", "loadMap", "checkArenaMap"]
+checkpoints = ["MOV_playMovie", "runLandingScreen", "runMainMenu", "newGameScene", "checkShopMap", "newGameStateMachine", "setupNameSelectorBox", "setupNameSelectorBox#2", "unloadNewGameScene", "loadMap", "checkShopMap#2", "checkArenaMap"]
 window = 1
 # Cross advances dialogue; Start skips the movie and accepts both names.
 # Hold presses across pad polling phases; finish each dialogue script before

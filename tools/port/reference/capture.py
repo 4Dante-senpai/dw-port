@@ -38,6 +38,21 @@ def valid_timing_pair(output):
         return False
 
 
+def validate_shop_pair(paths):
+    for path in paths:
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+        if not any(row["event"] == "read_file" for row in rows):
+            raise ValueError("SHOP_REL.BIN not read in map_load; stop investigation per spec 3.11")
+        if not any(row["event"] == "cd_read" and row.get("destination") == 0x80080800
+                   and row.get("sectors") == 16 for row in rows):
+            raise ValueError("missing SHOP CD read (destination 0x80080800, 16 sectors)")
+        summaries = [row for row in rows if row["event"] == "summary"]
+        if {row["kind"] for row in summaries} != {"Exec", "Read"}:
+            raise ValueError("incomplete SHOP access observation")
+    if paths[0].read_bytes() != paths[1].read_bytes():
+        raise ValueError("non-deterministic SHOP probe")
+
+
 def resolve_symbols(path, mark, overlay=None):
     source=path.read_text()
     extra=path.with_name(f"symbols_{overlay}.txt")
@@ -131,6 +146,11 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
     source = (ROOT / "config/us/symbols.txt").read_text()
     addresses = {name: int(address, 16) for name, address in re.findall(
         r"^([\w.$]+)\s*=\s*(0x[0-9a-fA-F]+);", source, re.M)}
+    if scene.get("_shop_probe"):
+        config["shop_probe"] = dict(trace=str(output / f"run-{index}.shop.jsonl"),
+            adapter=str(ROOT / "tools/port/reference/shop.lua"),
+            functions={name: addresses[name] for name in ("newGameScene", "loadMap",
+                "checkShopMap", "loadShopLibrary", "loadDynamicLibrary", "readFile", "isTriggerSet", "CdRead")})
     config["hardware_map_load"] = addresses.get("loadMap")
     config["hardware_irq"] = {name: addresses[name] for name in
         ("trapIntr", "ReturnFromException") if name in addresses}
@@ -223,6 +243,7 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("id", choices=sorted(p.stem for p in (ROOT / "tools/port/scenes").glob("*.toml")))
+    parser.add_argument("--shop-probe", action="store_true", help="trace SHOP loads and region accesses in map_load (external --out required)")
     parser.add_argument("--update", action="store_true")
     parser.add_argument("--state", action="store_true")
     parser.add_argument("--card1", type=Path, help="existing raw input card outside the repository")
@@ -232,8 +253,12 @@ def main(argv=None):
     parser.add_argument("--bios", type=Path)
     parser.add_argument("--out", type=Path)
     parser.add_argument("--timeout", type=float, default=7200)
-    parser.add_argument("--max-vblanks", type=int, default=10000)
+    parser.add_argument("--max-vblanks", type=int)
     args = parser.parse_args(argv)
+    if args.shop_probe and (args.id != "map_load" or args.reuse):
+        raise ValueError("--shop-probe requires map_load without --reuse")
+    if args.shop_probe and (not args.out or args.out.resolve().is_relative_to(ROOT)):
+        raise ValueError("--shop-probe requires --out outside the repository in DW1_REFERENCE_DIR")
     if args.id in ("movie0", "movie0_skip"): args.audio = True
     if args.reuse and (args.update or not (args.state or args.audio)):
         raise ValueError("--reuse requires --state or --audio and cannot be combined with --update")
@@ -241,6 +266,8 @@ def main(argv=None):
         raise ValueError("--audio cannot be combined with --state or --update")
     if args.bios and args.update:
         raise ValueError("--bios cannot be combined with --update")
+    if args.max_vblanks is None:
+        args.max_vblanks = 40000 if args.shop_probe else 10000
     if args.timeout <= 0 or args.max_vblanks <= 0:
         raise ValueError("timeouts must be positive")
     bios = args.bios.resolve() if args.bios else OPENBIOS
@@ -253,6 +280,8 @@ def main(argv=None):
         raise ValueError("audio scenes require --audio")
     if args.audio and not scene.get("audio"):
         raise ValueError("--audio requires an audio scene")
+    if args.shop_probe:
+        scene["_shop_probe"] = True
     scene["_card_build"] = args.card_build
     if args.card1:
         scene["_card1_input"] = str(args.card1)
@@ -307,6 +336,10 @@ def main(argv=None):
         (output / f"run-{index}.timing.jsonl").unlink(missing_ok=True)
     hashes = [run_once(emulator, cues[0].resolve(), bios, scene, symbols,
                        output, index, args.timeout, args.max_vblanks) for index in (1, 2)]
+    if args.shop_probe:
+        paths = [output / f"run-{index}.shop.jsonl" for index in (1, 2)]
+        validate_shop_pair(paths)
+        print("SHOP probe: two identical load/access traces; " + str(paths[0]))
     traces = [output / f"run-{index}.timing.jsonl" for index in (1, 2)]
     for path in traces:
         _runner.timing.read(path)
