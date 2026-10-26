@@ -2,6 +2,7 @@
 #define PORT_PSYQ_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 /*
  * Prototypes of the PsyQ functions the port implements, as in the mw_lib41 headers the game
@@ -67,6 +68,10 @@ void free3(void *ptr);
 /* rand.h */
 int rand(void);
 void srand(unsigned int seed);
+void *psyq_memcpy(void *dst, const void *src, size_t size);
+void *psyq_memset(void *dst, int value, size_t size);
+int psyq_strcmp(const char *left, const char *right);
+char *psyq_strrchr(const char *text, int value);
 
 /* kernel.h (values checked against it by tests/psyq_prototypes.c) */
 #ifndef RCntCNT0
@@ -351,6 +356,7 @@ void DecDCTout(unsigned long *buf, int size);
 /* Port internals. */
 extern int Vcount;
 void psyq_raise_irq(int irq); /* runs the InterruptCallback of line irq */
+void psyq_irq_cpu_cost(int irq, uint32_t verifier, uint32_t entry, uint32_t tail);
 void psyq_libspu_reset(void);
 void psyq_libetc_reset(void);
 void psyq_libapi_reset(void);

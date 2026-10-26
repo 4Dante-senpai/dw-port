@@ -2,7 +2,7 @@
 title: 'Historia 3.10: Calibración de costos y ritmo nativo'
 type: 'feature'
 created: '2026-10-24'
-status: 'in-progress'
+status: 'done'
 route: 'dispatch'
 baseline_commit: 'd79a22a49dda0c77b10478298c4b6c26555b3d0c'
 review_loop_iteration: 0
@@ -45,6 +45,7 @@ context:
 
 - **Forma del modelo (dueño, 2026-10-24):** si ajustar números no alcanza para diferencia 0, se puede cambiar la forma del modelo cuando la descomposición por tramo lo justifique. Ejemplos: un seek por distancia, o un costo de CPU por función pesada medido en Redux. Cada cambio queda determinista, sin ajustes por Escena, y se registra en AD-8, que pasa a decir que la forma también se calibra.
 - **Tasa de VBlank (dueño delegó; se eligió seguir al hardware):** la tasa de VBlank del reloj virtual es la que mide Redux en ciclos por VBlank. La ventana `native` se ritma a esa misma tasa, de modo que el audio (SPU a 44.100 Hz derivados de `CLOCK_HZ`) y la ventana no se separen. Si la medición difiere de 59,94 Hz, se corrige NFR-1 en el PRD, la arquitectura y `CLAUDE.md` con la medición como evidencia. Si coincide, nada cambia.
+- **Entrada guionada insensible a la fase (dueño, 2026-10-25):** con la intro completa, `newgame` llegaba 120 VBlanks tarde a `setupNameSelectorBox#2`, mientras `map_load` daba 0 en ese punto. La diferencia venía de unos pocos ciclos en la fase de lectura del pad, que decidían qué pulsación de Start recibía el juego. Las Escenas mantienen Start (y las demás pulsaciones guionadas que dependan de la fase) presionado varios VBlanks, para que el port y Redux reciban la misma pulsación. Se vuelven a capturar las referencias afectadas. El criterio de diferencia 0 no cambia, y sigue prohibido mover el latch.
 
 </frozen-after-approval>
 
@@ -70,16 +71,16 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `port/psyq/*` (según la causa) -- encontrar el primer evento distinto entre las trazas de `native-headless` y `native-asan` y hacer que el tiempo virtual no dependa del build. Cerrar la entrada de `deferred-work.md`.
-- [ ] `port/psyq/scene.c`, `crt.c`, `tools/port/reference/capture.lua` -- registrar en ambos lados el VBlank de cada punto de control y de la marca relativo al frame 0, con los ciclos acumulados por fuente de costo de cada tramo (CD, GPU, MDEC, tarjeta, entradas PsyQ y espera). En Redux, la descomposición sale de breakpoints en los comandos de CD, GPU y MDEC.
-- [ ] `tools/port/scenes/run.py`, `movie.py`, `test_runner.py` -- comparación de tiempos con salida según la matriz, en `--compare` y en las Escenas de video; quitar `skip_vblank_delta`. Tests unitarios con trazas sintéticas para el punto igual, el distinto y el ausente.
-- [ ] `tools/port/scenes/{title,movie0,newgame}.toml` (o `map_load.toml` nuevo) -- puntos de control de tiempo, incluida la carga de mapa.
-- [ ] `port/psyq/clock_costs.h`, `clock.h`, `libcd.c`, `libcd_stream.c`, `libgpu.c`, `libspu.c`, `src/mov/mov.c` -- mover las constantes y calibrarlas. Cada una lleva un comentario con su Escena y su medición de Redux, y pierde la marca `[hypothesis]` solo si quedó calibrada.
-- [ ] `docs/port/clock-calibration.md` (nuevo) -- tabla por Escena y tramo con los ciclos por fuente de costo en el port y en la referencia, antes y después.
-- [ ] `port/host/sdl/video.c`, `port/host/native_cli.c` -- contador de resincronizaciones y opción `--vblanks N`, que al salir imprime los VBlanks y la pared desde el ancla.
-- [ ] `tools/port/test_native_wall.py`, `CMakeLists.txt`, `.gitlab-ci.yml` -- prueba `native_wall_10min` (clase B, preset `native`, `SDL_VIDEODRIVER=offscreen`, `RUN_SERIAL`, TIMEOUT 900) dentro de `native-disc`.
-- [ ] `port/psyq/clock.h` -- medir en Redux los ciclos por VBlank y fijar la razón de VBlank del reloj a esa medición. La ventana de `video.c` toma la tasa del reloj, sin un 60000/1001 propio.
-- [ ] `docs/port/src-changes.md`, arquitectura (AD-8 con la forma calibrable y memlog con la tasa medida), PRD NFR-1 y `CLAUDE.md` si la tasa cambia -- registrar los cambios.
+- [x] `port/psyq/*` (según la causa) -- encontrar el primer evento distinto entre las trazas de `native-headless` y `native-asan` y hacer que el tiempo virtual no dependa del build. Cerrar la entrada de `deferred-work.md`.
+- [x] `port/psyq/scene.c`, `crt.c`, `tools/port/reference/capture.lua` -- registrar en ambos lados el VBlank de cada punto de control y de la marca relativo al frame 0, con los ciclos acumulados por fuente de costo de cada tramo (CD, GPU, MDEC, tarjeta, entradas PsyQ y espera). En Redux, la descomposición sale de breakpoints en los comandos de CD, GPU y MDEC.
+- [x] `tools/port/scenes/run.py`, `movie.py`, `test_runner.py` -- comparación de tiempos con salida según la matriz, en `--compare` y en las Escenas de video; quitar `skip_vblank_delta`. Tests unitarios con trazas sintéticas para el punto igual, el distinto y el ausente.
+- [x] `tools/port/scenes/{title,movie0,newgame}.toml` (o `map_load.toml` nuevo) -- puntos de control de tiempo, incluida la carga de mapa.
+- [x] `port/psyq/clock_costs.h`, `clock.h`, `libcd.c`, `libcd_stream.c`, `libgpu.c`, `libspu.c`, `src/mov/mov.c` -- mover las constantes y calibrarlas. Cada una lleva un comentario con su Escena y su medición de Redux, y pierde la marca `[hypothesis]` solo si quedó calibrada.
+- [x] `docs/port/clock-calibration.md` (nuevo) -- tabla por Escena y tramo con los ciclos por fuente de costo en el port y en la referencia, antes y después.
+- [x] `port/host/sdl/video.c`, `port/host/native_cli.c` -- contador de resincronizaciones y opción `--vblanks N`, que al salir imprime los VBlanks y la pared desde el ancla.
+- [x] `tools/port/test_native_wall.py`, `CMakeLists.txt`, `.gitlab-ci.yml` -- prueba `native_wall_10min` (clase B, preset `native`, `SDL_VIDEODRIVER=offscreen`, `RUN_SERIAL`, TIMEOUT 900) dentro de `native-disc`.
+- [x] `port/psyq/clock.h` -- medir en Redux los ciclos por VBlank y fijar la razón de VBlank del reloj a esa medición. La ventana de `video.c` toma la tasa del reloj, sin un 60000/1001 propio.
+- [x] `docs/port/src-changes.md`, arquitectura (AD-8 con la forma calibrable y memlog con la tasa medida), PRD NFR-1 y `CLAUDE.md` si la tasa cambia -- registrar los cambios.
 
 **Acceptance Criteria:**
 - Given `title`, `movie0`, `movie0_skip` y la carga de mapa, when `run.py <id> --build native-headless --compare`, then cada punto de control da diferencia 0 y los hashes pasan.
@@ -92,6 +93,22 @@ context:
 ## Spec Change Log
 
 ## Review Triage Log
+
+| # | Origen | Hallazgo | Veredicto | Ruta | Evidencia |
+|---|---|---|---|---|---|
+| 1 | blind, edge, vgap | `psyq_strrchr` no encuentra `'\0'` | low | patch | `port/psyq/libc.c:37` recorre solo hasta el terminador. El juego busca solo `'\\'`, pero la corrección es directa. |
+| 2 | blind, edge | `psyq_strrchr` compara un `signed char` con un `int` positivo | low | patch | Con `value` > 127 la comparación falla. Misma función; se corrige comparando como `unsigned char`. |
+| 3 | blind, vgap, edge | `native_wall_10min` valida contra la tasa que imprime el propio ejecutable | medium | patch | `verify()` usa `rate_num`/`rate_den` del log. `main()` ya lee `clock.h` y no lo compara, así que una ventana coherente a otra tasa pasa. |
+| 4 | blind, vgap, edge | El DMA GPU en modo lista enlazada registra `words` a partir del BCR | medium | patch | En `hardware.lua:159-179`, con `control & 0x400`, el BCR no aplica. Los resúmenes de calibración atribuyen palabras falsas. Ningún test cubre esa rama. |
+| 5 | edge | `hardware.py` rechaza un DMA que empieza antes del frame 0 y termina después | false | rechazo | Falla en voz alta, y ninguna captura actual lo alcanza: las 4 suites pasan. No es un defecto demostrado. |
+| 6 | blind, edge | `timing.py` no valida el orden de los puntos de control | low | rechazo | Las filas ya exigen ciclos monótonos. El orden solo afecta los costos de diagnóstico, y el arreglo agrega una guarda. |
+| 7 | edge | `valid_timing_pair` no atrapa `KeyError` ni `TypeError` | low | patch | Si una captura en caché tiene otro esquema, aborta en vez de regenerarse. El arreglo es directo: ampliar el `except`. |
+| 8 | blind | `clock-calibration.md` sigue mostrando ASan, SDL y suites como pendientes | low | patch | Las suites finales pasaron: headless 82/82, ASan 80/80, native 92/92, web 39/39 y la prueba de 10 minutos. Falta registrarlo. |
+| 9 | blind | La tabla de antes y después mezcla guiones de entrada distintos | low | patch | La columna "Antes" usa los guiones viejos. Va una nota en el documento. |
+| 10 | blind | `memcpy`/`memset` cobran el costo antes de copiar | maybe-false | defer | Si una IRQ despachada durante el avance lee el destino, ve un estado distinto. Se resuelve buscando callbacks que lean buffers en copia. |
+| 11 | blind | Falta verificar aisladamente la geometría ISO y la caché de directorios | maybe-false | rechazo | No nombra un daño concreto. Los puntos de control en 0 cubren las rutas que usan las Escenas. |
+| 12 | blind | Los cargos del código del juego no se comparan entre nativo y WASM | false | rechazo | El intento excluye calibrar la web (Never). `web_scene_title` compara con nativo y pasa. |
+| 13 | orquestador | La fila "Pausa del host" no tiene un test que provoque un atraso real | medium | patch | `video.c:50` cuenta las resincronizaciones, pero ningún test fuerza un atraso de más de 4 VBlanks. `test_timing.py` solo prueba el análisis del log. |
 
 ## Design Notes
 

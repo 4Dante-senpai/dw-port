@@ -39,8 +39,8 @@ src/main/script_common.c	while@padWithSpaces	(used != 0)	2	2932	no aplica: el lo
 src/main/script_interp.c	while@getScriptSection	(1)	1	713	no aplica: avanza su propio índice y sale con break/return
 src/main/script_interp.c	while@getTriggerOffset	(bit != 0)	1	2713	no aplica: el loop modifica su propia condición
 src/main/script_value.c	while@intToStringSJIS	(digits != 0)	1	107	no aplica: el loop modifica su propia condición
-src/main/sound.c	while@concatStrings3	(*src1 != 0)	1	508	no aplica: el loop modifica su propia condición
-src/main/sound.c	while@concatStrings3	(*src2 != 0)	1	511	no aplica: el loop modifica su propia condición
+src/main/sound.c	while@concatStrings3	(*src1 != 0)	1	529	no aplica: el loop modifica su propia condición
+src/main/sound.c	while@concatStrings3	(*src2 != 0)	1	532	no aplica: el loop modifica su propia condición
 src/main/sound_async.c	while@concatStrings2	(*s1)	1	88	no aplica: el loop modifica su propia condición
 src/main/sound_async.c	while@concatStrings2	(*s2)	1	92	no aplica: el loop modifica su propia condición
 src/main/utils2.c	while@startTournament	((i = *p++) < 0xfe)	1	620	no aplica: el loop modifica su propia condición

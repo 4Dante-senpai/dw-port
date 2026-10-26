@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Capture a scene twice with the pinned PCSX-Redux reference emulator."""
 import argparse
-from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import importlib.util
 import json
@@ -22,6 +21,21 @@ _runner = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_runner)
 OPENBIOS = _runner.OPENBIOS
 ppm_colors = _runner.ppm_colors
+
+_hardware_spec = importlib.util.spec_from_file_location("reference_hardware", Path(__file__).with_name("hardware.py"))
+hardware = importlib.util.module_from_spec(_hardware_spec)
+_hardware_spec.loader.exec_module(hardware)
+
+
+def valid_timing_pair(output):
+    paths = [output / f"run-{index}.timing.jsonl" for index in (1, 2)]
+    try:
+        for path in paths:
+            _runner.timing.read(path)
+        reports = [hardware.summarize(output / f"run-{index}.hardware.jsonl") for index in (1, 2)]
+        return paths[0].read_bytes() == paths[1].read_bytes() and reports[0]["sha256"] == reports[1]["sha256"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
 
 
 def resolve_symbols(path, mark, overlay=None):
@@ -108,6 +122,38 @@ def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vb
                   raw=str(work / "display.raw"), meta=str(work / "display.json"),
                   progress=str(work / "progress.txt"), inputs_from=scene.get("inputs_from", "frame0"))
     config["checkpoints"] = scene.get("resolved_checkpoints", [])
+    config["timing_trace"] = str(output / f"run-{index}.timing.jsonl")
+    config["mark_name"] = scene["mark"]
+    config["hardware_trace"] = str(output / f"run-{index}.hardware.jsonl")
+    config["hardware_adapter"] = str(ROOT / "tools/port/reference/hardware.lua")
+    config["input_diagnostics"] = scene.get("_input_diagnostics", False)
+    # Exclusive CPU time spent inside device APIs, including their blocking waits.
+    source = (ROOT / "config/us/symbols.txt").read_text()
+    addresses = {name: int(address, 16) for name, address in re.findall(
+        r"^([\w.$]+)\s*=\s*(0x[0-9a-fA-F]+);", source, re.M)}
+    config["hardware_map_load"] = addresses.get("loadMap")
+    config["hardware_irq"] = {name: addresses[name] for name in
+        ("trapIntr", "ReturnFromException") if name in addresses}
+    groups = dict(
+        cd="CdInit CdReset CdRead CdReadSync CdRead2 CdSearchFile CdControl CdControlB CdSync StGetNext",
+        gpu="LoadImage StoreImage MoveImage ClearImage DrawOTag DrawPrim DrawSync",
+        mdec="DecDCTin DecDCTout DecDCTinSync DecDCToutSync",
+        card="MemCardInit MemCardStart MemCardSync MemCardReadFile MemCardWriteFile MemCardReadData MemCardWriteData MemCardFormat",
+        wait="VSync", spu="SsInit SpuInit SpuWrite SpuIsTransferCompleted")
+    config["timing_functions"] = [dict(address=addresses[name], source=kind, name=name)
+        for kind, names in groups.items() for name in names.split() if name in addresses]
+    heavy = """initializeHeap initializeFramebuffer initializeModelComponents initializeWorldObjects
+        initializeGsTMDMap initializeFileReadQueue initializeAttackObjects initializeFontCLUT
+        fillEFEXTable initializeFadeData initializeScripts view_init initializeUIBoxData
+        initializeEffectData initializeInventoryModules initializeMedalModel initializeClockData
+        initializeStatusObjects loadTIMFile loadStackedTIMFile loadDynamicLibrary initializeMusic
+        decompressFile decodeFile renderString drawString setupNameSelectorBox loadMapSetup
+        initializeTamer initializePartner initializeMap loadTexture readFileSection
+        tickObjects renderObjects tickTextboxHandling tickNamingBox renderNamingBox
+        drawGlyph drawString2 pollInputGame processInput PadRead newGameStateMachine
+        DecDCTvlc2 DecDCTvlcBuild SsSeqCalledTbyT _SsSeqCalledTbyT_1per2"""
+    config["timing_functions"] += [dict(address=addresses[name], source="cpu", name=name)
+        for name in heavy.split() if name in addresses]
     if audio:
         config["audio_drain_vblanks"] = 4
         config["audio"] = [dict(segment, stop_addresses=_runner.checkpoint_symbols(
@@ -185,7 +231,7 @@ def main(argv=None):
     parser.add_argument("--reuse", action="store_true", help="reuse a valid deterministic state/audio capture")
     parser.add_argument("--bios", type=Path)
     parser.add_argument("--out", type=Path)
-    parser.add_argument("--timeout", type=float, default=600)
+    parser.add_argument("--timeout", type=float, default=7200)
     parser.add_argument("--max-vblanks", type=int, default=10000)
     args = parser.parse_args(argv)
     if args.id in ("movie0", "movie0_skip"): args.audio = True
@@ -237,7 +283,7 @@ def main(argv=None):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module.capture_audio(args, scene, symbols, emulator, cues[0].resolve(), bios,
-                                    SimpleNamespace(ROOT=ROOT, run_once=run_once))
+                                    SimpleNamespace(ROOT=ROOT, run_once=run_once, hardware=hardware))
     output = safe_output(args.out or Path(os.environ.get(
         "DW1_REFERENCE_DIR", str(ROOT / "build/reference"))) / args.id)
     output.mkdir(parents=True, exist_ok=True)
@@ -245,9 +291,11 @@ def main(argv=None):
     fingerprint = _runner.state_fingerprint(scene, identity) if args.state else None
     stamp = output / "state.sha256"
     expected = scene.get("reference_sha256")
-    if (args.reuse and stamp.is_file() and stamp.read_bytes().strip() == fingerprint.encode()
+    if (args.reuse and args.state and stamp.is_file() and stamp.read_bytes().strip() == fingerprint.encode()
             and ("card1" not in scene or _runner.valid_card_export("reference", args.id, args.card_build))
-            and all((output / name).is_file() for name in ("run-1.state", "run-2.state", "run-1.ppm"))
+            and all((output / name).is_file() for name in ("run-1.state", "run-2.state", "run-1.ppm",
+                "run-1.timing.jsonl", "run-2.timing.jsonl"))
+            and valid_timing_pair(output)
             and (args.bios or not expected or hashlib.sha256((output / "run-1.ppm").read_bytes()).hexdigest() == expected)):
         print(f"reference_{args.id}: cached")
         return 0
@@ -256,10 +304,18 @@ def main(argv=None):
     for index in (1, 2):
         (output / f"run-{index}.ppm").unlink(missing_ok=True)
         (output / f"run-{index}.state").unlink(missing_ok=True)
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        runs = [executor.submit(run_once, emulator, cues[0].resolve(), bios, scene, symbols,
-                                output, index, args.timeout, args.max_vblanks) for index in (1, 2)]
-        hashes = [run.result() for run in runs]
+        (output / f"run-{index}.timing.jsonl").unlink(missing_ok=True)
+    hashes = [run_once(emulator, cues[0].resolve(), bios, scene, symbols,
+                       output, index, args.timeout, args.max_vblanks) for index in (1, 2)]
+    traces = [output / f"run-{index}.timing.jsonl" for index in (1, 2)]
+    for path in traces:
+        _runner.timing.read(path)
+    if traces[0].read_bytes() != traces[1].read_bytes():
+        raise ValueError("non-deterministic reference checkpoint timing")
+    reports = [hardware.summarize(output / f"run-{index}.hardware.jsonl") for index in (1, 2)]
+    if reports[0]["sha256"] != reports[1]["sha256"]:
+        raise ValueError("non-deterministic reference hardware commands")
+    (output / "hardware-summary.json").write_text(json.dumps(reports[0], indent=2) + "\n")
     if "card1" in scene:
         card_paths = [_runner.final_card("reference", args.id, args.card_build).parent / f"run-{index}" / "card1.mcd" for index in (1, 2)]
         if card_paths[0].read_bytes() != card_paths[1].read_bytes():

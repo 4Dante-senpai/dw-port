@@ -19,6 +19,7 @@ long EnterCriticalSection(void);
 void ExitCriticalSection(void);
 void bios_card_deliver(uint32_t, uint32_t);
 void bios_card_init(void);
+uint32_t bios_card_vblank_cpu_cycles(void);
 void bios_card_stop(void);
 int bios_card_info(int);
 int bios_card_load(int);

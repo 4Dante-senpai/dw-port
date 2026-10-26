@@ -11,6 +11,9 @@ import wave
 _spec = importlib.util.spec_from_file_location("scene_audio", Path(__file__).parents[1] / "scenes/audio.py")
 compare = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(compare)
+_timing_spec = importlib.util.spec_from_file_location("scene_timing", Path(__file__).parents[1] / "scenes/timing.py")
+timing = importlib.util.module_from_spec(_timing_spec)
+_timing_spec.loader.exec_module(timing)
 _movie_spec = importlib.util.spec_from_file_location("scene_movie", Path(__file__).parents[1] / "scenes/movie.py")
 movie = importlib.util.module_from_spec(_movie_spec)
 _movie_spec.loader.exec_module(movie)
@@ -19,6 +22,7 @@ def evidence(scene, output=None):
     names = {f"run-{run}-{segment}.{suffix}" for run in (1,2)
             for segment in range(1,len(scene["audio"])+1)
             for suffix in (("spu","wav","xa.wav") if scene.get("xa") else ("spu","wav"))}
+    names.update(f"run-{i}.{kind}.jsonl" for i in (1, 2) for kind in ("timing", "hardware"))
 
     if scene.get("movie") and output:
         for run in (1,2): names.update(movie.evidence(output / f"movie-{run}"))
@@ -83,7 +87,7 @@ def digest(path):
 
 
 def fingerprint(scene, bios, emulator, root):
-    files = [root / "tools/port/reference" / name for name in ("capture.py", "capture.lua", "audio.py")]
+    files = [root / "tools/port/reference" / name for name in ("capture.py", "capture.lua", "hardware.lua", "audio.py")]
     files += [root / "tools/port/scenes/audio.py",
               root / "tools/port/reference/pcsx-redux-pcm-tap.patch", bios, Path(emulator)]
     if scene.get("movie"): files.append(root / "tools/port/scenes/movie.py")
@@ -126,6 +130,7 @@ def capture_audio(args, scene, symbols, emulator, cue, bios, adapter):
         for i in range(1,len(segments)+1):
             for suffix in ("spu", "wav", "json", "xa.wav"):
                 (output / f"run-{index}-{i}.{suffix}").unlink(missing_ok=True)
+        (output / f"run-{index}.timing.jsonl").unlink(missing_ok=True)
         (output / f"run-{index}.pcm").unlink(missing_ok=True)
         (output / f"run-{index}.xa").unlink(missing_ok=True)
     # The capped capture container must run only one emulator at a time.
@@ -134,6 +139,12 @@ def capture_audio(args, scene, symbols, emulator, cue, bios, adapter):
                          output, index, args.timeout, args.max_vblanks)
     hashes = {}
     for index in (1, 2):
+        timing_path = output / f"run-{index}.timing.jsonl"
+        timing.read(timing_path)
+        hashes[timing_path.name] = digest(timing_path)
+        hardware_path = output / f"run-{index}.hardware.jsonl"
+        adapter.hardware.summarize(hardware_path)
+        hashes[hardware_path.name] = digest(hardware_path)
         log = (output / f"run-{index}.log").read_text(errors="replace")
         if "DW1 PCM tap: PCM16LE stereo 44100 Hz, indexed mixer samples" not in log:
             raise ValueError("Redux PCM tap unavailable; rebuild the patched emulator")
@@ -147,6 +158,10 @@ def capture_audio(args, scene, symbols, emulator, cue, bios, adapter):
             for suffix in (("spu","wav","xa.wav") if scene.get("xa") else ("spu","wav")):
                 name = f"run-{index}-{i}.{suffix}"
                 hashes[name] = digest(output / name)
+    if hashes['run-1.hardware.jsonl'] != hashes['run-2.hardware.jsonl']:
+        raise ValueError('non-deterministic reference hardware commands')
+    if hashes['run-1.timing.jsonl'] != hashes['run-2.timing.jsonl']:
+        raise ValueError('non-deterministic reference checkpoint timing')
     for i in range(1,len(segments)+1):
         for suffix in (("spu","wav","xa.wav") if scene.get("xa") else ("spu","wav")):
             if hashes[f"run-1-{i}.{suffix}"] != hashes[f"run-2-{i}.{suffix}"]:

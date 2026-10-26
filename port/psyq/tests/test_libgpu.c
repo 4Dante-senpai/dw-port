@@ -122,12 +122,13 @@ static void transfers_and_time(void)
     ResetGraph(0);CHECK(!gpu_read_display(&pixel,&width,&height));
     DrawSync(0);clock_reset();ResetGraph(0);
     r=(RECT){0,0,1024,256};memset(data,0,sizeof(data));uint64_t start=clock_now();CHECK(LoadImage(&r,data)==0);
-    uint64_t end=start+CLOCK_PSYQ_ENTRY_CYCLES+131072*CLOCK_GPU_WORD_CYCLES+262144*CLOCK_GPU_PIXEL_CYCLES;
+    uint64_t end=start+CLOCK_PSYQ_ENTRY_CYCLES+57344u;
     CHECK(DrawSync(1)==1);CHECK(DrawSync(1)==1);CHECK(clock_now()<end);
     CHECK(DrawSync(0)==0&&clock_now()==end);CHECK(DrawSync(1)==0);
-    /* Outstanding work accumulates even though CPU-side execution is immediate. */
+    /* Redux: 131072 uploaded words / 16 words per block * 7 = 57344 cycles.
+     * Outstanding work accumulates even though CPU-side execution is immediate. */
     start=clock_now();LoadImage(&r,data);LoadImage(&r,data);
-    end=start+CLOCK_PSYQ_ENTRY_CYCLES+2*(131072*CLOCK_GPU_WORD_CYCLES+262144*CLOCK_GPU_PIXEL_CYCLES);
+    end=start+CLOCK_PSYQ_ENTRY_CYCLES+2*(57344u);
     CHECK(DrawSync(0)==0&&clock_now()==end);
     for(int i=0;i<128;i++)data[i]=(unsigned long)(2*i+1)|((unsigned long)(2*i+2)<<16);
     start=clock_now();CHECK(LoadClut(data,32,256)==0x4002);

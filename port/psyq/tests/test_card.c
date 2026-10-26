@@ -174,6 +174,12 @@ int main(void)
 	assert(card_image_data(0)[128] == 0xa0);
 	assert(!memcmp(card_image_data(0) + 16384, data, 8192));
 	assert(MemCardGetDirentry(0, "*", (struct DIRENTRY *)dir, &count, 0, 15) == 0 && count == 0);
+	/* An established device reads sector zero, retaining its cached TOC.
+	 * Reloading all 37 TOC/broken-list sectors misses menu input windows. */
+	BiosDir cached;
+	uint64_t directory_start = clock_now();
+	assert(!bios_bu_first("bu00:*", &cached));
+	assert(clock_now() - directory_start < 4u * ((uint64_t)CLOCK_HZ * CLOCK_VBLANK_NUM / CLOCK_VBLANK_DEN));
 	assert(MemCardCreateFile(0, "OPEN", 1) == 0);
 	assert(MemCardOpen(0, "OPEN", 1) == 0);
 	assert(MemCardWriteData(data, 0, 8192));

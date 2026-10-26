@@ -18,14 +18,23 @@ static DISPENV last_disp;
 
 static void finish(void *arg) { (void)arg; completion = 0; }
 static int idle(void *arg) { (void)arg; return clock_now() >= busy_until; }
-static void account(GpuWork work)
+static void account_cycles(uint64_t cost)
 {
-    uint64_t cost = work.words * CLOCK_GPU_WORD_CYCLES + work.pixels * CLOCK_GPU_PIXEL_CYCLES;
     if (!cost) return;
     clock_cancel(completion);
     if (busy_until < clock_now()) busy_until = clock_now();
     busy_until += cost;
     completion = clock_schedule(busy_until - clock_now(), finish, NULL);
+}
+/* Linked-list words include one header per packet and Redux's initial word.
+ * Pixel execution is immediate in the pinned software renderer. */
+static void account(GpuWork work)
+{
+    account_cycles((work.words + 2) * CLOCK_GPU_CHAIN_WORD_CYCLES);
+}
+static void upload(GpuWork work)
+{
+    account_cycles(work.words / CLOCK_GPU_DMA_BLOCK_WORDS * CLOCK_GPU_UPLOAD_BLOCK_CYCLES);
 }
 static uint32_t xy(int x, int y) { return (uint16_t)x | ((uint32_t)(uint16_t)y << 16); }
 static int clamp(int v, int hi) { return v < 0 ? 0 : v > hi ? hi : v; }
@@ -39,13 +48,18 @@ static void setup(void *p, unsigned char len, unsigned char op)
 /* asm:asm/us/main/psyq/libgpu.s ResetGraph / _reset */
 int ResetGraph(int mode)
 {
-    clock_psyq_entry();
+    if ((mode & 7) == 1) clock_advance_cost(CLOCK_GPU_RESET_QUEUE_CPU_CYCLES, CLOCK_COST_CPU);
+    else clock_psyq_entry();
     clock_cancel(completion); completion = 0; busy_until = clock_now();
     if ((mode & 7) == 0 || (mode & 7) == 3 || (mode & 7) == 5) {
         debug_level = 0;
         memset(&last_disp, 0xff, sizeof(last_disp));
         ResetCallback();
         if ((mode & 7) == 0) gpu_reset(1);
+        if ((mode & 7) == 0)
+            clock_advance_cost(CLOCK_GPU_RESET_CPU_CYCLES, CLOCK_COST_CPU);
+        if ((mode & 7) == 3)
+            clock_advance_cost(CLOCK_GPU_RESET_KEEP_CPU_CYCLES, CLOCK_COST_CPU);
     }
     return 0;
 }
@@ -55,24 +69,26 @@ int SetGraphDebug(int level)
     clock_psyq_entry(); int old = debug_level; debug_level = (unsigned char)level; return old;
 }
 /* asm:asm/us/main/psyq/libgpu.s SetDispMask */
-void SetDispMask(int on) { clock_psyq_entry(); gpu_set_display_enable(on != 0); }
+void SetDispMask(int on) { if (on) clock_advance_cost(CLOCK_GPU_DISP_MASK_ON_CPU_CYCLES,CLOCK_COST_CPU); else clock_psyq_entry(); gpu_set_display_enable(on != 0); }
 /* asm:asm/us/main/psyq/libgpu.s DrawSync / _sync (no queue) */
 int DrawSync(int mode)
 {
-    clock_psyq_entry();
+    clock_advance_cost(CLOCK_GPU_SYNC_ENTRY_CYCLES, CLOCK_COST_PSYQ);
     if (mode) return !idle(NULL);
-    clock_wait_until(idle, NULL);
+    clock_wait_cost(idle, NULL, CLOCK_COST_GPU);
     return 0;
 }
 /* asm:asm/us/main/psyq/libgpu.s LoadImage */
 int LoadImage(RECT *r, unsigned long *src)
 {
-    clock_psyq_entry(); account(gpu_load(r->x, r->y, r->w, r->h, (const uint16_t *)src)); return 0;
+    clock_psyq_entry(); upload(gpu_load(r->x, r->y, r->w, r->h, (const uint16_t *)src)); return 0;
 }
 /* asm:asm/us/main/psyq/libgpu.s StoreImage */
 int StoreImage(RECT *r, unsigned long *dst)
 {
-    clock_psyq_entry(); account(gpu_store(r->x, r->y, r->w, r->h, (uint16_t *)dst)); return 0;
+    clock_psyq_entry();
+    GpuWork work = gpu_store(r->x, r->y, r->w, r->h, (uint16_t *)dst);
+    account_cycles(work.words * CLOCK_GPU_DOWNLOAD_WORD_CYCLES); return 0;
 }
 /* asm:asm/us/main/psyq/libgpu.s ClearImage / _clr */
 int ClearImage(RECT *r, unsigned char red, unsigned char green, unsigned char blue)
@@ -83,7 +99,7 @@ int ClearImage(RECT *r, unsigned char red, unsigned char green, unsigned char bl
     r->w = (short)clamp(r->w, 1023); r->h = (short)clamp(r->h, 511);
     uint32_t mask = 0xe6000000u;
     gpu_gp0(&mask, 1);
-    account(gpu_fill(r->x, r->y, r->w, r->h, red | ((uint32_t)green << 8) | ((uint32_t)blue << 16)));
+    gpu_fill(r->x, r->y, r->w, r->h, red | ((uint32_t)green << 8) | ((uint32_t)blue << 16));
     return 0;
 }
 /* asm:asm/us/main/psyq/libgpu.s MoveImage */
@@ -91,12 +107,12 @@ int MoveImage(RECT *r, int x, int y)
 {
     clock_psyq_entry();
     if (!r->w || !r->h) return -1;
-    account(gpu_move(r->x, r->y, x, y, r->w, r->h)); return 0;
+    gpu_move(r->x, r->y, x, y, r->w, r->h); return 0;
 }
 /* asm:asm/us/main/psyq/libgpu.s LoadClut */
 unsigned short LoadClut(unsigned long *src, int x, int y)
 {
-    clock_psyq_entry(); account(gpu_load(x, y, 256, 1, (const uint16_t *)src)); return clut(x, y);
+    clock_psyq_entry(); upload(gpu_load(x, y, 256, 1, (const uint16_t *)src)); return clut(x, y);
 }
 /* asm:asm/us/main/psyq/libgpu.s GetClut */
 unsigned short GetClut(int x, int y) { clock_psyq_entry(); return clut(x, y); }
@@ -125,13 +141,15 @@ unsigned long *ClearOTagR(unsigned long *ot, int n)
 /* dw2-pc:psyq/libgpu.c DrawOTag; PS1 links and bounded traversal. */
 void DrawOTag(unsigned long *ot)
 {
-    clock_psyq_entry();
+    clock_advance_cost(CLOCK_GPU_DRAW_OT_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+    VSync(-1);
+    clock_advance_cost(CLOCK_GPU_DRAW_OT_RETURN_CPU_CYCLES, CLOCK_COST_CPU);
     GpuWork total = {0, 0};
     for (unsigned int i = 0; i < 0x100000; ++i) {
         uint32_t tag = *ot;
         GpuWork w = gpu_gp0((const uint32_t *)(ot+1), tag >> 24);
-        total.words += w.words; total.pixels += w.pixels;
-        if ((tag & PS1_LINK_END) == PS1_LINK_END) { account(total); return; }
+        total.words += w.words + 1; total.pixels += w.pixels;
+        if ((tag & PS1_LINK_END) == PS1_LINK_END) { account_cycles((total.words + 1) * CLOCK_GPU_CHAIN_WORD_CYCLES); return; }
         ot = PS1_LINK_PTR(tag & PS1_LINK_END);
     }
     fprintf(stderr, "[libgpu] OT traversal stopped after 0x100000 packets (unterminated list)\n");
@@ -212,6 +230,8 @@ DISPENV *PutDispEnv(DISPENV *e)
     if (memcmp(&e->screen, &last_disp.screen, sizeof(RECT)) ||
         memcmp(&e->disp, &last_disp.disp, sizeof(RECT)) ||
         memcmp(&e->isinter, &last_disp.isinter, 4)) e->pad0 = 0; /* USA NTSC */
+    clock_advance_cost(CLOCK_GPU_DISP_ENV_CPU_CYCLES +
+        (last_disp.disp.w != e->disp.w ? CLOCK_GPU_DISP_MODE_CPU_CYCLES : 0), CLOCK_COST_CPU);
     last_disp = *e;
     gpu_set_display(e->disp.x, e->disp.y, e->disp.w, e->disp.h, e->isrgb24);
     if (e->isrgb24 && port_scene_movie_display) port_scene_movie_display(e->disp.x,e->disp.y,e->disp.w,e->disp.h);
@@ -220,7 +240,11 @@ DISPENV *PutDispEnv(DISPENV *e)
 /* asm:asm/us/main/psyq/libgpu.s PutDrawEnv / SetDrawEnv2 / get_tw */
 DRAWENV *PutDrawEnv(DRAWENV *e)
 {
-    clock_psyq_entry(); uint32_t *c = (uint32_t *)e->dr_env.code;
+    clock_advance_cost(CLOCK_GPU_DRAW_ENV_ENTER_CPU_CYCLES, CLOCK_COST_CPU);
+    /* _addque2 -> set_alarm calls VSync(-1), including the first PutDrawEnv
+     * in gpu_init. It establishes AD-15 frame 0 before any blocking wait. */
+    VSync(-1);
+    uint32_t *c = (uint32_t *)e->dr_env.code;
     c[0] = 0xe3000000u | clamp(e->clip.x,1023) | (clamp(e->clip.y,511) << 10);
     c[1] = 0xe4000000u | clamp((int16_t)(e->clip.x+e->clip.w-1),1023) |
            (clamp((int16_t)(e->clip.y+e->clip.h-1),511) << 10);
@@ -238,7 +262,13 @@ DRAWENV *PutDrawEnv(DRAWENV *e)
         c[8]=xy(w,h); n=9;
     }
     e->dr_env.tag = ((uint32_t)n<<24) | PS1_LINK_END;
-    account(gpu_gp0(c,n)); return e;
+    account(gpu_gp0(c,n));
+    /* PutDrawEnv copies all 0x5c bytes to GEnv after submitting the packet
+     * (libgpu.s:80094bd8). The BIOS ROM loop runs while DMA progresses. */
+    clock_advance_cost(CLOCK_LIBC_MEMCPY_FIXED_CYCLES +
+                       0x5cu * CLOCK_LIBC_MEMCPY_BYTE_CYCLES, CLOCK_COST_CPU);
+    clock_advance_cost(CLOCK_GPU_DRAW_ENV_CPU_CYCLES, CLOCK_COST_CPU);
+    return e;
 }
 /* asm:asm/us/main/psyq/libgpu.s OpenTIM */
 int OpenTIM(unsigned long *addr) { clock_psyq_entry(); tim_cursor = addr; return 0; }

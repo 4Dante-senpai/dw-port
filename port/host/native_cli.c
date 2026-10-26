@@ -27,6 +27,7 @@ static int usage(const char *argv0)
 	                "  --pack FILE      the Pack of your disc (dw1-pack build); without it the disc is empty\n"
 	                "  --card1 FILE --card2 FILE  native .mcd images; omitted slots are absent\n"
 	                "  --frames N       exit with status 0 after N frames\n"
+	                "  --vblanks N      exit N VBlanks after frame 0; report wall time from pacing anchor\n"
 	                "  --capture-mark NAME --capture-vblank K --capture FILE  capture after mark + K VBlanks\n"
 	                "  --clock-trace FILE  write deterministic clock events\n"
 	                "  --inputs FILE --inputs-from frame0|mark  latch wire button masks per VBlank\n"
@@ -60,6 +61,15 @@ int native_cli_parse(int argc, char **argv, NativeCli *options)
 			continue;
 		}
 		if (i + 1 < argc) {
+			if (!strcmp(argv[i], "--vblanks")) {
+				char *end;
+				const char *value = argv[++i];
+				errno = 0;
+				config.vblank_limit = strtoul(value, &end, 10);
+				if (!errno && *value >= '0' && *value <= '9' && !*end &&
+				    config.vblank_limit > 0 && config.vblank_limit <= UINT_MAX) continue;
+				return usage(argv[0]);
+			}
 			if (!strcmp(argv[i], "--card1")) { cards[0] = argv[++i]; continue; }
 			if (!strcmp(argv[i], "--card2")) { cards[1] = argv[++i]; continue; }
 			if (!strcmp(argv[i], "--audio-segments")) { config.audio_segments = argv[++i]; continue; }

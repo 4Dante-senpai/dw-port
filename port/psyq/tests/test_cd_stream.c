@@ -39,22 +39,53 @@ static void check_output(const int16_t *pcm, unsigned frames, void *arg)
         nonzero+=pcm[i*2+ch]!=0;
     }
 }
+/* Independent Redux controller deadlines in integer CPU cycles. */
+#define PERIOD_1X (33868800ull*13333/1000000 + 14)
+#define PERIOD_2X (33868800ull*6666/1000000 + 14)
+static uint64_t first_sector(unsigned distance, int speed_changed, int double_speed)
+{
+    return 33868800ull*797/1000000 + 33868800ull*20000/1000000 +
+        33868800ull*1000/1000000 + 33868800ull*(distance*3)/1000000 +
+        (speed_changed ? 33868800ull*650000/1000000 : 0) +
+        (double_speed ? PERIOD_2X : PERIOD_1X);
+}
+static void delayed_interrupt(void *arg)
+{
+    (void)arg;
+    clock_advance(1000);
+}
+static void delayed_sector_dispatch(void)
+{
+    clock_reset(); spu_reset(); psyq_libcd_reset(); CHECK(CdInit());
+    StSetRing(ringbuf,1); StSetStream(1,1,(unsigned long)-1,NULL,NULL);
+    CdlLOC loc; CdIntToPos(26,&loc);
+    CdControl(CdlSetloc,(uint8_t *)&loc,NULL); CHECK(CdRead2(0x1e0));
+    uint64_t first = clock_now() + first_sector(26,1,1);
+    /* Another IRQ masks delivery of the first video sector. The following
+     * audio sector must retain the drive's deadline, without cumulative drift. */
+    clock_schedule(first-clock_now()-10, delayed_interrupt, NULL);
+    clock_advance(first-clock_now());
+    CHECK(((StHEADER *)ringbuf)->id==2 && !XaDec_Queued());
+    clock_advance(first+PERIOD_2X-clock_now()-1); CHECK(!XaDec_Queued());
+    clock_advance(1); CHECK(XaDec_Queued()==2352);
+    CdControl(CdlPause,NULL,NULL); StUnSetRing();
+}
 static void check_playback(int pause)
 {
     clock_reset(); spu_reset(); psyq_libcd_reset(); CHECK(CdInit());
     StSetRing(ringbuf,1); StSetStream(1,1,(unsigned long)-1,NULL,NULL);
     CdlLOC loc; CdIntToPos(27,&loc); CdControl(CdlSetloc,(uint8_t *)&loc,NULL);
-    CHECK(CdRead2(0x1e0)); clock_advance(CLOCK_HZ/150);
+    CHECK(CdRead2(0x1e0)); clock_advance(first_sector(27,1,1));
     CHECK(XaDec_Queued()==2352);
     rendered=nonzero=0; spu_set_output(check_output,NULL);
     if (pause) {
         CdControl(CdlPause,NULL,NULL);
         CHECK(rendered+(unsigned)XaDec_Queued()==2352);
-        clock_advance(CLOCK_HZ/150*12); spu_sync();
+        clock_advance(PERIOD_2X*12); spu_sync();
         CHECK(rendered>2352 && !XaDec_Queued() && nonzero);
         CHECK(((StHEADER *)ringbuf)->id==0); /* No video sector after Pause. */
     } else {
-        clock_advance(CLOCK_HZ/150*2); /* EOF after the reserved sector. */
+        clock_advance(PERIOD_2X*2); /* EOF after the reserved sector. */
         CHECK(rendered>0 && rendered<2352 && nonzero);
         unsigned before=rendered;
         uint64_t synced=spu_samples();
@@ -89,7 +120,7 @@ static void pause_latency(void)
         pause_event_seen=0;
         clock_schedule(CLOCK_PSYQ_ENTRY_CYCLES+cost-1,pause_event,NULL);
         CHECK(CdControlB(CdlPause,NULL,NULL));
-        CHECK(clock_now()==before+CLOCK_PSYQ_ENTRY_CYCLES+cost);
+        CHECK(clock_now()==before+CLOCK_PSYQ_ENTRY_CYCLES+3500+33868800ull*797/1000000+cost);
         CHECK(pause_event_seen==1); /* Device events run during the blocking wait. */
         CHECK(((StHEADER *)ringbuf)->id==0); /* Pending stream was stopped. */
     }
@@ -136,20 +167,20 @@ int main(void)
     CdlLOC loc; CdIntToPos(26,&loc); CdControl(CdlSetloc,(uint8_t *)&loc,NULL);
     CHECK(CdRead2(0x1e0)==1);
     uint64_t t=clock_now(); unsigned long *data,*head;
-    clock_advance(CLOCK_HZ/150-1);
+    clock_advance(first_sector(26,1,1)-1);
     CHECK(((StHEADER *)ringbuf)->id==0);
     clock_advance(1); CHECK(((StHEADER *)ringbuf)->id==2);
     CHECK(StGetNext(&data,&head)==0 && ((StHEADER *)head)->frameCount==1);
     CHECK(((uint8_t *)data)[0]==1 && ((uint8_t *)data)[2015]==1);
-    clock_advance(CLOCK_HZ/150); CHECK(XaDec_Queued()==2352);
-    clock_advance(CLOCK_HZ/150*3); /* video frame 2 waits for borrowed frame 1 */
+    clock_advance(PERIOD_2X); CHECK(XaDec_Queued()==2352);
+    clock_advance(PERIOD_2X*3); /* video frame 2 waits for borrowed frame 1 */
     CHECK(((StHEADER *)head)->frameCount==1 && XaDec_Queued()==2352);
     CHECK(StGetNext(&data,&head)==1);
     CHECK(StFreeRing(data)==0); CHECK(StFreeRing(data)==1);
-    clock_advance(CLOCK_HZ/150);
+    clock_advance(PERIOD_2X);
     CHECK(StGetNext(&data,&head)==0 && ((StHEADER *)head)->frameCount==2);
     CHECK(((uint8_t *)data)[2015]==2); CHECK(StFreeRing(data)==0);
-    clock_advance(CLOCK_HZ/150);
+    clock_advance(PERIOD_2X);
     CHECK(StGetNext(&data,&head)==0 && ((StHEADER *)head)->frameCount==0x7fffffff);
     CHECK(clock_now()>=t+4*(CLOCK_HZ/150));
     uint8_t *trace=read_file("stream.trace",&n);
@@ -157,7 +188,7 @@ int main(void)
     StUnSetRing(); CdControl(CdlPause,NULL,NULL);
     StSetRing(ringbuf,1); StSetStream(1,1,(unsigned long)-1,NULL,NULL);
     CdControl(CdlSetloc,(uint8_t *)&loc,NULL); CHECK(CdRead2(0x160));
-    clock_advance(CLOCK_HZ/75-1); CHECK(((StHEADER *)ringbuf)->id==0);
+    clock_advance(first_sector(4,1,0)-1); CHECK(((StHEADER *)ringbuf)->id==0);
     clock_advance(1); CHECK(((StHEADER *)ringbuf)->id==2);
     CdControl(CdlPause,NULL,NULL); clock_advance(CLOCK_HZ/75*3);
     CHECK(!XaDec_Queued()); /* Pause cancels the pending audio sector. */
@@ -173,6 +204,7 @@ int main(void)
     pause_latency();
     check_playback(1);
     check_playback(0);
+    delayed_sector_dispatch();
     uint8_t sector[CDROM_SECTOR_SIZE1];
     CHECK(cdrom_stream_sector(22,sector)>0 && !(sector[6]&0x24));
     cdrom_close();

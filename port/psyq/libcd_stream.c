@@ -128,16 +128,14 @@ int StGetBackloc(CdlLOC *loc)
     return (int)last_frame; /* asm: next_frameid is the published frame ID, without +1. */
 }
 /* asm: StGetNext, 800B31B4: status 2 -> 4; consumer advances only on free.
- * Polling yields one sector period so the untranslated MIPS busy-loop need not
- * consume millions of calls. This is provisional timing, calibrated in 3.10. */
+ * The empty-ring path is CPU polling, not a sector-sized device wait. */
 unsigned long StGetNext(unsigned long **addr, unsigned long **head)
 {
-    clock_psyq_entry();
+    clock_advance_cost(CLOCK_CD_STREAM_POLL_CYCLES, CLOCK_COST_CPU);
     if (!ring || !size) return 1;
     if (header(consumer)->id==1) { header(consumer)->id=0; consumer=0; }
-    if (header(consumer)->id!=2 && !ended) clock_advance(CLOCK_HZ/150);
-    if (header(consumer)->id==1) { header(consumer)->id=0; consumer=0; }
     if (header(consumer)->id==2) {
+        clock_advance_cost(CLOCK_CD_STREAM_PUBLISH_CYCLES, CLOCK_COST_CPU);
         header(consumer)->id=4;
         *addr=(unsigned long *)data(consumer); *head=(unsigned long *)header(consumer);
         return 0;

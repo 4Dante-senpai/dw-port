@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-23
+Última actualización: 2026-10-26
 
 ## Modo de operación
 
@@ -397,9 +397,15 @@
   Detalles y mediciones en
   `docs/implementation-artifacts/spec-e3-capturas-de-referencia-mas-rapidas.md`.
 
+- Historia 3.10 (calibración de costos y ritmo nativo): el reloj virtual calibrado contra PCSX-Redux da diferencia 0 en los 15 puntos de control de `title`, `movie0`, `movie0_skip` y `map_load`. Antes el port llegaba entre 286 y 800 VBlanks antes.
+  La tasa de VBlank medida en Redux es 564398 ciclos, es decir 60,0087 Hz. NFR-1, AD-8 y `CLAUDE.md` se actualizaron con ese valor.
+  AD-8 permite ahora calibrar también la forma del modelo: seek por distancia, CPU medida por función y servicio de IRQ de la BIOS. Las Escenas mantienen Start presionado para no depender de la fase del pad.
+  La prueba de 10 minutos de pared dio menos de 1 VBlank de error y 0 resincronizaciones. Pasaron las suites native-headless 82/82, native-asan 80/80, native 92/92 y web 39/39, todas sin omisiones, y `make compare` dio idéntico.
+  Detalles en `docs/port/clock-calibration.md`. Queda diferido el orden del costo de memcpy/memset (`deferred-work.md`).
+
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.9 cerradas; sigue la 3.10 (calibración de costos y ritmo nativo). El resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.10 cerradas; sigue la 3.11 (hipótesis pendientes de los overlays). El resto de la Épica 4 sigue después de la Épica 3.
 
 ## Bloqueos
 

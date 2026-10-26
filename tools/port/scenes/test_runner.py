@@ -14,13 +14,22 @@ from unittest.mock import patch
 spec = importlib.util.spec_from_file_location("scene_runner", Path(__file__).with_name("run.py"))
 runner = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(runner)
+def write_timing(path, mark, checkpoints=()):
+    import json
+    costs = dict.fromkeys(runner.timing.SOURCES, 0)
+    rows = [dict(event='frame0', label='frame0', cycle=0, vblank=0, costs=costs),
+            dict(event='mark', label=mark, cycle=0, vblank=0, costs=costs)]
+    rows += [dict(event='checkpoint', label=cp, cycle=0, vblank=0, costs=costs) for cp in checkpoints]
+    Path(path).write_text('\n'.join(map(json.dumps, rows)) + '\n')
+
+
 for preset in ("native-headless", "native"):
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory) / preset
         root.mkdir()
         scenes = root / "tools/port/scenes"
         scenes.mkdir(parents=True)
-        (scenes / "title.toml").write_bytes(Path(__file__).with_name("title.toml").read_bytes())
+        (scenes / "title.toml").write_text("\n".join(line for line in Path(__file__).with_name("title.toml").read_text().splitlines() if not line.startswith(("checkpoints =", "window ="))) + "\n")
         if preset == "native":
             import hashlib
             sample = b"P6\n17 1\n255\n" + b"".join(bytes([i, 0, 0]) for i in range(17))
@@ -54,6 +63,7 @@ for preset in ("native-headless", "native"):
                     if preset == "native":
                         assert kwargs["env"]["SDL_VIDEODRIVER"] == "offscreen"
                         assert kwargs["env"]["SDL_AUDIODRIVER"] == "dummy"
+                    write_timing(kwargs["env"]["DW1_TIMING_TRACE"], "runLandingScreen")
                     calls.append(command)
                     index = len(calls)
                     assert flag("--capture-mark") == "runLandingScreen"
@@ -92,6 +102,7 @@ with tempfile.TemporaryDirectory() as directory:
     import json
     import wave
     def audio_host(command, **kwargs):
+        write_timing(kwargs["env"]["DW1_TIMING_TRACE"], "start", scene["checkpoints"])
         assert "--capture" not in command and "--capture-vblank" not in command
         declarations = Path(command[command.index("--audio-segments") + 1])
         for row in declarations.read_text().splitlines():
@@ -113,11 +124,14 @@ with tempfile.TemporaryDirectory() as directory:
                 with wave.open(str(reference / f"run-{run}-{segment}.wav"), "wb") as stream:
                     stream.setparams((2, 2, 44100, 0, "NONE", "not compressed"))
                     stream.writeframes(b"\x01\0" * (44100 * 10 * 2))
+        for index in (1, 2):
+            write_timing(reference / f"run-{index}.timing.jsonl", "start", scene["checkpoints"])
+            (reference / f"run-{index}.hardware.jsonl").write_text('{}\n')
         hashes = {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in reference.iterdir()}
         identity_spec = importlib.util.spec_from_file_location("reference_audio", Path(runner.__file__).parents[1]/"reference/audio.py")
         identity_module = importlib.util.module_from_spec(identity_spec)
         identity_spec.loader.exec_module(identity_module)
-        for name in ("tools/port/reference/capture.py", "tools/port/reference/capture.lua", "tools/port/reference/audio.py",
+        for name in ("tools/port/reference/capture.py", "tools/port/reference/capture.lua", "tools/port/reference/hardware.lua", "tools/port/reference/audio.py",
                      "tools/port/scenes/audio.py", "tools/port/reference/pcsx-redux-pcm-tap.patch", "bios", "emulator"):
             path = root/name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -233,7 +247,7 @@ with tempfile.TemporaryDirectory() as directory:
         for wav, data in saved_wavs.items():
             wav.write_bytes(data)
         stamp.write_bytes(saved_stamp)
-        for dependency in (root/"bios", root/"emulator", root/"tools/port/reference/capture.lua", symbols):
+        for dependency in (root/"bios", root/"emulator", root/"tools/port/reference/capture.lua", root/"tools/port/reference/hardware.lua", symbols):
             saved = dependency.read_bytes()
             dependency.write_bytes(saved.replace(b"0x80010010", b"0x80010020") if dependency == symbols else saved+b"changed")
             with patch.object(runner.subprocess, "run") as process:
@@ -306,6 +320,8 @@ with tempfile.TemporaryDirectory() as directory:
             calls.append(command)
             def flag(name):
                 return Path(command[command.index(name) + 1])
+            write_timing(kwargs["env"]["DW1_TIMING_TRACE"], "runLandingScreen")
+            write_timing(runner.reference_path("title").with_suffix(".timing.jsonl"), "runLandingScreen")
             Path(kwargs["env"]["DW1_TRACE"]).write_text("1 mark runLandingScreen\n")
             flag("--clock-trace").write_text("1 -1\n")
             flag("--capture").write_bytes(capture)
@@ -504,7 +520,7 @@ with tempfile.TemporaryDirectory() as directory:
     root = Path(directory)
     for name in ('tools/port/scenes/title.toml', 'tools/port/scenes/state_vars.txt',
                  'tools/port/scenes/run.py', 'config/us/symbols.txt',
-                 'tools/port/reference/capture.py', 'tools/port/reference/capture.lua'):
+                 'tools/port/reference/capture.py', 'tools/port/reference/capture.lua', 'tools/port/reference/hardware.lua'):
         path = root / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text('# fixture\n')
@@ -529,6 +545,8 @@ with tempfile.TemporaryDirectory() as directory:
                 return subprocess.CompletedProcess(command, 0)
             hosts.append(command)
             def flag(name): return Path(command[command.index(name)+1])
+            write_timing(kwargs['env']['DW1_TIMING_TRACE'], 'target')
+            write_timing(reference.with_suffix('.timing.jsonl'), 'target')
             Path(kwargs['env']['DW1_TRACE']).write_text('1 mark target\n')
             flag('--clock-trace').write_text('1 -1\n')
             flag('--capture').write_bytes(b'P6\n1 1\n255\n\0\0\0')
@@ -646,12 +664,11 @@ with tempfile.TemporaryDirectory() as tmp:
     (reference/'movie.jsonl').write_text('\n'.join(map(json.dumps,rows))+'\n')
     (actual/'movie.jsonl').write_text('\n'.join(map(json.dumps,[rows[0],rows[1],rows[-1]]))+'\n')
     assert not movie.compare(actual,reference,dict(expected_return=0),root/'diff')['failures']
-    # An accepted skip delta must match exactly: on time, or later than listed, both fail.
-    skip=dict(expected_return=0,skip_vblank_delta=1)
-    assert any('skip VBlank' in f for f in movie.compare(actual,reference,skip,root/'diff')['failures'])
-    for late,ok in [(1,True),(2,False)]:
+    # No timing offset is accepted, including the previously permitted +1.
+    skip = dict(expected_return=0)
+    for late in (-1, 1, 2):
         (actual/'movie.jsonl').write_text('\n'.join(map(json.dumps,[rows[0],rows[1],dict(rows[-1],vblank=rows[-1]['vblank']+late)]))+'\n')
-        assert ok == (not movie.compare(actual,reference,skip,root/'diff')['failures'])
+        assert any('skip VBlank' in f for f in movie.compare(actual,reference,skip,root/'diff')['failures'])
 print('movie: per-channel tolerance, worst diff, complete sequence, determinism, return, skip VBlank and A/V bounds OK')
 
 # Scene-owned allowances preserve all three failure paths from owner decision 5.
@@ -705,7 +722,7 @@ with tempfile.TemporaryDirectory() as directory:
     root = Path(directory) / "repo"
     card_root = Path(directory) / "cards"
     (root / "tools/port/scenes").mkdir(parents=True)
-    for name in ("tools/port/scenes/run.py", "tools/port/reference/capture.py", "tools/port/reference/capture.lua", "config/us/symbols.txt"):
+    for name in ("tools/port/scenes/run.py", "tools/port/reference/capture.py", "tools/port/reference/capture.lua", "tools/port/reference/hardware.lua", "config/us/symbols.txt"):
         path = root / name; path.parent.mkdir(parents=True, exist_ok=True); path.write_text("fixture")
     (root / "tools/port/scenes/card_vars.txt").write_text("MONEY u32\n")
     with patch.object(runner, "ROOT", root), patch.dict(os.environ, {"DW1_CARD_DIR": str(card_root)}):
@@ -716,6 +733,12 @@ with tempfile.TemporaryDirectory() as directory:
         (root / "tools/port/scenes/card_vars.txt").write_text("MONEY u16\n")
         assert runner.state_fingerprint(scene, "bios") != before
         before = runner.state_fingerprint(scene, "bios")
+        emulator = root / "pcsx-redux"
+        emulator.write_bytes(b"first binary")
+        with patch.object(runner.shutil, "which", return_value=str(emulator)):
+            binary_before = runner.state_fingerprint(scene, "bios")
+            emulator.write_bytes(b"patched binary")
+            assert runner.state_fingerprint(scene, "bios") != binary_before
         source.write_bytes(bytes([1]) * 131072)
         assert runner.state_fingerprint(scene, "bios") != before
         paths = runner.prepare_cards(scene, "reference", 1)

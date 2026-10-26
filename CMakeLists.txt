@@ -161,9 +161,10 @@ set_source_files_properties(${CMAKE_BINARY_DIR}/sjis/src/main/main.c PROPERTIES
 target_compile_options(dw1_game_objs PRIVATE
   -fno-lto -fsigned-char -fwrapv -fno-strict-aliasing -fno-common -w
   -include ${CMAKE_SOURCE_DIR}/port/psyq/include/port_game.h)
+# Entry hooks also charge measured fixed CPU loops in every build.
+target_compile_options(dw1_game_objs PRIVATE -finstrument-functions)
 if(NOT EMSCRIPTEN)
-  # Entry hooks implement scene checkpoints without adding hooks to game sources.
-  target_compile_options(dw1_game_objs PRIVATE -finstrument-functions)
+  # Native hooks additionally implement scene checkpoints.
   # Audio anchors and public libsnd event boundaries use the same entry hook.
   set_source_files_properties(port/psyq/libsnd.c PROPERTIES COMPILE_OPTIONS -finstrument-functions)
 endif()
@@ -175,7 +176,7 @@ target_link_libraries(dw1_backend PUBLIC dw1_pack_lib)
 target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
 
 add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c port/psyq/clock.c
-  port/psyq/libetc.c port/psyq/libapi.c port/psyq/libc.c port/psyq/libgs.c port/psyq/libcd.c
+  port/psyq/game_clock.c port/psyq/libetc.c port/psyq/libapi.c port/psyq/libc.c port/psyq/libgs.c port/psyq/libcd.c
   port/psyq/libgte.c port/psyq/libgpu.c port/psyq/libsnd.c port/psyq/libspu.c
   port/psyq/card_image.c port/psyq/bios_card.c port/psyq/libpress.c port/psyq/libmcrd.c port/psyq/libcd_stream.c port/psyq/stub.c ${DW1_GTE_TABLES_H} ${DW1_PRESS_TABLES_H})
 target_include_directories(dw1_psyq PRIVATE ${CMAKE_BINARY_DIR}/generated)
@@ -211,6 +212,8 @@ add_test(NAME xa_vectors COMMAND python3 -I -B
   ${CMAKE_SOURCE_DIR}/tools/port/audio/xa_vectors.py --check)
 add_test(NAME scene_audio_unit COMMAND python3 -I -B
   ${CMAKE_SOURCE_DIR}/tools/port/scenes/test_audio.py)
+add_test(NAME scene_timing_unit COMMAND python3 -I -B
+  ${CMAKE_SOURCE_DIR}/tools/port/scenes/test_timing.py)
 foreach(suite spu xa mdec libpress libspu libsnd cd_stream card)
   if(suite STREQUAL "spu" OR suite STREQUAL "xa" OR suite STREQUAL "mdec")
     set(test_source port/backend/tests/test_${suite}.c)
@@ -423,6 +426,10 @@ if(NOT EMSCRIPTEN)
     add_test(NAME sdl_pacing COMMAND python3 -I -B
       ${CMAKE_SOURCE_DIR}/tools/port/test_sdl_pacing.py $<TARGET_FILE:test_sdl_pacing>)
     set_tests_properties(sdl_pacing PROPERTIES TIMEOUT 30 RUN_SERIAL TRUE)
+    add_test(NAME native_wall_10min COMMAND python3 -I -B
+      ${CMAKE_SOURCE_DIR}/tools/port/test_native_wall.py $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR})
+    set_tests_properties(native_wall_10min PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 900 RUN_SERIAL TRUE
+      ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy")
     add_test(NAME sdl_frame0 COMMAND dw1 --frames 120)
     set_tests_properties(sdl_frame0 PROPERTIES TIMEOUT 20 FAIL_REGULAR_EXPRESSION "overflows=[1-9]"
       ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy")
@@ -551,6 +558,10 @@ if(NOT EMSCRIPTEN)
     ${CMAKE_SOURCE_DIR}/tools/port/scenes/test_host.py
     $<TARGET_FILE:dw1> $<TARGET_FILE:test_scene_capture> ${CMAKE_BINARY_DIR} $<TARGET_FILE:test_scene_state>)
   set_tests_properties(scene_state_unit PROPERTIES FIXTURES_REQUIRED synthetic_pack TIMEOUT 120)
+  if(DW1_HOST STREQUAL "sdl")
+    set_tests_properties(libgte_host dw1_foreign_pack scene_flags scene_state_unit PROPERTIES
+      ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy")
+  endif()
 
   add_executable(test_scene_audio port/psyq/tests/test_scene_audio.c)
   target_link_libraries(test_scene_audio dw1_runtime)
@@ -585,7 +596,7 @@ if(NOT EMSCRIPTEN)
   set_tests_properties(scene_title scene_title_compare PROPERTIES RESOURCE_LOCK scene_title_capture)
   add_test(NAME reference_naming COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py naming --state --reuse)
-  set_tests_properties(reference_naming PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1250
+  set_tests_properties(reference_naming PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 14500
     FIXTURES_SETUP naming_reference RESOURCE_LOCK newgame_capture)
   add_test(NAME scene_naming_compare COMMAND sh -c
     "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py naming --build ${DW1_SCENE_PRESET} --compare")
@@ -593,52 +604,60 @@ if(NOT EMSCRIPTEN)
     FIXTURES_REQUIRED "disc_pack;naming_reference" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     RESOURCE_LOCK newgame_capture)
   add_test(NAME reference_newgame_state COMMAND python3 -I -B
-    ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py newgame --state --reuse --max-vblanks 40000 --timeout 1800)
-  set_tests_properties(reference_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+    ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py newgame --state --reuse --max-vblanks 40000 --timeout 7200)
+  set_tests_properties(reference_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 14500
     FIXTURES_SETUP newgame_reference RESOURCE_LOCK newgame_capture)
+  add_test(NAME reference_map_load COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py map_load --state --reuse --max-vblanks 40000 --timeout 7200)
+  set_tests_properties(reference_map_load PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 14500
+    FIXTURES_SETUP map_load_reference RESOURCE_LOCK newgame_capture)
+  add_test(NAME scene_map_load_compare COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py map_load --build ${DW1_SCENE_PRESET} --state)
+  set_tests_properties(scene_map_load_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 14500
+    FIXTURES_REQUIRED "disc_pack;map_load_reference" RESOURCE_LOCK newgame_capture)
   add_test(NAME reference_title_audio COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py title_audio --audio --reuse
-    --max-vblanks 40000 --timeout 1800)
-  set_tests_properties(reference_title_audio PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+    --max-vblanks 40000 --timeout 7200)
+  set_tests_properties(reference_title_audio PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 14500
     FIXTURES_SETUP title_audio_reference RESOURCE_LOCK newgame_capture)
   add_test(NAME scene_title_audio_compare COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py title_audio --build ${DW1_SCENE_PRESET} --compare-audio)
-  set_tests_properties(scene_title_audio_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+  set_tests_properties(scene_title_audio_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 14500
     FIXTURES_REQUIRED "disc_pack;title_audio_reference" RESOURCE_LOCK newgame_capture)
   add_test(NAME reference_xa_op1 COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py xa_op1 --audio --reuse
-    --max-vblanks 40000 --timeout 1800)
-  set_tests_properties(reference_xa_op1 PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+    --max-vblanks 40000 --timeout 7200)
+  set_tests_properties(reference_xa_op1 PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 14500
     FIXTURES_SETUP xa_op1_reference RESOURCE_LOCK newgame_capture)
   add_test(NAME scene_xa_op1_compare COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py xa_op1 --build ${DW1_SCENE_PRESET} --compare-audio)
-  set_tests_properties(scene_xa_op1_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+  set_tests_properties(scene_xa_op1_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 14500
     FIXTURES_REQUIRED "disc_pack;xa_op1_reference" RESOURCE_LOCK newgame_capture)
   foreach(movie_scene movie0 movie0_skip)
     add_test(NAME reference_${movie_scene} COMMAND python3 -I -B
       ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py ${movie_scene} --reuse
-      --max-vblanks 40000 --timeout 3500)
-    set_tests_properties(reference_${movie_scene} PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 7200
+      --max-vblanks 40000 --timeout 14400)
+    set_tests_properties(reference_${movie_scene} PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 28900
       FIXTURES_SETUP ${movie_scene}_reference RESOURCE_LOCK newgame_capture)
     add_test(NAME scene_${movie_scene}_compare COMMAND python3 -I -B
       ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py ${movie_scene} --build ${DW1_SCENE_PRESET} --compare)
-    set_tests_properties(scene_${movie_scene}_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 7200
+    set_tests_properties(scene_${movie_scene}_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 28900
       FIXTURES_REQUIRED "disc_pack;${movie_scene}_reference" RESOURCE_LOCK newgame_capture)
   endforeach()
   add_test(NAME scene_newgame_state COMMAND sh -c
     "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py newgame --build ${DW1_SCENE_PRESET} --state")
-  set_tests_properties(scene_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+  set_tests_properties(scene_newgame_state PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 14500
     FIXTURES_REQUIRED "disc_pack;newgame_reference" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     RESOURCE_LOCK newgame_capture)
   foreach(card_scene card_newgame card_continue)
     add_test(NAME reference_${card_scene} COMMAND python3 -I -B
       ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py ${card_scene} --state --reuse
-      --card-build ${DW1_SCENE_PRESET} --max-vblanks 40000 --timeout 1800)
-    set_tests_properties(reference_${card_scene} PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+      --card-build ${DW1_SCENE_PRESET} --max-vblanks 40000 --timeout 7200)
+    set_tests_properties(reference_${card_scene} PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 14500
       FIXTURES_SETUP ${card_scene}_reference RESOURCE_LOCK newgame_capture)
     add_test(NAME scene_${card_scene}_compare COMMAND python3 -I -B
       ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py ${card_scene} --build ${DW1_SCENE_PRESET} --state)
-    set_tests_properties(scene_${card_scene}_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3650
+    set_tests_properties(scene_${card_scene}_compare PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 14500
       FIXTURES_REQUIRED "disc_pack;${card_scene}_reference" RESOURCE_LOCK newgame_capture)
   endforeach()
   set_tests_properties(scene_card_newgame_compare PROPERTIES FIXTURES_SETUP card_newgame_saved)
@@ -701,6 +720,6 @@ add_test(NAME reference_capture_unit COMMAND python3 -I -B
 if(NOT EMSCRIPTEN)
   add_test(NAME reference_title COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/tools/port/reference/capture.py title)
-  set_tests_properties(reference_title PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1250
-    FIXTURES_SETUP title_reference)
+  set_tests_properties(reference_title PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 14500
+    FIXTURES_SETUP title_reference RESOURCE_LOCK newgame_capture)
 endif()

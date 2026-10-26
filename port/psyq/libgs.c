@@ -2,6 +2,8 @@
 /* asm:asm/us/main/psyq/libgs.s (mw_lib41).
  * DW1's view normalization and packet formats follow DW1 asm, not Psy-Q 4.7. */
 #include "clock.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include "psyq.h"
 #include "ps1mem.h"
 #include "../backend/gte.h"
@@ -49,9 +51,11 @@ static PACKET *_make_packet(PACKET *p,GsOT *ot,unsigned short pri,unsigned len)
 static void GsSetDrawBuffOffset(void)
 {
     if(gpu_offsets) {
+        clock_advance_cost(CLOCK_GS_OFFSET_CPU_CYCLES, CLOCK_COST_CPU);
         orgofs[0]=orgofs[1]=0;
         draw.ofs[0]=origin[0]+bufx[active]; draw.ofs[1]=origin[1]+bufy[active];
         PutDrawEnv(&draw);
+        clock_advance_cost(CLOCK_GS_OFFSET_RETURN_CPU_CYCLES,CLOCK_COST_CPU);
     } else {
         int x=origin[0]+bufx[!active], y=origin[1]+bufy[!active];
         gte_ctc2(GTE_OFX,(uint32_t)x<<16); gte_ctc2(GTE_OFY,(uint32_t)y<<16);
@@ -61,11 +65,14 @@ static void GsSetDrawBuffOffset(void)
 /* asm:asm/us/main/psyq/libgs.s GsSetDrawBuffClip */
 static void GsSetDrawBuffClip(void)
 {
+    clock_advance_cost(CLOCK_GS_CLIP_CPU_CYCLES, CLOCK_COST_CPU);
     draw.clip=(RECT){bufx[active],bufy[active],width,height}; PutDrawEnv(&draw);
+    clock_advance_cost(CLOCK_GS_CLIP_RETURN_CPU_CYCLES,CLOCK_COST_CPU);
 }
 /* asm:asm/us/main/psyq/libgs.s gpu_init */
 static void gpu_init(unsigned short w,unsigned short h,unsigned short mode,unsigned short dith,unsigned short vram)
 {
+    clock_advance_cost(CLOCK_GPU_INIT_CPU_CYCLES, CLOCK_COST_CPU);
     ResetGraph(((mode>>4)&3)==3?3:0);
     memset(&draw,0,sizeof(draw)); draw.dtd=dith; PutDrawEnv(&draw);
     memset(&disp,0,sizeof(disp)); disp.disp.w=w;disp.disp.h=h;
@@ -79,6 +86,7 @@ static void gte_init(void)
     gte_ctc2(GTE_H,1000);gte_ctc2(GTE_DQA,0xffffef9e);gte_ctc2(GTE_DQB,0x1400000);
     gte_ctc2(GTE_RFC,0);gte_ctc2(GTE_GFC,0);gte_ctc2(GTE_BFC,0);
     gte_ctc2(GTE_OFX,0);gte_ctc2(GTE_OFY,0);orgofs[0]=orgofs[1]=0;
+    clock_advance_cost(CLOCK_GTE_INIT_CPU_CYCLES, CLOCK_COST_CPU);
 }
 /* asm:asm/us/main/psyq/libgs.s valiable_init */
 static void valiable_init(unsigned short w,unsigned short h)
@@ -91,10 +99,11 @@ static void valiable_init(unsigned short w,unsigned short h)
     memset(bufx,0,sizeof(bufx));memset(bufy,0,sizeof(bufy));origin[0]=origin[1]=0;
     memset(clear,0,sizeof(clear));clear[0][0]=clear[1][0]=0x03000000;
     clear[0][1]=clear[1][1]=0x02000000;frame=1;
+    clock_advance_cost(CLOCK_GS_VARIABLE_INIT_CPU_CYCLES, CLOCK_COST_CPU);
 }
 /* asm:asm/us/main/psyq/libgs.s GsInitGraph */
 void GsInitGraph(unsigned short w,unsigned short h,unsigned short mode,unsigned short dith,unsigned short vram)
-{ clock_psyq_entry();gpu_init(w,h,mode,dith,vram);gte_init();active=0;valiable_init(w,h);GsSetDrawBuffClip();GsSetDrawBuffOffset(); }
+{ clock_psyq_entry();clock_advance_cost(CLOCK_GS_INIT_CPU_CYCLES,CLOCK_COST_CPU);gpu_init(w,h,mode,dith,vram);gte_init();active=0;valiable_init(w,h);GsSetDrawBuffClip();GsSetDrawBuffOffset(); }
 /* asm:asm/us/main/psyq/libgs.s GsInit3D */
 void GsInit3D(void)
 { clock_psyq_entry();origin[0]=width/2;origin[1]=height/2;GsSetDrawBuffOffset();near_clip=10;far_clip=0x3fff;light_mode=0; }
@@ -105,18 +114,25 @@ PACKET *GsGetWorkBase(void) { clock_psyq_entry();return GsOUT_PACKET_P; }
 /* asm:asm/us/main/psyq/libgs.s GsGetActiveBuff */
 int GsGetActiveBuff(void) { clock_psyq_entry();return active; }
 /* asm:asm/us/main/psyq/libgs.s GsSetOrign */
-void GsSetOrign(long x,long y) { clock_psyq_entry();origin[0]=x;origin[1]=y; }
+void GsSetOrign(long x,long y) { clock_advance_cost(CLOCK_GS_ORIGIN_CPU_CYCLES,CLOCK_COST_CPU);origin[0]=x;origin[1]=y; }
 /* asm:asm/us/main/psyq/libgs.s GsSetNearClip */
 void GsSetNearClip(long z) { clock_psyq_entry();near_clip=z; }
 /* asm:asm/us/main/psyq/libgs.s GsDefDispBuff */
 void GsDefDispBuff(unsigned short x0,unsigned short y0,unsigned short x1,unsigned short y1)
-{ clock_psyq_entry();bufx[0]=x0;bufx[1]=x1;bufy[0]=y0;bufy[1]=y1;GsSetDrawBuffClip();GsSetDrawBuffOffset(); }
+{ clock_psyq_entry();clock_advance_cost(CLOCK_GS_DISPLAY_BUFF_CPU_CYCLES,CLOCK_COST_CPU);bufx[0]=x0;bufx[1]=x1;bufy[0]=y0;bufy[1]=y1;GsSetDrawBuffClip();GsSetDrawBuffOffset(); }
 /* asm:asm/us/main/psyq/libgs.s GsSwapDispBuff */
 void GsSwapDispBuff(void)
 {
-    clock_psyq_entry();disp.disp.x=bufx[active];disp.disp.y=bufy[active];PutDispEnv(&disp);SetDispMask(1);
+    uint64_t probe_start = clock_now();
+    clock_advance_cost(CLOCK_GS_SWAP_ENTER_CPU_CYCLES,CLOCK_COST_CPU);
+    disp.disp.x=bufx[active];disp.disp.y=bufy[active];PutDispEnv(&disp);
+    clock_advance_cost(CLOCK_GS_SWAP_MASK_ENTER_CPU_CYCLES,CLOCK_COST_CPU);SetDispMask(1);
+    clock_advance_cost(CLOCK_GS_SWAP_COUNT_CPU_CYCLES,CLOCK_COST_CPU);
     if(++frame==0) frame=1;
-    active=!active;GsSetDrawBuffClip();GsSetDrawBuffOffset();
+    active=!active;clock_advance_cost(CLOCK_GS_SWAP_CLIP_ENTER_CPU_CYCLES,CLOCK_COST_CPU);GsSetDrawBuffClip();
+    clock_advance_cost(CLOCK_GS_SWAP_OFFSET_ENTER_CPU_CYCLES,CLOCK_COST_CPU);GsSetDrawBuffOffset();
+    clock_advance_cost(CLOCK_GS_SWAP_RETURN_CPU_CYCLES,CLOCK_COST_CPU);
+    if (getenv("DW1_VSYNC_PROBE")) fprintf(stderr, "gs-swap %llu %llu\n", (unsigned long long)probe_start, (unsigned long long)clock_now());
 }
 /* asm:asm/us/main/psyq/libgs.s GsSortClear */
 void GsSortClear(unsigned char r,unsigned char g,unsigned char b,GsOT *ot)
@@ -126,7 +142,7 @@ void GsSortClear(unsigned char r,unsigned char g,unsigned char b,GsOT *ot)
     p[2]=xy(bufx[active],bufy[active]);p[3]=xy(disp.isrgb24?width*3/2:width,height);AddPrim(ot->tag,p);
 }
 /* asm:asm/us/main/psyq/libgs.s GsDrawOt */
-void GsDrawOt(GsOT *ot) { clock_psyq_entry();DrawOTag((unsigned long *)ot->tag); }
+void GsDrawOt(GsOT *ot) { clock_advance_cost(CLOCK_GS_DRAW_OT_ENTER_CPU_CYCLES,CLOCK_COST_CPU);DrawOTag((unsigned long *)ot->tag);clock_advance_cost(CLOCK_GS_DRAW_OT_RETURN_CPU_CYCLES,CLOCK_COST_CPU); }
 /* asm:asm/us/main/psyq/libgs.s GsClearOt */
 void GsClearOt(unsigned short offset,unsigned short point,GsOT *ot)
 {
