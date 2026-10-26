@@ -32,6 +32,14 @@ with tempfile.TemporaryDirectory() as directory:
             assert (wav.getnchannels(), wav.getsampwidth(), wav.getframerate()) == (2, 2, 44100)
             assert wav.getnframes() == frames[index - 1]
     assert not list(output.glob("*.ppm"))
+    # A video/audio interval may end before its final strict checkpoint.
+    # Keep running until the checkpoint is recorded, without extending audio.
+    checkpoints.write_text(checkpoints.read_text() + "AUDIO_LANDING 0\n")
+    late = subprocess.run([sys.argv[1], str(checkpoints), str(segments)], env=environment,
+                          capture_output=True, text=True, timeout=30)
+    assert late.returncode == 0, (late.stdout, late.stderr)
+    assert (output / "2.spu").read_text().splitlines()[-1].endswith(" vblanks")
+    checkpoints.write_text(checkpoints.read_text().replace("AUDIO_LANDING 0\n", ""))
     segments.write_text(f"AUDIO_START AUDIO_FINISH 0 {output}/1.spu {output}/1.wav\n"
                         f"AUDIO_MUSIC - 0 {output}/2.spu {output}/2.wav AUDIO_STOP\n")
     event = subprocess.run([sys.argv[1], str(checkpoints), str(segments)], env=environment,

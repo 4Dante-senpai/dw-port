@@ -25,7 +25,7 @@ DW1 Web Port es *Digimon World* (PlayStation, USA) corriendo en el navegador com
 nativo: el código C del juego descompilado por `dw_decomp`, compilado a WebAssembly, sobre una
 reimplementación propia de las librerías PsyQ y del hardware de la consola. El jugador entra a
 una URL, elige la imagen de su disco una única vez y juega la partida completa, con la lógica
-original, a 59,94 Hz, con sonido, videos, controles a su gusto y saves que no se pierden.
+original, a 60,0087172527 Hz, con sonido, videos, controles a su gusto y saves que no se pierden.
 
 La tesis: con el 100 % del código del juego ya en C (medido) y una arquitectura probada en
 DW2-PC, el problema deja de ser "descompilar" y pasa a ser "reemplazar la plataforma": PsyQ, GPU,
@@ -271,7 +271,7 @@ mejoras son opt-in].
 #### FR-12: Escala de resolución
 
 El usuario puede elegir la resolución interna del 3D (1× a N×) [ASSUMPTION: N = 4 en v1; más si
-el Renderer WebGL2 lo sostiene a 59,94 Hz].
+el Renderer WebGL2 lo sostiene a 60,0087172527 Hz].
 
 **Consecuencias:**
 - A 1× sin otras mejoras, los frames coinciden con los Frames de referencia.
@@ -333,7 +333,7 @@ web, con y sin ventana.
 
 ## 5. Requisitos no funcionales transversales
 
-- **NFR-1 Ritmo:** el Juego avanza a 59,94 Hz (VBlank NTSC, 1001/60000 s) sin deriva acumulada:
+- **NFR-1 Ritmo:** el Juego avanza a 60,0087172527 Hz (Redux NTSC, 564398/33868800 s; medición en `docs/port/clock-calibration.md`) sin deriva acumulada:
   tras 10 minutos, el conteo de VBlanks difiere del teórico en menos de 1 en el Build nativo y en
   menos de 0,1 % en el Build web.
 - **NFR-2 Rendimiento:** en Chrome y Firefox de escritorio actuales en el hardware de referencia,

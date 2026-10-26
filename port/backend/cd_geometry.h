@@ -1,0 +1,45 @@
+/* USA ISO9660 geometry, verified from PVD 16 and its little-endian path table.
+ * Metadata only. Manifest SHA-256: 2750890c75ab70d3d0e134ccc4569d2737ff0e4769fc2cf3d87a8a2e745b20d3.
+ * Used for CD directory cache/seek timing; no sector payload is stored. */
+static const struct { const char *path; uint32_t lba; uint16_t entries, name_bytes; } iso_directories[] = {
+    {"", 22u, 32u, 300u},
+    {"\\CARD", 24u, 3u, 10u},
+    {"\\CHDAT", 949u, 9u, 36u},
+    {"\\DOOR", 7321u, 34u, 384u},
+    {"\\ETCDAT", 7357u, 24u, 251u},
+    {"\\ETCHI", 7558u, 7u, 54u},
+    {"\\ETCNA", 8789u, 20u, 192u},
+    {"\\MAP", 8890u, 19u, 76u},
+    {"\\MOVIE", 77123u, 6u, 36u},
+    {"\\SCN", 142588u, 4u, 21u},
+    {"\\SOUND", 142995u, 3u, 3u},
+    {"\\STDDAT", 147005u, 24u, 258u},
+    {"\\CHDAT\\MMD0", 2570u, 32u, 300u},
+    {"\\CHDAT\\MMD1", 3570u, 32u, 300u},
+    {"\\CHDAT\\MMD2", 4729u, 31u, 290u},
+    {"\\CHDAT\\MMD3", 5504u, 31u, 290u},
+    {"\\CHDAT\\MMD4", 6170u, 32u, 300u},
+    {"\\CHDAT\\MMD5", 6744u, 32u, 300u},
+    {"\\MAP\\MAP1", 8891u, 32u, 368u},
+    {"\\MAP\\MAP10", 13342u, 32u, 360u},
+    {"\\MAP\\MAP11", 16872u, 32u, 366u},
+    {"\\MAP\\MAP12", 20691u, 32u, 360u},
+    {"\\MAP\\MAP13", 25702u, 32u, 360u},
+    {"\\MAP\\MAP14", 30914u, 32u, 360u},
+    {"\\MAP\\MAP15", 35260u, 32u, 366u},
+    {"\\MAP\\MAP16", 38459u, 32u, 360u},
+    {"\\MAP\\MAP17", 42238u, 12u, 120u},
+    {"\\MAP\\MAP2", 43346u, 32u, 364u},
+    {"\\MAP\\MAP3", 47752u, 32u, 364u},
+    {"\\MAP\\MAP4", 52089u, 30u, 340u},
+    {"\\MAP\\MAP5", 55912u, 28u, 312u},
+    {"\\MAP\\MAP6", 59971u, 32u, 362u},
+    {"\\MAP\\MAP7", 64108u, 32u, 360u},
+    {"\\MAP\\MAP8", 68166u, 32u, 368u},
+    {"\\MAP\\MAP9", 72693u, 32u, 390u},
+    {"\\SOUND\\VHB", 142996u, 9u, 68u},
+    {"\\STDDAT\\GRADE", 147312u, 25u, 223u},
+};
+#define ISO_PATH_TABLE_LBA 18u
+#define ISO_PATH_TABLE_ENTRIES 37u
+#define ISO_PATH_TABLE_NAME_BYTES 160u

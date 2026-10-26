@@ -16,6 +16,7 @@ typedef struct {
 } Event;
 
 static uint64_t now;
+static uint64_t poll_boundary;
 static uint64_t next_seq;
 static uint32_t vblanks;
 static Event events[MAX_EVENTS];
@@ -28,6 +29,19 @@ static int observed_vblank;
 static void (*trace)(uint64_t, int, void *);
 static pthread_t owner;
 static int has_owner;
+static uint64_t costs[CLOCK_COST_COUNT];
+static ClockCost cost_source = CLOCK_COST_CPU;
+const char *const clock_cost_names[CLOCK_COST_COUNT] = {
+	"cd", "gpu", "mdec", "card", "psyq", "wait", "cpu", "spu"
+};
+void clock_cost_snapshot(uint64_t totals[CLOCK_COST_COUNT])
+{
+	for (unsigned i = 0; i < CLOCK_COST_COUNT; i++) totals[i] = costs[i];
+}
+static void advance_to(uint64_t cycle)
+{
+	if (cycle > now) { costs[cost_source] += cycle - now; now = cycle; }
+}
 
 /* Losing an event or racing on the clock corrupts the game: fatal in every build. */
 #define CLOCK_FATAL(cond, msg)                                                                 \
@@ -49,20 +63,24 @@ static void check_thread(void)
 
 uint64_t clock_vblank_cycle(uint32_t k)
 {
-	/* Split k so the product cannot overflow 64 bits. */
+	/* Split the period, not k: a large rational denominator otherwise overflows
+	 * k * per after only hours of gameplay. Both products fit for all uint32_t k. */
 	const uint64_t per = (uint64_t)CLOCK_HZ * CLOCK_VBLANK_NUM;
-	return (k / CLOCK_VBLANK_DEN) * per + (k % CLOCK_VBLANK_DEN) * per / CLOCK_VBLANK_DEN;
+	return (uint64_t)k * (per / CLOCK_VBLANK_DEN) +
+	       (uint64_t)k * (per % CLOCK_VBLANK_DEN) / CLOCK_VBLANK_DEN;
 }
 
 uint64_t clock_lines(uint64_t cycles)
 {
-	const uint64_t per = (uint64_t)CLOCK_HZ * CLOCK_VBLANK_NUM; /* cycles per frame * DEN */
-	uint64_t frames = cycles * CLOCK_VBLANK_DEN / per;           /* whole frames, no overflow for */
-	uint64_t rest = cycles - clock_vblank_cycle((uint32_t)frames); /* < 2^32 frames */
-	return frames * CLOCK_LINES_PER_FRAME + rest * CLOCK_LINES_PER_FRAME * CLOCK_VBLANK_DEN / per;
+	/* The measured Redux period is an integer CPU-cycle count. Split the span
+	 * before multiplying, so long sessions do not overflow cycles * DEN. */
+	const uint64_t period = clock_vblank_cycle(1);
+	return cycles / period * CLOCK_LINES_PER_FRAME +
+	       cycles % period * CLOCK_LINES_PER_FRAME / period;
 }
 
 uint64_t clock_now(void) { return now; }
+uint64_t clock_poll_boundary(void) { return poll_boundary; }
 uint32_t clock_vblanks(void) { return vblanks; }
 int clock_in_handler(void) { return in_handler; }
 
@@ -86,13 +104,15 @@ void clock_set_trace(void (*fn)(uint64_t, int, void *))
 
 void clock_reset(void)
 {
-	now = next_seq = 0;
+	now = next_seq = poll_boundary = 0;
 	vblanks = 0;
 	for (int i = 0; i < MAX_EVENTS; i++)
 		events[i].id = 0;
 	in_handler = 0;
 	observed_vblank = 0;
 	has_owner = 0;
+	for (unsigned i = 0; i < CLOCK_COST_COUNT; i++) costs[i] = 0;
+	cost_source = CLOCK_COST_CPU;
 }
 
 int clock_schedule(uint64_t delay, ClockFn fn, void *arg)
@@ -152,7 +172,7 @@ static void dispatch(int index)
 }
 
 /* Runs every event due at or before target, in order; time never goes backwards. */
-static void run_until(uint64_t target)
+static void run_until(uint64_t target, int cpu_work)
 {
 	for (;;) {
 		int index;
@@ -164,29 +184,68 @@ static void run_until(uint64_t target)
 		}
 		if (due > target)
 			break;
-		if (due > now)
-			now = due;
+		advance_to(due);
+		uint64_t interrupted = now;
 		dispatch(index);
+		/* Interrupt service consumes CPU while a device deadline keeps running.
+		 * Preserve the interrupted instruction work, including the remainder
+		 * after a short DMA completes inside a public API return path. */
+		if (cpu_work) target += now - interrupted;
 		if (index < 0)
 			observed_vblank = 1;
 	}
-	if (target > now)
-		now = target;
+	advance_to(target);
 }
 
 void clock_advance(uint64_t cycles)
 {
 	check_thread();
 	if (in_handler) {
-		now += cycles; /* masked: the outer loop dispatches what became due */
+		advance_to(now + cycles); /* masked: the outer loop dispatches what became due */
 		return;
 	}
-	run_until(now + cycles);
+	run_until(now + cycles, 0);
 }
 
 void clock_psyq_entry(void)
 {
-	clock_advance(CLOCK_PSYQ_ENTRY_CYCLES);
+	clock_advance_cost(CLOCK_PSYQ_ENTRY_CYCLES, CLOCK_COST_PSYQ);
+}
+
+void clock_advance_cost(uint64_t cycles, ClockCost source)
+{
+	ClockCost previous = cost_source;
+	cost_source = source;
+	if (!in_handler && source == CLOCK_COST_CPU) {
+		check_thread();
+		run_until(now + cycles, 1);
+	} else clock_advance(cycles);
+	cost_source = previous;
+}
+
+/* A compiled polling loop checks devices only after a taken branch. Keep
+ * device deadlines running through the straight-line CPU work and dispatch
+ * them at its measured branch boundary (Redux interpreter branchTest). */
+void clock_poll_branch(unsigned cycles)
+{
+	check_thread();
+	CLOCK_FATAL(!in_handler, "polling branch inside interrupt handler");
+	ClockCost previous = cost_source;
+	cost_source = CLOCK_COST_CPU;
+	advance_to(now + cycles);
+	poll_boundary = now;
+	int pending;
+	do { run_until(now, 0); } while (next_due(&pending) <= now);
+	poll_boundary = 0;
+	cost_source = previous;
+}
+
+void clock_wait_cost(int (*done)(void *), void *arg, ClockCost source)
+{
+	ClockCost previous = cost_source;
+	cost_source = source;
+	clock_wait_until(done, arg);
+	cost_source = previous;
 }
 
 void clock_wait_until(int (*done)(void *), void *arg)
@@ -196,6 +255,8 @@ void clock_wait_until(int (*done)(void *), void *arg)
 	while (!done(arg)) {
 		int index;
 		uint64_t due = next_due(&index);
-		run_until(due);
+		run_until(due, 0);
 	}
 }
+
+__attribute__((weak)) void clock_game_function_exit(void *function) { (void)function; }

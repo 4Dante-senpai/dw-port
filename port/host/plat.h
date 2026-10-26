@@ -9,6 +9,8 @@ void plat_present(long frame);
 void plat_native_present(long frame) __attribute__((weak));
 void plat_game_init(void) __attribute__((weak));
 void plat_input_vblank(void) __attribute__((weak));
+void plat_native_wall_begin(void) __attribute__((weak));
+void plat_native_wall_finish(void) __attribute__((weak));
 int plat_main_loop(pthread_t game) __attribute__((weak));
 static inline void plat_present(long frame)
 {

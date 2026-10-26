@@ -26,6 +26,72 @@ reference_audio = importlib.util.module_from_spec(audio_spec)
 audio_spec.loader.exec_module(reference_audio)
 
 
+class HardwareSummaryTests(unittest.TestCase):
+    def test_malformed_timing_cache_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            frame = dict(event="frame0", label="frame0", cycle=0, vblank=0,
+                         costs=dict.fromkeys(capture._runner.timing.SOURCES, 0))
+            for index in (1, 2):
+                (output / f"run-{index}.timing.jsonl").write_text(json.dumps(frame) + "\n")
+                (output / f"run-{index}.hardware.jsonl").write_text(json.dumps(
+                    dict(cycle=0, device="checkpoint", event="frame0", label="frame0")) + "\n")
+            self.assertTrue(capture.valid_timing_pair(output))
+            for row in (dict(cycle=0, device="checkpoint", event="checkpoint"),
+                        dict(cycle=0, device="checkpoint", event="function_span",
+                             label=[], start=0, elapsed=0)):
+                with self.subTest(row=row):
+                    (output / "run-1.hardware.jsonl").write_text(json.dumps(
+                        dict(cycle=0, device="checkpoint", event="frame0", label="frame0")) +
+                        "\n" + json.dumps(row) + "\n")
+                    self.assertFalse(capture.valid_timing_pair(output))
+
+    def test_checkpoint_breakdown_excludes_boot_and_resets_each_segment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "hardware.jsonl"
+            rows = [dict(cycle=1, device="cd", event="command", command=10, parameters=[]),
+                    dict(cycle=100, device="checkpoint", event="frame0", label="frame0"),
+                    dict(cycle=110, device="cd", event="command", command=6, parameters=[]),
+                    dict(cycle=120, device="gpu", event="gp0", command=96, words=3),
+                    dict(cycle=130, device="checkpoint", event="checkpoint", label="first"),
+                    dict(cycle=140, device="checkpoint", event="function_span", label="decode",
+                         start=120, elapsed=20, own=12),
+                    dict(cycle=150, device="checkpoint", event="checkpoint", label="second")]
+            path.write_text("\n".join(map(json.dumps, rows))+"\n")
+            first, second = capture.hardware.summarize(path)["segments"]
+            self.assertEqual((first["start_cycle"], first["end_cycle"]), (0, 30))
+            self.assertEqual(first["operations"], {"cd_commands": {"06": 1}, "gp0": {"60": 1}})
+            self.assertEqual(second["operations"], {})
+            self.assertEqual(second["api"]["decode"], dict(count=1, inclusive_cycles=20,
+                own_cycles=12, crosses_start=1))
+
+    def test_bounds_and_invalid_observations(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "hardware.jsonl"
+            rows = [dict(cycle=100, device="checkpoint", event="frame0", label="frame0"),
+                    dict(cycle=110, device="mdec", event="dma", channel=1, words=2112,
+                         bcr=4325408, control=0x1000200, command=0x32000740),
+                    dict(cycle=18000, device="mdec", event="dma_done", channel=1,
+                         previous_busy=8744, elapsed=17890),
+                    dict(cycle=18001, device="checkpoint", event="function_span", label="decode",
+                         start=110, elapsed=17891)]
+            def write(values):
+                path.write_text("\n".join(map(json.dumps, values))+"\n")
+            write(rows)
+            result = capture.hardware.summarize(path)
+            self.assertEqual(result["dma"]["1"][0]["observed_done"], 17890)
+            self.assertEqual(result["functions"]["decode"]["inclusive_total"], 17891)
+            self.assertEqual(result["sha256"], hashlib.sha256(path.read_bytes()).hexdigest())
+            for values, message in ((rows[1:], "frame 0"),
+                                    (rows+[rows[0]], "backwards"),
+                                    (rows[:1]*2, "duplicate"),
+                                    (rows[:2]+[dict(rows[2], previous_busy=20000)], "bounds"),
+                                    (rows[:3]+[dict(rows[3], elapsed=2)], "span")):
+                write(values)
+                with self.assertRaisesRegex(ValueError, message):
+                    capture.hardware.summarize(path)
+
+
 class AudioCaptureTests(unittest.TestCase):
     def test_mixer_tap_conversion_and_discontinuities(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -59,7 +125,7 @@ class AudioCaptureTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
             root, output = base / "repo", base / "audio"
-            for name in ("tools/port/reference/capture.py", "tools/port/reference/capture.lua",
+            for name in ("tools/port/reference/capture.py", "tools/port/reference/capture.lua", "tools/port/reference/hardware.lua",
                          "tools/port/reference/audio.py", "tools/port/scenes/audio.py",
                          "tools/port/reference/pcsx-redux-pcm-tap.patch", "bios", "emulator"):
                 path = root / name
@@ -74,6 +140,8 @@ class AudioCaptureTests(unittest.TestCase):
             calls = []
             changed = None
             def run_once(emulator, cue, bios, scene, symbols, output, index, timeout, max_vblanks):
+                (output / f"run-{index}.timing.jsonl").write_text(json.dumps(dict(event="frame0", label="frame0", vblank=0, cycle=0, costs=dict.fromkeys(reference_audio.timing.SOURCES, 0))) + "\n")
+                (output / f"run-{index}.hardware.jsonl").write_text(json.dumps(dict(cycle=0, device="checkpoint", event="frame0", label="frame0")) + "\n")
                 calls.append(index)
                 (output / f"run-{index}.log").write_text("unpatched emulator" if changed == "unpatched" else
                     "DW1 PCM tap: PCM16LE stereo 44100 Hz, indexed mixer samples")
@@ -85,7 +153,7 @@ class AudioCaptureTests(unittest.TestCase):
                         "# dw1-spu-trace-v1\n0 0 180 " + ("0002" if changed == "spu" and index == 2 else "0001") + "\n")
                     (output / f"run-{index}-{segment}.json").write_text(json.dumps(
                         dict(start_cycle=0, end_cycle=3072)))
-            adapter = SimpleNamespace(ROOT=root, run_once=run_once)
+            adapter = SimpleNamespace(ROOT=root, run_once=run_once, hardware=capture.hardware)
             def run():
                 return reference_audio.capture_audio(args, scene, {}, root / "emulator", base / "disc",
                                                      root / "bios", adapter)
@@ -97,7 +165,7 @@ class AudioCaptureTests(unittest.TestCase):
                 self.assertEqual(run(), 0)
                 self.assertEqual(calls, [])
                 for dependency in (output / "run-2-1.wav", root / "bios", root / "emulator",
-                                   root / "tools/port/reference/capture.lua",
+                                   root / "tools/port/reference/capture.lua", root / "tools/port/reference/hardware.lua",
                                    root / "tools/port/reference/pcsx-redux-pcm-tap.patch"):
                     dependency.write_bytes(b"modified")
                     calls.clear()
@@ -151,7 +219,8 @@ class PortDisplayTests(unittest.TestCase):
         # Exhaust all 15-bit colors, plus the ignored high bit, in two displays.
         with tempfile.TemporaryDirectory() as directory:
             library = Path(directory) / "gpu.so"
-            subprocess.run(["cc", "-shared", "-fPIC", "-O2", "-o", str(library),
+            subprocess.run(["cc", *(["-m32"] if ctypes.sizeof(ctypes.c_void_p) == 4 else []),
+                            "-shared", "-fPIC", "-O2", "-o", str(library),
                             str(capture.ROOT / "port/backend/gpu_soft/gpu_soft.c")], check=True,
                            capture_output=True)
             gpu = ctypes.CDLL(str(library))
@@ -175,6 +244,93 @@ class PortDisplayTests(unittest.TestCase):
 
 class AdapterTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which("pcsx-redux") and shutil.which("xvfb-run"), "PCSX-Redux Lua runtime unavailable")
+    def test_hardware_commands_dma_and_map_return(self):
+        with tempfile.TemporaryDirectory() as directory:
+            work = Path(directory)
+            script = work / "hardware-test.lua"
+            script.write_text("local work=" + json.dumps(str(work)) + "\n" + r'''
+local quit=PCSX.quit
+local bit=require('bit')
+local callbacks,ram,mem={},{},{}
+local cycle=9000000000
+local r={rawPC=0xbfc00000,GPR={r={[5]=0,[6]=0},n={ra=0x80010000,v0=3,a0=1,a1=2,a2=3,a3=4}}}
+PCSX={getCPUCycles=function() return cycle end,getRegisters=function() return r end,
+ getMemPtr=function() return ram end,
+ getMemoryAsFile=function() return {readU32At=function(_,a) return mem[a] or 0 end} end,
+ addBreakpoint=function(address,kind,width,name,callback)
+  local b={callback=callback};function b:disable() self.disabled=true end
+  callbacks[tostring(address)..kind]=b;return b
+ end}
+local handles={}
+''' + "local point=dofile(" + json.dumps(str(capture.ROOT / "tools/port/reference/hardware.lua")) + ")" + r'''
+ (work..'/hardware.jsonl',handles,function(fn) return fn end,function() return 'cpu' end,0x80020000)
+local function fire(address,kind,...)
+ return callbacks[tostring(address)..kind].callback(...)
+end
+local function write(base,address,width,value)
+ r.GPR.r[5]=address;r.GPR.r[6]=value
+ local op=width==1 and 0x28 or width==2 and 0x29 or 0x2b
+ mem[r.rawPC]=bit.bor(bit.lshift(op,26),bit.lshift(5,21),bit.lshift(6,16))
+ fire(base,'Write',address,width)
+end
+point('frame0','frame0')
+write(0x1f801800,0x1f801800,1,0)
+write(0x1f801800,0x1f801802,1,12)
+write(0x1f801800,0x1f801801,1,2)
+write(0x1f801800,0x1f801800,1,1)
+write(0x1f801800,0x1f801803,1,7)
+fire(0x800b060c,'Exec')
+write(0x1f801810,0x1f801810,4,0x60000000)
+write(0x1f801810,0x1f801810,4,0)
+write(0x1f801810,0x1f801810,4,480+480*65536)
+mem[0x1f8010a0]=0x10000;mem[0x1f8010a4]=2*65536+4
+for i=0,31 do ram[0x10000+i]=0 end
+write(0x1f8010a8,0x1f8010a8,4,0x01000201)
+mem[0x1f8010a8]=0x01000201;cycle=cycle+3;fire(0x1f8010a8,'Read')
+mem[0x1f8010a8]=0;cycle=cycle+15;fire(0x1f8010a8,'Read')
+local function ramword(a,v)
+ for i=0,3 do ram[a+i]=bit.band(bit.rshift(v,8*i),255) end
+end
+-- Two packets: two and three payload words, plus two excluded headers.
+ramword(0x11000,0x02012000);ramword(0x11004,0);ramword(0x11008,0)
+ramword(0x12000,0x03ffffff)
+for i=1,3 do ramword(0x12000+4*i,0) end
+mem[0x1f8010a0]=0x11000;mem[0x1f8010a4]=99*65536+77
+write(0x1f8010a8,0x1f8010a8,4,0x01000401)
+mem[0x1f8010a8]=0;cycle=cycle+7;fire(0x1f8010a8,'Read')
+point('checkpoint','dma_end')
+write(0x1f801820,0x1f801820,4,0x38000000)
+mem[0x1f801080]=0x10000;mem[0x1f801084]=65536+16
+write(0x1f801088,0x1f801088,4,0x01000201)
+fire(0x80020000,'Exec');cycle=cycle+10;fire(0x80010000,'Exec')
+assert(handles['hardware_map load return'].disabled)
+mem[r.rawPC]=0
+assert(not pcall(function() fire(0x1f801800,'Write',0x1f801800,1) end))
+quit(0)
+''')
+            process = subprocess.run(["xvfb-run", "-a", "pcsx-redux", "-no-ui", "-portable", str(work),
+                                      "-noupdate", "-no-webserver", "-no-gdb", "-dofile", str(script)],
+                                     cwd=work, capture_output=True, timeout=30)
+            self.assertEqual(process.returncode, 0, (process.stdout, process.stderr))
+            rows = [json.loads(line) for line in (work / "hardware.jsonl").read_text().splitlines()]
+            command = next(r for r in rows if r["device"] == "cd" and r["event"] == "command")
+            self.assertEqual((command["cycle"], command["command"], command["parameters"]), (9000000000, 2, [12]))
+            tile = next(r for r in rows if r.get("command") == 0x60)
+            self.assertEqual((tile["width"], tile["height"]), (480, 480))
+            dma = next(r for r in rows if r["event"] == "dma" and r["device"] == "gpu")
+            self.assertEqual(dma["words"], 8)
+            linked = [r for r in rows if r["event"] == "dma" and r["device"] == "gpu"][1]
+            self.assertEqual((linked["words"], linked["bcr"]), (5, 99*65536+77))
+            summary = capture.hardware.summarize(work / "hardware.jsonl")
+            self.assertEqual(summary["segments"][0]["operations"]["dma2"],
+                             dict(requests=2, words=13))
+            self.assertEqual([r["words"] for r in summary["dma"]["2"]], [8, 5])
+            done = next(r for r in rows if r["event"] == "dma_done")
+            self.assertEqual((done["elapsed"], done["previous_busy"]), (18, 3))
+            mdec = next(r for r in rows if r["event"] == "dma" and r["device"] == "mdec")
+            self.assertEqual((mdec["words"], mdec["command"]), (16, 0x38000000))
+            self.assertEqual(rows[-1]["event"], "loadMap_return")
+
     def test_lua_audio_segments_and_store_decode(self):
         with tempfile.TemporaryDirectory() as directory:
             work = Path(directory)
@@ -236,6 +392,26 @@ quit(0)
             self.assertEqual((work / "2.spu").read_text(), "# dw1-spu-trace-v1\n0 1 000 5678\n# end 1 vblanks\n")
             self.assertEqual(json.loads((work / "1.json").read_text())["start_cycle"], 9000000000)
             self.assertEqual(json.loads((work / "2.json").read_text())["vblanks"], 2)
+            late_script = script.read_text().replace(
+                "{label='music',address=400,occurrence=1,window=0}",
+                "{label='music',address=400,occurrence=1,window=0},"
+                "{label='landing',address=500,occurrence=1,window=0}")
+            late_script = late_script.replace(
+                "onVsync();assert(quits==1, 'must quit after exactly two drain VBlanks')",
+                "onVsync();assert(quits==0, 'must wait for the final checkpoint');"
+                "enter(500);onVsync();assert(quits==1)")
+            script.write_text(late_script)
+            process = subprocess.run(["xvfb-run", "-a", "pcsx-redux", "-no-ui", "-portable", str(work),
+                                      "-noupdate", "-no-webserver", "-no-gdb", "-dofile", str(script)],
+                                     cwd=work, capture_output=True, timeout=30)
+            self.assertEqual(process.returncode, 0, (process.stdout, process.stderr))
+            script.write_text(late_script.replace(
+                "{label='music',address=400,occurrence=1,window=0},"
+                "{label='landing',address=500,occurrence=1,window=0}",
+                "{label='music',address=400,occurrence=1,window=0}").replace(
+                "onVsync();assert(quits==0, 'must wait for the final checkpoint');"
+                "enter(500);onVsync();assert(quits==1)",
+                "onVsync();assert(quits==1, 'must quit after exactly two drain VBlanks')"))
             # The same address dispatches an armed anchor and a stop condition.
             # Early calls are ignored; opening the anchor must not close it.
             event_script = script.read_text().replace(
@@ -298,6 +474,7 @@ store(0x188,1);store(0x18a,0)
 local quit = PCSX.quit
 local callbacks, vsync, buttons = {}, nil, {}
 local created, removed = 0, 0
+local cycles = 9000000000
 local registers = {GPR={n={ra=700,v0=123}}}
 local pad = {
  clearOverride=function(b) buttons[b]=nil end,
@@ -314,6 +491,7 @@ PCSX = {
    return bp
  end,
  getRegisters=function() return registers end,
+ getCPUCycles=function() return cycles end,
  getMemPtr=function() return {[0x10000]=42} end,
  Events={createEventListener=function(name,callback)
    created=created+1; vsync=callback; return {remove=function() removed=removed+1 end}
@@ -321,7 +499,8 @@ PCSX = {
  GPU={takeScreenShot=function() return {data="abc",bpp=1,width=1,height=1} end},
  quit=function(code) assert(code==0); end,
 }
-DW1_CAPTURE={mark=100,vsync=200,rand=300,progress=work.."/progress",state_trace=work.."/state",
+DW1_CAPTURE={mark=100,mark_name="mark",vsync=200,rand=300,progress=work.."/progress",state_trace=work.."/state",
+ timing_trace=work.."/timing",timing_functions={{address=9000,source="cd"},{address=9004,source="gpu"}},
  raw=work.."/raw",meta=work.."/meta",max_vblanks=20000,capture_vblank=20,inputs_from="mark",
  checkpoints={{label="mark",address=100,occurrence=1,window=1},
               {label="loop#2",address=400,occurrence=2,window=1}},
@@ -330,6 +509,13 @@ DW1_CAPTURE={mark=100,vsync=200,rand=300,progress=work.."/progress",state_trace=
 ''' + "\ndofile(" + json.dumps(str(capture.ROOT / "tools/port/reference/capture.lua")) + ")\n" + r'''
 local function enter(address) local bp=assert(callbacks[address]); if bp.active then bp.callback() end end
 enter(200); enter(700) -- frame 0
+cycles=cycles+10;registers.GPR.n.ra=9008;enter(9000)
+cycles=cycles+20;registers.GPR.n.ra=9012;enter(9004)
+cycles=cycles+30;enter(9012)
+cycles=cycles+40;registers.GPR.n.ra=9008;enter(9004) -- GPU tail call from CD
+cycles=cycles+50;enter(9008) -- closes GPU and CD together
+cycles=cycles+60 -- outside either API
+registers.GPR.n.ra=700
 enter(100) -- mark is itself the first checkpoint
 vsync(); assert(buttons[3] and not buttons[14])
 enter(300); enter(700) -- actual adapter rand return hook
@@ -351,6 +537,12 @@ quit(0)
             process = subprocess.run(command, capture_output=True, timeout=30, cwd=work)
             self.assertEqual(process.returncode, 0, (process.stdout, process.stderr))
             self.assertTrue((work / "state").is_file())
+            points = capture._runner.timing.read(work / "timing")
+            self.assertEqual(points[("frame0", "frame0")]["cycle"], 0)
+            mark = points[("mark", "mark")]
+            self.assertEqual(mark["cycle"], 210)
+            self.assertEqual({key: mark["costs"][key] for key in ("cpu", "cd", "gpu")},
+                             dict(cpu=70, cd=60, gpu=80))
 
     @unittest.skipUnless(shutil.which("pcsx-redux") and shutil.which("xvfb-run"), "PCSX-Redux Lua runtime unavailable")
     def test_real_lua_pointer_ram_boundaries(self):
@@ -453,6 +645,7 @@ class RunnerTests(unittest.TestCase):
         lua = self.root / "tools/port/reference/capture.lua"
         lua.parent.mkdir()
         lua.write_text('-- adapter fixture')
+        lua.with_name('hardware.lua').write_text('-- hardware fixture')
         lua.with_suffix('.py').write_text('# adapter fixture')
         (self.scene.parent / 'run.py').write_text('# runner fixture')
         self.disc = Path(self.temp.name) / "disc"
@@ -476,21 +669,16 @@ mode = os.environ.get("FAKE_MODE", "ok")
 (work / "progress.txt").write_text("frame 0")
 if mode == "timeout": time.sleep(30)
 if mode == "fail": sys.exit(1)
-if mode in ("overlap", "fail-first", "fail-second", "timeout-second"):
+if mode in ("sequential", "fail-first", "fail-second", "timeout-second"):
     (work / "started").touch()
     other = work.parent / ("work-2" if work.name == "work-1" else "work-1")
-    deadline = time.monotonic() + 3
-    while not (other / "started").exists():
-        if time.monotonic() > deadline:
-            print("other pass did not start", flush=True)
-            sys.exit(2)
-        time.sleep(0.01)
-    if mode in ("fail-first", "fail-second", "timeout-second"):
-        failing = "work-1" if mode == "fail-first" else "work-2"
-        if work.name == failing:
-            if mode == "timeout-second": time.sleep(30)
-            sys.exit(1)
-        time.sleep(0.1)
+    if work.name == "work-2": assert (other / "finished").is_file()
+    else: assert not (other / "started").exists()
+    failing = "work-1" if mode == "fail-first" else "work-2"
+    if mode != "sequential" and work.name == failing:
+        if mode == "timeout-second": time.sleep(30)
+        sys.exit(1)
+(work / "finished").touch()
 pixels = bytes(range(96))
 if mode == "different" and work.name == "work-2": pixels = pixels[::-1]
 if mode == "black": pixels = bytes(96)
@@ -499,6 +687,17 @@ if mode == "black": pixels = bytes(96)
 if "--state" not in sys.argv:
     import re
     script = (work / "capture.lua").read_text()
+    hardware_match = re.search(r'\\["hardware_trace"\\]="([^"]+)"', script)
+    if hardware_match:
+        pathlib.Path(hardware_match[1]).write_text(json.dumps(dict(cycle=0,device="checkpoint",event="frame0",scope="cpu",label="frame0"))+"\\n")
+    timing_match = re.search(r'\\["timing_trace"\\]="([^"]+)"', script)
+    if timing_match and mode != "timing-missing":
+        costs = dict.fromkeys(("cd", "gpu", "mdec", "card", "psyq", "wait", "cpu", "spu"), 0)
+        cycle = 1 if mode == "timing-different" and work.name == "work-2" else 0
+        rows = [dict(event="frame0",label="frame0",vblank=0,cycle=0,costs=costs.copy())]
+        costs["cpu"] = cycle
+        rows.append(dict(event="mark",label="titleMark",vblank=0,cycle=cycle,costs=costs))
+        pathlib.Path(timing_match[1]).write_text("\\n".join(map(json.dumps, rows)) + "\\n")
     match = re.search(r'\\["state_trace"\\]="([^"]+)"', script)
     if match:
         text = "".join(f"{k} state TEST[0] -32768\\n{k} state POINTER[0] TABLE+4\\n" for k in range(1, 61))
@@ -577,6 +776,14 @@ if "--state" not in sys.argv:
                 self.run_capture("--timeout", "1")
             self.assertTrue((self.root / "build/reference/title/run-1.log").is_file())
 
+    def test_timing_evidence(self):
+        os.environ["FAKE_MODE"] = "timing-different"
+        with self.assertRaisesRegex(ValueError, "non-deterministic reference checkpoint timing"):
+            self.run_capture()
+        os.environ["FAKE_MODE"] = "timing-missing"
+        with self.assertRaises(FileNotFoundError):
+            self.run_capture()
+
     def test_black(self):
         os.environ["FAKE_MODE"] = "black"
         with self.assertRaisesRegex(ValueError, "only 1 colors"):
@@ -628,12 +835,12 @@ if "--state" not in sys.argv:
         self.assertIn('["rand"]=2147500032', script)
         self.assertNotIn("reference_sha256", self.scene.read_text())
 
-    def test_passes_overlap(self):
+    def test_passes_are_sequential(self):
         self.state_fixture()
-        os.environ["FAKE_MODE"] = "overlap"
+        os.environ["FAKE_MODE"] = "sequential"
         self.assertEqual(self.run_capture("--state"), 0)
 
-    def test_failed_pass_waits_for_other_without_stamp(self):
+    def test_failed_pass_stops_without_stamp(self):
         self.state_fixture()
         for mode, failed, code in (("fail-first", 1, "1"), ("fail-second", 2, "1"),
                                    ("timeout-second", 2, "wall timeout")):
@@ -644,8 +851,8 @@ if "--state" not in sys.argv:
                     self.run_capture("--state", "--timeout", "1")
                 output = self.root / "build/reference/title"
                 other = 3 - failed
-                self.assertTrue((output / f"run-{other}.state").is_file())
-                self.assertTrue((output / f"run-{other}.ppm").is_file())
+                self.assertEqual((output / f"run-{other}.state").is_file(), failed == 2)
+                self.assertEqual((output / f"run-{other}.ppm").is_file(), failed == 2)
                 self.assertTrue((output / f"run-{failed}.log").is_file())
                 self.assertFalse((output / "state.sha256").exists())
                 os.environ["FAKE_MODE"] = "ok"
@@ -685,6 +892,19 @@ if "--state" not in sys.argv:
                 with self.assertRaisesRegex(ValueError, "run 1: 1"):
                     self.run_capture("--state", "--reuse")
                 os.environ["FAKE_MODE"] = "ok"
+
+    def test_reuse_damaged_timing_recaptures(self):
+        self.state_fixture()
+        for payload in ('invalid JSON',
+                        '{"event":"frame0","label":"frame0","cycle":0,"vblank":0,"costs":{}}',
+                        json.dumps(dict(event="frame0", label="different", cycle=0, vblank=0,
+                                        costs=dict.fromkeys(capture._runner.timing.SOURCES, 0)))):
+            self.assertEqual(self.run_capture("--state"), 0)
+            (self.root / "build/reference/title/run-2.timing.jsonl").write_text(payload)
+            os.environ["FAKE_MODE"] = "fail"
+            with self.assertRaisesRegex(ValueError, "run 1: 1"):
+                self.run_capture("--state", "--reuse")
+            os.environ["FAKE_MODE"] = "ok"
 
     def test_reuse_changed_pin_recaptures_and_validates(self):
         self.state_fixture()

@@ -28,4 +28,13 @@ extern unsigned char Ps1_Ram[];
 #define longjmp _longjmp
 #endif
 
+/* Game calls reach the BIOS libc jump table on PS1. Host/backend copies do
+ * not, so only game translation units use the timed entry. */
+#ifdef DW1_PORT
+#define memcpy psyq_memcpy
+#define memset psyq_memset
+#define strcmp psyq_strcmp
+#define strrchr psyq_strrchr
+#endif
+
 #endif

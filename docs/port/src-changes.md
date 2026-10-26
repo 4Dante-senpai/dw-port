@@ -174,8 +174,38 @@ ASan, con cero píxeles RGB555 distintos respecto de la referencia.
 ## Historia 3.7: espera de DMA MDEC
 
 `src/mov/mov.c`: bajo `DW1_PORT` se incluye el reloj del port y se llama
-`clock_advance(1024)` dentro de `MOV_waitForFlip`. Permite despachar las
+`clock_advance(CLOCK_MOVIE_FLIP_POLL_CYCLES)` dentro de `MOV_waitForFlip` (constante centralizada en `clock_costs.h` por 3.10, aún hipotética). Permite despachar las
 terminaciones asíncronas de `DecDCTout` y sus callbacks de slices. La rama
 PS1 mantiene exactamente el bucle original. El inventario `isr_spins.tsv`
 retira esa fila porque el bucle ya contiene una llamada explícita.
 Costes sin calibrar: [mdec.md](mdec.md), historia 3.10.
+
+### Historia 3.10: CPU de búsqueda de archivos
+
+`src/main/file.c`: `lookupFileTable` suma bajo `DW1_PORT` el trabajo de CPU
+del recorrido de la tabla (86 ciclos fijos y 22 por entrada examinada). Los
+costos de `strrchr`/`strcmp` se contabilizan en sus propias implementaciones.
+El conteo se obtiene del asm USA y se contrasta con el probe de Redux
+`build/calibration/lookup-cpu-probe`; no cambia el recorrido ni los datos.
+
+`src/mov/mov.c`: el sondeo fallido de `MOV_readFrame` suma bajo `DW1_PORT`
+16 ciclos de CPU entre llamadas a `StGetNext` (ocho instrucciones RAM del
+asm USA). `StGetNext` cobra sus propios 38 ciclos medidos; no se salta al
+siguiente sector ni se cambia el latch del pad.
+
+### Historia 3.10: trabajo de CPU entre llamadas de carga de audio
+
+`src/main/sound.c`, `initializeMusic`: los bloques `DW1_PORT` cobran el
+trabajo propio entre ResetCallback, SsInit, SsSetTableSize, SsSetTickMode,
+las dos lecturas VHB y SsStart (9/4/10/4/10/16/10 ciclos). Las cifras
+salen del asm USA y de `tick-mode-probe`; no dependen de la escena.
+`src/main/file.c`, `readFile` y `readFileSectors`: 10 ciclos entre CdRead
+y CdReadSync, correspondientes al retorno, la rama y la llamada del
+original. Se descuentan del cobro previo de readFile para conservar la
+cantidad y corregir el orden. `readFile` separa además 18 ciclos de entrada,
+14 antes de cada CdControl y 21 antes de CdRead. `readVHBFile` conserva
+el orden observado de sus seis intervalos propios (29/6/24/19/8/4 ciclos)
+y 18 de retorno; `SsUtGetVBaddrInSB` cobra sus 40 ciclos dentro de libsnd.
+Evidencia: `file-probe`, `vhb-tail-probe` e `intro-music-spans`. Todos los
+bloques nuevos están bajo DW1_PORT. `resume69-matching.log` confirma
+`Compiled binaries match with target binaries`.

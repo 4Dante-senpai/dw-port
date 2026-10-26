@@ -8,23 +8,24 @@ state_vars = "card_state_vars.txt"
 checkpoints = ["MOV_playMovie", "runLandingScreen", "runMainMenu", "loadSavegame"]
 window = 1
 # Skip the opening movie with the same Start pulse as movie0_skip.
+# Hold scripted presses across pad polling phases (spec 3.10 owner decision).
 inputs = [
   {after = "MOV_playMovie", vblank = 120, buttons = [3]},
   {after = "MOV_playMovie", vblank = 180, buttons = []},
   {after = "runLandingScreen", vblank = 60, buttons = [3]},
-  {after = "runLandingScreen", vblank = 68, buttons = []},
+  {after = "runLandingScreen", vblank = 84, buttons = []},
   {after = "runMainMenu", vblank = 135, buttons = [14]},
-  {after = "runMainMenu", vblank = 143, buttons = []},
+  {after = "runMainMenu", vblank = 151, buttons = []},
   {after = "runMainMenu", vblank = 195, buttons = [14]},
-  {after = "runMainMenu", vblank = 203, buttons = []},
+  {after = "runMainMenu", vblank = 211, buttons = []},
   {after = "runMainMenu", vblank = 255, buttons = [14]},
-  {after = "runMainMenu", vblank = 263, buttons = []},
+  {after = "runMainMenu", vblank = 271, buttons = []},
   {after = "runMainMenu", vblank = 315, buttons = [14]},
-  {after = "runMainMenu", vblank = 323, buttons = []},
+  {after = "runMainMenu", vblank = 331, buttons = []},
   {after = "runMainMenu", vblank = 395, buttons = [14]},
-  {after = "runMainMenu", vblank = 403, buttons = []},
+  {after = "runMainMenu", vblank = 411, buttons = []},
   {after = "runMainMenu", vblank = 475, buttons = [14]},
-  {after = "runMainMenu", vblank = 483, buttons = []},
+  {after = "runMainMenu", vblank = 491, buttons = []},
   {after = "runMainMenu", vblank = 555, buttons = [14]},
-  {after = "runMainMenu", vblank = 563, buttons = []},
+  {after = "runMainMenu", vblank = 571, buttons = []},
 ]

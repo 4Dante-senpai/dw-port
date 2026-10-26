@@ -3,4 +3,6 @@ overlay = "mov"
 inputs = []
 mark = "runLandingScreen"
 capture_vblank = 60
+checkpoints = ["runLandingScreen"]
+window = 60
 reference_sha256 = "561323665a33d833c89339030f6a8c60e4a395add2cff467d1d47e92dd46260d"
