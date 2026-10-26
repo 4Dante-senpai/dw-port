@@ -403,9 +403,15 @@
   La prueba de 10 minutos de pared dio menos de 1 VBlank de error y 0 resincronizaciones. Pasaron las suites native-headless 82/82, native-asan 80/80, native 92/92 y web 39/39, todas sin omisiones, y `make compare` dio idéntico.
   Detalles en `docs/port/clock-calibration.md`. Queda diferido el orden del costo de memcpy/memset (`deferred-work.md`).
 
+- Historia 3.11 (hipótesis pendientes de los overlays): queda cerrada la hipótesis de `SHOP_REL.BIN` en USA (`docs/research/overlays.md`).
+  En `map_load`, Redux muestra una sola carga, síncrona: `newGameScene → checkShopMap(0xda) → loadDynamicLibrary(11) → readFile → CdRead`, 16 sectores a `0x80080800`. `checkShopMap(0xcc)` desde `loadMap` no carga, porque el mapa no está en `SHOP_MAPS`.
+  Hasta el final de la Escena nada ejecuta código en `0x80080840–0x80088610`. Las lecturas de esa región son todas de `DecDCTvlc2`/`DecDCTvlcBuild`, porque la tabla VLC de MOV la reutiliza.
+  El análisis estático (`tools/port/metrics/shop_overlay.py`) solo encuentra referencias de `main` a DOOA, DGET y `REL_BIN_OFFSETS`, y no confirma que el archivo sea una copia reubicada de la tienda de `main`.
+  Límite: `map_load` no entra a una tienda, y `loadShopLibrary` (script 0x23) se verificó solo estáticamente. Se agregó la sonda `capture.py map_load --shop-probe` y `map_load` suma los checkpoints `checkShopMap` y `checkShopMap#2`, con diferencia 0. Pasaron 12/12 tests de CTest con disco. Sin cambios en `src/`.
+
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3) en curso: 3.1 a 3.10 cerradas; sigue la 3.11 (hipótesis pendientes de los overlays). El resto de la Épica 4 sigue después de la Épica 3.
+- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3): las historias 3.1 a 3.11 están cerradas y falta la retrospectiva. El resto de la Épica 4 sigue después de esa retrospectiva.
 
 ## Bloqueos
 
@@ -424,7 +430,7 @@
 | Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (sin comportamiento M2: la Memory card es real desde 3.8) / 0 / 11 (de 198) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
-| Escenas que funcionan (nativo) | 9 (`card_newgame`: crea el save, `.mcd` idéntico a Redux; `card_continue`: carga el save con estado idéntico; `movie0`: OP1 completo por MDEC, 3636 frames dentro de tolerancia salvo 4 componentes aceptados; `movie0_skip`: salida con Start en el mismo VBlank que la referencia; `xa_op1`: XA de OP1 a 54,42 dB contra la referencia; título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control; `naming`: grilla de nombres exacta salvo el modelo 3D; `title_audio` con escrituras de voz idénticas en 2 tramos) |
+| Escenas que funcionan (nativo) | 10 (`card_newgame`: crea el save, `.mcd` idéntico a Redux; `card_continue`: carga el save con estado idéntico; `movie0`: OP1 completo por MDEC, 3636 frames dentro de tolerancia salvo 4 componentes aceptados; `movie0_skip`: salida con Start en el mismo VBlank que la referencia; `xa_op1`: XA de OP1 a 54,42 dB contra la referencia; título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control; `map_load` con estado idéntico en 12 puntos de control, incluida la carga de SHOP; `naming`: grilla de nombres exacta salvo el modelo 3D; `title_audio` con escrituras de voz idénticas en 2 tramos) |
 | Escenas que funcionan (web) | 1 (título, igual a nativo, Chromium y Firefox) |
 | Llamadas con firma distinta inventariadas / sin resolver | 1031 / 0 (`fnptr_casts.tsv`) |
 

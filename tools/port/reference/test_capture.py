@@ -1056,5 +1056,101 @@ if "--state" not in sys.argv:
             [dict(name="A", address=0x80100000, size=4), dict(name="B", address=0x80100008, size=8)])
 
 
+class ShopProbeTests(unittest.TestCase):
+    def test_shop_trace_pair_validation(self):
+        rows = [dict(event="read_file"),
+                dict(event="cd_read", destination=0x80080800, sectors=16),
+                dict(event="summary", kind="Exec"), dict(event="summary", kind="Read")]
+        cases = [("valid", rows, rows, None)]
+        for index in (0, 1):
+            for name, changed, error in (
+                ("missing cd_read", rows[:1] + rows[2:], "missing SHOP CD read"),
+                ("wrong destination", [rows[0], dict(rows[1], destination=0x80080804)] + rows[2:],
+                 "missing SHOP CD read"),
+                ("wrong sectors", [rows[0], dict(rows[1], sectors=15)] + rows[2:],
+                 "missing SHOP CD read"),
+                ("missing summary", rows[:-1], "incomplete SHOP access observation"),
+            ):
+                pair = [rows, rows]
+                pair[index] = changed
+                cases.append((f"{name} run {index+1}", *pair, error))
+        cases.append(("non-identical", rows, [dict(rows[0], frame=1)] + rows[1:],
+                      "non-deterministic SHOP probe"))
+        with tempfile.TemporaryDirectory() as directory:
+            paths = [Path(directory) / f"run-{index}.shop.jsonl" for index in (1, 2)]
+            for name, first, second, error in cases:
+                with self.subTest(case=name):
+                    for path, trace in zip(paths, (first, second)):
+                        path.write_text("".join(json.dumps(row) + "\n" for row in trace))
+                    if error:
+                        with self.assertRaisesRegex(ValueError, error):
+                            capture.validate_shop_pair(paths)
+                    else:
+                        capture.validate_shop_pair(paths)
+
+    def test_missing_disc_skips(self):
+        with patch.dict(os.environ, {"DW1_DISC_DIR": ""}):
+            self.assertEqual(capture.main(["map_load", "--shop-probe", "--out", "/tmp/shop-test"]), 77)
+
+    def test_probe_requires_map_load_and_external_output(self):
+        for args in (["title", "--shop-probe"], ["map_load", "--shop-probe"],
+                     ["map_load", "--shop-probe", "--out", str(capture.ROOT / "build/shop")]):
+            with self.subTest(args=args), self.assertRaises(ValueError):
+                capture.main(args)
+
+    @unittest.skipUnless(shutil.which("pcsx-redux") and shutil.which("xvfb-run"), "Redux Lua unavailable")
+    def test_load_stack_skip_and_region_counts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            work = Path(directory)
+            script = work / "shop-test.lua"
+            script.write_text("local work=" + json.dumps(str(work)) + "\n" + r'''
+local quit=PCSX.quit
+local callbacks, watches, r = {}, {}, {GPR={n={}},rawPC=0x80100000}
+PCSX={getRegisters=function() return r end,
+ getMemoryAsFile=function() return {readU32At=function() return 0x504f4853 end} end,
+ addBreakpoint=function(address,kind,width,name,fn)
+   callbacks[kind..address]=fn
+   watches[kind..address]={address=address,width=width}
+   return {}
+ end}
+local config={trace=work..'/trace',functions={newGameScene=100,checkShopMap=200,
+ loadDynamicLibrary=300,readFile=400,isTriggerSet=500,CdRead=600}}
+local finish=dofile(''' + json.dumps(str(capture.ROOT / "tools/port/reference/shop.lua")) + r''')(config,{},function(fn) return fn end,function() return 10,12345 end)
+for _,kind in ipairs({'Exec','Read'}) do
+ local watch=watches[kind..0x80080840]
+ assert(watch and watch.address==0x80080840 and watch.width==0x7dd0)
+end
+local function enter(pc,ra,a0,a1,a2)
+ r.GPR.n={ra=ra,a0=a0,a1=a1,a2=a2}
+ assert(callbacks['Exec'..pc])()
+end
+callbacks['Read'..0x80080840]() -- Ignore the region before SHOP load.
+enter(100,1000,0)
+enter(200,1100,0xda)
+enter(500,1200,0x29);r.GPR.n.v0=0;callbacks['Exec1200']()
+enter(300,1300,11,0,0)
+enter(400,1400,0,0x80080800)
+enter(600,1500,16,0x80080800)
+callbacks['Exec1500']();callbacks['Exec1400']();callbacks['Exec1300']()
+callbacks['Exec1100']();callbacks['Exec1000']()
+enter(200,1600,0xda)
+enter(500,1700,0x29);r.GPR.n.v0=1;callbacks['Exec1700']();callbacks['Exec1600']()
+callbacks['Read'..0x80080840]();callbacks['Read'..0x80080840]()
+finish();quit(0)
+''')
+            result = subprocess.run(["xvfb-run", "-a", "pcsx-redux", "-no-ui", "-portable", str(work),
+                "-noupdate", "-no-webserver", "-no-gdb", "-dofile", str(script)],
+                cwd=work, capture_output=True, timeout=30)
+            self.assertEqual(result.returncode, 0, (result.stdout, result.stderr))
+            rows = [json.loads(line) for line in (work / "trace").read_text().splitlines()]
+            load = next(row for row in rows if row["event"] == "load")
+            self.assertEqual([entry["function"] for entry in load["stack"]],
+                             ["newGameScene", "checkShopMap", "loadDynamicLibrary"])
+            self.assertEqual(load["destination"], 0x80080800)
+            self.assertTrue(any(row["event"] == "skip" and row["trigger_0x29"] == 1 for row in rows))
+            self.assertEqual([(row["kind"], row["count"]) for row in rows if row["event"] == "summary"],
+                             [("Exec", 0), ("Read", 2)])
+
+
 if __name__ == "__main__":
     unittest.main()
