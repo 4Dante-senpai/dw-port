@@ -714,6 +714,10 @@ if(EMSCRIPTEN)
     FIXTURES_REQUIRED "disc_pack;native_title")
 endif()
 
+# SHOP audit is metadata-only; synthetic tests need no private disc.
+add_test(NAME shop_overlay_unit COMMAND python3 -I -B
+  ${CMAKE_SOURCE_DIR}/tools/port/metrics/test_shop_overlay.py)
+
 # Reference captures: class A uses synthetic data, class B needs the private disc.
 add_test(NAME reference_capture_unit COMMAND python3 -I -B
   ${CMAKE_SOURCE_DIR}/tools/port/reference/test_capture.py)
