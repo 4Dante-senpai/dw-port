@@ -6,7 +6,12 @@
 <section id="launcher" hidden>
   <p>Commit: <span id="version">dev</span></p>
   <p id="pack-status">Pack ausente</p>
-  <button id="load-pack" disabled>Cargar Pack</button>
+  <label id="drop-zone">Seleccionar o arrastrar el disco
+    <input id="disc" type="file" disabled multiple accept=".bin,.cue">
+  </label>
+  <button id="clear" disabled>Borrar datos</button>
+  <p id="storage-warning"></p>
+  <button id="load-pack" hidden disabled>Cargar Pack</button>
   <button id="play" disabled>Jugar</button>
   <progress id="progress" hidden></progress>
 </section>
@@ -55,40 +60,90 @@ async function launch() {
   const load = document.querySelector('#load-pack');
   const play = document.querySelector('#play');
   const progress = document.querySelector('#progress');
-  let expected;
+  const disc = document.querySelector('#disc');
+  const clear = document.querySelector('#clear');
+  const warning = document.querySelector('#storage-warning');
+  let expected, available = false;
+  function request(data, onProgress) {
+    return new Promise((resolve, reject) => {
+      const worker = new Worker('/io_worker.js');
+      worker.onmessage = ({data}) => {
+        if (data.progress !== undefined) { onProgress?.(data); return; }
+        worker.terminate();
+        data.error ? reject(Error(data.error)) : resolve(data);
+      };
+      worker.onerror = e => { worker.terminate(); reject(Error(e.message)); };
+      worker.postMessage(data);
+    });
+  }
+  function busy(value) {
+    disc.disabled = clear.disabled = value;
+    load.disabled = value || !expected;
+    play.disabled = value || !available;
+    progress.hidden = !value;
+    if (value) { progress.removeAttribute('value'); status.textContent = ''; }
+  }
+  async function select(files) {
+    if (disc.disabled) return;
+    busy(true);
+    try {
+      const response = await fetch('/us.tsv');
+      if (!response.ok) throw Error('Manifest HTTP ' + response.status);
+      await request({type:'build', files:Array.from(files), manifest:await response.text()}, data => {
+        progress.max = data.total; progress.value = data.progress;
+      });
+      available = true;
+      state.textContent = 'Listo para jugar';
+      navigator.storage.persist().then(granted => {
+        if (!granted) warning.textContent = 'Almacenamiento persistente denegado: el navegador puede borrar los datos.';
+      }).catch(e => { warning.textContent = 'No se pudo solicitar almacenamiento persistente: ' + e.message; });
+    } catch (e) { status.textContent = e.message; }
+    finally { busy(false); disc.value = ''; }
+  }
+  disc.onchange = () => select(disc.files);
+  const drop = document.querySelector('#drop-zone');
+  drop.ondragover = e => e.preventDefault();
+  drop.ondrop = e => { e.preventDefault(); select(e.dataTransfer.files); };
+  clear.onclick = async () => {
+    busy(true);
+    try {
+      await request({type:'clear'});
+      available = false; state.textContent = 'Pack ausente'; warning.textContent = '';
+    } catch (e) { status.textContent = e.message; }
+    finally { busy(false); }
+  };
   try {
+    const stored = await request({type:'status'});
+    available = !!stored.sha256;
+    state.textContent = available ? 'Listo para jugar' : 'Pack ausente';
+    play.disabled = !available;
     try {
       const version = await fetch('/version.txt');
       if (version.ok) document.querySelector('#version').textContent = (await version.text()).trim();
-    } catch (_) { /* Keep the local development fallback. */ }
-    const response = await fetch('/__fixture/us.pack.sha256');
-    if (!response.ok) throw Error('Pack SHA-256 HTTP ' + response.status);
-    expected = (await response.text()).trim();
-    if (!/^[a-f0-9]{64}$/.test(expected)) throw Error('invalid Pack SHA-256');
-    const root = await navigator.storage.getDirectory();
-    try {
-      const dir = await root.getDirectoryHandle('dw1');
-      const pack = await (await dir.getFileHandle('us.pack')).getFile();
-      let stored = '';
-      try { stored = (await (await (await dir.getFileHandle('us.pack.sha256')).getFile()).text()).trim(); }
-      catch (error) { if (error.name !== 'NotFoundError') throw error; }
-      if (pack.size) {
-        state.textContent = stored === expected ? 'Pack disponible' : 'Pack desactualizado';
-        play.disabled = stored !== expected;
+      const response = await fetch('/__fixture/us.pack.sha256');
+      if (response.ok) {
+        expected = (await response.text()).trim();
+        if (!/^[a-f0-9]{64}$/.test(expected)) throw Error('invalid Pack SHA-256');
+        load.hidden = false; load.disabled = false;
+        if (available) {
+          state.textContent = stored.sha256 === expected ? 'Pack disponible' : 'Pack desactualizado';
+          available = stored.sha256 === expected;
+          play.disabled = !available;
+        }
       }
-    } catch (error) { if (error.name !== 'NotFoundError') throw error; }
-    load.disabled = false;
-  } catch (error) { status.textContent = error.message; load.disabled = true; }
+    } catch (_) { /* The fixture is optional on the user's host. */ }
+  } catch (e) { status.textContent = e.message; }
+  busy(false);
   // ponytail: a finite run, because the game thread's OffscreenCanvas only shows a frame once the
   // thread returns to its event loop; an endless run stays blank. Continuous presentation is deferred.
   play.onclick = () => { location.href = '/?pack=1&frames=300'; };
   load.onclick = () => {
-    load.disabled = true; play.disabled = true; progress.hidden = false;
+    busy(true);
     const worker = new Worker('/seed_worker.js');
     const finish = error => {
-      worker.terminate(); load.disabled = false; progress.hidden = true;
-      if (error) { status.textContent = error; state.textContent = 'Pack ausente'; }
-      else { status.textContent = ''; state.textContent = 'Pack disponible'; play.disabled = false; }
+      worker.terminate(); busy(false);
+      if (error) { available = false; play.disabled = true; status.textContent = error; state.textContent = 'Pack ausente'; }
+      else { available = true; status.textContent = ''; state.textContent = 'Pack disponible'; play.disabled = false; }
     };
     worker.onmessage = ({data}) => {
       if (data.step) { status.textContent = data.step; return; }

@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-27",
+  "environment": "dw-port container; Playwright 1.64.0; screenshots disabled",
+  "results": [
+    {
+      "command": "ctest --preset web",
+      "passed": 38,
+      "skipped": 4,
+      "failed": 0
+    },
+    {
+      "command": "ctest --preset web -R 'web_disc$|web_io$|web_launcher$|web_boot$|testing_'",
+      "passed": 6,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "command": "python3 port/web/tests/run.py build/port/web disc",
+      "passed": 26,
+      "duration": "23.7s"
+    },
+    {
+      "command": "DW1_DISC_DIR=<private> python3 port/web/tests/run.py build/port/web disc_real",
+      "passed": 2,
+      "duration": "3.8m"
+    },
+    {
+      "command": "DW1_DISC_DIR=<private> ctest --preset web -R '^pack_disc$'",
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "command": "DW1_REFERENCE_DIR=<empty> ctest --preset native-headless",
+      "environment_note": "cached native us.pack temporarily held outside default path and restored after the suite",
+      "passed": 58,
+      "skipped": 25,
+      "failed": 0
+    },
+    {
+      "command": "DW1_REFERENCE_DIR=<empty> ctest --preset native-asan",
+      "environment_note": "cached native us.pack temporarily held outside default path and restored after the suite",
+      "passed": 56,
+      "skipped": 25,
+      "failed": 0
+    },
+    {
+      "command": "DW1_DISC_DIR=<private> ctest --preset web -R 'web_disc$|web_disc_real$'",
+      "passed": 3,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "command": "dw1-pack sha256 <synthetic pack>, compared with Python hashlib",
+      "passed": 1,
+      "sha256": "2ad264d5a53653d718380b304f3881731e5213c8d07ead3f9021a4d6b7313908"
+    }
+  ]
+}
