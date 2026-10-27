@@ -1,0 +1,2576 @@
+pace-gap vblank=356 ns=5813815239 tid=144326784
+pace-gap vblank=368 ns=230319161 tid=144326784
+pace-gap vblank=370 ns=90863146 tid=144326784
+audio-wait tid=144326784 vblank=7403 ns=3456903 sleeps=3 level=1616
+audio-wait tid=144326784 vblank=7407 ns=7927626 sleeps=7 level=1571
+audio-wait tid=144326784 vblank=7435 ns=3290877 sleeps=3 level=1633
+audio-wait tid=144326784 vblank=7439 ns=5652717 sleeps=5 level=1590
+audio-wait tid=144326784 vblank=7453 ns=2238357 sleeps=2 level=1578
+audio-wait tid=144326784 vblank=7467 ns=2234212 sleeps=2 level=1663
+audio-wait tid=144326784 vblank=7471 ns=5788262 sleeps=5 level=1621
+audio-wait tid=144326784 vblank=7485 ns=1105229 sleeps=1 level=1619
+audio-wait tid=144326784 vblank=7506 ns=1116701 sleeps=1 level=1738
+audio-wait tid=144326784 vblank=7510 ns=3409719 sleeps=3 level=1765
+audio-wait tid=144326784 vblank=7524 ns=1077382 sleeps=1 level=1691
+audio-wait tid=144326784 vblank=7542 ns=1081417 sleeps=1 level=1800
+audio-wait tid=144326784 vblank=7560 ns=2119817 sleeps=2 level=1611
+audio-wait tid=144326784 vblank=7574 ns=1058947 sleeps=1 level=1860
+audio-wait tid=144326784 vblank=7578 ns=3429678 sleeps=3 level=1577
+audio-wait tid=144326784 vblank=7592 ns=1063019 sleeps=1 level=1661
+pace-detail vblank=7600 late_ns=-16668360 audio_ns=715 cpu_ns=66107507880
+pace-detail vblank=7602 late_ns=-16700935 audio_ns=530 cpu_ns=16555422
+pace-detail vblank=7604 late_ns=-16237032 audio_ns=813 cpu_ns=17037725
+pace-detail vblank=7606 late_ns=-16400943 audio_ns=891 cpu_ns=16881349
+pace-detail vblank=7608 late_ns=-17018477 audio_ns=568 cpu_ns=16283765
+audio-wait tid=144326784 vblank=7610 ns=2199917 sleeps=2 level=1624
+pace-detail vblank=7610 late_ns=-14183370 audio_ns=2200090 cpu_ns=16917685
+pace-detail vblank=7612 late_ns=-14801348 audio_ns=569 cpu_ns=18486158
+pace-detail vblank=7614 late_ns=-16598279 audio_ns=639 cpu_ns=16677426
+pace-detail vblank=7616 late_ns=-16436166 audio_ns=594 cpu_ns=16832896
+pace-detail vblank=7618 late_ns=-16672414 audio_ns=652 cpu_ns=16582808
+pace-detail vblank=7620 late_ns=-16710859 audio_ns=554 cpu_ns=16494291
+pace-detail vblank=7622 late_ns=-16609959 audio_ns=620 cpu_ns=16671123
+pace-detail vblank=7624 late_ns=-16557745 audio_ns=447 cpu_ns=16635295
+pace-detail vblank=7626 late_ns=-15987451 audio_ns=895 cpu_ns=17160094
+pace-detail vblank=7628 late_ns=-15536552 audio_ns=634 cpu_ns=17734614
+pace-detail vblank=7630 late_ns=-16951577 audio_ns=474 cpu_ns=16302506
+pace-detail vblank=7632 late_ns=-16119136 audio_ns=701 cpu_ns=17178060
+pace-detail vblank=7634 late_ns=-17142482 audio_ns=469 cpu_ns=16130228
+pace-detail vblank=7636 late_ns=-16890336 audio_ns=534 cpu_ns=16339109
+pace-detail vblank=7638 late_ns=-16193450 audio_ns=554 cpu_ns=17000826
+audio-wait tid=144326784 vblank=7640 ns=3307447 sleeps=3 level=1745
+audio-wait tid=144326784 vblank=7641 ns=21372554 sleeps=19 level=2470
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance_cost+0x65)[0x81acd85]
+build/port/native/dw1(ResetGraph+0x102)[0x81b9dd2]
+build/port/native/dw1[0x81af254]
+build/port/native/dw1(GsInitGraph+0x73)[0x81af1c3]
+build/port/native/dw1(initializeFramebuffer+0x67)[0x80fa247]
+build/port/native/dw1(playMovie+0x3d)[0x8139edd]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7642 ns=22687392 sleeps=20 level=1666
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance_cost+0x65)[0x81acd85]
+build/port/native/dw1(PutDrawEnv+0x352)[0x81bb092]
+build/port/native/dw1[0x81af693]
+build/port/native/dw1(GsDefDispBuff+0x63)[0x81af983]
+build/port/native/dw1(initializeFramebuffer+0x8d)[0x80fa26d]
+build/port/native/dw1(playMovie+0x3d)[0x8139edd]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7644 ns=15742101 sleeps=14 level=1599
+audio-wait tid=144326784 vblank=7645 ns=18820225 sleeps=17 level=2328
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(readVHBFile+0x89)[0x8130199]
+build/port/native/dw1(initializeMusic+0xfd)[0x813091d]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7647 ns=15979056 sleeps=14 level=1745
+audio-wait tid=144326784 vblank=7648 ns=19198958 sleeps=17 level=1957
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(readVHBFile+0x89)[0x8130199]
+build/port/native/dw1(initializeMusic+0xfd)[0x813091d]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7649 ns=18097832 sleeps=16 level=1671
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc4e]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(readVHBFile+0x89)[0x8130199]
+build/port/native/dw1(initializeMusic+0xfd)[0x813091d]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7651 ns=14752958 sleeps=13 level=1603
+audio-wait tid=144326784 vblank=7652 ns=19488987 sleeps=18 level=1815
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(readVHBFile+0x89)[0x8130199]
+build/port/native/dw1(initializeMusic+0xfd)[0x813091d]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7654 ns=15382670 sleeps=14 level=1744
+audio-wait tid=144326784 vblank=7655 ns=19087584 sleeps=17 level=1962
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc4e]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(readVHBFile+0x89)[0x8130199]
+build/port/native/dw1(initializeMusic+0xfd)[0x813091d]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7656 ns=18205523 sleeps=16 level=1665
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(readVHBFile+0x89)[0x8130199]
+build/port/native/dw1(initializeMusic+0xfd)[0x813091d]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7658 ns=14746942 sleeps=13 level=1598
+audio-wait tid=144326784 vblank=7659 ns=20520974 sleeps=18 level=1819
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance_cost+0x65)[0x81acd85]
+build/port/native/dw1(psyq_memcpy+0x37)[0x81aeeb7]
+build/port/native/dw1(readVHBFile+0xd9)[0x81301e9]
+build/port/native/dw1(initializeMusic+0xfd)[0x813091d]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7661 ns=20324534 sleeps=18 level=1743
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance+0x6f)[0x81acb3f]
+build/port/native/dw1(clock_advance_cost+0x7c)[0x81acd9c]
+build/port/native/dw1(CdControl+0xaa)[0x81b614a]
+build/port/native/dw1(readFile+0x83)[0x80e5bd3]
+build/port/native/dw1(readVHBFile+0x89)[0x8130199]
+build/port/native/dw1(initializeMusic+0x152)[0x8130972]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7662 ns=19377642 sleeps=17 level=1956
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(readVHBFile+0x89)[0x8130199]
+build/port/native/dw1(initializeMusic+0x152)[0x8130972]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7663 ns=17943067 sleeps=16 level=1665
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(readVHBFile+0x89)[0x8130199]
+build/port/native/dw1(initializeMusic+0x152)[0x8130972]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7665 ns=14753232 sleeps=13 level=1598
+audio-wait tid=144326784 vblank=7666 ns=19526561 sleeps=17 level=1813
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(readVHBFile+0x89)[0x8130199]
+build/port/native/dw1(initializeMusic+0x152)[0x8130972]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7668 ns=14716804 sleeps=13 level=1743
+audio-wait tid=144326784 vblank=7669 ns=19407627 sleeps=17 level=1956
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(readVHBFile+0x89)[0x8130199]
+build/port/native/dw1(initializeMusic+0x152)[0x8130972]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7670 ns=19239220 sleeps=17 level=1664
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(readVHBFile+0x89)[0x8130199]
+build/port/native/dw1(initializeMusic+0x152)[0x8130972]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7672 ns=14790293 sleeps=13 level=1597
+audio-wait tid=144326784 vblank=7673 ns=18648987 sleeps=17 level=1814
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(readVHBFile+0x89)[0x8130199]
+build/port/native/dw1(initializeMusic+0x152)[0x8130972]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=7674 ns=20121505 sleeps=18 level=1743
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1(spu_write16+0x12)[0x81cfa52]
+build/port/native/dw1(SpuWrite+0x8c)[0x81c31fc]
+build/port/native/dw1(SsVabTransBody+0xd7)[0x81be4f7]
+build/port/native/dw1(readVHBFile+0x196)[0x81302a6]
+build/port/native/dw1(initializeMusic+0x152)[0x8130972]
+build/port/native/dw1(dw1_game_main+0x11f)[0x80fa4df]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+pace-gap vblank=7675 ns=602564167 tid=144326784
+pace-detail vblank=7675 late_ns=-30206369 audio_ns=456234515 cpu_ns=138231079
+pace-detail vblank=7676 late_ns=2486274 audio_ns=1269 cpu_ns=19005702
+pace-detail vblank=7677 late_ns=4761585 audio_ns=1026 cpu_ns=18928260
+pace-detail vblank=7678 late_ns=6275334 audio_ns=1043 cpu_ns=18174179
+pace-detail vblank=7679 late_ns=8362067 audio_ns=936 cpu_ns=18747354
+pace-detail vblank=7680 late_ns=10438787 audio_ns=959 cpu_ns=18737778
+pace-detail vblank=7681 late_ns=12335950 audio_ns=958 cpu_ns=18558478
+pace-detail vblank=7682 late_ns=13890562 audio_ns=920 cpu_ns=18214941
+pace-detail vblank=7683 late_ns=16024965 audio_ns=989 cpu_ns=18794984
+pace-detail vblank=7684 late_ns=18014778 audio_ns=952 cpu_ns=18644366
+pace-detail vblank=7685 late_ns=20303581 audio_ns=971 cpu_ns=18949091
+pace-detail vblank=7686 late_ns=22526261 audio_ns=1233 cpu_ns=18883403
+pace-detail vblank=7687 late_ns=25345852 audio_ns=1144 cpu_ns=19480419
+pace-detail vblank=7688 late_ns=27781715 audio_ns=1037 cpu_ns=19096594
+audio-wait tid=144326784 vblank=7688 ns=6527668 sleeps=6 level=1614
+pace-detail vblank=7689 late_ns=36891338 audio_ns=6528092 cpu_ns=19312388
+pace-detail vblank=7690 late_ns=39768752 audio_ns=1254 cpu_ns=19517140
+pace-detail vblank=7691 late_ns=42352322 audio_ns=1027 cpu_ns=19244528
+pace-detail vblank=7692 late_ns=44946482 audio_ns=967 cpu_ns=19255537
+pace-detail vblank=7693 late_ns=47771391 audio_ns=1291 cpu_ns=19484719
+pace-detail vblank=7694 late_ns=50519004 audio_ns=1086 cpu_ns=19408803
+pace-detail vblank=7695 late_ns=53284905 audio_ns=1378 cpu_ns=19426049
+pace-detail vblank=7696 late_ns=55923812 audio_ns=1218 cpu_ns=19298677
+pace-detail vblank=7697 late_ns=58012537 audio_ns=1074 cpu_ns=18748807
+pace-detail vblank=7698 late_ns=59784161 audio_ns=924 cpu_ns=18432677
+pace-detail vblank=7699 late_ns=61952455 audio_ns=950 cpu_ns=18830183
+pace-detail vblank=7700 late_ns=64219889 audio_ns=917 cpu_ns=18923756
+pace-detail vblank=7701 late_ns=66364576 audio_ns=961 cpu_ns=18805879
+pace-detail vblank=7702 late_ns=68757522 audio_ns=1115 cpu_ns=19053775
+dw1: pacing resynchronization vblank=7701 late_ns=68757522
+pace-detail vblank=7703 late_ns=2626503 audio_ns=1062 cpu_ns=19262595
+pace-detail vblank=7704 late_ns=5122849 audio_ns=1020 cpu_ns=19156951
+pace-detail vblank=7705 late_ns=7275607 audio_ns=1039 cpu_ns=18813390
+pace-detail vblank=7706 late_ns=9294532 audio_ns=1026 cpu_ns=18693684
+pace-detail vblank=7707 late_ns=11410168 audio_ns=971 cpu_ns=18762830
+audio-wait tid=144326784 vblank=7707 ns=6742208 sleeps=6 level=1616
+pace-detail vblank=7708 late_ns=20336884 audio_ns=6742142 cpu_ns=18952236
+pace-detail vblank=7709 late_ns=22632754 audio_ns=1016 cpu_ns=18956379
+pace-detail vblank=7710 late_ns=25036321 audio_ns=951 cpu_ns=19043780
+pace-detail vblank=7711 late_ns=27099235 audio_ns=952 cpu_ns=18724332
+pace-detail vblank=7712 late_ns=29195940 audio_ns=946 cpu_ns=18757815
+pace-detail vblank=7713 late_ns=31371680 audio_ns=956 cpu_ns=18836597
+pace-detail vblank=7714 late_ns=33719344 audio_ns=929 cpu_ns=19008519
+pace-detail vblank=7715 late_ns=36151385 audio_ns=1032 cpu_ns=19092773
+pace-detail vblank=7716 late_ns=31773876 audio_ns=1449 cpu_ns=12283191
+pace-detail vblank=7717 late_ns=27430359 audio_ns=1149 cpu_ns=12285795
+pace-detail vblank=7718 late_ns=22971815 audio_ns=1436 cpu_ns=12156859
+audio-wait tid=144326784 vblank=7718 ns=2294483 sleeps=2 level=1716
+pace-detail vblank=7719 late_ns=20804795 audio_ns=2294878 cpu_ns=12253914
+pace-detail vblank=7720 late_ns=16166714 audio_ns=979 cpu_ns=12022600
+audio-wait tid=144326784 vblank=7720 ns=3405832 sleeps=3 level=1610
+pace-detail vblank=7721 late_ns=14890715 audio_ns=3406318 cpu_ns=12020334
+audio-wait tid=144326784 vblank=7721 ns=9080880 sleeps=8 level=1686
+pace-detail vblank=7722 late_ns=19381527 audio_ns=9081219 cpu_ns=12258727
+audio-wait tid=144326784 vblank=7722 ns=9199024 sleeps=8 level=1579
+pace-detail vblank=7723 late_ns=23945684 audio_ns=9199631 cpu_ns=12187463
+pace-detail vblank=7724 late_ns=19233596 audio_ns=995 cpu_ns=11947786
+audio-wait tid=144326784 vblank=7724 ns=2244701 sleeps=2 level=1656
+pace-detail vblank=7725 late_ns=16778511 audio_ns=2245144 cpu_ns=12008611
+audio-wait tid=144326784 vblank=7725 ns=7955670 sleeps=7 level=1730
+pace-detail vblank=7726 late_ns=20038986 audio_ns=7956190 cpu_ns=12085989
+pace-detail vblank=7727 late_ns=15986326 audio_ns=1374 cpu_ns=12585977
+audio-wait tid=144326784 vblank=7727 ns=2168067 sleeps=2 level=1623
+pace-detail vblank=7728 late_ns=13938108 audio_ns=2168712 cpu_ns=12442990
+audio-wait tid=144326784 vblank=7728 ns=8754696 sleeps=8 level=1699
+pace-detail vblank=7729 late_ns=18291506 audio_ns=8755422 cpu_ns=12283431
+audio-wait tid=144326784 vblank=7729 ns=8921775 sleeps=8 level=1592
+pace-detail vblank=7730 late_ns=22908096 audio_ns=8922479 cpu_ns=12462727
+pace-detail vblank=7731 late_ns=18267466 audio_ns=996 cpu_ns=11979909
+audio-wait tid=144326784 vblank=7731 ns=1089333 sleeps=1 level=1669
+pace-detail vblank=7732 late_ns=15684598 audio_ns=1090477 cpu_ns=12265136
+audio-wait tid=144326784 vblank=7732 ns=7524579 sleeps=7 level=1742
+pace-detail vblank=7733 late_ns=18643049 audio_ns=7525002 cpu_ns=12150108
+pace-detail vblank=7734 late_ns=14155229 audio_ns=1880 cpu_ns=12119109
+audio-wait tid=144326784 vblank=7734 ns=3198913 sleeps=3 level=1635
+pace-detail vblank=7735 late_ns=13366899 audio_ns=3199397 cpu_ns=12684356
+audio-wait tid=144326784 vblank=7735 ns=7530989 sleeps=7 level=1711
+pace-detail vblank=7736 late_ns=16612123 audio_ns=7531332 cpu_ns=12417867
+audio-wait tid=144326784 vblank=7736 ns=9598795 sleeps=9 level=1604
+pace-detail vblank=7737 late_ns=21751114 audio_ns=9598986 cpu_ns=12268590
+pace-detail vblank=7738 late_ns=17182876 audio_ns=1007 cpu_ns=12086344
+audio-wait tid=144326784 vblank=7738 ns=1055576 sleeps=1 level=1680
+pace-detail vblank=7739 late_ns=13651281 audio_ns=1056133 cpu_ns=12079331
+audio-wait tid=144326784 vblank=7739 ns=10342515 sleeps=9 level=1574
+pace-detail vblank=7740 late_ns=19150895 audio_ns=10342705 cpu_ns=12034734
+pace-detail vblank=7741 late_ns=14567794 audio_ns=1023 cpu_ns=12071213
+audio-wait tid=144326784 vblank=7741 ns=2050601 sleeps=2 level=1581
+pace-detail vblank=7742 late_ns=12918302 audio_ns=2050897 cpu_ns=12393121
+audio-wait tid=144326784 vblank=7742 ns=6456817 sleeps=6 level=1727
+pace-detail vblank=7743 late_ns=15201956 audio_ns=6457640 cpu_ns=12449845
+audio-wait tid=144326784 vblank=7743 ns=10279440 sleeps=9 level=1620
+pace-detail vblank=7744 late_ns=21161088 audio_ns=10279831 cpu_ns=12549807
+pace-detail vblank=7745 late_ns=16615417 audio_ns=953 cpu_ns=12109144
+audio-wait tid=144326784 vblank=7745 ns=1155323 sleeps=1 level=1695
+pace-detail vblank=7746 late_ns=13139468 audio_ns=1155261 cpu_ns=12042277
+audio-wait tid=144326784 vblank=7746 ns=9780089 sleeps=9 level=1590
+pace-detail vblank=7747 late_ns=18448691 audio_ns=9780750 cpu_ns=12337065
+pace-detail vblank=7748 late_ns=13907948 audio_ns=1137 cpu_ns=12119879
+audio-wait tid=144326784 vblank=7748 ns=1098896 sleeps=1 level=1596
+pace-detail vblank=7749 late_ns=10661778 audio_ns=1098760 cpu_ns=12329578
+audio-wait tid=144326784 vblank=7749 ns=7744243 sleeps=7 level=1741
+pace-detail vblank=7750 late_ns=13700612 audio_ns=7744586 cpu_ns=12104517
+audio-wait tid=144326784 vblank=7750 ns=10256862 sleeps=9 level=1634
+pace-detail vblank=7751 late_ns=19462559 audio_ns=10257325 cpu_ns=12346275
+pace-detail vblank=7752 late_ns=14700078 audio_ns=996 cpu_ns=11898560
+audio-wait tid=144326784 vblank=7752 ns=1068092 sleeps=1 level=1709
+pace-detail vblank=7753 late_ns=11426636 audio_ns=1068602 cpu_ns=12325400
+audio-wait tid=144326784 vblank=7753 ns=10140403 sleeps=9 level=1603
+pace-detail vblank=7754 late_ns=16941610 audio_ns=10140760 cpu_ns=12205021
+pace-detail vblank=7755 late_ns=12512876 audio_ns=1000 cpu_ns=12231142
+audio-wait tid=144326784 vblank=7755 ns=1057345 sleeps=1 level=1608
+pace-detail vblank=7756 late_ns=8999848 audio_ns=1057765 cpu_ns=12097421
+audio-wait tid=144326784 vblank=7756 ns=10452954 sleeps=9 level=1575
+pace-detail vblank=7757 late_ns=14966515 audio_ns=10453342 cpu_ns=12372304
+audio-wait tid=144326784 vblank=7757 ns=7723689 sleeps=7 level=1651
+pace-detail vblank=7758 late_ns=18039856 audio_ns=7724115 cpu_ns=12124575
+pace-detail vblank=7759 late_ns=13368176 audio_ns=1021 cpu_ns=11988476
+audio-wait tid=144326784 vblank=7759 ns=2140882 sleeps=2 level=1725
+pace-detail vblank=7760 late_ns=10790846 audio_ns=2141315 cpu_ns=11958736
+audio-wait tid=144326784 vblank=7760 ns=9950759 sleeps=9 level=1619
+pace-detail vblank=7761 late_ns=16606275 audio_ns=9951080 cpu_ns=12625495
+pace-detail vblank=7762 late_ns=11999438 audio_ns=1065 cpu_ns=12053358
+audio-wait tid=144326784 vblank=7762 ns=1175449 sleeps=1 level=1623
+pace-detail vblank=7763 late_ns=8343112 audio_ns=1175666 cpu_ns=11856408
+audio-wait tid=144326784 vblank=7763 ns=10129938 sleeps=9 level=1590
+pace-detail vblank=7764 late_ns=13848763 audio_ns=10130047 cpu_ns=12207782
+audio-wait tid=144326784 vblank=7764 ns=7634497 sleeps=7 level=1666
+pace-detail vblank=7765 late_ns=17058079 audio_ns=7634859 cpu_ns=12331982
+pace-detail vblank=7766 late_ns=12574196 audio_ns=1319 cpu_ns=12175981
+audio-wait tid=144326784 vblank=7766 ns=2166569 sleeps=2 level=1740
+pace-detail vblank=7767 late_ns=10754305 audio_ns=2167027 cpu_ns=12693916
+audio-wait tid=144326784 vblank=7767 ns=8552377 sleeps=8 level=1633
+pace-detail vblank=7768 late_ns=15144737 audio_ns=8552951 cpu_ns=12573951
+pace-detail vblank=7769 late_ns=10145368 audio_ns=986 cpu_ns=11661444
+audio-wait tid=144326784 vblank=7769 ns=2350960 sleeps=2 level=1636
+pace-detail vblank=7770 late_ns=7745402 audio_ns=2351312 cpu_ns=11962541
+audio-wait tid=144326784 vblank=7770 ns=9997638 sleeps=9 level=1604
+pace-detail vblank=7771 late_ns=13013263 audio_ns=9998312 cpu_ns=12095308
+audio-wait tid=144326784 vblank=7771 ns=8057196 sleeps=7 level=1679
+pace-detail vblank=7772 late_ns=16338449 audio_ns=8057676 cpu_ns=12084056
+pace-detail vblank=7773 late_ns=11992377 audio_ns=1024 cpu_ns=12313624
+audio-wait tid=144326784 vblank=7773 ns=3238744 sleeps=3 level=1574
+pace-detail vblank=7774 late_ns=10405485 audio_ns=3239129 cpu_ns=11876502
+audio-wait tid=144326784 vblank=7774 ns=9121252 sleeps=8 level=1650
+pace-detail vblank=7775 late_ns=14579315 audio_ns=9121613 cpu_ns=11894063
+pace-detail vblank=7776 late_ns=9713595 audio_ns=959 cpu_ns=11795267
+audio-wait tid=144326784 vblank=7776 ns=2220147 sleeps=2 level=1652
+pace-detail vblank=7777 late_ns=7324446 audio_ns=2220550 cpu_ns=12082341
+audio-wait tid=144326784 vblank=7777 ns=8823831 sleeps=8 level=1620
+pace-detail vblank=7778 late_ns=11430199 audio_ns=8824245 cpu_ns=12081476
+audio-wait tid=144326784 vblank=7778 ns=9106466 sleeps=8 level=1694
+pace-detail vblank=7779 late_ns=16028493 audio_ns=9106983 cpu_ns=12343194
+pace-detail vblank=7780 late_ns=11423391 audio_ns=1054 cpu_ns=12055047
+audio-wait tid=144326784 vblank=7780 ns=2185274 sleeps=2 level=1589
+pace-detail vblank=7781 late_ns=8996494 audio_ns=2185526 cpu_ns=12080176
+audio-wait tid=144326784 vblank=7781 ns=9100233 sleeps=8 level=1665
+pace-detail vblank=7782 late_ns=13369161 audio_ns=9100677 cpu_ns=12080460
+pace-detail vblank=7783 late_ns=8746090 audio_ns=1051 cpu_ns=12037320
+audio-wait tid=144326784 vblank=7783 ns=2231752 sleeps=2 level=1666
+pace-detail vblank=7784 late_ns=6188619 audio_ns=2231958 cpu_ns=11903737
+audio-wait tid=144326784 vblank=7784 ns=9015714 sleeps=8 level=2146
+pace-detail vblank=7785 late_ns=10523395 audio_ns=9016311 cpu_ns=12201796
+audio-wait tid=144326784 vblank=7785 ns=9071362 sleeps=8 level=1708
+pace-detail vblank=7786 late_ns=15141097 audio_ns=9071716 cpu_ns=12362155
+pace-detail vblank=7787 late_ns=10730639 audio_ns=1148 cpu_ns=12216137
+audio-wait tid=144326784 vblank=7787 ns=2150668 sleeps=2 level=1602
+pace-detail vblank=7788 late_ns=8101637 audio_ns=2151124 cpu_ns=11914578
+audio-wait tid=144326784 vblank=7788 ns=9095025 sleeps=8 level=1679
+pace-detail vblank=7789 late_ns=12456660 audio_ns=9095482 cpu_ns=12070059
+audio-wait tid=144326784 vblank=7789 ns=10413016 sleeps=9 level=1572
+pace-detail vblank=7790 late_ns=18258419 audio_ns=10413484 cpu_ns=12272716
+pace-detail vblank=7791 late_ns=13767914 audio_ns=13173 cpu_ns=12160390
+audio-wait tid=144326784 vblank=7791 ns=1070536 sleeps=1 level=1649
+pace-detail vblank=7792 late_ns=9966990 audio_ns=1057978 cpu_ns=11808981
+audio-wait tid=144326784 vblank=7792 ns=9036522 sleeps=8 level=1723
+pace-detail vblank=7793 late_ns=14229227 audio_ns=9037037 cpu_ns=12029681
+pace-detail vblank=7794 late_ns=9586164 audio_ns=907 cpu_ns=12017122
+audio-wait tid=144326784 vblank=7794 ns=2361070 sleeps=2 level=1617
+pace-detail vblank=7795 late_ns=7496312 audio_ns=2361809 cpu_ns=12238985
+audio-wait tid=144326784 vblank=7795 ns=8855948 sleeps=8 level=1693
+pace-detail vblank=7796 late_ns=11807012 audio_ns=8854966 cpu_ns=12337969
+audio-wait tid=144326784 vblank=7796 ns=10092718 sleeps=9 level=1586
+pace-detail vblank=7797 late_ns=17147149 audio_ns=10093147 cpu_ns=12031042
+pace-detail vblank=7798 late_ns=12583776 audio_ns=924 cpu_ns=12096432
+audio-wait tid=144326784 vblank=7798 ns=1058602 sleeps=1 level=1665
+pace-detail vblank=7799 late_ns=9617187 audio_ns=1059037 cpu_ns=12613718
+audio-wait tid=144326784 vblank=7799 ns=7500117 sleeps=7 level=1739
+pace-detail vblank=7800 late_ns=13193155 audio_ns=7500980 cpu_ns=12817891
+pace-detail vblank=7801 late_ns=9126780 audio_ns=1222 cpu_ns=12507895
+audio-wait tid=144326784 vblank=7801 ns=2122573 sleeps=2 level=1632
+pace-detail vblank=7802 late_ns=6653053 audio_ns=2123054 cpu_ns=12079728
+audio-wait tid=144326784 vblank=7802 ns=8898804 sleeps=8 level=1707
+pace-detail vblank=7803 late_ns=10909387 audio_ns=8899256 cpu_ns=12150155
+audio-wait tid=144326784 vblank=7803 ns=8866813 sleeps=8 level=1601
+pace-detail vblank=7804 late_ns=15275363 audio_ns=8867321 cpu_ns=12308969
+pace-detail vblank=7805 late_ns=10617192 audio_ns=942 cpu_ns=11990278
+audio-wait tid=144326784 vblank=7805 ns=2247317 sleeps=2 level=1677
+pace-detail vblank=7806 late_ns=8305668 audio_ns=2247756 cpu_ns=12150686
+audio-wait tid=144326784 vblank=7806 ns=9101649 sleeps=8 level=1572
+pace-detail vblank=7807 late_ns=12976599 audio_ns=9101705 cpu_ns=12334306
+pace-detail vblank=7808 late_ns=8258843 audio_ns=921 cpu_ns=11942748
+audio-wait tid=144326784 vblank=7808 ns=2242934 sleeps=2 level=1571
+pace-detail vblank=7809 late_ns=5837818 audio_ns=2243339 cpu_ns=12023676
+audio-wait tid=144326784 vblank=7809 ns=8879530 sleeps=8 level=1724
+pace-detail vblank=7810 late_ns=10215082 audio_ns=8879548 cpu_ns=12258907
+audio-wait tid=144326784 vblank=7810 ns=8883859 sleeps=8 level=2129
+pace-detail vblank=7811 late_ns=14327562 audio_ns=8884196 cpu_ns=11978990
+pace-detail vblank=7812 late_ns=9360762 audio_ns=936 cpu_ns=11692963
+audio-wait tid=144326784 vblank=7812 ns=2210562 sleeps=2 level=1693
+pace-detail vblank=7813 late_ns=7243273 audio_ns=2211062 cpu_ns=12366232
+audio-wait tid=144326784 vblank=7813 ns=10302625 sleeps=9 level=1587
+pace-detail vblank=7814 late_ns=12857012 audio_ns=10302869 cpu_ns=12170057
+pace-detail vblank=7815 late_ns=8376846 audio_ns=1254 cpu_ns=12180319
+audio-wait tid=144326784 vblank=7815 ns=1157536 sleeps=1 level=1586
+pace-detail vblank=7816 late_ns=4790005 audio_ns=1157536 cpu_ns=11929269
+audio-wait tid=144326784 vblank=7816 ns=8961531 sleeps=8 level=1739
+pace-detail vblank=7817 late_ns=9282446 audio_ns=8961665 cpu_ns=12345447
+audio-wait tid=144326784 vblank=7817 ns=9172951 sleeps=8 level=1632
+pace-detail vblank=7818 late_ns=14013790 audio_ns=9173359 cpu_ns=12369065
+pace-detail vblank=7819 late_ns=9530306 audio_ns=999 cpu_ns=12165706
+audio-wait tid=144326784 vblank=7819 ns=1097504 sleeps=1 level=2219
+pace-detail vblank=7820 late_ns=5819860 audio_ns=1097868 cpu_ns=11861948
+audio-wait tid=144326784 vblank=7820 ns=10089088 sleeps=9 level=1601
+pace-detail vblank=7821 late_ns=11446615 audio_ns=10089352 cpu_ns=12349610
+pace-detail vblank=7822 late_ns=7069638 audio_ns=979 cpu_ns=12254734
+audio-wait tid=144326784 vblank=7822 ns=2215465 sleeps=2 level=1599
+pace-detail vblank=7823 late_ns=4555488 audio_ns=2215727 cpu_ns=11964653
+audio-wait tid=144326784 vblank=7823 ns=9531905 sleeps=9 level=1573
+pace-detail vblank=7824 late_ns=9832168 audio_ns=9532286 cpu_ns=12490747
+audio-wait tid=144326784 vblank=7824 ns=7729419 sleeps=7 level=1649
+pace-detail vblank=7825 late_ns=13221216 audio_ns=7730168 cpu_ns=12339523
+pace-detail vblank=7826 late_ns=9188745 audio_ns=1470 cpu_ns=12402436
+audio-wait tid=144326784 vblank=7826 ns=1059416 sleeps=1 level=1724
+pace-detail vblank=7827 late_ns=5891956 audio_ns=1059995 cpu_ns=12312069
+audio-wait tid=144326784 vblank=7827 ns=9768712 sleeps=9 level=1618
+pace-detail vblank=7828 late_ns=10930651 audio_ns=9769377 cpu_ns=12049850
+pace-detail vblank=7829 late_ns=6344991 audio_ns=1358 cpu_ns=12065500
+audio-wait tid=144326784 vblank=7829 ns=1103289 sleeps=1 level=1614
+pace-detail vblank=7830 late_ns=3040912 audio_ns=1103496 cpu_ns=12275364
+audio-wait tid=144326784 vblank=7830 ns=9652626 sleeps=9 level=1589
+pace-detail vblank=7831 late_ns=7998206 audio_ns=9652855 cpu_ns=12020139
+audio-wait tid=144326784 vblank=7831 ns=8685929 sleeps=8 level=1664
+pace-detail vblank=7832 late_ns=11979456 audio_ns=8686428 cpu_ns=12041559
+pace-detail vblank=7833 late_ns=7173935 audio_ns=969 cpu_ns=11854887
+audio-wait tid=144326784 vblank=7833 ns=2282036 sleeps=2 level=1739
+pace-detail vblank=7834 late_ns=4917744 audio_ns=2282173 cpu_ns=12166593
+audio-wait tid=144326784 vblank=7834 ns=9056906 sleeps=8 level=1632
+pace-detail vblank=7835 late_ns=9233786 audio_ns=9057482 cpu_ns=12084286
+pace-detail vblank=7836 late_ns=4751020 audio_ns=1019 cpu_ns=12177815
+audio-wait tid=144326784 vblank=7836 ns=2360472 sleeps=2 level=1628
+pace-detail vblank=7837 late_ns=2189277 audio_ns=2360827 cpu_ns=11793545
+audio-wait tid=144326784 vblank=7837 ns=10197747 sleeps=9 level=1603
+pace-detail vblank=7838 late_ns=7854580 audio_ns=10198244 cpu_ns=12265537
+audio-wait tid=144326784 vblank=7838 ns=7742770 sleeps=7 level=1678
+pace-detail vblank=7839 late_ns=11082484 audio_ns=7743185 cpu_ns=12267607
+pace-detail vblank=7840 late_ns=6449711 audio_ns=996 cpu_ns=12028029
+audio-wait tid=144326784 vblank=7840 ns=3340969 sleeps=3 level=1573
+pace-detail vblank=7841 late_ns=5057274 audio_ns=3341376 cpu_ns=11982240
+audio-wait tid=144326784 vblank=7841 ns=8999019 sleeps=8 level=1650
+pace-detail vblank=7842 late_ns=9336278 audio_ns=8999572 cpu_ns=12089888
+pace-detail vblank=7843 late_ns=4714119 audio_ns=976 cpu_ns=12038245
+audio-wait tid=144326784 vblank=7843 ns=1180486 sleeps=1 level=1644
+pace-detail vblank=7844 late_ns=1126025 audio_ns=1180747 cpu_ns=11919556
+audio-wait tid=144326784 vblank=7844 ns=9990629 sleeps=9 level=1619
+pace-detail vblank=7845 late_ns=6320946 audio_ns=9991035 cpu_ns=11997746
+audio-wait tid=144326784 vblank=7845 ns=9103719 sleeps=8 level=1694
+pace-detail vblank=7846 late_ns=10880948 audio_ns=9104110 cpu_ns=12266394
+pace-detail vblank=7847 late_ns=6353583 audio_ns=987 cpu_ns=12119159
+audio-wait tid=144326784 vblank=7847 ns=2281385 sleeps=2 level=1588
+pace-detail vblank=7848 late_ns=3910586 audio_ns=2269006 cpu_ns=11986699
+audio-wait tid=144326784 vblank=7848 ns=8852421 sleeps=8 level=1665
+pace-detail vblank=7849 late_ns=8046986 audio_ns=8852647 cpu_ns=12083357
+pace-detail vblank=7850 late_ns=3253858 audio_ns=1176 cpu_ns=11866688
+audio-wait tid=144326784 vblank=7850 ns=2266327 sleeps=2 level=1658
+pace-detail vblank=7851 late_ns=681530 audio_ns=2266628 cpu_ns=11890810
+audio-wait tid=144326784 vblank=7851 ns=10033408 sleeps=9 level=1634
+pace-detail vblank=7852 late_ns=5984229 audio_ns=10033940 cpu_ns=12130654
+audio-wait tid=144326784 vblank=7852 ns=7676330 sleeps=7 level=1708
+pace-detail vblank=7853 late_ns=9240721 audio_ns=7676486 cpu_ns=12348997
+pace-detail vblank=7854 late_ns=4614364 audio_ns=959 cpu_ns=12033159
+audio-wait tid=144326784 vblank=7854 ns=3385392 sleeps=3 level=1602
+pace-detail vblank=7855 late_ns=3490018 audio_ns=3385984 cpu_ns=12214485
+audio-wait tid=144326784 vblank=7855 ns=7525501 sleeps=7 level=1678
+pace-detail vblank=7856 late_ns=6760729 audio_ns=7526160 cpu_ns=12447448
+audio-wait tid=144326784 vblank=7856 ns=9698477 sleeps=9 level=1572
+pace-detail vblank=7857 late_ns=12326145 audio_ns=9698837 cpu_ns=12483143
+pace-detail vblank=7858 late_ns=8286311 audio_ns=1299 cpu_ns=12620803
+audio-wait tid=144326784 vblank=7858 ns=1177738 sleeps=1 level=1649
+pace-detail vblank=7859 late_ns=4974109 audio_ns=1178127 cpu_ns=12189958
+audio-wait tid=144326784 vblank=7859 ns=7947923 sleeps=7 level=1723
+pace-detail vblank=7860 late_ns=8230109 audio_ns=7948468 cpu_ns=12120012
+pace-detail vblank=7861 late_ns=3779236 audio_ns=972 cpu_ns=12205540
+audio-wait tid=144326784 vblank=7861 ns=3418859 sleeps=3 level=1617
+pace-detail vblank=7862 late_ns=2593169 audio_ns=3418885 cpu_ns=12121267
+audio-wait tid=144326784 vblank=7862 ns=7658818 sleeps=7 level=1692
+pace-detail vblank=7863 late_ns=5722045 audio_ns=7659055 cpu_ns=12250233
+audio-wait tid=144326784 vblank=7863 ns=9598224 sleeps=9 level=1586
+pace-detail vblank=7864 late_ns=10754873 audio_ns=9598727 cpu_ns=12175311
+pace-detail vblank=7865 late_ns=6379424 audio_ns=1398 cpu_ns=12280334
+audio-wait tid=144326784 vblank=7865 ns=1056194 sleeps=1 level=1662
+pace-detail vblank=7866 late_ns=3004276 audio_ns=1056668 cpu_ns=12233389
+audio-wait tid=144326784 vblank=7866 ns=9089248 sleeps=8 level=1736
+pace-detail vblank=7867 late_ns=7750152 audio_ns=9089711 cpu_ns=12465924
+pace-detail vblank=7868 late_ns=3346447 audio_ns=1017 cpu_ns=12255844
+audio-wait tid=144326784 vblank=7868 ns=2168400 sleeps=2 level=1629
+pace-detail vblank=7869 late_ns=1023015 audio_ns=2169023 cpu_ns=12202887
+audio-wait tid=144326784 vblank=7869 ns=9016542 sleeps=8 level=1705
+pace-detail vblank=7870 late_ns=5248088 audio_ns=9016988 cpu_ns=12020437
+audio-wait tid=144326784 vblank=7870 ns=9038846 sleeps=8 level=1598
+pace-detail vblank=7871 late_ns=9841930 audio_ns=9039405 cpu_ns=12353501
+pace-detail vblank=7872 late_ns=5445347 audio_ns=964 cpu_ns=12264373
+audio-wait tid=144326784 vblank=7872 ns=2379462 sleeps=2 level=1674
+pace-detail vblank=7873 late_ns=3048807 audio_ns=2380034 cpu_ns=11918886
+audio-wait tid=144326784 vblank=7873 ns=8625791 sleeps=8 level=1569
+pace-detail vblank=7874 late_ns=7543218 audio_ns=8626204 cpu_ns=12614305
+pace-detail vblank=7875 late_ns=2929909 audio_ns=1124 cpu_ns=12032621
+audio-wait tid=144326784 vblank=7875 ns=2233737 sleeps=2 level=1645
+pace-detail vblank=7876 late_ns=446744 audio_ns=2234270 cpu_ns=11978590
+audio-wait tid=144326784 vblank=7876 ns=7577154 sleeps=7 level=1720
+pace-detail vblank=7877 late_ns=3323009 audio_ns=7577634 cpu_ns=12073831
+audio-wait tid=144326784 vblank=7877 ns=10036755 sleeps=9 level=2125
+pace-detail vblank=7878 late_ns=8606336 audio_ns=10037213 cpu_ns=12027052
+pace-detail vblank=7879 late_ns=4307540 audio_ns=964 cpu_ns=12361287
+audio-wait tid=144326784 vblank=7879 ns=2274039 sleeps=2 level=1689
+pace-detail vblank=7880 late_ns=1994841 audio_ns=2274480 cpu_ns=12114600
+audio-wait tid=144326784 vblank=7880 ns=9865622 sleeps=9 level=1583
+pace-detail vblank=7881 late_ns=7049300 audio_ns=9865794 cpu_ns=11972997
+pace-detail vblank=7882 late_ns=2197246 audio_ns=932 cpu_ns=11807831
+audio-wait tid=144326784 vblank=7882 ns=1068025 sleeps=1 level=1575
+pace-detail vblank=7883 late_ns=-1182858 audio_ns=1068507 cpu_ns=12230251
+audio-wait tid=144326784 vblank=7883 ns=7802684 sleeps=7 level=1736
+pace-detail vblank=7884 late_ns=3472210 audio_ns=7803152 cpu_ns=12116436
+audio-wait tid=144326784 vblank=7884 ns=9199392 sleeps=8 level=1628
+pace-detail vblank=7885 late_ns=8040055 audio_ns=9199760 cpu_ns=12203935
+pace-detail vblank=7886 late_ns=3726609 audio_ns=1313 cpu_ns=12347516
+audio-wait tid=144326784 vblank=7886 ns=1087232 sleeps=1 level=1704
+pace-detail vblank=7887 late_ns=694137 audio_ns=1087773 cpu_ns=12496547
+audio-wait tid=144326784 vblank=7887 ns=9006829 sleeps=8 level=1598
+pace-detail vblank=7888 late_ns=5525377 audio_ns=9006701 cpu_ns=12624048
+pace-detail vblank=7889 late_ns=569760 audio_ns=977 cpu_ns=11704831
+audio-wait tid=144326784 vblank=7889 ns=2304373 sleeps=2 level=1589
+pace-detail vblank=7890 late_ns=-2050637 audio_ns=2304606 cpu_ns=11790748
+audio-wait tid=144326784 vblank=7890 ns=7891343 sleeps=7 level=1570
+pace-detail vblank=7891 late_ns=3319069 audio_ns=7891995 cpu_ns=12138880
+audio-wait tid=144326784 vblank=7891 ns=7780456 sleeps=7 level=1646
+pace-detail vblank=7892 late_ns=6928276 audio_ns=7780464 cpu_ns=12645652
+pace-detail vblank=7893 late_ns=2030221 audio_ns=1004 cpu_ns=11762814
+audio-wait tid=144326784 vblank=7893 ns=2206800 sleeps=2 level=1721
+pace-detail vblank=7894 late_ns=-356913 audio_ns=2205931 cpu_ns=12125963
+audio-wait tid=144326784 vblank=7894 ns=8982958 sleeps=8 level=1615
+pace-detail vblank=7895 late_ns=4382047 audio_ns=8983549 cpu_ns=12057395
+pace-detail vblank=7896 late_ns=-321434 audio_ns=949 cpu_ns=11956920
+audio-wait tid=144326784 vblank=7896 ns=2104590 sleeps=2 level=1605
+pace-detail vblank=7897 late_ns=-2835684 audio_ns=2104992 cpu_ns=11693835
+audio-wait tid=144326784 vblank=7897 ns=6646981 sleeps=6 level=1587
+pace-detail vblank=7898 late_ns=2113102 audio_ns=6647467 cpu_ns=12103772
+audio-wait tid=144326784 vblank=7898 ns=9386590 sleeps=8 level=1662
+pace-detail vblank=7899 late_ns=6925744 audio_ns=9387063 cpu_ns=12259446
+pace-detail vblank=7900 late_ns=2231798 audio_ns=958 cpu_ns=11965688
+audio-wait tid=144326784 vblank=7900 ns=1197902 sleeps=1 level=1737
+pace-detail vblank=7901 late_ns=-1007347 audio_ns=1198359 cpu_ns=12267855
+audio-wait tid=144326784 vblank=7901 ns=7857479 sleeps=7 level=1630
+pace-detail vblank=7902 late_ns=3627356 audio_ns=7858085 cpu_ns=12107730
+pace-detail vblank=7903 late_ns=-975142 audio_ns=1150 cpu_ns=12051981
+audio-wait tid=144326784 vblank=7903 ns=1175631 sleeps=1 level=1619
+pace-detail vblank=7904 late_ns=-3443712 audio_ns=1175941 cpu_ns=11845332
+audio-wait tid=144326784 vblank=7904 ns=6802361 sleeps=6 level=1601
+pace-detail vblank=7905 late_ns=2332844 audio_ns=6803002 cpu_ns=12208254
+audio-wait tid=144326784 vblank=7905 ns=7969267 sleeps=7 level=1676
+pace-detail vblank=7906 late_ns=5809900 audio_ns=7969710 cpu_ns=12302138
+pace-detail vblank=7907 late_ns=966699 audio_ns=942 cpu_ns=11807797
+audio-wait tid=144326784 vblank=7907 ns=3476159 sleeps=3 level=1571
+pace-detail vblank=7908 late_ns=-14161 audio_ns=3476494 cpu_ns=12265427
+audio-wait tid=144326784 vblank=7908 ns=7823217 sleeps=7 level=1648
+pace-detail vblank=7909 late_ns=3197542 audio_ns=7823384 cpu_ns=12108553
+pace-detail vblank=7910 late_ns=-1122856 audio_ns=1352 cpu_ns=12339450
+pace-detail vblank=7911 late_ns=-4234988 audio_ns=1268 cpu_ns=12394836
+audio-wait tid=144326784 vblank=7911 ns=5408429 sleeps=5 level=1618
+pace-detail vblank=7912 late_ns=954801 audio_ns=5409196 cpu_ns=12224702
+audio-wait tid=144326784 vblank=7912 ns=7404190 sleeps=7 level=1692
+pace-detail vblank=7913 late_ns=4130046 audio_ns=7404731 cpu_ns=12462697
+pace-detail vblank=7914 late_ns=-400268 audio_ns=1104 cpu_ns=12130329
+audio-wait tid=144326784 vblank=7914 ns=2173001 sleeps=2 level=1587
+pace-detail vblank=7915 late_ns=-1950591 audio_ns=2173752 cpu_ns=12433788
+audio-wait tid=144326784 vblank=7915 ns=6460916 sleeps=6 level=1663
+pace-detail vblank=7916 late_ns=2359142 audio_ns=6461136 cpu_ns=12558506
+pace-detail vblank=7917 late_ns=-1935317 audio_ns=1384 cpu_ns=12322560
+pace-detail vblank=7918 late_ns=-4014966 audio_ns=1167 cpu_ns=12586990
+audio-wait tid=144326784 vblank=7918 ns=4368921 sleeps=4 level=1633
+pace-detail vblank=7919 late_ns=198524 audio_ns=4369629 cpu_ns=12444081
+audio-wait tid=144326784 vblank=7919 ns=7459623 sleeps=7 level=1707
+pace-detail vblank=7920 late_ns=3373283 audio_ns=7460129 cpu_ns=12441821
+pace-detail vblank=7921 late_ns=-879202 audio_ns=1289 cpu_ns=12393564
+audio-wait tid=144326784 vblank=7921 ns=1057082 sleeps=1 level=1601
+pace-detail vblank=7922 late_ns=-2801431 audio_ns=1057857 cpu_ns=12659991
+audio-wait tid=144326784 vblank=7922 ns=5742514 sleeps=5 level=1677
+pace-detail vblank=7923 late_ns=1446421 audio_ns=5743123 cpu_ns=12434947
+audio-wait tid=144326784 vblank=7923 ns=9090786 sleeps=8 level=1571
+pace-detail vblank=7924 late_ns=5933595 audio_ns=9077729 cpu_ns=12228216
+pace-detail vblank=7925 late_ns=1266734 audio_ns=961 cpu_ns=11993385
+audio-wait tid=144326784 vblank=7925 ns=2361109 sleeps=2 level=1648
+pace-detail vblank=7926 late_ns=-1234594 audio_ns=2361427 cpu_ns=11852720
+audio-wait tid=144326784 vblank=7926 ns=6689176 sleeps=6 level=1722
+pace-detail vblank=7927 late_ns=2770679 audio_ns=6689882 cpu_ns=12792984
+pace-detail vblank=7928 late_ns=-1713145 audio_ns=1072 cpu_ns=12176432
+audio-wait tid=144326784 vblank=7928 ns=1069315 sleeps=1 level=1616
+pace-detail vblank=7929 late_ns=-3797677 audio_ns=1069972 cpu_ns=11779660
+audio-wait tid=144326784 vblank=7929 ns=4342276 sleeps=4 level=1692
+pace-detail vblank=7930 late_ns=33914 audio_ns=4342758 cpu_ns=12282463
+audio-wait tid=144326784 vblank=7930 ns=8946538 sleeps=8 level=1585
+pace-detail vblank=7931 late_ns=4652242 audio_ns=8947099 cpu_ns=12422436
+pace-detail vblank=7932 late_ns=-30697 audio_ns=950 cpu_ns=11972207
+audio-wait tid=144326784 vblank=7932 ns=2237985 sleeps=2 level=1662
+pace-detail vblank=7933 late_ns=-2109649 audio_ns=2238418 cpu_ns=12310759
+audio-wait tid=144326784 vblank=7933 ns=5389369 sleeps=5 level=1735
+pace-detail vblank=7934 late_ns=1014318 audio_ns=5389902 cpu_ns=12211865
+pace-detail vblank=7935 late_ns=-3895561 audio_ns=931 cpu_ns=11751282
+pace-detail vblank=7936 late_ns=-4574653 audio_ns=1044 cpu_ns=11953957
+audio-wait tid=144326784 vblank=7936 ns=3437138 sleeps=3 level=1706
+pace-detail vblank=7937 late_ns=-775429 audio_ns=3437546 cpu_ns=12374928
+audio-wait tid=144326784 vblank=7937 ns=9016988 sleeps=8 level=1599
+pace-detail vblank=7938 late_ns=4580901 audio_ns=9017584 cpu_ns=12255191
+pace-detail vblank=7939 late_ns=-240888 audio_ns=970 cpu_ns=11838292
+audio-wait tid=144326784 vblank=7939 ns=1181958 sleeps=1 level=1675
+pace-detail vblank=7940 late_ns=-2805505 audio_ns=1182333 cpu_ns=12139220
+audio-wait tid=144326784 vblank=7940 ns=6762791 sleeps=6 level=1570
+pace-detail vblank=7941 late_ns=2038826 audio_ns=6763008 cpu_ns=12002488
+pace-detail vblank=7942 late_ns=-2667039 audio_ns=1024 cpu_ns=11948686
+pace-detail vblank=7943 late_ns=-4270896 audio_ns=1067 cpu_ns=12326634
+audio-wait tid=144326784 vblank=7943 ns=3437081 sleeps=3 level=1723
+pace-detail vblank=7944 late_ns=-1362656 audio_ns=3437602 cpu_ns=11873873
+audio-wait tid=144326784 vblank=7944 ns=7949056 sleeps=7 level=1616
+pace-detail vblank=7945 late_ns=3381704 audio_ns=7949562 cpu_ns=12223827
+pace-detail vblank=7946 late_ns=-978727 audio_ns=1072 cpu_ns=12299618
+pace-detail vblank=7947 late_ns=-4915671 audio_ns=1020 cpu_ns=11704187
+audio-wait tid=144326784 vblank=7947 ns=4733844 sleeps=4 level=1589
+pace-detail vblank=7948 late_ns=887742 audio_ns=4734429 cpu_ns=12849656
+pace-detail vblank=7949 late_ns=-3917461 audio_ns=1015 cpu_ns=11855136
+pace-detail vblank=7950 late_ns=-4167497 audio_ns=1245 cpu_ns=12491660
+audio-wait tid=144326784 vblank=7950 ns=2376582 sleeps=2 level=1741
+pace-detail vblank=7951 late_ns=-2231732 audio_ns=2377178 cpu_ns=12056958
+audio-wait tid=144326784 vblank=7951 ns=6503032 sleeps=6 level=1634
+pace-detail vblank=7952 late_ns=2177878 audio_ns=6517279 cpu_ns=12283691
+pace-detail vblank=7953 late_ns=-2789055 audio_ns=936 cpu_ns=11693799
+pace-detail vblank=7954 late_ns=-4588042 audio_ns=1169 cpu_ns=11941277
+audio-wait tid=144326784 vblank=7954 ns=4715577 sleeps=4 level=1607
+pace-detail vblank=7955 late_ns=104289 audio_ns=4716027 cpu_ns=12071273
+pace-detail vblank=7956 late_ns=-4370397 audio_ns=884 cpu_ns=12185816
+pace-detail vblank=7957 late_ns=-4673144 audio_ns=1088 cpu_ns=11853651
+audio-wait tid=144326784 vblank=7957 ns=2126785 sleeps=2 level=1579
+pace-detail vblank=7958 late_ns=-2474459 audio_ns=2127340 cpu_ns=12001386
+audio-wait tid=144326784 vblank=7958 ns=6615165 sleeps=6 level=1654
+pace-detail vblank=7959 late_ns=1732535 audio_ns=6615822 cpu_ns=11863031
+pace-detail vblank=7960 late_ns=-2740707 audio_ns=1114 cpu_ns=12173630
+pace-detail vblank=7961 late_ns=-4525237 audio_ns=1253 cpu_ns=12077096
+audio-wait tid=144326784 vblank=7961 ns=3416212 sleeps=3 level=1627
+pace-detail vblank=7962 late_ns=-1396957 audio_ns=3416909 cpu_ns=11853870
+pace-detail vblank=7963 late_ns=-4659500 audio_ns=1170 cpu_ns=11918715
+pace-detail vblank=7964 late_ns=-4800596 audio_ns=1107 cpu_ns=11795215
+audio-wait tid=144326784 vblank=7964 ns=1180178 sleeps=1 level=1598
+pace-detail vblank=7965 late_ns=-3412341 audio_ns=1180790 cpu_ns=12050022
+audio-wait tid=144326784 vblank=7965 ns=5447257 sleeps=5 level=1673
+pace-detail vblank=7966 late_ns=948710 audio_ns=5448019 cpu_ns=12063238
+pace-detail vblank=7967 late_ns=-3610999 audio_ns=962 cpu_ns=12087977
+pace-detail vblank=7968 late_ns=-4544776 audio_ns=1013 cpu_ns=12089128
+audio-wait tid=144326784 vblank=7968 ns=2294505 sleeps=2 level=1645
+pace-detail vblank=7969 late_ns=-2269745 audio_ns=2295183 cpu_ns=11995105
+pace-detail vblank=7970 late_ns=-4783923 audio_ns=1082 cpu_ns=11747356
+pace-detail vblank=7971 late_ns=-4881371 audio_ns=1075 cpu_ns=11747364
+pace-detail vblank=7972 late_ns=-4524460 audio_ns=1217 cpu_ns=12014819
+audio-wait tid=144326784 vblank=7972 ns=3299646 sleeps=3 level=1691
+pace-detail vblank=7973 late_ns=-1116253 audio_ns=3300244 cpu_ns=12147387
+pace-detail vblank=7974 late_ns=-4884252 audio_ns=1456 cpu_ns=11736460
+pace-detail vblank=7975 late_ns=-4562849 audio_ns=1124 cpu_ns=12028875
+audio-wait tid=144326784 vblank=7975 ns=1117289 sleeps=1 level=1663
+pace-detail vblank=7976 late_ns=-3307847 audio_ns=1117820 cpu_ns=12126244
+pace-detail vblank=7977 late_ns=-4810217 audio_ns=1055 cpu_ns=11811483
+pace-detail vblank=7978 late_ns=-3913650 audio_ns=1085 cpu_ns=12551761
+pace-detail vblank=7979 late_ns=-4596356 audio_ns=1131 cpu_ns=11939440
+audio-wait tid=144326784 vblank=7979 ns=3290188 sleeps=3 level=1708
+pace-detail vblank=7980 late_ns=-1377825 audio_ns=3290706 cpu_ns=11973115
+pace-detail vblank=7981 late_ns=-4020023 audio_ns=2165 cpu_ns=12619088
+pace-detail vblank=7982 late_ns=-2754200 audio_ns=1511 cpu_ns=12202326
+pace-detail vblank=7983 late_ns=-2704982 audio_ns=3196 cpu_ns=12418407
+audio-wait tid=144326784 vblank=7983 ns=5522079 sleeps=5 level=1576
+pace-detail vblank=7984 late_ns=1348407 audio_ns=5522743 cpu_ns=12495620
+pace-detail vblank=7985 late_ns=-2405725 audio_ns=1441 cpu_ns=12145466
+pace-detail vblank=7986 late_ns=-4272246 audio_ns=1373 cpu_ns=12325945
+audio-wait tid=144326784 vblank=7986 ns=1060750 sleeps=1 level=1729
+pace-detail vblank=7987 late_ns=-2767821 audio_ns=1061404 cpu_ns=12550324
+pace-detail vblank=7988 late_ns=-3677147 audio_ns=1263 cpu_ns=12177921
+pace-detail vblank=7989 late_ns=-4297888 audio_ns=1360 cpu_ns=12369047
+pace-detail vblank=7990 late_ns=-4392755 audio_ns=1378 cpu_ns=12240039
+audio-wait tid=144326784 vblank=7990 ns=4675052 sleeps=4 level=1596
+pace-detail vblank=7991 late_ns=-16207 audio_ns=4675585 cpu_ns=12036242
+pace-detail vblank=7992 late_ns=-4644613 audio_ns=1043 cpu_ns=12018023
+pace-detail vblank=7993 late_ns=-4368730 audio_ns=1213 cpu_ns=12164824
+audio-wait tid=144326784 vblank=7993 ns=2374274 sleeps=2 level=1570
+pace-detail vblank=7994 late_ns=-1960405 audio_ns=2374836 cpu_ns=12266042
+pace-detail vblank=7995 late_ns=-4522241 audio_ns=1290 cpu_ns=12120075
+pace-detail vblank=7996 late_ns=-4643493 audio_ns=1170 cpu_ns=11943832
+pace-detail vblank=7997 late_ns=-4392324 audio_ns=1276 cpu_ns=12146223
+audio-wait tid=144326784 vblank=7997 ns=3448716 sleeps=3 level=1620
+pace-detail vblank=7998 late_ns=-1168809 audio_ns=3449188 cpu_ns=12029707
+pace-detail vblank=7999 late_ns=-4419296 audio_ns=1036 cpu_ns=12102430
+pace-detail vblank=8000 late_ns=-4693636 audio_ns=1074 cpu_ns=11933818
+audio-wait tid=144326784 vblank=8000 ns=1175783 sleeps=1 level=1593
+pace-detail vblank=8001 late_ns=-3436927 audio_ns=1176342 cpu_ns=12034490
+pace-detail vblank=8002 late_ns=-4404869 audio_ns=1104 cpu_ns=12181659
+pace-detail vblank=8003 late_ns=-4530267 audio_ns=1010 cpu_ns=12003861
+pace-detail vblank=8004 late_ns=-4661832 audio_ns=1083 cpu_ns=11878962
+audio-wait tid=144326784 vblank=8004 ns=2180868 sleeps=2 level=1643
+pace-detail vblank=8005 late_ns=-2336920 audio_ns=2181294 cpu_ns=12048275
+pace-detail vblank=8006 late_ns=-4787239 audio_ns=1068 cpu_ns=11739737
+pace-detail vblank=8007 late_ns=-4499288 audio_ns=1188 cpu_ns=12007621
+pace-detail vblank=8008 late_ns=-4252932 audio_ns=1427 cpu_ns=12357975
+pace-detail vblank=8009 late_ns=-4649293 audio_ns=1236 cpu_ns=11966600
+pace-detail vblank=8010 late_ns=-4720538 audio_ns=1002 cpu_ns=11870478
+pace-detail vblank=8011 late_ns=-4862449 audio_ns=998 cpu_ns=11669086
+audio-wait tid=144326784 vblank=8011 ns=1156520 sleeps=1 level=1665
+pace-detail vblank=8012 late_ns=-3270972 audio_ns=1157047 cpu_ns=12144228
+pace-detail vblank=8013 late_ns=-4830191 audio_ns=1142 cpu_ns=11761920
+pace-detail vblank=8014 late_ns=-4614073 audio_ns=1006 cpu_ns=11921550
+pace-detail vblank=8015 late_ns=-4795570 audio_ns=1078 cpu_ns=11736927
+pace-detail vblank=8016 late_ns=-4562168 audio_ns=1231 cpu_ns=12044222
+pace-detail vblank=8017 late_ns=-4427068 audio_ns=1488 cpu_ns=12246161
+pace-detail vblank=8018 late_ns=-4359988 audio_ns=1506 cpu_ns=12279097
+pace-detail vblank=8019 late_ns=-4412312 audio_ns=1242 cpu_ns=12148338
+pace-detail vblank=8020 late_ns=-4793364 audio_ns=1234 cpu_ns=11751071
+pace-detail vblank=8021 late_ns=-5068742 audio_ns=1037 cpu_ns=11573625
+pace-detail vblank=8022 late_ns=-4825830 audio_ns=1072 cpu_ns=11671372
+pace-detail vblank=8023 late_ns=-4708083 audio_ns=1102 cpu_ns=11863727
+pace-detail vblank=8024 late_ns=-4480127 audio_ns=1045 cpu_ns=12053370
+pace-detail vblank=8025 late_ns=-4300562 audio_ns=1153 cpu_ns=12277809
+pace-detail vblank=8026 late_ns=-4809435 audio_ns=1171 cpu_ns=11750434
+pace-detail vblank=8027 late_ns=-4476298 audio_ns=1131 cpu_ns=12092659
+pace-detail vblank=8028 late_ns=-4454530 audio_ns=1205 cpu_ns=12055099
+pace-detail vblank=8029 late_ns=-4531529 audio_ns=1010 cpu_ns=12012434
+audio-wait tid=144326784 vblank=8029 ns=2257355 sleeps=2 level=1583
+pace-detail vblank=8030 late_ns=-2236884 audio_ns=2258011 cpu_ns=12074147
+pace-detail vblank=8031 late_ns=-4447065 audio_ns=1139 cpu_ns=12074969
+pace-detail vblank=8032 late_ns=-4817261 audio_ns=1088 cpu_ns=11761282
+pace-detail vblank=8033 late_ns=-4827629 audio_ns=1064 cpu_ns=11707580
+pace-detail vblank=8034 late_ns=-4550798 audio_ns=1184 cpu_ns=11959487
+pace-detail vblank=8035 late_ns=-4356224 audio_ns=1110 cpu_ns=12197302
+pace-detail vblank=8036 late_ns=-4387268 audio_ns=1132 cpu_ns=12148853
+audio-wait tid=144326784 vblank=8036 ns=1170047 sleeps=1 level=1609
+pace-detail vblank=8037 late_ns=-3241436 audio_ns=1170597 cpu_ns=12151118
+pace-detail vblank=8038 late_ns=-4184168 audio_ns=1146 cpu_ns=12356670
+pace-detail vblank=8039 late_ns=-4851572 audio_ns=1053 cpu_ns=11795310
+pace-detail vblank=8040 late_ns=-4668830 audio_ns=1048 cpu_ns=11855773
+pace-detail vblank=8041 late_ns=-4827130 audio_ns=1040 cpu_ns=11801912
+pace-detail vblank=8042 late_ns=-4604159 audio_ns=1027 cpu_ns=12032388
+pace-detail vblank=8043 late_ns=-4374443 audio_ns=1104 cpu_ns=12215205
+pace-detail vblank=8044 late_ns=-4720512 audio_ns=1137 cpu_ns=11816962
+pace-detail vblank=8045 late_ns=-4461960 audio_ns=1221 cpu_ns=12081702
+pace-detail vblank=8046 late_ns=-4423665 audio_ns=1046 cpu_ns=12208332
+pace-detail vblank=8047 late_ns=-4438549 audio_ns=1017 cpu_ns=12097044
+pace-detail vblank=8048 late_ns=-4644412 audio_ns=1073 cpu_ns=11950448
+pace-detail vblank=8049 late_ns=-4714976 audio_ns=1069 cpu_ns=11809947
+pace-detail vblank=8050 late_ns=-4025007 audio_ns=1067 cpu_ns=12550624
+pace-detail vblank=8051 late_ns=-4476767 audio_ns=1220 cpu_ns=12161775
+pace-detail vblank=8052 late_ns=-4900707 audio_ns=1353 cpu_ns=11753222
+pace-detail vblank=8053 late_ns=-4710455 audio_ns=1097 cpu_ns=11920285
+pace-detail vblank=8054 late_ns=-4462526 audio_ns=1053 cpu_ns=12075167
+pace-detail vblank=8055 late_ns=-4451817 audio_ns=1207 cpu_ns=12164701
+pace-detail vblank=8056 late_ns=-4856563 audio_ns=1149 cpu_ns=11693220
+pace-detail vblank=8057 late_ns=-4425736 audio_ns=1049 cpu_ns=12184456
+pace-detail vblank=8058 late_ns=-4624159 audio_ns=1071 cpu_ns=11956623
+pace-detail vblank=8059 late_ns=-4483121 audio_ns=1099 cpu_ns=12116138
+pace-detail vblank=8060 late_ns=-4610867 audio_ns=1083 cpu_ns=12031366
+pace-detail vblank=8061 late_ns=-4597184 audio_ns=1059 cpu_ns=11934889
+pace-detail vblank=8062 late_ns=-4742348 audio_ns=1187 cpu_ns=11794907
+pace-detail vblank=8063 late_ns=-4324476 audio_ns=1109 cpu_ns=12304302
+pace-detail vblank=8064 late_ns=-4717345 audio_ns=1049 cpu_ns=11839176
+pace-detail vblank=8065 late_ns=-4532080 audio_ns=1072 cpu_ns=12010653
+pace-detail vblank=8066 late_ns=-4917867 audio_ns=1085 cpu_ns=11713556
+pace-detail vblank=8067 late_ns=-4040474 audio_ns=1261 cpu_ns=12560991
+pace-detail vblank=8068 late_ns=-4748005 audio_ns=1131 cpu_ns=11790730
+pace-detail vblank=8069 late_ns=-4469487 audio_ns=1189 cpu_ns=12156656
+pace-detail vblank=8070 late_ns=-4803800 audio_ns=1092 cpu_ns=11730846
+pace-detail vblank=8071 late_ns=-4667921 audio_ns=1028 cpu_ns=11862381
+pace-detail vblank=8072 late_ns=-4520563 audio_ns=1057 cpu_ns=12009668
+pace-detail vblank=8073 late_ns=-4868607 audio_ns=1075 cpu_ns=11761878
+pace-detail vblank=8074 late_ns=-4672707 audio_ns=1081 cpu_ns=11858355
+pace-detail vblank=8075 late_ns=-4659099 audio_ns=1022 cpu_ns=11969962
+pace-detail vblank=8076 late_ns=-4712913 audio_ns=1099 cpu_ns=11832902
+pace-detail vblank=8077 late_ns=-4460405 audio_ns=1473 cpu_ns=12169676
+pace-detail vblank=8078 late_ns=-4331607 audio_ns=1276 cpu_ns=12192383
+pace-detail vblank=8079 late_ns=-4269943 audio_ns=1251 cpu_ns=12350070
+pace-detail vblank=8080 late_ns=-4200741 audio_ns=1297 cpu_ns=12359425
+pace-detail vblank=8081 late_ns=-4183088 audio_ns=1279 cpu_ns=12460887
+pace-detail vblank=8082 late_ns=-4313318 audio_ns=1420 cpu_ns=12291490
+pace-detail vblank=8083 late_ns=-4474402 audio_ns=1199 cpu_ns=12135286
+pace-detail vblank=8084 late_ns=-4346843 audio_ns=1212 cpu_ns=12274929
+pace-detail vblank=8085 late_ns=-4317597 audio_ns=1477 cpu_ns=12291365
+pace-detail vblank=8086 late_ns=-4451441 audio_ns=1343 cpu_ns=12157962
+pace-detail vblank=8087 late_ns=-4310200 audio_ns=1250 cpu_ns=12335060
+pace-detail vblank=8088 late_ns=-4213343 audio_ns=1709 cpu_ns=12357196
+pace-detail vblank=8089 late_ns=-3921075 audio_ns=1579 cpu_ns=12577366
+pace-detail vblank=8090 late_ns=-4134458 audio_ns=1719 cpu_ns=12504617
+pace-detail vblank=8091 late_ns=-4220926 audio_ns=1744 cpu_ns=12367579
+pace-detail vblank=8092 late_ns=-4242361 audio_ns=2085 cpu_ns=12213125
+pace-detail vblank=8093 late_ns=-3667677 audio_ns=1504 cpu_ns=12305792
+audio-wait tid=144326784 vblank=8093 ns=1078563 sleeps=1 level=1569
+pace-detail vblank=8094 late_ns=-3003334 audio_ns=1079537 cpu_ns=12358073
+pace-detail vblank=8095 late_ns=-4296600 audio_ns=1520 cpu_ns=12275891
+pace-detail vblank=8096 late_ns=-4083154 audio_ns=1737 cpu_ns=12495536
+pace-detail vblank=8097 late_ns=-4078529 audio_ns=1601 cpu_ns=12400424
+pace-detail vblank=8098 late_ns=-4095060 audio_ns=2062 cpu_ns=12323354
+pace-detail vblank=8099 late_ns=-3934640 audio_ns=2335 cpu_ns=12446121
+pace-detail vblank=8100 late_ns=-3525650 audio_ns=1626 cpu_ns=12615395
+audio-wait tid=144326784 vblank=8100 ns=3204783 sleeps=3 level=1597
+pace-detail vblank=8101 late_ns=-941744 audio_ns=3205303 cpu_ns=12411449
+pace-detail vblank=8102 late_ns=-3979288 audio_ns=1884 cpu_ns=12401765
+pace-detail vblank=8103 late_ns=-4296913 audio_ns=1133 cpu_ns=12255853
+audio-wait tid=144326784 vblank=8103 ns=1083289 sleeps=1 level=1571
+pace-detail vblank=8104 late_ns=-2950241 audio_ns=1083994 cpu_ns=12590255
+pace-detail vblank=8105 late_ns=-4104526 audio_ns=1408 cpu_ns=12531463
+pace-detail vblank=8106 late_ns=-4169025 audio_ns=1242 cpu_ns=12466953
+pace-detail vblank=8107 late_ns=-4564360 audio_ns=1380 cpu_ns=11971730
+audio-wait tid=144326784 vblank=8107 ns=2161141 sleeps=2 level=1622
+pace-detail vblank=8108 late_ns=-2409972 audio_ns=2161653 cpu_ns=12031605
+pace-detail vblank=8109 late_ns=-4127814 audio_ns=1191 cpu_ns=12466116
+pace-detail vblank=8110 late_ns=-4179242 audio_ns=1737 cpu_ns=12438230
+audio-wait tid=144326784 vblank=8110 ns=1085526 sleeps=1 level=1595
+pace-detail vblank=8111 late_ns=-3177765 audio_ns=1086467 cpu_ns=12437885
+pace-detail vblank=8112 late_ns=-4258053 audio_ns=1426 cpu_ns=12268103
+pace-detail vblank=8113 late_ns=-3885827 audio_ns=1771 cpu_ns=12714941
+pace-detail vblank=8114 late_ns=-4113730 audio_ns=1344 cpu_ns=12524021
+audio-wait tid=144326784 vblank=8114 ns=1061535 sleeps=1 level=1645
+pace-detail vblank=8115 late_ns=-2822767 audio_ns=1062117 cpu_ns=12775325
+pace-detail vblank=8116 late_ns=-3935756 audio_ns=1588 cpu_ns=12661378
+pace-detail vblank=8117 late_ns=-4182220 audio_ns=1458 cpu_ns=12455260
+pace-detail vblank=8118 late_ns=-3853578 audio_ns=1325 cpu_ns=12751060
+pace-detail vblank=8119 late_ns=-4059491 audio_ns=1399 cpu_ns=12546270
+pace-detail vblank=8120 late_ns=-4239085 audio_ns=1811 cpu_ns=12426715
+pace-detail vblank=8121 late_ns=-3849750 audio_ns=1391 cpu_ns=12760308
+audio-wait tid=144326784 vblank=8121 ns=1105884 sleeps=1 level=1667
+pace-detail vblank=8122 late_ns=-3150112 audio_ns=1106660 cpu_ns=12380369
+pace-detail vblank=8123 late_ns=-4201921 audio_ns=1070 cpu_ns=12444763
+pace-detail vblank=8124 late_ns=-4368945 audio_ns=1502 cpu_ns=12269037
+pace-detail vblank=8125 late_ns=-4257168 audio_ns=1630 cpu_ns=12353137
+pace-detail vblank=8126 late_ns=-4472047 audio_ns=1502 cpu_ns=12174457
+pace-detail vblank=8127 late_ns=713188 audio_ns=2116 cpu_ns=12288455
+pace-detail vblank=8128 late_ns=1561198 audio_ns=1807 cpu_ns=12136211
+pace-detail vblank=8129 late_ns=-840035 audio_ns=1404 cpu_ns=12159792
+pace-detail vblank=8130 late_ns=-2956723 audio_ns=1526 cpu_ns=12194935
+pace-detail vblank=8131 late_ns=-4421232 audio_ns=1192 cpu_ns=12219519
+pace-detail vblank=8132 late_ns=-4437943 audio_ns=1144 cpu_ns=12204030
+audio-wait tid=144326784 vblank=8132 ns=3190134 sleeps=3 level=1570
+pace-detail vblank=8133 late_ns=-1438132 audio_ns=3190886 cpu_ns=11980861
+pace-detail vblank=8134 late_ns=-4515967 audio_ns=1111 cpu_ns=12095831
+pace-detail vblank=8135 late_ns=-4796458 audio_ns=1042 cpu_ns=11825141
+pace-detail vblank=8136 late_ns=-4823748 audio_ns=1020 cpu_ns=11726086
+pace-detail vblank=8137 late_ns=-4756025 audio_ns=1107 cpu_ns=11831483
+pace-detail vblank=8138 late_ns=-4772596 audio_ns=1034 cpu_ns=11811453
+pace-detail vblank=8139 late_ns=-4448801 audio_ns=1041 cpu_ns=12078778
+audio-wait tid=144326784 vblank=8139 ns=2378585 sleeps=2 level=1597
+pace-detail vblank=8140 late_ns=-2427446 audio_ns=2379260 cpu_ns=11763591
+pace-detail vblank=8141 late_ns=-4661822 audio_ns=1073 cpu_ns=11848273
+pace-detail vblank=8142 late_ns=-4516218 audio_ns=1320 cpu_ns=12010599
+pace-detail vblank=8143 late_ns=-4596450 audio_ns=1193 cpu_ns=12011963
+pace-detail vblank=8144 late_ns=-4268653 audio_ns=1274 cpu_ns=12341372
+pace-detail vblank=8145 late_ns=-4220945 audio_ns=1280 cpu_ns=12392895
+pace-detail vblank=8146 late_ns=-4188478 audio_ns=1296 cpu_ns=12301825
+pace-detail vblank=8147 late_ns=-3925987 audio_ns=1273 cpu_ns=12728592
+pace-detail vblank=8148 late_ns=-4646285 audio_ns=1352 cpu_ns=11964388
+pace-detail vblank=8149 late_ns=-4286307 audio_ns=1637 cpu_ns=12297029
+pace-detail vblank=8150 late_ns=-4510264 audio_ns=1180 cpu_ns=12096054
+pace-detail vblank=8151 late_ns=-4408641 audio_ns=1323 cpu_ns=12196057
+pace-detail vblank=8152 late_ns=-4529308 audio_ns=1392 cpu_ns=12105906
+pace-detail vblank=8153 late_ns=-4356506 audio_ns=1133 cpu_ns=12187914
+pace-detail vblank=8154 late_ns=-4504815 audio_ns=1215 cpu_ns=12101342
+pace-detail vblank=8155 late_ns=-4995246 audio_ns=1146 cpu_ns=11550332
+pace-detail vblank=8156 late_ns=-4733553 audio_ns=988 cpu_ns=11785091
+pace-detail vblank=8157 late_ns=-4407557 audio_ns=1086 cpu_ns=12120997
+pace-detail vblank=8158 late_ns=-4764690 audio_ns=1219 cpu_ns=11766430
+pace-detail vblank=8159 late_ns=-4139409 audio_ns=1049 cpu_ns=12413650
+pace-detail vblank=8160 late_ns=-4621494 audio_ns=1041 cpu_ns=11910870
+pace-detail vblank=8161 late_ns=-4356063 audio_ns=1161 cpu_ns=12236606
+pace-detail vblank=8162 late_ns=-4587285 audio_ns=1086 cpu_ns=11940997
+pace-detail vblank=8163 late_ns=-4407685 audio_ns=1063 cpu_ns=12142761
+pace-detail vblank=8164 late_ns=-4387581 audio_ns=1166 cpu_ns=12149775
+pace-detail vblank=8165 late_ns=-4788464 audio_ns=1142 cpu_ns=11810146
+pace-detail vblank=8166 late_ns=-4431823 audio_ns=1089 cpu_ns=12095846
+pace-detail vblank=8167 late_ns=-4674417 audio_ns=1030 cpu_ns=11932683
+pace-detail vblank=8168 late_ns=-4415729 audio_ns=1275 cpu_ns=12097112
+pace-detail vblank=8169 late_ns=-3921818 audio_ns=1417 cpu_ns=12690827
+pace-detail vblank=8170 late_ns=-4125271 audio_ns=1446 cpu_ns=12483143
+pace-detail vblank=8171 late_ns=-4147462 audio_ns=1689 cpu_ns=12243431
+pace-detail vblank=8172 late_ns=-4256771 audio_ns=1286 cpu_ns=12221490
+pace-detail vblank=8173 late_ns=-4096789 audio_ns=1427 cpu_ns=12500399
+pace-detail vblank=8174 late_ns=-4683255 audio_ns=1101 cpu_ns=11952322
+pace-detail vblank=8175 late_ns=-4303005 audio_ns=1086 cpu_ns=11884140
+pace-detail vblank=8176 late_ns=-4649864 audio_ns=1253 cpu_ns=11950235
+pace-detail vblank=8177 late_ns=-4318211 audio_ns=1141 cpu_ns=12212777
+pace-detail vblank=8178 late_ns=-4652472 audio_ns=1019 cpu_ns=11936313
+pace-detail vblank=8179 late_ns=-4571649 audio_ns=1109 cpu_ns=12060336
+pace-detail vblank=8180 late_ns=-4625818 audio_ns=1176 cpu_ns=11872926
+pace-detail vblank=8181 late_ns=-4651386 audio_ns=1057 cpu_ns=11883910
+pace-detail vblank=8182 late_ns=-4265569 audio_ns=1042 cpu_ns=12274766
+pace-detail vblank=8183 late_ns=-4525622 audio_ns=1111 cpu_ns=12007106
+pace-detail vblank=8184 late_ns=-4892708 audio_ns=1076 cpu_ns=11638742
+pace-detail vblank=8185 late_ns=-4429910 audio_ns=1027 cpu_ns=12147692
+pace-detail vblank=8186 late_ns=-4738159 audio_ns=1089 cpu_ns=11795669
+pace-detail vblank=8187 late_ns=-4446648 audio_ns=1203 cpu_ns=12082667
+pace-detail vblank=8188 late_ns=-4572456 audio_ns=1205 cpu_ns=11971790
+pace-detail vblank=8189 late_ns=-4582044 audio_ns=1057 cpu_ns=11929649
+pace-detail vblank=8190 late_ns=-4584021 audio_ns=1084 cpu_ns=12047929
+pace-detail vblank=8191 late_ns=-4931525 audio_ns=1048 cpu_ns=11604070
+pace-detail vblank=8192 late_ns=-4670465 audio_ns=1074 cpu_ns=11853952
+pace-detail vblank=8193 late_ns=-4530707 audio_ns=1124 cpu_ns=12001205
+pace-detail vblank=8194 late_ns=-4873072 audio_ns=1260 cpu_ns=11759507
+pace-detail vblank=8195 late_ns=-4665582 audio_ns=1103 cpu_ns=11886952
+pace-detail vblank=8196 late_ns=-4925658 audio_ns=1049 cpu_ns=11708451
+pace-detail vblank=8197 late_ns=-4497056 audio_ns=1065 cpu_ns=12134128
+pace-detail vblank=8198 late_ns=-4799329 audio_ns=1029 cpu_ns=11754870
+pace-detail vblank=8199 late_ns=-4439287 audio_ns=1127 cpu_ns=12089092
+pace-detail vblank=8200 late_ns=-4731144 audio_ns=1076 cpu_ns=11899782
+pace-detail vblank=8201 late_ns=-4410596 audio_ns=1169 cpu_ns=12175844
+pace-detail vblank=8202 late_ns=-4784047 audio_ns=1276 cpu_ns=11818626
+pace-detail vblank=8203 late_ns=-4592012 audio_ns=979 cpu_ns=11953570
+pace-detail vblank=8204 late_ns=-4748896 audio_ns=1170 cpu_ns=11797170
+pace-detail vblank=8205 late_ns=-4808728 audio_ns=1108 cpu_ns=11726974
+pace-detail vblank=8206 late_ns=-4658470 audio_ns=1111 cpu_ns=11870512
+pace-detail vblank=8207 late_ns=-4251225 audio_ns=999 cpu_ns=12245687
+pace-detail vblank=8208 late_ns=-4186852 audio_ns=1398 cpu_ns=12444406
+pace-detail vblank=8209 late_ns=-4858116 audio_ns=1116 cpu_ns=11776873
+pace-detail vblank=8210 late_ns=-4914652 audio_ns=1017 cpu_ns=11619531
+pace-detail vblank=8211 late_ns=-4432471 audio_ns=1054 cpu_ns=12090270
+pace-detail vblank=8212 late_ns=-4840878 audio_ns=1142 cpu_ns=11788530
+pace-detail vblank=8213 late_ns=-4889155 audio_ns=1035 cpu_ns=11640084
+pace-detail vblank=8214 late_ns=-4695761 audio_ns=1105 cpu_ns=11838357
+pace-detail vblank=8215 late_ns=-4463162 audio_ns=1009 cpu_ns=12167813
+pace-detail vblank=8216 late_ns=-4343889 audio_ns=1015 cpu_ns=12180504
+pace-detail vblank=8217 late_ns=-4682874 audio_ns=1040 cpu_ns=11845718
+pace-detail vblank=8218 late_ns=-4982084 audio_ns=1179 cpu_ns=11640173
+pace-detail vblank=8219 late_ns=-4078632 audio_ns=1072 cpu_ns=12457080
+pace-detail vblank=8220 late_ns=-4450263 audio_ns=1141 cpu_ns=12130872
+pace-detail vblank=8221 late_ns=-4763188 audio_ns=1060 cpu_ns=11872308
+pace-detail vblank=8222 late_ns=-4055262 audio_ns=1131 cpu_ns=12446018
+pace-detail vblank=8223 late_ns=-4351596 audio_ns=1067 cpu_ns=12200638
+pace-detail vblank=8224 late_ns=-4683280 audio_ns=1114 cpu_ns=11949082
+pace-detail vblank=8225 late_ns=-4508994 audio_ns=1076 cpu_ns=12041161
+pace-detail vblank=8226 late_ns=-4535260 audio_ns=1111 cpu_ns=12051271
+pace-detail vblank=8227 late_ns=-4284040 audio_ns=1217 cpu_ns=12349025
+pace-detail vblank=8228 late_ns=-4660975 audio_ns=1063 cpu_ns=11948155
+pace-detail vblank=8229 late_ns=-4361143 audio_ns=1321 cpu_ns=12251025
+pace-detail vblank=8230 late_ns=-4572867 audio_ns=1234 cpu_ns=12085224
+pace-detail vblank=8231 late_ns=-4691866 audio_ns=1044 cpu_ns=11841583
+pace-detail vblank=8232 late_ns=-4180149 audio_ns=1500 cpu_ns=12350584
+pace-detail vblank=8233 late_ns=-4200946 audio_ns=1335 cpu_ns=12434914
+pace-detail vblank=8234 late_ns=-4216789 audio_ns=1504 cpu_ns=12414898
+pace-detail vblank=8235 late_ns=-4564453 audio_ns=1242 cpu_ns=12048177
+pace-detail vblank=8236 late_ns=-4662078 audio_ns=1265 cpu_ns=11974661
+pace-detail vblank=8237 late_ns=-4570187 audio_ns=1207 cpu_ns=12085661
+pace-detail vblank=8238 late_ns=-4577480 audio_ns=1178 cpu_ns=11977711
+pace-detail vblank=8239 late_ns=-4409784 audio_ns=1024 cpu_ns=12226145
+pace-detail vblank=8240 late_ns=-4379110 audio_ns=1068 cpu_ns=12157676
+pace-detail vblank=8241 late_ns=-4334551 audio_ns=1116 cpu_ns=12192847
+pace-detail vblank=8242 late_ns=-4380836 audio_ns=1127 cpu_ns=12250341
+pace-detail vblank=8243 late_ns=-4592038 audio_ns=1139 cpu_ns=11942283
+pace-detail vblank=8244 late_ns=-4562271 audio_ns=1123 cpu_ns=11982227
+pace-detail vblank=8245 late_ns=-4588602 audio_ns=982 cpu_ns=11994175
+pace-detail vblank=8246 late_ns=-4864339 audio_ns=1045 cpu_ns=11740323
+pace-detail vblank=8247 late_ns=-4103807 audio_ns=1261 cpu_ns=12500345
+pace-detail vblank=8248 late_ns=-4423933 audio_ns=1218 cpu_ns=12210311
+pace-detail vblank=8249 late_ns=-4744232 audio_ns=1049 cpu_ns=11792330
+pace-detail vblank=8250 late_ns=-4500651 audio_ns=1156 cpu_ns=12030134
+pace-detail vblank=8251 late_ns=-4877196 audio_ns=1051 cpu_ns=11797290
+pace-detail vblank=8252 late_ns=-4465665 audio_ns=1074 cpu_ns=12087196
+pace-detail vblank=8253 late_ns=-4581275 audio_ns=1085 cpu_ns=11935022
+pace-detail vblank=8254 late_ns=-5051322 audio_ns=1214 cpu_ns=11556502
+pace-detail vblank=8255 late_ns=-4466896 audio_ns=1142 cpu_ns=12029264
+pace-detail vblank=8256 late_ns=-4634134 audio_ns=1008 cpu_ns=11976231
+pace-detail vblank=8257 late_ns=-4646038 audio_ns=1047 cpu_ns=11977735
+pace-detail vblank=8258 late_ns=-4766438 audio_ns=1037 cpu_ns=11783188
+pace-detail vblank=8259 late_ns=-4608448 audio_ns=1119 cpu_ns=11926651
+pace-detail vblank=8260 late_ns=-4895589 audio_ns=1162 cpu_ns=11705629
+pace-detail vblank=8261 late_ns=-4552773 audio_ns=1149 cpu_ns=11936864
+pace-detail vblank=8262 late_ns=-4622393 audio_ns=1079 cpu_ns=11912213
+pace-detail vblank=8263 late_ns=-5062859 audio_ns=1031 cpu_ns=11499709
+pace-detail vblank=8264 late_ns=-4616057 audio_ns=997 cpu_ns=11917448
+pace-detail vblank=8265 late_ns=-4850645 audio_ns=1120 cpu_ns=11747265
+pace-detail vblank=8266 late_ns=-4912814 audio_ns=1123 cpu_ns=11650400
+pace-detail vblank=8267 late_ns=-4234536 audio_ns=1148 cpu_ns=12295553
+pace-detail vblank=8268 late_ns=-4507403 audio_ns=1084 cpu_ns=12079685
+pace-detail vblank=8269 late_ns=-4277338 audio_ns=1192 cpu_ns=12285961
+pace-detail vblank=8270 late_ns=-4827631 audio_ns=1054 cpu_ns=11711221
+pace-detail vblank=8271 late_ns=-4576717 audio_ns=1048 cpu_ns=12055695
+pace-detail vblank=8272 late_ns=-4845112 audio_ns=1133 cpu_ns=11757436
+pace-detail vblank=8273 late_ns=-4784334 audio_ns=1099 cpu_ns=11752260
+pace-detail vblank=8274 late_ns=-4594644 audio_ns=1152 cpu_ns=11943320
+pace-detail vblank=8275 late_ns=2223976 audio_ns=1059 cpu_ns=18855711
+pace-detail vblank=8276 late_ns=4524394 audio_ns=922 cpu_ns=18960103
+pace-detail vblank=8277 late_ns=6973874 audio_ns=975 cpu_ns=19109555
+pace-detail vblank=8278 late_ns=9067311 audio_ns=994 cpu_ns=18754635
+pace-detail vblank=8279 late_ns=11594112 audio_ns=1203 cpu_ns=19153338
+pace-detail vblank=8280 late_ns=14033230 audio_ns=953 cpu_ns=19099474
+pace-detail vblank=8281 late_ns=16363862 audio_ns=920 cpu_ns=18991913
+pace-detail vblank=8282 late_ns=18648640 audio_ns=1024 cpu_ns=18945964
+pace-detail vblank=8283 late_ns=20743760 audio_ns=1197 cpu_ns=18754354
+pace-detail vblank=8284 late_ns=22882713 audio_ns=1046 cpu_ns=18798863
+pace-detail vblank=8285 late_ns=25050057 audio_ns=977 cpu_ns=18827664
+pace-detail vblank=8286 late_ns=27170895 audio_ns=1006 cpu_ns=18777032
+pace-detail vblank=8287 late_ns=29639825 audio_ns=974 cpu_ns=19130388
+pace-detail vblank=8288 late_ns=31818641 audio_ns=1074 cpu_ns=18840336
+pace-detail vblank=8289 late_ns=34138589 audio_ns=1004 cpu_ns=18971003
+audio-wait tid=144326784 vblank=8289 ns=5749441 sleeps=5 level=1677
+pace-detail vblank=8290 late_ns=42564352 audio_ns=5749821 cpu_ns=19471247
+audio-wait tid=144326784 vblank=8290 ns=3360578 sleeps=3 level=1571
+pace-detail vblank=8291 late_ns=48150683 audio_ns=3361055 cpu_ns=18952846
+pace-detail vblank=8292 late_ns=50268160 audio_ns=1238 cpu_ns=18776986
+pace-detail vblank=8293 late_ns=52530619 audio_ns=1038 cpu_ns=18923251
+pace-detail vblank=8294 late_ns=54636946 audio_ns=966 cpu_ns=18766768
+pace-detail vblank=8295 late_ns=56719917 audio_ns=985 cpu_ns=18744367
+pace-detail vblank=8296 late_ns=58835591 audio_ns=1043 cpu_ns=18776557
+pace-detail vblank=8297 late_ns=60848978 audio_ns=982 cpu_ns=18674441
+pace-detail vblank=8298 late_ns=63192556 audio_ns=985 cpu_ns=19005146
+pace-detail vblank=8299 late_ns=65350203 audio_ns=960 cpu_ns=18812343
+pace-detail vblank=8300 late_ns=67478207 audio_ns=992 cpu_ns=18788509
+dw1: pacing resynchronization vblank=8299 late_ns=67478207
+pace-detail vblank=8301 late_ns=2115467 audio_ns=1000 cpu_ns=18743207
+pace-detail vblank=8302 late_ns=4610873 audio_ns=1065 cpu_ns=19156927
+pace-detail vblank=8303 late_ns=7435480 audio_ns=1050 cpu_ns=19484843
+pace-detail vblank=8304 late_ns=9549957 audio_ns=1000 cpu_ns=18775664
+pace-detail vblank=8305 late_ns=10924049 audio_ns=1013 cpu_ns=18034231
+pace-detail vblank=8306 late_ns=12826947 audio_ns=935 cpu_ns=18563326
+pace-detail vblank=8307 late_ns=14438601 audio_ns=982 cpu_ns=18272456
+pace-detail vblank=8308 late_ns=15921798 audio_ns=986 cpu_ns=18143476
+audio-wait tid=144326784 vblank=8308 ns=10317323 sleeps=9 level=1679
+pace-detail vblank=8309 late_ns=28075083 audio_ns=10317741 cpu_ns=18642718
+audio-wait tid=144326784 vblank=8309 ns=3456703 sleeps=3 level=2084
+pace-detail vblank=8310 late_ns=33386251 audio_ns=3457145 cpu_ns=18578138
+pace-detail vblank=8311 late_ns=35060521 audio_ns=1041 cpu_ns=18319626
+pace-detail vblank=8312 late_ns=36650970 audio_ns=954 cpu_ns=18251620
+audio-wait tid=144326784 vblank=8315 ns=18180504 sleeps=16 level=2001
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance+0x6f)[0x81acb3f]
+build/port/native/dw1(clock_advance_cost+0x7c)[0x81acd9c]
+build/port/native/dw1(CdInit+0x89)[0x81b5fd9]
+build/port/native/dw1(startMovie+0x23)[0x81398c3]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8316 ns=21162592 sleeps=19 level=1708
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance+0x6f)[0x81acb3f]
+build/port/native/dw1(clock_advance_cost+0x7c)[0x81acd9c]
+build/port/native/dw1(CdInit+0x89)[0x81b5fd9]
+build/port/native/dw1(startMovie+0x23)[0x81398c3]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8318 ns=20623958 sleeps=18 level=2152
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance+0x6f)[0x81acb3f]
+build/port/native/dw1(clock_advance_cost+0x7c)[0x81acd9c]
+build/port/native/dw1(CdInit+0x89)[0x81b5fd9]
+build/port/native/dw1(startMovie+0x23)[0x81398c3]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8319 ns=21445319 sleeps=19 level=1856
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance+0x6f)[0x81acb3f]
+build/port/native/dw1(clock_advance_cost+0x7c)[0x81acd9c]
+build/port/native/dw1(CdInit+0x89)[0x81b5fd9]
+build/port/native/dw1(startMovie+0x23)[0x81398c3]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8321 ns=20341207 sleeps=18 level=1784
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(psyq_vsync_query_cost+0x1e)[0x81adb9e]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8322 ns=17913837 sleeps=16 level=1996
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8323 ns=18073768 sleeps=16 level=1703
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8325 ns=14630142 sleeps=13 level=1636
+audio-wait tid=144326784 vblank=8326 ns=19536516 sleeps=17 level=1851
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8328 ns=14862928 sleeps=13 level=1780
+audio-wait tid=144326784 vblank=8329 ns=18993592 sleeps=17 level=1992
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8330 ns=19134566 sleeps=17 level=1700
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8332 ns=14690063 sleeps=13 level=1631
+audio-wait tid=144326784 vblank=8333 ns=19384944 sleeps=17 level=1847
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8335 ns=14205966 sleeps=13 level=1776
+audio-wait tid=144326784 vblank=8336 ns=19195517 sleeps=17 level=1988
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8337 ns=19124286 sleeps=17 level=1696
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8339 ns=14626192 sleeps=13 level=1628
+audio-wait tid=144326784 vblank=8340 ns=19233909 sleeps=17 level=1844
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8342 ns=14568577 sleeps=13 level=1772
+audio-wait tid=144326784 vblank=8343 ns=19037918 sleeps=17 level=1985
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8344 ns=17984418 sleeps=16 level=1692
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(psyq_vsync_query_cost+0x1e)[0x81adb9e]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8346 ns=15779339 sleeps=14 level=1625
+audio-wait tid=144326784 vblank=8347 ns=18947814 sleeps=17 level=1841
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(psyq_vsync_query_cost+0x1e)[0x81adb9e]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8349 ns=14469438 sleeps=13 level=1769
+audio-wait tid=144326784 vblank=8350 ns=19412346 sleeps=18 level=1981
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8351 ns=18555298 sleeps=17 level=1689
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8353 ns=14710717 sleeps=13 level=1621
+audio-wait tid=144326784 vblank=8354 ns=19244233 sleeps=17 level=1837
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8356 ns=14841471 sleeps=13 level=1766
+audio-wait tid=144326784 vblank=8357 ns=20121361 sleeps=18 level=1979
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8358 ns=18024701 sleeps=16 level=1687
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(psyq_vsync_query_cost+0x1e)[0x81adb9e]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8360 ns=15686251 sleeps=14 level=1619
+audio-wait tid=144326784 vblank=8361 ns=19203709 sleeps=17 level=1834
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(psyq_vsync_query_cost+0x1e)[0x81adb9e]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8363 ns=14085817 sleeps=13 level=1763
+audio-wait tid=144326784 vblank=8364 ns=18836611 sleeps=17 level=1976
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(psyq_vsync_query_cost+0x1e)[0x81adb9e]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8365 ns=17683013 sleeps=16 level=2196
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8367 ns=14824935 sleeps=13 level=1617
+audio-wait tid=144326784 vblank=8368 ns=20401853 sleeps=18 level=1833
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8370 ns=14504964 sleeps=13 level=1761
+audio-wait tid=144326784 vblank=8371 ns=19401127 sleeps=17 level=1974
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8372 ns=18147295 sleeps=16 level=1682
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x13c)[0x81b6a7c]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8374 ns=15031852 sleeps=14 level=1614
+audio-wait tid=144326784 vblank=8375 ns=18298693 sleeps=17 level=2342
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(psyq_vsync_query_cost+0x1e)[0x81adb9e]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8377 ns=15158406 sleeps=14 level=1759
+audio-wait tid=144326784 vblank=8378 ns=19363089 sleeps=18 level=1971
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(psyq_vsync_query_cost+0x1e)[0x81adb9e]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8379 ns=18290809 sleeps=17 level=1679
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8381 ns=13978163 sleeps=13 level=1612
+audio-wait tid=144326784 vblank=8382 ns=22531946 sleeps=21 level=1828
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance+0x6f)[0x81acb3f]
+build/port/native/dw1(clock_advance_cost+0x7c)[0x81acd9c]
+build/port/native/dw1[0x81b599e]
+build/port/native/dw1[0x81b59bb]
+build/port/native/dw1[0x81b6bf8]
+build/port/native/dw1(CdReadSync+0xe5)[0x81b6a25]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8384 ns=18194398 sleeps=17 level=1757
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8385 ns=18343521 sleeps=17 level=1970
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc4e]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8386 ns=18219580 sleeps=17 level=1678
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc4e]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8388 ns=13918258 sleeps=13 level=1610
+audio-wait tid=144326784 vblank=8389 ns=19271120 sleeps=18 level=1826
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8391 ns=14013369 sleeps=13 level=1755
+audio-wait tid=144326784 vblank=8392 ns=19204544 sleeps=18 level=1968
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8393 ns=18237871 sleeps=17 level=1676
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8395 ns=13886488 sleeps=13 level=1609
+audio-wait tid=144326784 vblank=8396 ns=19239011 sleeps=18 level=1825
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x13c)[0x81b6a7c]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8398 ns=14919982 sleeps=14 level=1754
+audio-wait tid=144326784 vblank=8399 ns=19262839 sleeps=18 level=1966
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8400 ns=18274662 sleeps=17 level=1675
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8402 ns=14868251 sleeps=14 level=1607
+audio-wait tid=144326784 vblank=8403 ns=18285658 sleeps=17 level=1824
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc4e]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8405 ns=15003770 sleeps=14 level=1753
+audio-wait tid=144326784 vblank=8406 ns=19269767 sleeps=18 level=1965
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8407 ns=17315578 sleeps=16 level=1673
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8409 ns=14912198 sleeps=14 level=1606
+audio-wait tid=144326784 vblank=8410 ns=19331463 sleeps=18 level=1822
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8412 ns=14943825 sleeps=14 level=1751
+audio-wait tid=144326784 vblank=8413 ns=19180774 sleeps=18 level=1964
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8414 ns=17325454 sleeps=16 level=1672
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8416 ns=15005641 sleeps=14 level=1605
+audio-wait tid=144326784 vblank=8417 ns=19342688 sleeps=18 level=1821
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8419 ns=13986827 sleeps=13 level=1750
+audio-wait tid=144326784 vblank=8420 ns=18356998 sleeps=17 level=1963
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8421 ns=18321208 sleeps=17 level=1671
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc4e]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8423 ns=14054951 sleeps=13 level=1604
+audio-wait tid=144326784 vblank=8424 ns=19214105 sleeps=18 level=1821
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8426 ns=14991378 sleeps=14 level=1749
+audio-wait tid=144326784 vblank=8427 ns=18217937 sleeps=17 level=1962
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc4e]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8428 ns=19127294 sleeps=18 level=1670
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc4e]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8430 ns=14022442 sleeps=13 level=1603
+audio-wait tid=144326784 vblank=8431 ns=19173686 sleeps=18 level=1819
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8433 ns=15089814 sleeps=14 level=1749
+audio-wait tid=144326784 vblank=8434 ns=18300460 sleeps=17 level=1960
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8435 ns=18144169 sleeps=17 level=1669
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8437 ns=14996050 sleeps=14 level=1602
+audio-wait tid=144326784 vblank=8438 ns=19361291 sleeps=18 level=1818
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8440 ns=14137450 sleeps=13 level=1748
+audio-wait tid=144326784 vblank=8441 ns=19191386 sleeps=18 level=1960
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8442 ns=17181214 sleeps=16 level=1669
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8444 ns=14817248 sleeps=14 level=1601
+audio-wait tid=144326784 vblank=8445 ns=19335268 sleeps=18 level=1817
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc4e]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8447 ns=14057397 sleeps=13 level=1747
+audio-wait tid=144326784 vblank=8448 ns=18242450 sleeps=17 level=2471
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8449 ns=18176339 sleeps=17 level=1668
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8451 ns=14972361 sleeps=14 level=1601
+audio-wait tid=144326784 vblank=8452 ns=19320718 sleeps=18 level=1817
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc4e]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8454 ns=13864364 sleeps=13 level=1746
+audio-wait tid=144326784 vblank=8455 ns=19394019 sleeps=18 level=1958
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8456 ns=16029865 sleeps=15 level=1667
+audio-wait tid=144326784 vblank=8458 ns=12841628 sleeps=12 level=1600
+audio-wait tid=144326784 vblank=8459 ns=18480511 sleeps=17 level=1816
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8461 ns=15119142 sleeps=14 level=1746
+audio-wait tid=144326784 vblank=8462 ns=19350428 sleeps=18 level=1957
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x13c)[0x81b6a7c]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8463 ns=17239153 sleeps=16 level=2178
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8465 ns=15019874 sleeps=14 level=1599
+audio-wait tid=144326784 vblank=8466 ns=19340899 sleeps=18 level=1816
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8468 ns=13879348 sleeps=13 level=1745
+audio-wait tid=144326784 vblank=8469 ns=19305524 sleeps=18 level=1958
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc4e]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8470 ns=18231449 sleeps=17 level=1666
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc4e]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xf6)[0x81b6a36]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8472 ns=14332126 sleeps=13 level=1598
+audio-wait tid=144326784 vblank=8473 ns=17867794 sleeps=17 level=1815
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0x102)[0x81b6a42]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8475 ns=13821294 sleeps=13 level=1744
+audio-wait tid=144326784 vblank=8476 ns=19251378 sleeps=18 level=1957
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adc90]
+build/port/native/dw1(psyq_vsync_query_cost+0x12)[0x81adb92]
+build/port/native/dw1(CdReadSync+0xd7)[0x81b6a17]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8477 ns=17155169 sleeps=16 level=1665
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1(CdReadSync+0xf1)[0x81b6a31]
+build/port/native/dw1(readFile+0x10a)[0x80e5c5a]
+build/port/native/dw1(loadDynamicLibrary+0x5f)[0x813983f]
+build/port/native/dw1(startMovie+0x6c)[0x813990c]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8479 ns=14995040 sleeps=14 level=1599
+audio-wait tid=144326784 vblank=8480 ns=19286365 sleeps=18 level=1815
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_poll_branch+0xaf)[0x81ace5f]
+build/port/native/dw1[0x81adf97]
+build/port/native/dw1(VSync+0x182)[0x81ade22]
+build/port/native/dw1(MOV_startRead+0x8e)[0x813c18e]
+build/port/native/dw1(MOV_startStream+0x8e)[0x813c0de]
+build/port/native/dw1(MOV_playMovie+0xd0)[0x813c5e0]
+build/port/native/dw1(startMovie+0x77)[0x8139917]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+pace-gap vblank=8480 ns=2762999240 tid=144326784
+audio-wait tid=144326784 vblank=8482 ns=20314265 sleeps=19 level=1744
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance_cost+0x65)[0x81acd85]
+build/port/native/dw1(DecDCTvlcBuild+0x4d1)[0x81c5621]
+build/port/native/dw1(MOV_playMovie+0xde)[0x813c5ee]
+build/port/native/dw1(startMovie+0x77)[0x8139917]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8483 ns=22587018 sleeps=21 level=1956
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance_cost+0x65)[0x81acd85]
+build/port/native/dw1(DecDCTvlcBuild+0x4d1)[0x81c5621]
+build/port/native/dw1(MOV_playMovie+0xde)[0x813c5ee]
+build/port/native/dw1(startMovie+0x77)[0x8139917]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8484 ns=19182516 sleeps=18 level=1665
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance_cost+0x65)[0x81acd85]
+build/port/native/dw1(MOV_readFrame+0x5e)[0x813c2fe]
+build/port/native/dw1(MOV_decodeFrame+0x3a)[0x813c1fa]
+build/port/native/dw1(MOV_playMovie+0xf6)[0x813c606]
+build/port/native/dw1(startMovie+0x77)[0x8139917]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8486 ns=18230552 sleeps=17 level=1598
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance_cost+0x65)[0x81acd85]
+build/port/native/dw1(StGetNext+0x27)[0x81c8947]
+build/port/native/dw1(MOV_readFrame+0x3a)[0x813c2da]
+build/port/native/dw1(MOV_decodeFrame+0x3a)[0x813c1fa]
+build/port/native/dw1(MOV_playMovie+0xf6)[0x813c606]
+build/port/native/dw1(startMovie+0x77)[0x8139917]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8487 ns=19558250 sleeps=17 level=1815
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance_cost+0x65)[0x81acd85]
+build/port/native/dw1(MOV_readFrame+0x5e)[0x813c2fe]
+build/port/native/dw1(MOV_decodeFrame+0x3a)[0x813c1fa]
+build/port/native/dw1(MOV_playMovie+0xf6)[0x813c606]
+build/port/native/dw1(startMovie+0x77)[0x8139917]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8489 ns=17388989 sleeps=16 level=1744
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance_cost+0x65)[0x81acd85]
+build/port/native/dw1(MOV_readFrame+0x5e)[0x813c2fe]
+build/port/native/dw1(MOV_decodeFrame+0x3a)[0x813c1fa]
+build/port/native/dw1(MOV_playMovie+0xf6)[0x813c606]
+build/port/native/dw1(startMovie+0x77)[0x8139917]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8490 ns=19235605 sleeps=18 level=1956
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance_cost+0x65)[0x81acd85]
+build/port/native/dw1(StGetNext+0x27)[0x81c8947]
+build/port/native/dw1(MOV_readFrame+0x3a)[0x813c2da]
+build/port/native/dw1(MOV_decodeFrame+0x3a)[0x813c1fa]
+build/port/native/dw1(MOV_playMovie+0xf6)[0x813c606]
+build/port/native/dw1(startMovie+0x77)[0x8139917]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8491 ns=18288746 sleeps=17 level=1664
+build/port/native/dw1[0x81a6c8f]
+build/port/native/dw1(spu_sync+0x2b7)[0x81ce9b7]
+build/port/native/dw1[0x81a884c]
+build/port/native/dw1[0x81acc3c]
+build/port/native/dw1(clock_advance_cost+0x65)[0x81acd85]
+build/port/native/dw1(StGetNext+0x27)[0x81c8947]
+build/port/native/dw1(MOV_readFrame+0x3a)[0x813c2da]
+build/port/native/dw1(MOV_decodeFrame+0x3a)[0x813c1fa]
+build/port/native/dw1(MOV_playMovie+0x1e7)[0x813c6f7]
+build/port/native/dw1(startMovie+0x77)[0x8139917]
+build/port/native/dw1(playMovie+0x38)[0x8139ed8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4da]
+build/port/native/dw1[0x81a87a8]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xe7e83e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xe7f1b246]
+audio-wait tid=144326784 vblank=8493 ns=6379518 sleeps=6 level=1597
+pace-gap vblank=8493 ns=207099356 tid=144326784
+audio-wait tid=144326784 vblank=8495 ns=3234760 sleeps=3 level=1750
+audio-wait tid=144326784 vblank=8497 ns=6453057 sleeps=6 level=1962
+audio-wait tid=144326784 vblank=8498 ns=1085030 sleeps=1 level=1671
+audio-wait tid=144326784 vblank=8501 ns=11713711 sleeps=11 level=1819
+audio-wait tid=144326784 vblank=8503 ns=2142950 sleeps=2 level=1749
+audio-wait tid=144326784 vblank=8505 ns=12938019 sleeps=12 level=1647
+audio-wait tid=144326784 vblank=8507 ns=4353437 sleeps=4 level=1613
+audio-wait tid=144326784 vblank=8511 ns=7523938 sleeps=7 level=1977
+audio-wait tid=144326784 vblank=8515 ns=9726409 sleeps=9 level=2022
+audio-wait tid=144326784 vblank=8519 ns=12832784 sleeps=12 level=1694
+audio-wait tid=144326784 vblank=8520 ns=2108862 sleeps=2 level=1627
+audio-wait tid=144326784 vblank=8525 ns=4383988 sleeps=4 level=1991
+audio-wait tid=144326784 vblank=8527 ns=1088380 sleeps=1 level=1636
+audio-wait tid=144326784 vblank=8529 ns=6519779 sleeps=6 level=1852
+audio-wait tid=144326784 vblank=8533 ns=10666853 sleeps=10 level=1722
+audio-wait tid=144326784 vblank=8539 ns=3230229 sleeps=3 level=2017
+audio-wait tid=144326784 vblank=8543 ns=5403550 sleeps=5 level=1877
+audio-wait tid=144326784 vblank=8547 ns=7433762 sleeps=7 level=1928
+audio-wait tid=144326784 vblank=8551 ns=11551779 sleeps=10 level=1603
+audio-wait tid=144326784 vblank=8557 ns=3422679 sleeps=3 level=1897
+audio-wait tid=144326784 vblank=8561 ns=6888137 sleeps=6 level=1765
+audio-wait tid=144326784 vblank=8565 ns=9158049 sleeps=8 level=1639
+audio-wait tid=144326784 vblank=8571 ns=2339216 sleeps=2 level=1940
+audio-wait tid=144326784 vblank=8575 ns=4454027 sleeps=4 level=1804
+audio-wait tid=144326784 vblank=8579 ns=6522533 sleeps=6 level=1862
+audio-wait tid=144326784 vblank=8589 ns=2271201 sleeps=2 level=1842
+audio-wait tid=144326784 vblank=8593 ns=5545247 sleeps=5 level=1712
+audio-wait tid=144326784 vblank=8597 ns=7567235 sleeps=7 level=1590
+audio-wait tid=144326784 vblank=8603 ns=1115192 sleeps=1 level=1898
+audio-wait tid=144326784 vblank=8607 ns=3440295 sleeps=3 level=1766
+audio-wait tid=144326784 vblank=8611 ns=5699236 sleeps=5 level=1828
+audio-wait tid=144326784 vblank=8621 ns=1195863 sleeps=1 level=1831
+audio-wait tid=144326784 vblank=8625 ns=3205066 sleeps=3 level=1701
+audio-wait tid=144326784 vblank=8629 ns=6490950 sleeps=6 level=1579
+audio-wait tid=144326784 vblank=8639 ns=2355470 sleeps=2 level=1765
+audio-wait tid=144326784 vblank=8643 ns=4552140 sleeps=4 level=1829
+audio-wait tid=144326784 vblank=8657 ns=3242070 sleeps=3 level=1707
+audio-wait tid=144326784 vblank=8661 ns=5577332 sleeps=5 level=1584
+audio-wait tid=144326784 vblank=8671 ns=1083136 sleeps=1 level=1782
+audio-wait tid=144326784 vblank=8675 ns=3425392 sleeps=3 level=1848
+audio-wait tid=144326784 vblank=8689 ns=1181758 sleeps=1 level=1722
+audio-wait tid=144326784 vblank=8693 ns=5668165 sleeps=5 level=1599
+audio-wait tid=144326784 vblank=8699 ns=16048737 sleeps=14 level=1638
+audio-wait tid=144326784 vblank=8704 ns=3283150 sleeps=3 level=1569
+audio-wait tid=144326784 vblank=8715 ns=4517036 sleeps=4 level=1652
+audio-wait tid=144326784 vblank=8718 ns=2117603 sleeps=2 level=1586
+audio-wait tid=144326784 vblank=8731 ns=15248905 sleeps=14 level=1678
+audio-wait tid=144326784 vblank=8736 ns=2147365 sleeps=2 level=1610
+audio-wait tid=144326784 vblank=8747 ns=3416703 sleeps=3 level=1699
+audio-wait tid=144326784 vblank=8750 ns=1061029 sleeps=1 level=1631
+audio-wait tid=144326784 vblank=8763 ns=15061127 sleeps=14 level=1729
+audio-wait tid=144326784 vblank=8768 ns=2256184 sleeps=2 level=1662
+audio-wait tid=144326784 vblank=8779 ns=3231478 sleeps=3 level=1740
+audio-wait tid=144326784 vblank=8782 ns=1058371 sleeps=1 level=1671
+audio-wait tid=144326784 vblank=8795 ns=15590222 sleeps=14 level=1761
+audio-wait tid=144326784 vblank=8800 ns=3220215 sleeps=3 level=1694
+audio-wait tid=144326784 vblank=8814 ns=1060395 sleeps=1 level=1708
+audio-wait tid=144326784 vblank=8818 ns=4424122 sleeps=4 level=1584
+audio-wait tid=144326784 vblank=8832 ns=2121703 sleeps=2 level=1727
+audio-wait tid=144326784 vblank=8843 ns=4282367 sleeps=4 level=1579
+audio-wait tid=144326784 vblank=8850 ns=3316173 sleeps=3 level=1614
+audio-wait tid=144326784 vblank=8868 ns=3412760 sleeps=3 level=1571
+audio-wait tid=144326784 vblank=8882 ns=1069534 sleeps=1 level=1657
+audio-wait tid=144326784 vblank=8891 ns=11415780 sleeps=10 level=1858
+audio-wait tid=144326784 vblank=8900 ns=1058644 sleeps=1 level=1609
+audio-wait tid=144326784 vblank=8907 ns=3342233 sleeps=3 level=1651
+audio-wait tid=144326784 vblank=8932 ns=1166626 sleeps=1 level=1641
+audio-wait tid=144326784 vblank=8968 ns=3170763 sleeps=3 level=1583
+audio-wait tid=144326784 vblank=8972 ns=4727485 sleeps=4 level=1612
+audio-wait tid=144326784 vblank=9000 ns=1105207 sleeps=1 level=1634
+dw1: audio_rate overflows=0 underruns=6
+port: libgte table rsin_tbl sha256 f3c96402945a33c125f918b4487421c4798141c8b958927fd8437eecadc601d7
+port: libgte table SQRT sha256 45ca1b7b619b33961c03c82243b8baf59fc50c49b4d7eefc94b76edbd417a5c8
+port: libgte table rcossin_tbl sha256 b40c47b014ca8650c539760fd4c519cabce6f091628566ca0dd22318bb2c5b7a
+port: libgte table ratan_tbl sha256 423668b6164114405675398f08d4623fee2dad1a203d0e4958d4b70341969d02
+port: libpress table mdec_iq sha256 22b0a18f9c1e01de3f659ebb2fc3c27b2806ed56cca4b98013c76fdd44158f77
+port: libpress table mdec_coef sha256 391ecd19658b4284a26410762115804676432e1b350c369ecbf75d1ccf0bfa79
+port: libpress table data_2 sha256 86bfa7f158814c9ab59bcd5138347853f1e238652d01eb6f684ed6ae0982b4e3
+port: wall vblanks=9000 nanoseconds=150114620858 resynchronizations=2 rate_num=16934400 rate_den=282199
+port: reached VBlank 9000 after frame 0

@@ -1,0 +1,25 @@
+Test project /dw/build/port/native
+      Start 36: clock
+ 1/10 Test #36: clock ............................   Passed    0.38 sec
+      Start 43: sdl_pacing
+ 2/10 Test #43: sdl_pacing .......................   Passed   15.40 sec
+      Start 45: sdl_frame0
+ 3/10 Test #45: sdl_frame0 .......................   Passed    8.14 sec
+      Start 46: sdl_input
+ 4/10 Test #46: sdl_input ........................   Passed    0.03 sec
+      Start 47: sdl_quit
+ 5/10 Test #47: sdl_quit .........................   Passed    0.15 sec
+      Start 48: sdl_video
+ 6/10 Test #48: sdl_video ........................   Passed    0.11 sec
+      Start 49: sdl_audio
+ 7/10 Test #49: sdl_audio ........................   Passed    0.05 sec
+      Start 50: sdl_cli
+ 8/10 Test #50: sdl_cli ..........................   Passed    8.64 sec
+      Start 51: sdl_native_hooks
+ 9/10 Test #51: sdl_native_hooks .................   Passed    0.00 sec
+      Start 52: sdl_scene_input_precedence
+10/10 Test #52: sdl_scene_input_precedence .......   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Total Test time (real) =  32.91 sec

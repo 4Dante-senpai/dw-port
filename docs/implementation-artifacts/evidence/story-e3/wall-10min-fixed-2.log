@@ -1,0 +1,38 @@
+UpdateCTestConfiguration  from :/dw/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/dw/build/port/native/DartConfiguration.tcl
+Test project /dw/build/port/native
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 44
+    Start 44: native_wall_10min
+
+44: Test command: /dw/.venv/bin/python3 "-I" "-B" "/dw/tools/port/test_native_wall.py" "/dw/build/port/native/dw1" "/dw"
+44: Working Directory: /dw/build/port/native
+44: Environment variables: 
+44:  SDL_VIDEODRIVER=offscreen
+44:  SDL_AUDIODRIVER=dummy
+44: Test timeout computed to be: 900
+44: port: libgte table rsin_tbl sha256 f3c96402945a33c125f918b4487421c4798141c8b958927fd8437eecadc601d7
+44: port: libgte table SQRT sha256 45ca1b7b619b33961c03c82243b8baf59fc50c49b4d7eefc94b76edbd417a5c8
+44: port: libgte table rcossin_tbl sha256 b40c47b014ca8650c539760fd4c519cabce6f091628566ca0dd22318bb2c5b7a
+44: port: libgte table ratan_tbl sha256 423668b6164114405675398f08d4623fee2dad1a203d0e4958d4b70341969d02
+44: port: libpress table mdec_iq sha256 22b0a18f9c1e01de3f659ebb2fc3c27b2806ed56cca4b98013c76fdd44158f77
+44: port: libpress table mdec_coef sha256 391ecd19658b4284a26410762115804676432e1b350c369ecbf75d1ccf0bfa79
+44: port: libpress table data_2 sha256 86bfa7f158814c9ab59bcd5138347853f1e238652d01eb6f684ed6ae0982b4e3
+44: port: wall vblanks=36006 nanoseconds=600012884626 resynchronizations=0 rate_num=16934400 rate_den=282199
+44: port: reached VBlank 36006 after frame 0
+44: dw1: audio_rate overflows=0 underruns=5
+44: 
+44: native_wall: vblanks=36006 wall=600.012884626s expected=36006.003541510 resynchronizations=0
+1/1 Test #44: native_wall_10min ................   Passed  600.20 sec
+
+The following tests passed:
+	native_wall_10min
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) = 600.20 sec

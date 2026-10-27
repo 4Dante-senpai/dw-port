@@ -754,8 +754,10 @@ def main():
         if informative:
             print(f"informative frame comparison: {informative['reason']}; "
                   f"measured {informative['pixels']} px, box {informative['box']}")
-        different = compare_capture(output / "run-1.ppm", scene, args.id, frame)
-        if different and not informative:
+            # Differences stay confined to the declared box; anything outside fails.
+            scene = dict(scene, exceptions=scene.get("exceptions", []) +
+                         [{"region": informative["box"], "reason": informative["reason"]}])
+        if compare_capture(output / "run-1.ppm", scene, args.id, frame):
             return 1
     print(f"scene_{args.id}: {args.build}: OK (two identical captures and clock traces)")
     return 0

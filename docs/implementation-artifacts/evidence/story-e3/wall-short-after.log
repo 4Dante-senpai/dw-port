@@ -1,0 +1,3 @@
+dw1: audio_rate overflows=0 underruns=0
+port: wall vblanks=120 nanoseconds=1999903264 resynchronizations=0 rate_num=16934400 rate_den=282199
+port: reached VBlank 120 after frame 0
