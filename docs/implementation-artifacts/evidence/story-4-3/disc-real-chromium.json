@@ -1,0 +1,8 @@
+{
+  "browser": "chromium",
+  "native_sha256": "c01e5c3680ffdf50d0342f16ec978c6d107a33529688dae6a817bd63947f0cf6",
+  "sha256": "c01e5c3680ffdf50d0342f16ec978c6d107a33529688dae6a817bd63947f0cf6",
+  "sidecar": "c01e5c3680ffdf50d0342f16ec978c6d107a33529688dae6a817bd63947f0cf6",
+  "memory_max_bytes": 69853927,
+  "sm4_ms": 81228
+}

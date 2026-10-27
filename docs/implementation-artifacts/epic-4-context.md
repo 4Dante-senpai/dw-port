@@ -1,10 +1,10 @@
 # Epic 4 Context: Jugar en el navegador con el disco propio (M4)
 
-<!-- Compilado a partir de los artefactos de planificación. Puede editarse libremente. Regenerar con compile-epic-context si cambia la planificación. -->
+<!-- Compiled from planning artifacts. Edit freely. Regenerate with compile-epic-context if planning docs change. -->
 
 ## Goal
 
-Permitir que el jugador abra la Shell web, seleccione su disco USA, lo valide y empaquete localmente y juegue con teclado o gamepad, audio y partidas persistentes, incluso sin conexión. El mismo C del juego se compila a WebAssembly: los datos proceden del dispositivo del usuario y permanecen allí.
+Llevar el mismo código nativo de Digimon World USA al navegador mediante Emscripten, con presentación, audio, controles y partidas persistentes. El jugador aporta su propio disco, lo valida y convierte localmente una sola vez y puede volver a jugar sin conexión ni instalaciones. Esta épica establece la plataforma web y su fidelidad respecto del port nativo.
 
 ## Stories
 
@@ -21,31 +21,33 @@ Permitir que el jugador abra la Shell web, seleccione su disco USA, lo valide y 
 
 ## Requirements & Constraints
 
-- Aceptar `.bin` de pista única `MODE2/2352`, con `.cue` opcional, por selector o arrastre. Rechazar otros modos, ISO de 2048 bytes/sector y versiones JP/PAL, indicando que se requiere USA SLUS-01032. Validar cada archivo por SHA-256; identificar el archivo incorrecto y no conservar Packs parciales.
-- Leer por partes con memoria de pestaña ≤ 512 MB. El Pack web debe ser idéntico al nativo y reutilizarse al recargar. Medir el tiempo hasta «Listo para jugar»; la meta de ≤ 60 s en hardware de referencia sigue siendo un supuesto.
-- Ofrecer 14 botones digitales, remapeo persistente, restauración de valores y stick izquierdo como D-pad opcional. Conectar o desconectar gamepads no debe interrumpir el juego.
-- Mantener dos tarjetas crudas de 131.072 bytes; importar `.mcd`/`.mcr` y exportar `.mcd` compatibles con DuckStation y PCSX-Redux. Una escritura interrumpida conserva el estado anterior o el nuevo.
-- En diez minutos, la desviación del conteo de VBlanks web debe ser < 0,1 % a 60000/1001 Hz. Verificar PCM idéntico al nativo antes del remuestreo y cero underruns del worklet en diez minutos en ambos navegadores.
-- `.wasm` con Brotli ≤ 4 MB; primera descarga sin Pack ≤ 6 MB. Dos builds del mismo commit en la imagen fijada deben producir `.wasm` idénticos.
-- Disco, Pack y tarjetas permanecen locales; la red solo solicita archivos del programa. Prohibir datos extraídos o incrustados; únicamente se admiten los bytes que reproduce el C upstream de `src/` e `include/`. Verificarlo con ventanas de 64 bytes y un caso de contaminación que haga fallar el control.
-- Cubrir Chrome y Firefox de escritorio, sus dos últimas versiones estables. Exigir evidencia automática con Playwright en Chromium y Firefox: pruebas sintéticas sin datos y pruebas privadas con disco. No cerrar historias con fallos o implementación parcial.
+- Aceptar `.bin` de pista única `MODE2/2352`, con o sin `.cue`, por selector o arrastre. Rechazar modos incompatibles, `.iso` de 2048 bytes/sector y versiones JP/PAL; identificar el archivo inválido y la edición requerida, SLUS-01032. Validar tamaños y SHA-256 contra el manifest, sin dejar un Pack parcial. Leer por partes con un máximo de 512 MB de memoria de pestaña durante la validación.
+- El Pack web debe ser idéntico byte a byte al nativo, persistir entre sesiones y poder borrarse. Las actualizaciones deben conservar Pack y tarjetas y migrar formatos anteriores sin solicitar nuevamente el disco.
+- Soportar Chrome y Firefox de escritorio, en sus dos últimas versiones estables; verificar en Chromium y Firefox. Safari y móviles quedan fuera de v1.
+- Mantener el ritmo calibrado de 60,0087172527 Hz: desviación del conteo teórico de VBlanks inferior al 0,1 % en diez minutos. Este valor actualizado reemplaza las menciones antiguas de 59,94 Hz.
+- La imagen de título a 1× debe coincidir píxel a píxel con nativo y la referencia; el PCM del AudioWorklet antes del remuestreo debe coincidir con nativo. Verificar diez minutos sin underruns; la aceptación final de rendimiento en hardware de referencia corresponde a la épica 5.
+- Limitar el `.wasm` con Brotli a 4 MB y la primera descarga sin Pack a 6 MB. Dos builds del mismo commit en la imagen Docker del proyecto deben producir el mismo `.wasm`.
+- Disco, Pack y tarjetas permanecen en el dispositivo; la red solo solicita archivos propios del deploy. No distribuir datos extraídos: únicamente se admiten los bytes ya reproducidos por el C de upstream. Comprobar filtraciones mediante ventanas de 64 bytes contra los objetos compilados del juego.
 
 ## Technical Decisions
 
-- Emscripten con `-pthread -sSUPPORT_LONGJMP=wasm -fwasm-exceptions`, memoria inicial fija y sin crecimiento; sin LTO para objetos del juego. Un hilo ejecuta juego, PsyQ, Backend y callbacks. Stack estático y objetos enlazables por OT dentro de `[0, 16 MB)`. Si no se respeta el stack, registrar el fallback `-sPROXY_TO_PTHREAD`. Resolver firmas incompatibles de llamadas indirectas wasm. Sin ASYNCIFY ni JSPI.
-- El hilo principal gestiona Shell, input, IndexedDB y Web Lock `dw1-game`. Un worker es dueño exclusivo de OPFS; abre el Pack antes del arranque y sirve lecturas por buzón SAB con `Atomics.wait`, sin espera activa. Compartir el C del constructor del Pack entre nativo y web.
-- Presentar el renderer software como textura WebGL2 en un `OffscreenCanvas` del hilo del juego mediante `plat_present`. Medir presentación sin imponer todavía un umbral.
-- El reloj virtual conserva el orden determinista de eventos; input latcheado por VBlank. El reloj de pared permite recuperar hasta tres VBlanks; al reanudar una pausa restablece el plazo sin contabilizar pérdidas por ella.
-- AudioWorklet consume un ring SAB. El Host aplica volumen y remuestreo; el audio no modifica VBlank.
-- IndexedDB usa `schema_version`; cada tarjeta se escribe en una transacción con `durability: 'strict'`. Enviar copia al hilo principal al completar escritura y en `pagehide`. Guardar controles y volumen en `PortSettings`.
-- Service worker con caché versionada del programa; migrar Pack y opciones anteriores sin pedir nuevamente el disco ni perder tarjetas. Mantener cambios upstream detrás de `DW1_PORT`, documentados y compatibles con el build PS1.
+- Compilar C a wasm32, sin ejecución de instrucciones MIPS. Mantener cambios del juego aislados con `DW1_PORT` y documentados; preservar el build PS1.
+- Ejecutar juego, PsyQ, backend y callbacks en un único pthread; reservar el hilo principal para interfaz e input. Usar `-pthread -sSUPPORT_LONGJMP=wasm -fwasm-exceptions`, memoria inicial fija sin crecimiento y objetos del juego sin LTO. El stack y todo elemento enlazable en las OT deben quedar en los primeros 16 MB. Si no se respeta el stack estático, aplicar y registrar el fallback `-sPROXY_TO_PTHREAD`. Resolver incompatibilidades de firmas de punteros a función para wasm. No usar ASYNCIFY ni JSPI.
+- Servir con COOP/COEP. Transferir `OffscreenCanvas` al hilo del juego y presentar el rasterizador software como textura WebGL2; las mejoras gráficas pertenecen a la épica 5.
+- Un worker exclusivo posee OPFS, construye el Pack con el mismo C usado por la herramienta nativa y abre el archivo antes del arranque. El juego solicita sectores por un buzón en `SharedArrayBuffer` y espera con `Atomics.wait`, sin acceder directamente a OPFS.
+- Conservar un único reloj virtual determinista; el reloj de pared regula el ritmo sin ordenar eventos. Muestrear input en el hilo principal y aplicarlo en el latch del VBlank correspondiente. El AudioWorklet consume un anillo en memoria compartida; volumen y remuestreo pertenecen al Host.
+- Guardar opciones y controles en `PortSettings` con `schema_version` en IndexedDB. Cada tarjeta ocupa 131.072 bytes por ranura y se escribe mediante una transacción con `durability: 'strict'`: una interrupción conserva la versión anterior o la nueva. Enviar copias al hilo principal tras escrituras y en `pagehide`.
+- Reservar la instancia con el Web Lock `dw1-game`. Solicitar almacenamiento persistente. Usar caché versionada del programa mediante service worker y migraciones de almacenamiento.
+- Separar pruebas sin datos, con fixtures sintéticos, de las pruebas con disco real en runner privado protegido. Exigir evidencia automática para fidelidad, persistencia, ritmo, tamaño, reproducibilidad y privacidad.
 
 ## UX & Interaction Patterns
 
-Bienvenida con aviso de copia propia → selección → progreso → «Listo para jugar» → «Jugar». Ese único gesto habilita audio y lleva al título. Ofrecer opciones, Memory cards, borrado y pausa manual; pausar automáticamente al ocultarse la pestaña. Informar específicamente si faltan aislamiento cross-origin, SAB u OPFS y bloquear el arranque; una segunda pestaña también recibe un mensaje y no arranca. Solicitar almacenamiento persistente; si se deniega, avisar y sugerir exportar tarjetas. Tras la primera carga, permitir recarga offline y activar actualizaciones al recargar conservando datos.
+El recorrido inicial muestra bienvenida y aviso de copia propia, selección, progreso, estado listo y «Jugar». Ese único gesto debe habilitar audio y llevar al título. Al regresar con Pack válido, ofrecer «Jugar» directamente. Mostrar errores específicos por capacidad ausente —aislamiento, memoria compartida o almacenamiento— y por otra pestaña activa; impedir el arranque en esos casos.
+
+Ofrecer pausa manual y automática al ocultar la pestaña, congelando VBlanks y retomando sin penalizar la pausa como frames perdidos. Incluir opciones de video, audio y controles, gestión de tarjetas y borrado de datos. Los 14 botones digitales deben funcionar por defecto con teclado y gamepad, admitir remapeo persistente y restauración; conectar o desconectar mandos no interrumpe el juego. El stick izquierdo puede actuar como cruceta.
+
+Mostrar dos ranuras con importación/exportación `.mcd`/`.mcr` compatibles con DuckStation y PCSX-Redux; rechazar tamaños distintos de 131.072 bytes. Si se deniega persistencia, informar y sugerir exportar la tarjeta.
 
 ## Cross-Story Dependencies
 
-El hilo y la presentación habilitan E/S y título; estos habilitan selección, empaquetado y arranque completo. Controles preceden al remapeo; almacenamiento y Shell sostienen tarjetas, opciones y offline. Los checks verifican el conjunto.
-
-La épica 2 aporta Pack y título nativo determinista. La épica 3 aporta audio, tarjetas y referencia: comparar inicialmente el título web contra nativo no demuestra paridad con consola. La épica 5 incorpora mejoras gráficas y el umbral final de rendimiento en hardware de referencia. Servir con COOP `same-origin` y COEP `require-corp` desde desarrollo; la publicación corresponde a la épica 7.
+La épica 2 aporta el build nativo y el constructor de Pack compartido; la épica 3 aporta referencias de video, audio y tarjetas. Hilos y presentación habilitan E/S y título; el almacenamiento sustenta preparación del disco, persistencia y funcionamiento offline. Audio e input dependen del modelo de hilos y reloj. Los checks finales integran esas garantías. Las mejoras gráficas y el umbral final de rendimiento quedan para la épica 5; la publicación en servidor corresponde a la épica 7.

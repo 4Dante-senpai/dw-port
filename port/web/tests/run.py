@@ -14,8 +14,8 @@ import importlib.util
 root = Path(__file__).resolve().parents[3]
 build = Path(sys.argv[1]).resolve()
 suite = sys.argv[2] if len(sys.argv) > 2 else 'boot'
-if suite == 'title' and not (os.environ.get('DW1_DISC_DIR') or os.environ.get('DW1_WEB_URL')):
-    print('web_scene_title: DW1_DISC_DIR not set; skipped')
+if suite in ('title', 'disc_real') and not (os.environ.get('DW1_DISC_DIR') or (suite == 'title' and os.environ.get('DW1_WEB_URL'))):
+    print(f'web_{"scene_title" if suite == "title" else suite}: DW1_DISC_DIR not set; skipped')
     sys.exit(77)
 if suite in ('io', 'launcher'):
     # Same sector/byte formula as pack/tests/test_pack.c; no disc bytes.
@@ -34,7 +34,7 @@ if suite in ('io', 'launcher'):
 
 env = dict(os.environ, DW1_WEB_SUITE=suite, DW1_WEB_BUILD=str(build))
 server = None
-if suite == 'title' and not env.get('DW1_WEB_URL'):
+if suite in ('title', 'disc_real') and not env.get('DW1_WEB_URL'):
     with (build / 'us.pack').open('rb') as pack_file:
         (build / 'us.pack.sha256').write_text(hashlib.file_digest(pack_file, 'sha256').hexdigest() + '\n')
 if not env.get('DW1_WEB_URL'):
