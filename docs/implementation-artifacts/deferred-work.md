@@ -127,3 +127,6 @@
 - source_spec: `docs/implementation-artifacts/spec-e3-ritmo-de-pared-en-diez-minutos.md`
   summary: `dw1 --frames 1200` con `SDL_AUDIODRIVER=dummy` da `overflows=0 underruns=2`; la historia "ritmo y texto SJIS nativo" había registrado `underruns=0`. Las corridas de 10 minutos dan 5 y 6 underruns.
   evidence: Medido el 2026-10-27, determinista en el PC del dueño (tres corridas) y en este servidor (dos corridas). `main` (`73ffac1`) da el mismo valor, así que no lo introdujo la corrección E3 y su origen está entre esa historia y la 3.11. Para resolverlo, bisecar con `--frames 1200` y ubicar los VBlanks de los underruns. Ningún test lo exige hoy: `sdl_pacing` usa carga sintética y `native_wall_10min` no mira underruns. Severidad sin verificar (medium si se oye un corte con un driver real). Revisar junto con el ritmo de audio de la épica 4.
+- source_spec: `docs/implementation-artifacts/spec-4-3-seleccion-del-disco-validacion-y-pack-en-el-navegador.md`
+  summary: El Web Lock de instancia única (historia 4.4) también debe serializar la construcción y el borrado del Pack en OPFS entre pestañas.
+  evidence: `port/web/io_worker.js` usa nombres fijos (`us.pack.tmp`, `us.pack.previous`, `us.pack.sha256.tmp`); dos pestañas que construyen o borran a la vez pueden eliminar o reemplazar archivos de la otra.

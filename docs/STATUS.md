@@ -14,7 +14,7 @@
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
 - M3 Paridad nativa: **completo** (Épica 3 cerrada: retrospectiva `accepted-with-open-items`, 2026-10-27).
-- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo).
+- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador).
 
 ## Hecho
 
@@ -203,6 +203,19 @@
   Revisión (3 capas Codex): eliminado un mutex nativo especulativo y agregado el conteo real de
   accesos al guard. Suites web (19), nativo, ASan y clase B con disco verdes. Evidencia:
   `docs/implementation-artifacts/evidence/story-4-2/`.
+- Historia 4.3 (disco propio y Pack en el navegador): la Shell acepta el `.bin` solo o con su
+  `.cue`, por selector o arrastre. El worker de E/S corre la CLI `dw1-pack` compilada a wasm
+  (`dw1_pack.js`, mismo C que la herramienta nativa, más el comando `sha256`), lee la Imagen por
+  partes con WORKERFS y escribe el Pack directo a un handle síncrono de OPFS. El commit es
+  `us.pack.tmp` -> `us.pack` -> sidecar `us.pack.sha256`, y restaura el Pack anterior si algo falla.
+  Muestra progreso (incluida la relectura del SHA), «Listo para jugar», aviso si se deniega
+  `persist()` y «Borrar datos». Clase A (`web_disc`, 38 casos en Chromium y Firefox): `.bin`/`.cue`,
+  arrastre, modo de pista, ISO, byte cambiado, exe JP/PAL (SLUS-01032), selección inválida,
+  recarga, borrado y rollback con fallas inyectadas. Clase B (`web_disc_real`): Pack web
+  `c01e5c36…0cf6`, idéntico al nativo en ambos navegadores; memoria máxima de 67 MiB (Chromium);
+  SM-4 de 81 s (Chromium) y 36 s (Firefox) en el contenedor limitado a 2,5 CPU. Diferido a 4.4: el
+  Web Lock también debe serializar el build y el borrado del Pack. Evidencia:
+  `docs/implementation-artifacts/evidence/story-4-3/`.
 
 - Historia 8.5 (entorno de testing en el homelab): job `testing` de clase B en `main` compila nativo y
   web, arma el Pack, valida el título y despliega en el host de deploy (`HUB_DOCKER_HOST`) una imagen
@@ -417,7 +430,7 @@
 
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 y 4.2 ya están cerradas, y también la 8.5.
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2 y 4.3 ya están cerradas, y también la 8.5.
 
 ## Bloqueos
 
