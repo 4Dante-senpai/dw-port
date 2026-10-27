@@ -1,0 +1,36 @@
+build=0
+Test project /dw/build/port/native
+    Start 44: native_wall_10min
+Errors while running CTest
+1/1 Test #44: native_wall_10min ................***Failed  601.06 sec
+native_wall_10min: wall pacing failed: vblanks=36006, wall_ns=600631147889, rate=16934400/282199, resynchronizations=9
+port: libgte table rsin_tbl sha256 f3c96402945a33c125f918b4487421c4798141c8b958927fd8437eecadc601d7
+port: libgte table SQRT sha256 45ca1b7b619b33961c03c82243b8baf59fc50c49b4d7eefc94b76edbd417a5c8
+port: libgte table rcossin_tbl sha256 b40c47b014ca8650c539760fd4c519cabce6f091628566ca0dd22318bb2c5b7a
+port: libgte table ratan_tbl sha256 423668b6164114405675398f08d4623fee2dad1a203d0e4958d4b70341969d02
+port: libpress table mdec_iq sha256 22b0a18f9c1e01de3f659ebb2fc3c27b2806ed56cca4b98013c76fdd44158f77
+port: libpress table mdec_coef sha256 391ecd19658b4284a26410762115804676432e1b350c369ecbf75d1ccf0bfa79
+port: libpress table data_2 sha256 86bfa7f158814c9ab59bcd5138347853f1e238652d01eb6f684ed6ae0982b4e3
+port: wall vblanks=36006 nanoseconds=600631147889 resynchronizations=9 rate_num=16934400 rate_den=282199
+port: reached VBlank 36006 after frame 0
+dw1: pacing resynchronization vblank=7694 late_ns=67052479
+dw1: pacing resynchronization vblank=7712 late_ns=68744351
+dw1: pacing resynchronization vblank=8294 late_ns=69630447
+dw1: pacing resynchronization vblank=15827 late_ns=67285947
+dw1: pacing resynchronization vblank=16426 late_ns=68244340
+dw1: pacing resynchronization vblank=23954 late_ns=67243938
+dw1: pacing resynchronization vblank=24551 late_ns=67780133
+dw1: pacing resynchronization vblank=32075 late_ns=70494600
+dw1: pacing resynchronization vblank=32672 late_ns=71694751
+dw1: audio_rate overflows=0 underruns=20
+
+native_wall: vblanks=36006 wall=600.631147889s expected=36043.104726847 resynchronizations=9
+
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) = 601.07 sec
+
+The following tests FAILED:
+	 44 - native_wall_10min (Failed)
+ctest=8

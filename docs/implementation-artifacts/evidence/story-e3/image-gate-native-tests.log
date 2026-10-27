@@ -1,0 +1,13 @@
+Test project /dw/build/port/native
+    Start 49: sdl_audio
+1/4 Test #49: sdl_audio ........................   Passed    0.05 sec
+    Start 57: pack
+2/4 Test #57: pack .............................   Passed    0.02 sec
+    Start 62: scene_runner
+3/4 Test #62: scene_runner .....................   Passed    5.23 sec
+    Start 64: scene_state_unit
+4/4 Test #64: scene_state_unit .................   Passed    0.38 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   5.68 sec

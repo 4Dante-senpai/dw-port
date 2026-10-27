@@ -466,8 +466,9 @@ if(NOT EMSCRIPTEN)
     set_tests_properties(sdl_native_hooks sdl_scene_input_precedence PROPERTIES TIMEOUT 10)
     add_test(NAME native_sdl_title_capture COMMAND python3 -I -B
       ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py title --build native)
+    # Shares build/port/native/scenes/title with scene_title in the native preset.
     set_tests_properties(native_sdl_title_capture PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1200
-      FIXTURES_REQUIRED disc_pack)
+      FIXTURES_REQUIRED disc_pack RESOURCE_LOCK scene_title_capture)
   endif()
   target_link_libraries(dw1 dw1_runtime ${CMAKE_DL_LIBS})
   target_link_options(dw1 PRIVATE -rdynamic)

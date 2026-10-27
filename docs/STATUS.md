@@ -13,7 +13,7 @@
 - M0 Entorno: **completo** (modo sin compilador matching).
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
-- M3 Paridad nativa: **en curso** (3.1 referencia PCSX-Redux/OpenBIOS del título).
+- M3 Paridad nativa: **completo** (Épica 3 cerrada: retrospectiva `accepted-with-open-items`, 2026-10-27).
 - M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo).
 
 ## Hecho
@@ -409,9 +409,15 @@
   El análisis estático (`tools/port/metrics/shop_overlay.py`) solo encuentra referencias de `main` a DOOA, DGET y `REL_BIN_OFFSETS`, y no confirma que el archivo sea una copia reubicada de la tienda de `main`.
   Límite: `map_load` no entra a una tienda, y `loadShopLibrary` (script 0x23) se verificó solo estáticamente. Se agregó la sonda `capture.py map_load --shop-probe` y `map_load` suma los checkpoints `checkShopMap` y `checkShopMap#2`, con diferencia 0. Pasaron 12/12 tests de CTest con disco. Sin cambios en `src/`.
 
+- Retrospectiva de la Épica 3 (`docs/implementation-artifacts/epic-3-retro-2026-10-26.md`): veredicto `accepted-with-open-items`. Durante la retro se corrigieron dos gates:
+  - `--state` ahora falla por diferencia de imagen, salvo que la Escena declare `image_informative` con motivo, píxeles y caja. Las diferencias tienen que quedar dentro de la caja. Lo declaran `newgame` y las dos tarjetas.
+  - `native_wall_10min` estaba en rojo desde la 3.10. `next_due` recorría los 32 slots de la cola en cada consulta de VSync; ahora cachea el mínimo. En este servidor dio 0 resincronizaciones en dos corridas.
+  La espera del productor de audio se conserva como excepción aceptada de AD-8.
+  Suites con disco: native-headless 83/83, native-asan 81/81 y native 94/94. Quedan abiertas las acciones A2 y A4–A8, y F15: `--frames 1200` da 2 underruns, igual que en `main` (`deferred-work.md`).
+
 ## En curso
 
-- Fase 5: Épica 4 (M4) en curso; historias 4.1 y 4.2 cerradas. Historia 8.5 cerrada. Épica 3 (M3): las historias 3.1 a 3.11 están cerradas y falta la retrospectiva. El resto de la Épica 4 sigue después de esa retrospectiva.
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 y 4.2 ya están cerradas, y también la 8.5.
 
 ## Bloqueos
 

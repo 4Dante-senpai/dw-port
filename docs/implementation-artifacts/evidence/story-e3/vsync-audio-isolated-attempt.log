@@ -1,0 +1,31 @@
+Test project /dw/build/port/native
+    Start 43: sdl_pacing
+1/2 Test #43: sdl_pacing .......................***Failed   10.38 sec
+port: reached frame 299 at cycle 338641295
+dw1: pacing resynchronization vblank=168 late_ns=68075223
+dw1: pacing resynchronization vblank=230 late_ns=81701648
+dw1: pacing resynchronization vblank=240 late_ns=73654017
+dw1: audio_rate overflows=0 underruns=3
+
+Traceback (most recent call last):
+  File "/dw/tools/port/test_sdl_pacing.py", line 24, in <module>
+    assert counters and int(counters[1]) == 0 and int(counters[2]) == 0, \
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: missing audio counters, ring overflow or underrun: audio_rate overflows=0 underruns=3
+
+    Start 45: sdl_frame0
+2/2 Test #45: sdl_frame0 .......................***Failed  Error regular expression found in output. Regex=[overflows=[1-9]]  8.29 sec
+dw1: pacing resynchronization vblank=382 late_ns=74383069
+dw1: pacing resynchronization vblank=399 late_ns=69246349
+dw1: audio_rate overflows=20133 underruns=4
+port: reached frame 119 at cycle 270925239
+
+
+0% tests passed, 2 tests failed out of 2
+
+Total Test time (real) =  18.68 sec
+
+The following tests FAILED:
+	 43 - sdl_pacing (Failed)
+	 45 - sdl_frame0 (Failed)
+Errors while running CTest

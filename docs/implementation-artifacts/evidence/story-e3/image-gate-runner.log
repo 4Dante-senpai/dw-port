@@ -1,0 +1,17 @@
+scene_runner: skip 77, missing explicit Pack, success, failed exit, sanitizers, missing mark/capture, <=16 colors, malformed PPM, divergent capture/clock: OK
+scene_runner: audio skip 77, two deterministic runs, no image capture, hash validation: OK
+scene_runner: RGB555 comparison, bounding box, exceptions, missing/stale reference, dimensions and preflight validation: OK
+state match: 2 VBlanks, 2 variables, 16 rand calls
+scene_runner: typed declarations, missing symbols, first variable/rand divergence, incomplete traces, expect_rand: OK
+state match: 2 checkpoints, window 2, 1 variables, 16 rand calls
+scene_runner: checkpoint windows, independent clocks, ordered rand values, divergence diagnostics and checkpoint/input preflight: OK
+scene_runner: uninstrumented checkpoint preflight: OK
+scene_runner: main --state cached references; exact/different/informative images; invalid reason/hash/PPM: OK
+scene_runner: XA single return window, all SPU registers, full tails and empty writes OK
+scene_runner: timestamped XA tap validation and full-window SNR OK
+movie: per-channel tolerance, worst diff, complete sequence, determinism, return, skip VBlank and A/V bounds OK
+movie allowances: exact listed pairs pass; unlisted, worsened and mean violations fail
+scene_runner: state reuse requires a valid card export for the current preset OK
+scene_runner: external new/source cards, deterministic export, card/state fingerprint and path validation OK
+save/load match: 2 values after loadSavegame
+scene_runner: entity offsets and saved/restored payload comparison OK

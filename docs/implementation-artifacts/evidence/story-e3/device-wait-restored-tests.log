@@ -1,0 +1,9 @@
+Test project /dw/build/port/native
+    Start 36: clock
+1/2 Test #36: clock ............................   Passed    2.33 sec
+    Start 49: sdl_audio
+2/2 Test #49: sdl_audio ........................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   2.38 sec

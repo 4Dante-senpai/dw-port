@@ -50,3 +50,4 @@ _bmad/custom/config.user.toml
 
 # Homelab hosts and tokens metadata (the GitHub repo is public)
 docs/port/local-infra.md
+/port_trace.log

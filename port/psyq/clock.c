@@ -20,6 +20,10 @@ static uint64_t poll_boundary;
 static uint64_t next_seq;
 static uint32_t vblanks;
 static Event events[MAX_EVENTS];
+/* Polling usually leaves the queue unchanged. Cache its minimum so each
+ * compiled VSync/CD polling branch need not scan all event slots. -2 is dirty,
+ * -1 is an empty queue; VBlank is still compared independently on each query. */
+static int next_event = -2;
 static int generation = 1;
 static int in_handler;
 static void (*vblank_handler)(void);
@@ -106,6 +110,7 @@ void clock_reset(void)
 {
 	now = next_seq = poll_boundary = 0;
 	vblanks = 0;
+	next_event = -2;
 	for (int i = 0; i < MAX_EVENTS; i++)
 		events[i].id = 0;
 	in_handler = 0;
@@ -123,6 +128,7 @@ int clock_schedule(uint64_t delay, ClockFn fn, void *arg)
 			int id = i + MAX_EVENTS * generation;
 			generation = generation % 0x1000000 + 1;
 			events[i] = (Event){ now + delay, next_seq++, fn, arg, id };
+			next_event = -2;
 			return id;
 		}
 	}
@@ -133,20 +139,25 @@ int clock_schedule(uint64_t delay, ClockFn fn, void *arg)
 void clock_cancel(int id)
 {
 	check_thread();
-	if (id > 0 && events[id % MAX_EVENTS].id == id)
+	if (id > 0 && events[id % MAX_EVENTS].id == id) {
 		events[id % MAX_EVENTS].id = 0;
+		next_event = -2;
+	}
 }
 
 /* Due cycle of the next event of any kind (a VBlank is always pending); *index -1 = VBlank. */
 static uint64_t next_due(int *index)
 {
 	uint64_t vb = clock_vblank_cycle(vblanks + 1);
-	int best = -1;
-	for (int i = 0; i < MAX_EVENTS; i++) {
-		if (events[i].id && (best < 0 || events[i].due < events[best].due ||
-		                     (events[i].due == events[best].due && events[i].seq < events[best].seq)))
-			best = i;
+	if (next_event == -2) {
+		next_event = -1;
+		for (int i = 0; i < MAX_EVENTS; i++) {
+			if (events[i].id && (next_event < 0 || events[i].due < events[next_event].due ||
+			                     (events[i].due == events[next_event].due && events[i].seq < events[next_event].seq)))
+				next_event = i;
+		}
 	}
+	int best = next_event;
 	/* A device event due at the VBlank cycle runs after the VBlank. */
 	*index = (best >= 0 && events[best].due < vb) ? best : -1;
 	return *index >= 0 ? events[*index].due : vb;
@@ -164,6 +175,7 @@ static void dispatch(int index)
 	} else {
 		Event e = events[index];
 		events[index].id = 0;
+		next_event = -2;
 		if (trace)
 			trace(now, index, e.arg);
 		e.fn(e.arg);
