@@ -1,0 +1,195 @@
+build_native=0
+Test project /dw/build/port/native
+      Start 85: reference_card_newgame
+      Start 66: pack_disc
+      Start 57: pack
+      Start 31: test_preproc_check
+      Start 30: preproc_check
+      Start 93: reference_capture_unit
+      Start 29: inventory
+      Start 91: fnptr_inventory
+ 1/94 Test #57: pack .............................   Passed    0.01 sec
+      Start 62: scene_runner
+ 2/94 Test #62: scene_runner .....................   Passed    3.53 sec
+      Start 56: watchdog
+ 3/94 Test #91: fnptr_inventory ..................   Passed    4.64 sec
+      Start  7: scene_audio_unit
+ 4/94 Test #56: watchdog .........................   Passed    1.27 sec
+      Start  2: audio_rate
+ 5/94 Test  #7: scene_audio_unit .................   Passed    1.42 sec
+      Start 59: libcd
+ 6/94 Test #59: libcd ............................   Passed    0.28 sec
+      Start 50: sdl_cli
+ 7/94 Test  #2: audio_rate .......................   Passed    4.50 sec
+      Start 42: overlay_objects
+ 8/94 Test #29: inventory ........................   Passed    9.59 sec
+      Start 54: frame0
+ 9/94 Test #54: frame0 ...........................   Passed    0.32 sec
+      Start 45: sdl_frame0
+10/94 Test #42: overlay_objects ..................   Passed    0.81 sec
+      Start  6: xa_vectors
+11/94 Test  #6: xa_vectors .......................   Passed    0.64 sec
+      Start  5: spu_vectors
+12/94 Test #93: reference_capture_unit ...........   Passed   11.06 sec
+      Start 19: gpu
+13/94 Test  #5: spu_vectors ......................   Passed    0.57 sec
+      Start 28: gen_stubs
+14/94 Test #19: gpu ..............................   Passed    0.33 sec
+      Start  9: spu
+15/94 Test  #9: spu ..............................   Passed    0.19 sec
+      Start 90: fnptr_scanner
+16/94 Test #28: gen_stubs ........................   Passed    0.27 sec
+      Start 60: libgte_host
+17/94 Test #90: fnptr_scanner ....................   Passed    0.14 sec
+      Start 64: scene_state_unit
+18/94 Test #60: libgte_host ......................   Passed    0.27 sec
+      Start 27: tu_list
+19/94 Test #64: scene_state_unit .................   Passed    0.19 sec
+      Start 63: scene_flags
+20/94 Test #27: tu_list ..........................   Passed    0.16 sec
+      Start 36: clock
+21/94 Test #63: scene_flags ......................   Passed    0.18 sec
+      Start 14: libsnd
+22/94 Test #14: libsnd ...........................   Passed    0.10 sec
+      Start 92: shop_overlay_unit
+23/94 Test #92: shop_overlay_unit ................   Passed    0.05 sec
+      Start 15: cd_stream
+24/94 Test #36: clock ............................   Passed    0.29 sec
+      Start 61: dw1_foreign_pack
+25/94 Test #15: cd_stream ........................   Passed    0.09 sec
+      Start 65: scene_audio_runtime
+26/94 Test #65: scene_audio_runtime ..............   Passed    0.09 sec
+      Start 25: rts_info
+27/94 Test #61: dw1_foreign_pack .................   Passed    0.13 sec
+      Start 58: av_stubs
+28/94 Test #25: rts_info .........................   Passed    0.06 sec
+      Start  3: press_tables
+29/94 Test #58: av_stubs .........................   Passed    0.04 sec
+      Start 22: gte_tables
+30/94 Test  #3: press_tables .....................   Passed    0.06 sec
+      Start  8: scene_timing_unit
+31/94 Test #22: gte_tables .......................   Passed    0.06 sec
+      Start 24: pre_commit
+32/94 Test #24: pre_commit .......................   Passed    0.05 sec
+      Start 26: ovl_starts
+33/94 Test  #8: scene_timing_unit ................   Passed    0.07 sec
+      Start  4: mdec_vectors
+34/94 Test #26: ovl_starts .......................   Passed    0.05 sec
+      Start 33: psyq_prototypes
+35/94 Test  #4: mdec_vectors .....................   Passed    0.04 sec
+      Start  1: sjis_literals
+36/94 Test #33: psyq_prototypes ..................   Passed    0.03 sec
+      Start 17: card_host
+37/94 Test #17: card_host ........................   Passed    0.03 sec
+      Start 32: ps1_ram_addr_range
+38/94 Test #32: ps1_ram_addr_range ...............   Passed    0.02 sec
+      Start 47: sdl_quit
+39/94 Test  #1: sjis_literals ....................   Passed    0.11 sec
+      Start 10: xa
+40/94 Test #10: xa ...............................   Passed    0.02 sec
+      Start 21: libgpu
+41/94 Test #21: libgpu ...........................   Passed    0.02 sec
+      Start 18: card_cli
+42/94 Test #18: card_cli .........................   Passed    0.01 sec
+      Start 48: sdl_video
+43/94 Test #47: sdl_quit .........................   Passed    0.12 sec
+      Start 37: libc_heap_pad
+44/94 Test #37: libc_heap_pad ....................   Passed    0.01 sec
+      Start 35: ps1mem
+45/94 Test #35: ps1mem ...........................   Passed    0.01 sec
+      Start 38: gte
+46/94 Test #38: gte ..............................   Passed    0.00 sec
+      Start 49: sdl_audio
+47/94 Test #49: sdl_audio ........................   Passed    0.05 sec
+      Start 16: card
+48/94 Test #16: card .............................   Passed    0.00 sec
+      Start 20: libgs
+49/94 Test #20: libgs ............................   Passed    0.00 sec
+      Start 23: libgte
+50/94 Test #23: libgte ...........................   Passed    0.00 sec
+      Start 12: libpress
+51/94 Test #48: sdl_video ........................   Passed    0.11 sec
+      Start 41: overlay_sections
+52/94 Test #12: libpress .........................   Passed    0.01 sec
+      Start 11: mdec
+53/94 Test #41: overlay_sections .................   Passed    0.01 sec
+      Start 13: libspu
+54/94 Test #11: mdec .............................   Passed    0.00 sec
+      Start 46: sdl_input
+55/94 Test #13: libspu ...........................   Passed    0.00 sec
+      Start 40: overlay_O2
+56/94 Test #40: overlay_O2 .......................   Passed    0.00 sec
+      Start 39: overlay_O0
+57/94 Test #46: sdl_input ........................   Passed    0.00 sec
+      Start 55: dw1_bad_args
+58/94 Test #39: overlay_O0 .......................   Passed    0.00 sec
+      Start 34: setjmp
+59/94 Test #55: dw1_bad_args .....................   Passed    0.00 sec
+      Start 51: sdl_native_hooks
+60/94 Test #34: setjmp ...........................   Passed    0.00 sec
+      Start 52: sdl_scene_input_precedence
+61/94 Test #51: sdl_native_hooks .................   Passed    0.00 sec
+62/94 Test #52: sdl_scene_input_precedence .......   Passed    0.00 sec
+63/94 Test #50: sdl_cli ..........................   Passed    8.71 sec
+64/94 Test #30: preproc_check ....................   Passed   17.73 sec
+65/94 Test #45: sdl_frame0 .......................   Passed    8.10 sec
+66/94 Test #66: pack_disc ........................   Passed   26.25 sec
+      Start 69: scene_title
+      Start 68: press_tables_disc
+      Start 67: gte_tables_disc
+      Start 89: dw1_overlay
+67/94 Test #89: dw1_overlay ......................   Passed    0.29 sec
+68/94 Test #67: gte_tables_disc ..................   Passed    0.36 sec
+69/94 Test #68: press_tables_disc ................   Passed    0.37 sec
+70/94 Test #31: test_preproc_check ...............   Passed   77.58 sec
+71/94 Test #69: scene_title ......................   Passed   85.33 sec
+      Start 53: native_sdl_title_capture
+72/94 Test #85: reference_card_newgame ...........   Passed  112.80 sec
+      Start 86: scene_card_newgame_compare
+73/94 Test #86: scene_card_newgame_compare .......   Passed    9.07 sec
+      Start 94: reference_title
+74/94 Test #53: native_sdl_title_capture .........   Passed   85.75 sec
+75/94 Test #94: reference_title ..................   Passed  865.83 sec
+      Start 87: reference_card_continue
+      Start 70: scene_title_compare
+76/94 Test #70: scene_title_compare ..............   Passed   85.84 sec
+77/94 Test #87: reference_card_continue ..........   Passed  120.10 sec
+      Start 73: reference_newgame_state
+78/94 Test #73: reference_newgame_state ..........   Passed   89.50 sec
+      Start 74: reference_map_load
+79/94 Test #74: reference_map_load ...............   Passed   24.03 sec
+      Start 80: reference_movie0
+80/94 Test #80: reference_movie0 .................   Passed    7.03 sec
+      Start 71: reference_naming
+81/94 Test #71: reference_naming .................   Passed   23.81 sec
+      Start 76: reference_title_audio
+82/94 Test #76: reference_title_audio ............   Passed    1.07 sec
+      Start 78: reference_xa_op1
+83/94 Test #78: reference_xa_op1 .................   Passed    0.57 sec
+      Start 82: reference_movie0_skip
+84/94 Test #82: reference_movie0_skip ............   Passed    0.20 sec
+      Start 84: scene_newgame_state
+85/94 Test #84: scene_newgame_state ..............   Passed  269.81 sec
+      Start 77: scene_title_audio_compare
+86/94 Test #77: scene_title_audio_compare ........   Passed  197.84 sec
+      Start 81: scene_movie0_compare
+87/94 Test #81: scene_movie0_compare .............   Passed  244.75 sec
+      Start 44: native_wall_10min
+88/94 Test #44: native_wall_10min ................   Passed  600.22 sec
+      Start 79: scene_xa_op1_compare
+89/94 Test #79: scene_xa_op1_compare .............   Passed  105.25 sec
+      Start 75: scene_map_load_compare
+90/94 Test #75: scene_map_load_compare ...........   Passed   92.06 sec
+      Start 72: scene_naming_compare
+91/94 Test #72: scene_naming_compare .............   Passed   93.16 sec
+      Start 88: scene_card_continue_compare
+92/94 Test #88: scene_card_continue_compare ......   Passed    9.63 sec
+      Start 83: scene_movie0_skip_compare
+93/94 Test #83: scene_movie0_skip_compare ........   Passed    3.23 sec
+      Start 43: sdl_pacing
+94/94 Test #43: sdl_pacing .......................   Passed   14.70 sec
+
+100% tests passed, 0 tests failed out of 94
+
+Total Test time (real) = 2884.67 sec
+ctest_native=0

@@ -1,0 +1,13 @@
+Test project /dw/build/port/native-headless
+    Start 36: clock
+1/4 Test #36: clock ............................   Passed    3.23 sec
+    Start 46: pack
+2/4 Test #46: pack .............................   Passed    0.03 sec
+    Start 51: scene_runner
+3/4 Test #51: scene_runner .....................   Passed    4.37 sec
+    Start 53: scene_state_unit
+4/4 Test #53: scene_state_unit .................   Passed    0.14 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   7.78 sec

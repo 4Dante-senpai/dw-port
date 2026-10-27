@@ -170,6 +170,15 @@ def export_card(scene, kind, index, paths, build="native-headless"):
 
 
 def validate_scene(scene):
+    if "image_informative" in scene:
+        entry = scene["image_informative"]
+        if (not isinstance(entry, dict) or not isinstance(entry.get("reason"), str)
+                or not entry["reason"].strip() or type(entry.get("pixels")) is not int
+                or entry["pixels"] <= 0 or not isinstance(entry.get("box"), list)
+                or len(entry["box"]) != 4 or any(type(v) is not int for v in entry["box"])
+                or not (0 <= entry["box"][0] <= entry["box"][2]
+                        and 0 <= entry["box"][1] <= entry["box"][3])):
+            raise ValueError("image_informative requires a nonempty reason, positive pixels and box = [x0, y0, x1, y1]")
     if "card1" in scene and (not isinstance(scene["card1"], str) or not re.fullmatch(r"[a-z][a-z0-9_]*", scene["card1"])):
         raise ValueError("card1 must be new or a scene id")
     if "state_vars" in scene:
@@ -620,13 +629,14 @@ def main():
         raise ValueError("--compare-audio cannot be combined with --compare or --state")
     build = ROOT / "build/port" / args.build
     output = build / "scenes" / args.id
-    if args.compare:
+    if args.compare or args.state:
         (output / "diff.ppm").unlink(missing_ok=True)
     scene = tomllib.loads((ROOT / "tools/port/scenes" / f"{args.id}.toml").read_text())
     validate_scene(scene)
     if args.compare_audio:
         audio.validate_segments(scene)
-    frame = validate_comparison(scene, args.id) if args.compare and not scene.get("movie") else None
+    if (args.compare or args.state) and not scene.get("movie"):
+        validate_comparison(scene, args.id)
     vars_path = ROOT / "tools/port/scenes" / scene.get("state_vars", "state_vars.txt")
     scene["_card_build"] = args.build
     checkpoints = checkpoint_symbols(scene, ROOT / "config/us/symbols.txt", build / "dw1")
@@ -731,21 +741,24 @@ def main():
             raise ValueError(f"final card differs: port={actual}, reference={reference}")
         print(f"card1: identical 131072 bytes sha256={hashlib.sha256(actual.read_bytes()).hexdigest()}")
     if args.state:
-        ref = reference_path(args.id)
-        if ref.is_file():
-            print("informative frame comparison:")
-            try:
-                compare_capture(output / "run-1.ppm", dict(scene, reference_sha256=hashlib.sha256(ref.read_bytes()).hexdigest()), args.id, read_ppm(ref))
-            except ValueError as error:
-                print(error)
         compare_state(output / "run-1.state", reference_state, variables,
                       scene["capture_vblank"], scene.get("expect_rand", False), scene.get("checkpoints"), scene.get("window", 0))
         if scene.get("card1", "new") != "new":
             saved = build / "scenes" / scene["card1"] / "run-1.state"
             compare_saved_state(saved, output / "run-1.state", variables,
                                 scene["checkpoints"], scene.get("window", 0))
-    if args.compare and compare_capture(output / "run-1.ppm", scene, args.id, frame):
-        return 1
+    if args.compare or args.state:
+        # A regenerated reference must still match the pinned hash and bounds.
+        frame = validate_comparison(scene, args.id)
+        informative = scene.get("image_informative")
+        if informative:
+            print(f"informative frame comparison: {informative['reason']}; "
+                  f"measured {informative['pixels']} px, box {informative['box']}")
+            # Differences stay confined to the declared box; anything outside fails.
+            scene = dict(scene, exceptions=scene.get("exceptions", []) +
+                         [{"region": informative["box"], "reason": informative["reason"]}])
+        if compare_capture(output / "run-1.ppm", scene, args.id, frame):
+            return 1
     print(f"scene_{args.id}: {args.build}: OK (two identical captures and clock traces)")
     return 0
 

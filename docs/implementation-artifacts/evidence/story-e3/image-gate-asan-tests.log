@@ -1,0 +1,13 @@
+Test project /dw/build/port/native-asan
+    Start 36: clock
+1/4 Test #36: clock ............................   Passed    1.34 sec
+    Start 44: pack
+2/4 Test #44: pack .............................   Passed    0.03 sec
+    Start 49: scene_runner
+3/4 Test #49: scene_runner .....................   Passed    3.91 sec
+    Start 51: scene_state_unit
+4/4 Test #51: scene_state_unit .................   Passed    0.53 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   5.82 sec

@@ -558,3 +558,46 @@ La traza del título se repite exactamente en ambas corridas:
 clock=eae9b3f14dff0dac82412be3d02836d59a734ecf01751622e998a216a9b48b90,
 timing=a288f0c2e537ea6f52e96599f2fda3615393996b587eba5af3513a59d9a17154.
 La verificación final de ASan y SDL se registra arriba.
+
+
+## Corrección E3: regresión de pared en diez minutos (2026-10-26)
+
+La aprobación histórica de la 3.10 no era repetible en este servidor:
+`wall-10min-local-2026-10-26.log` registra nueve resincronizaciones y
+`wall-9000-detail-probe.log` reproduce dos en los primeros 9000 VBlanks.
+El diagnóstico mide **18,961 y 18,890 ms de CPU por VBlank** en las dos
+transiciones afectadas, por encima de los 16,664 ms disponibles. La espera
+acumulada de `produce` es apenas 6,556 ms en las 27 consultas del primer
+tramo y 9,131 ms en las 22 del segundo; no duerme en las dos consultas que
+resincronizan. La contrapresión de A3 no es la causa principal.
+
+El muestreo del hilo del juego atribuye 275/373 muestras a rasterización y
+74/373 a `next_due`: el sondeo de VSync vuelve a recorrer los 32 slots de
+la misma cola miles de veces sin que cambie. `clock.c` conserva ahora el
+mínimo de eventos de dispositivo hasta que una inserción, cancelación,
+despacho o reset invalide la caché. Cada consulta sigue comparando con el
+VBlank y mantiene el desempate por secuencia. No se modifican costos,
+frecuencia, muestras, umbral de resincronización ni la contrapresión de audio.
+
+La regresión corta sintética reproduce textura y fundido de pantalla completa
+seguidos por el VSync real: con el reloj anterior da cinco resincronizaciones
+en 120 VBlanks; con la caché, cero, sin overflow ni underrun. Los casos nuevos
+de `test_clock` verifican las mutaciones de la cola después de consultar su
+mínimo. `clock` y todos los tests `sdl_` pasan (10/10). La traza con disco de
+1000 VBlanks se conserva byte por byte (SHA-256
+`1355d14b6709ce0a2e364f87f7829494e2c8591eebb3b13f0eaba188531dbb69`).
+
+La corrida corregida de 9000 VBlanks da 149978334834 ns y cero
+resincronizaciones. Las dos corridas consecutivas aisladas de diez minutos pasan:
+
+| Corrida | VBlanks | Pared (s) | Error (VBlank) | Resincronizaciones |
+|---|---:|---:|---:|---:|
+| 1 | 36006 | 600,012999970 | 0,010463155 | 0 |
+| 2 | 36006 | 600,012884626 | 0,003541510 | 0 |
+
+Logs: `evidence/story-e3/wall-10min-fixed-{1,2}.log`. El audio registra cero
+overflows y 6/5 underruns en estas cargas largas; el gate corto `sdl_pacing`
+conserva cero en ambos contadores. Las suites completas con disco siguen en
+curso; todavía no se declara la aceptación integral.
+Diagnóstico, procedimiento y logs:
+[wall-pacing-cause.md](../implementation-artifacts/evidence/story-e3/wall-pacing-cause.md).

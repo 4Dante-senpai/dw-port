@@ -1,0 +1,8 @@
+dw1: pacing resynchronization vblank=21 late_ns=67184055
+dw1: pacing resynchronization vblank=43 late_ns=68580921
+dw1: pacing resynchronization vblank=64 late_ns=76622273
+dw1: pacing resynchronization vblank=85 late_ns=67284969
+dw1: pacing resynchronization vblank=106 late_ns=68975055
+dw1: audio_rate overflows=0 underruns=7
+port: wall vblanks=120 nanoseconds=2393739654 resynchronizations=5 rate_num=16934400 rate_den=282199
+port: reached VBlank 120 after frame 0

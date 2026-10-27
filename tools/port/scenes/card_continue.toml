@@ -31,3 +31,7 @@ inputs = [
   {after = "runMainMenu", vblank = 555, buttons = [14]},
   {after = "runMainMenu", vblank = 571, buttons = []},
 ]
+
+# Existing reference: two identical captures; measurement at HEAD 73ffac1.
+reference_sha256 = "7d31999f13609f6a311c6ade5e9e355275f1fc0733b16e348c8c42926fff4a3c"
+image_informative = { reason = "Pending card screen image parity at loadSavegame; cause unverified.", pixels = 469, box = [58, 53, 255, 92] }

@@ -248,6 +248,44 @@ static void cancel_ids(void)
 	CHECK(order_len == 2);
 }
 
+/* Queries can leave a cached empty queue, a device minimum or a VBlank.
+ * Exercise every mutation after a query, including slot reuse inside a callback. */
+static void replace_event(void *arg)
+{
+	mark(arg);
+	clock_schedule(0, mark, (void *)7);
+}
+static void queue_mutations(void)
+{
+	clock_reset();
+	order_len = 0;
+	clock_advance(1); /* query the empty device queue */
+	int later = clock_schedule(100, mark, (void *)1);
+	clock_advance(1); /* query the later minimum */
+	int earlier = clock_schedule(10, mark, (void *)2);
+	clock_advance(1);
+	clock_cancel(earlier);
+	clock_advance(20);
+	CHECK(order_len == 0);
+	clock_schedule(10, mark, (void *)6); /* earlier than the cached later minimum */
+	clock_advance(10);
+	CHECK(order_len == 1 && order[0] == 6);
+	clock_cancel(later);
+	order_len = 0;
+	clock_advance(1); /* cache empty again */
+	clock_schedule(10, replace_event, (void *)3);
+	clock_advance(10);
+	CHECK(order_len == 2 && order[0] == 3 && order[1] == 7);
+	clock_schedule(20, mark, (void *)5);
+	clock_advance(1);
+	clock_reset(); /* discard a previously cached pending event */
+	clock_advance(50);
+	CHECK(order_len == 2);
+	clock_schedule(1, mark, (void *)4);
+	clock_advance(1);
+	CHECK(order_len == 3 && order[2] == 4);
+}
+
 static uint64_t inside, after;
 static void calls_psyq(void)
 {
@@ -467,6 +505,7 @@ static void polling_branch_dispatch(void)
 
 int main(void)
 {
+    queue_mutations();
     polling_branch_dispatch();
 	pad_irq_publication();
 	first_vsync_origin();

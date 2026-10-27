@@ -56,3 +56,24 @@ for stalled in (False, True):
     count = int(counters[1])
     assert count == int(stalled), f'expected {int(stalled)} resynchronizations: {log}'
     assert log.count('pacing resynchronization vblank=') == count, log
+
+# The title transition combines a full-screen texture/fade with fine-grained
+# VSync polling. Repeatedly scanning every event slot makes this workload miss
+# wall deadlines even without an audio wait; keep it covered without disc data.
+env = dict(os.environ, SDL_VIDEODRIVER='offscreen', SDL_AUDIODRIVER='dummy',
+           DW1_TEST_GPU_LOAD='1')
+env.pop('DW1_TEST_HOST_STALL', None)
+run = subprocess.run([sys.argv[1], '--vblanks', '120'], env=env,
+                     capture_output=True, text=True, timeout=5)
+log = run.stdout + run.stderr
+print(log)
+assert run.returncode == 0, log
+wall = re.search(r'wall vblanks=120 nanoseconds=(\d+) resynchronizations=0 '
+                 r'rate_num=(\d+) rate_den=(\d+)', log)
+assert wall, log
+nanoseconds, rate_num, rate_den = map(int, wall.groups())
+assert abs(120 * rate_den * 10**9 - nanoseconds * rate_num) < rate_den * 10**9, \
+    f'wall error exceeds one VBlank: {log}'
+assert 'audio_rate overflows=0 underruns=0' in log, log
+assert 'pacing resynchronization vblank=' not in log, log
+print('sdl_pacing: textured title/fade and VSync polling keep wall deadlines')

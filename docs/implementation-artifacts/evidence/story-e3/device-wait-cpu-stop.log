@@ -1,0 +1,149 @@
+PROBE advance from=1657928 to=3473341 source=cpu
+PROBE advance from=3663979 to=7728235 source=cd
+PROBE advance from=9117464 to=32097842 source=cd
+PROBE advance from=32097842 to=33310243 source=cd
+PROBE underrun ticks=1051204697
+PROBE advance from=34343892 to=35523812 source=cd
+PROBE advance from=35571178 to=37280798 source=cd
+PROBE advance from=55988708 to=57199394 source=cd
+PROBE advance from=58242273 to=59450872 source=cd
+PROBE advance from=61261883 to=62405798 source=cd
+PROBE advance from=62439489 to=77123942 source=cd
+PROBE advance from=77132628 to=78336343 source=cd
+PROBE advance from=79661443 to=80810909 source=cd
+PROBE advance from=81895884 to=83036038 source=cd
+PROBE advance from=85154650 to=86300253 source=cd
+PROBE advance from=96672432 to=100736688 source=cd
+PROBE advance from=135500326 to=136712727 source=cd
+PROBE advance from=189678481 to=190889206 source=cd
+PROBE advance from=190922897 to=199102203 source=cd
+PROBE push vb=340 cycle=191909424 n=512 level=1829 ticks=5717701682
+PROBE push vb=340 cycle=191909424 n=223 level=2341 ticks=5717888011
+PROBE pace vb=340 ticks=5717892667
+PROBE push vb=341 cycle=192473822 n=512 level=1540 ticks=5734383021
+PROBE push vb=341 cycle=192473822 n=222 level=2052 ticks=5734543129
+PROBE pace vb=341 ticks=5734547724
+PROBE push vb=342 cycle=193038220 n=512 level=2274 ticks=5751044315
+PROBE push vb=342 cycle=193038220 n=223 level=2786 ticks=5751220483
+PROBE pace vb=342 ticks=5751225174
+PROBE push vb=343 cycle=193602618 n=512 level=1975 ticks=5767737178
+PROBE push vb=343 cycle=193602618 n=223 level=2487 ticks=5767915291
+PROBE pace vb=343 ticks=5767919910
+PROBE push vb=344 cycle=194167016 n=512 level=1683 ticks=5784372804
+PROBE push vb=344 cycle=194167016 n=223 level=2195 ticks=5784536353
+PROBE pace vb=344 ticks=5784541120
+PROBE push vb=345 cycle=194731414 n=512 level=1394 ticks=5801005685
+PROBE push vb=345 cycle=194731414 n=223 level=1906 ticks=5801166011
+PROBE pace vb=345 ticks=5801173493
+PROBE push vb=346 cycle=195295812 n=512 level=2129 ticks=5817762972
+PROBE push vb=346 cycle=195295812 n=223 level=2641 ticks=5817935372
+PROBE pace vb=346 ticks=5817939730
+PROBE push vb=347 cycle=195860210 n=512 level=1833 ticks=5834332576
+PROBE push vb=347 cycle=195860210 n=223 level=2345 ticks=5834511024
+PROBE pace vb=347 ticks=5834515746
+PROBE push vb=348 cycle=196424608 n=512 level=1544 ticks=5851044890
+PROBE push vb=348 cycle=196424608 n=223 level=2056 ticks=5851217302
+PROBE pace vb=348 ticks=5851221891
+PROBE push vb=349 cycle=196989006 n=512 level=2279 ticks=5867707757
+PROBE push vb=349 cycle=196989006 n=223 level=1762 ticks=5867972624
+PROBE pace vb=349 ticks=5867980699
+PROBE push vb=350 cycle=197553404 n=512 level=1985 ticks=5884384114
+PROBE push vb=350 cycle=197553404 n=222 level=2497 ticks=5884556927
+PROBE pace vb=350 ticks=5884561647
+PROBE push vb=351 cycle=198117802 n=512 level=1691 ticks=5901094367
+PROBE push vb=351 cycle=198117802 n=223 level=2203 ticks=5901268480
+PROBE pace vb=351 ticks=5901273322
+PROBE push vb=352 cycle=198682200 n=512 level=1402 ticks=5917694045
+PROBE push vb=352 cycle=198682200 n=223 level=1914 ticks=5917856413
+PROBE pace vb=352 ticks=5917860893
+PROBE advance from=199108792 to=200314604 source=cd
+PROBE push vb=353 cycle=199246598 n=512 level=2137 ticks=5934369382
+PROBE push vb=353 cycle=199246598 n=223 level=2649 ticks=5934507785
+PROBE pace vb=353 ticks=5934511874
+PROBE push vb=354 cycle=199810996 n=512 level=1841 ticks=5951005493
+PROBE push vb=354 cycle=199810996 n=223 level=2353 ticks=5951199867
+PROBE pace vb=354 ticks=5951205531
+PROBE push vb=355 cycle=200375394 n=512 level=1552 ticks=5967769078
+PROBE push vb=355 cycle=200375394 n=223 level=2064 ticks=5967942266
+PROBE pace vb=355 ticks=5967946848
+PROBE push vb=356 cycle=200939804 n=512 level=1264 ticks=5990641619
+PROBE push vb=356 cycle=200939804 n=223 level=1776 ticks=5990809484
+PROBE pace vb=356 ticks=5990819436
+PROBE push vb=356 cycle=200970462 n=40 level=1999 ticks=6000923891
+build/port/native/dw1[0x81accd3]
+build/port/native/dw1(clock_advance_cost+0x65)[0x81acf55]
+build/port/native/dw1(DecDCTvlcBuild+0x4d1)[0x81c5811]
+build/port/native/dw1(MOV_playMovie+0xde)[0x813c5de]
+build/port/native/dw1(startMovie+0x77)[0x8139907]
+build/port/native/dw1(playMovie+0x38)[0x8139ec8]
+build/port/native/dw1(dw1_game_main+0x11a)[0x80fa4ca]
+build/port/native/dw1[0x81a8798]
+/lib/i386-linux-gnu/libc.so.6(+0x8ce57)[0xec391e57]
+/lib/i386-linux-gnu/libc.so.6(__clone+0x66)[0xec429246]
+PROBE advance from=200970462 to=202671907 source=cpu
+PROBE push vb=357 cycle=201504190 n=512 level=2039 ticks=6002263566
+PROBE push vb=357 cycle=201504190 n=183 level=2551 ticks=6002378177
+PROBE push vb=358 cycle=202068588 n=512 level=2734 ticks=6002694904
+PROBE push vb=358 cycle=202068588 n=223 level=3246 ticks=6002835721
+PROBE push vb=359 cycle=202632986 n=512 level=3469 ticks=6003151779
+PROBE push vb=359 cycle=202632986 n=223 level=3981 ticks=6003292181
+PROBE push vb=360 cycle=203197384 n=512 level=4204 ticks=6005159556
+PROBE push vb=360 cycle=203197384 n=222 level=4716 ticks=6005310675
+PROBE push vb=361 cycle=203761782 n=512 level=3894 ticks=6007911485
+PROBE push vb=361 cycle=203761782 n=223 level=4406 ticks=6008070034
+PROBE push vb=362 cycle=204326180 n=512 level=4629 ticks=6010170891
+PROBE push vb=362 cycle=204326180 n=223 level=5141 ticks=6010320633
+PROBE push vb=363 cycle=204890578 n=512 level=5364 ticks=6013587603
+PROBE push vb=363 cycle=204890578 n=223 level=5876 ticks=6013783319
+PROBE push vb=364 cycle=205454976 n=512 level=6099 ticks=6016019317
+PROBE push vb=364 cycle=205454976 n=223 level=6611 ticks=6016174571
+PROBE push vb=365 cycle=206019374 n=512 level=6834 ticks=6018808334
+PROBE push vb=365 cycle=206019374 n=223 level=7346 ticks=6018992996
+PROBE push vb=366 cycle=206583772 n=512 level=6524 ticks=6033549618
+PROBE push vb=366 cycle=206583772 n=223 level=7036 ticks=6033712436
+PROBE push vb=366 cycle=206616803 n=43 level=7259 ticks=6033913578
+PROBE push vb=367 cycle=207148170 n=512 level=7302 ticks=6036321182
+PROBE push vb=367 cycle=207148170 n=180 level=7814 ticks=6036451374
+PROBE push vb=368 cycle=207712577 n=512 level=7994 ticks=6041171623
+PROBE overflow vb=368 cycle=207712577 lost=314 handler=0 ticks=6041178717
+PROBE push vb=368 cycle=207712577 n=223 level=8192 ticks=6041373574
+PROBE overflow vb=368 cycle=207712577 lost=223 handler=0 ticks=6041377796
+PROBE gap cd=26993
+PROBE gap gpu=0
+PROBE gap mdec=0
+PROBE gap card=0
+PROBE gap psyq=3189
+PROBE gap wait=0
+PROBE gap cpu=6742591
+PROBE gap spu=0
+PROBE pace vb=368 ticks=6041414913
+PROBE underrun ticks=6214709138
+PROBE push vb=369 cycle=208276966 n=512 level=1 ticks=6216641564
+PROBE push vb=369 cycle=208276966 n=222 level=513 ticks=6216831396
+PROBE push vb=369 cycle=208423078 n=191 level=735 ticks=6217477965
+PROBE push vb=370 cycle=208841374 n=512 level=926 ticks=6222098395
+PROBE push vb=370 cycle=208841374 n=32 level=1438 ticks=6222138680
+PROBE pace vb=370 ticks=6222143084
+PROBE push vb=371 cycle=209405762 n=512 level=1470 ticks=6248371728
+PROBE push vb=371 cycle=209405762 n=223 level=1982 ticks=6248538197
+PROBE push vb=372 cycle=209970168 n=512 level=2205 ticks=6253313461
+PROBE push vb=372 cycle=209970168 n=223 level=2717 ticks=6253481188
+PROBE pace vb=372 ticks=6253485738
+PROBE push vb=372 cycle=210229331 n=338 level=1908 ticks=6277860232
+PROBE push vb=373 cycle=210534558 n=397 level=2246 ticks=6283035099
+PROBE push vb=374 cycle=211098974 n=512 level=1617 ticks=6287892150
+PROBE push vb=374 cycle=211098974 n=223 level=2129 ticks=6288047645
+PROBE pace vb=374 ticks=6288094623
+PROBE push vb=375 cycle=211663354 n=512 level=1328 ticks=6314966955
+PROBE push vb=375 cycle=211663354 n=223 level=1840 ticks=6315135515
+PROBE push vb=375 cycle=212035608 n=485 level=2063 ticks=6318170360
+dw1: audio_rate overflows=537 underruns=2
+port: libgte table rsin_tbl sha256 f3c96402945a33c125f918b4487421c4798141c8b958927fd8437eecadc601d7
+port: libgte table SQRT sha256 45ca1b7b619b33961c03c82243b8baf59fc50c49b4d7eefc94b76edbd417a5c8
+port: libgte table rcossin_tbl sha256 b40c47b014ca8650c539760fd4c519cabce6f091628566ca0dd22318bb2c5b7a
+port: libgte table ratan_tbl sha256 423668b6164114405675398f08d4623fee2dad1a203d0e4958d4b70341969d02
+port: libpress table mdec_iq sha256 22b0a18f9c1e01de3f659ebb2fc3c27b2806ed56cca4b98013c76fdd44158f77
+port: libpress table mdec_coef sha256 391ecd19658b4284a26410762115804676432e1b350c369ecbf75d1ccf0bfa79
+port: libpress table data_2 sha256 86bfa7f158814c9ab59bcd5138347853f1e238652d01eb6f684ed6ae0982b4e3
+port: wall vblanks=400 nanoseconds=6665786562 resynchronizations=0 rate_num=16934400 rate_den=282199
+port: reached VBlank 400 after frame 0
