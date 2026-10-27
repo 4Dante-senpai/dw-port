@@ -500,6 +500,15 @@ endif()
 target_link_libraries(dw1_pack_lib PUBLIC Threads::Threads)
 target_include_directories(dw1_pack_lib PUBLIC port/host/pack)
 target_compile_options(dw1_pack_lib PRIVATE -Wall -Wextra -Werror)
+if(EMSCRIPTEN)
+  add_executable(dw1_pack tools/port/pack/dw1_pack.c)
+  target_link_libraries(dw1_pack dw1_pack_lib)
+  target_link_options(dw1_pack PRIVATE -sENVIRONMENT=worker -sMODULARIZE=1
+    -sEXPORT_NAME=createPackModule -sINVOKE_RUN=0 -sEXIT_RUNTIME=0
+    -sINITIAL_MEMORY=67108864 -sALLOW_MEMORY_GROWTH=0 -sSTACK_SIZE=1048576
+    -lworkerfs.js -sFORCE_FILESYSTEM=1 -sEXPORTED_RUNTIME_METHODS=FS,WORKERFS,callMain)
+  configure_file(tools/port/manifest/us.tsv ${CMAKE_BINARY_DIR}/us.tsv COPYONLY)
+endif()
 if(NOT EMSCRIPTEN)
   add_executable(dw1-pack tools/port/pack/dw1_pack.c)
   target_link_libraries(dw1-pack dw1_pack_lib)
@@ -674,6 +683,7 @@ add_test(NAME fnptr_scanner COMMAND python3 -I -B
 add_test(NAME fnptr_inventory COMMAND python3 -I -B
   ${CMAKE_SOURCE_DIR}/tools/port/fnptr/inventory.py ${CMAKE_BINARY_DIR})
 if(EMSCRIPTEN)
+  configure_file(port/web/tests/disc_hash_worker.js ${CMAKE_BINARY_DIR}/disc_hash_worker.js COPYONLY)
   configure_file(port/web/tests/seed.html ${CMAKE_BINARY_DIR}/seed.html COPYONLY)
   configure_file(port/web/tests/seed_worker.js ${CMAKE_BINARY_DIR}/seed_worker.js COPYONLY)
   configure_file(port/web/io_worker.js ${CMAKE_BINARY_DIR}/io_worker.js COPYONLY)
@@ -699,9 +709,15 @@ if(EMSCRIPTEN)
     ${CMAKE_SOURCE_DIR}/tools/port/testing/test_deploy.py)
   add_test(NAME testing_context COMMAND python3 -B
     ${CMAKE_SOURCE_DIR}/tools/port/testing/test_context.py)
+  foreach(suite disc disc_real)
+    add_test(NAME web_${suite} COMMAND python3 -I -B
+      ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} ${suite})
+    set_tests_properties(web_${suite} PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1800)
+  endforeach()
   add_test(NAME web_io COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} io)
   set_tests_properties(web_io PROPERTIES TIMEOUT 180)
+  set_tests_properties(web_disc_real PROPERTIES FIXTURES_REQUIRED disc_pack TIMEOUT 3300)
   add_test(NAME pack_disc COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/pack/test_pack_disc.sh
     ${CMAKE_SOURCE_DIR}/build/port/native-headless/dw1-pack ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/us.pack)
   set_tests_properties(pack_disc PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600 FIXTURES_SETUP disc_pack)

@@ -383,6 +383,62 @@ un getter que falla ante cualquier acceso a `navigator.storage` en los pthreads.
 `?capture-mark=runLandingScreen&capture-vblank=60&frames=10000&pack=1` publica el
 PPM en `Module.capture` y el resultado final en `Module.finished` (0 éxito).
 Los PPM y Packs solo quedan en `build/`; los JSON del título contienen hashes,
-modo de prueba y conteos. No hay selector ni constructor de Pack en el navegador.
+modo de prueba y conteos. El recorrido con disco propio se describe a continuación.
 
 El build del port genera copias de todas las fuentes del Juego con literales CP932 en escapes octales (`tools/port/sjis_literals.py`), conservando la ruta original mediante `#line` y sin modificar `src/`.
+
+
+### Disco propio y Pack en OPFS (historia 4.3)
+
+Abrir `/` permite seleccionar un `.bin` solo, o su `.bin` y `.cue`, y también
+arrastrarlos sobre el selector. El worker monta los `File` con WORKERFS y llama
+la misma CLI C que el port nativo. El Manifest público es `/us.tsv`, copiado de
+`tools/port/manifest/us.tsv`. El módulo `dw1_pack.js`/`dw1_pack.wasm` usa memoria
+fija de 64 MiB, sin pool de pthreads. No carga la imagen ni el Pack completos.
+Las lecturas se hacen por partes y el nodo de salida escribe directamente a un
+handle síncrono de `dw1/us.pack.tmp`. Tras validar y calcular el SHA con el mismo
+C, mueve el archivo a `us.pack` y publica `us.pack.sha256`. Conserva temporalmente
+el Pack anterior para restaurarlo si falla la publicación del sidecar.
+
+Al terminar aparece «Listo para jugar» y se solicita persistencia sin bloquear
+«Jugar». La denegación muestra un aviso. Recargar reconoce Pack y sidecar;
+«Borrar datos» elimina el directorio `dw1/`. El cargador del fixture de testing
+se muestra únicamente cuando responde `/__fixture/us.pack.sha256`.
+
+Dentro del contenedor, sin disco (clase A y comprobación del salto clase B):
+
+```sh
+cmake --preset web
+cmake --build --preset web
+ctest --preset web
+```
+
+`web_disc` genera un disco sintético de 32 sectores, obtiene su Manifest con
+`dw1-pack manifest` en wasm y sustituye `/us.tsv` mediante Playwright. Comprueba
+selección, arrastre, errores del C, persistencia denegada, recarga, borrado y
+conservación del Pack previo ante errores de validación o escritura. Chromium
+usa el navegador completo y `ForceEagerMeasureMemory` para medir con
+`performance.measureUserAgentSpecificMemory()`; Firefox registra memoria nula
+porque no expone esa API. La prueba sintética pausa el worker antes del
+constructor C para incluir su heap en la muestra. El umbral comprobado en
+Chromium es 512 MiB.
+
+Clase B con el disco privado (no se publica ni se agrega a la evidencia):
+
+```sh
+cmake --preset native-headless
+cmake --build --preset native-headless
+DW1_DISC_DIR=/dw/game_rom/extracted ctest --preset web -R 'pack_disc|web_disc_real' --output-on-failure
+ctest --preset native-headless
+cmake --preset native-asan
+cmake --build --preset native-asan
+ctest --preset native-asan
+```
+
+`web_disc_real` requiere `DW1_DISC_DIR`; sin él sale con 77. Su fixture prepara
+el Pack nativo y el test vuelve a construirlo en ambos navegadores desde los
+archivos elegidos. Reabre el archivo OPFS, recalcula su SHA por partes y compara
+archivo y sidecar contra el SHA nativo conocido. Los JSON `disc-*.json` y
+`disc-real-*.json` en `build/port/web/` contienen memoria máxima, hashes y el
+tiempo desde la selección hasta «Listo para jugar» (SM-4, milisegundos). Solo se
+copian esos metadatos a `docs/implementation-artifacts/evidence/story-4-3/`.
