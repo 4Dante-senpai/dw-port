@@ -1,0 +1,75 @@
+Test project /dw/build/port/native-headless
+      Start 74: reference_card_newgame
+      Start 55: pack_disc
+      Start 51: scene_runner
+ 1/10 Test #51: scene_runner .....................   Passed    2.99 sec
+ 2/10 Test #55: pack_disc ........................   Passed   32.41 sec
+ 3/10 Test #74: reference_card_newgame ...........   Passed  212.51 sec
+      Start 75: scene_card_newgame_compare
+ 4/10 Test #75: scene_card_newgame_compare .......   Passed   18.07 sec
+      Start 63: reference_map_load
+ 5/10 Test #63: reference_map_load ...............   Passed  1174.18 sec
+      Start 62: reference_newgame_state
+ 6/10 Test #62: reference_newgame_state ..........   Passed  3708.06 sec
+      Start 76: reference_card_continue
+ 7/10 Test #76: reference_card_continue ..........   Passed  208.04 sec
+      Start 64: scene_map_load_compare
+ 8/10 Test #64: scene_map_load_compare ...........   Passed  157.75 sec
+      Start 73: scene_newgame_state
+ 9/10 Test #73: scene_newgame_state ..............   Passed  517.32 sec
+      Start 77: scene_card_continue_compare
+10/10 Test #77: scene_card_continue_compare ......   Passed   17.62 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Total Test time (real) = 6013.54 sec
+Test project /dw/build/port/native-asan
+      Start 72: reference_card_newgame
+      Start 53: pack_disc
+      Start 49: scene_runner
+ 1/10 Test #49: scene_runner .....................   Passed    3.17 sec
+ 2/10 Test #53: pack_disc ........................   Passed   27.58 sec
+ 3/10 Test #72: reference_card_newgame ...........   Passed  206.35 sec
+      Start 73: scene_card_newgame_compare
+ 4/10 Test #73: scene_card_newgame_compare .......   Passed   17.86 sec
+      Start 74: reference_card_continue
+ 5/10 Test #74: reference_card_continue ..........   Passed  196.11 sec
+      Start 60: reference_newgame_state
+ 6/10 Test #60: reference_newgame_state ..........   Passed   90.36 sec
+      Start 61: reference_map_load
+ 7/10 Test #61: reference_map_load ...............   Passed   22.66 sec
+      Start 62: scene_map_load_compare
+ 8/10 Test #62: scene_map_load_compare ...........   Passed  154.37 sec
+      Start 71: scene_newgame_state
+ 9/10 Test #71: scene_newgame_state ..............   Passed  499.63 sec
+      Start 75: scene_card_continue_compare
+10/10 Test #75: scene_card_continue_compare ......   Passed   18.89 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Total Test time (real) = 1206.24 sec
+Test project /dw/build/port/native
+      Start 85: reference_card_newgame
+      Start 66: pack_disc
+      Start 62: scene_runner
+ 1/10 Test #62: scene_runner .....................   Passed    3.15 sec
+ 2/10 Test #66: pack_disc ........................   Passed   32.29 sec
+ 3/10 Test #85: reference_card_newgame ...........   Passed  195.07 sec
+      Start 86: scene_card_newgame_compare
+ 4/10 Test #86: scene_card_newgame_compare .......   Passed    9.89 sec
+      Start 87: reference_card_continue
+ 5/10 Test #87: reference_card_continue ..........   Passed  194.41 sec
+      Start 73: reference_newgame_state
+ 6/10 Test #73: reference_newgame_state ..........   Passed   89.30 sec
+      Start 74: reference_map_load
+ 7/10 Test #74: reference_map_load ...............   Passed   22.02 sec
+      Start 84: scene_newgame_state
+ 8/10 Test #84: scene_newgame_state ..............   Passed  274.47 sec
+      Start 75: scene_map_load_compare
+ 9/10 Test #75: scene_map_load_compare ...........   Passed   92.15 sec
+      Start 88: scene_card_continue_compare
+10/10 Test #88: scene_card_continue_compare ......   Passed    9.58 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Total Test time (real) = 886.90 sec

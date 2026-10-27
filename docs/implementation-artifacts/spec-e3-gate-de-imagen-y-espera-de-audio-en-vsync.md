@@ -2,7 +2,7 @@
 title: 'Corrección E3: gate de imagen en Escenas de estado y espera de audio en VSync'
 type: 'bugfix'
 created: '2026-10-26'
-status: 'in-progress'
+status: 'done'
 route: 'dispatch'
 baseline_commit: '73ffac194c5fdc795ea175681fc6aaf9cd388e97'
 review_loop_iteration: 0
@@ -74,15 +74,15 @@ Decisiones del dueño (2026-10-26, retro de la Épica 3):
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `tools/port/scenes/run.py` -- con `--state`, que una diferencia de imagen haga fallar la corrida salvo que el `.toml` declare imagen informativa con motivo. Validar ese campo al cargar la Escena -- cierra F2.
-- [ ] `tools/port/scenes/{newgame,card_newgame,card_continue}.toml` -- medir la captura en el HEAD. Si coincide, no se agrega nada. Si no, agregar la marca con el motivo y los píxeles y la caja medidos -- cada Escena queda gate o excepción explícita.
-- [ ] `tools/port/scenes/test_runner.py` -- probar con capturas sintéticas: igual (sale 0), distinta (falla), informativa declarada (sale 0) e informativa sin motivo (error).
-- [ ] `port/host/sdl/audio.c` -- quitar la espera de `produce`.
-- [ ] `port/host/sdl/video.c`, `port/host/plat.h`, `port/psyq/crt.c`, `port/psyq/clock.c` -- pacear también en el `VSync` no bloqueante y en las esperas bloqueantes de dispositivo del reloj (el punto único donde una espera salta al próximo evento), con el mismo acumulador de deadline, y respetar headless y `port_capture_active()` -- cierra F3.
-- [ ] `docs/planning-artifacts/architecture/architecture-dw-port-2026-10-11/ARCHITECTURE-SPINE.md` (AD-8, "Reloj de pared") -- enmendar: la pared pausa solo en `VSync` y en esperas bloqueantes de dispositivo, nunca en escrituras de registros -- decisión del dueño.
-- [ ] `port/host/tests/` o `tools/port/test_sdl_pacing.py` -- un test que falle si el productor de audio vuelve a dormir fuera de `VSync`, y verificación de `dw1 --frames 1200` con `overflows=0 underruns=0`.
-- [ ] `docs/implementation-artifacts/epic-3-retro-2026-10-26.md` (solo las filas A1 y A3 de Acciones), `docs/port/src-changes.md` si corresponde -- registrar el cierre con la evidencia.
-- [ ] `docs/implementation-artifacts/evidence/story-e3/` -- log de la corrida de las Escenas `--state`, `sdl_frame0`, `sdl_pacing`, `native_wall_10min` y `dw1 --frames 1200`.
+- [x] `tools/port/scenes/run.py` -- con `--state`, que una diferencia de imagen haga fallar la corrida salvo que el `.toml` declare imagen informativa con motivo. Validar ese campo al cargar la Escena -- cierra F2.
+- [x] `tools/port/scenes/{newgame,card_newgame,card_continue}.toml` -- medir la captura en el HEAD. Si coincide, no se agrega nada. Si no, agregar la marca con el motivo y los píxeles y la caja medidos -- cada Escena queda gate o excepción explícita.
+- [x] `tools/port/scenes/test_runner.py` -- probar con capturas sintéticas: igual (sale 0), distinta (falla), informativa declarada (sale 0) e informativa sin motivo (error).
+- [x] ~~`port/host/sdl/audio.c` -- quitar la espera de `produce`.~~ Superada por la opción 2 del dueño.
+- [x] ~~`port/host/sdl/video.c`, `port/host/plat.h`, `port/psyq/crt.c`, `port/psyq/clock.c` -- pacear también en el `VSync` no bloqueante y en las esperas bloqueantes de dispositivo del reloj (el punto único donde una espera salta al próximo evento), con el mismo acumulador de deadline, y respetar headless y `port_capture_active()` -- cierra F3.~~ Superada por la opción 2 del dueño.
+- [x] `docs/planning-artifacts/architecture/architecture-dw-port-2026-10-11/ARCHITECTURE-SPINE.md` (AD-8, "Reloj de pared") -- enmendar: la pared pausa solo en `VSync` y en esperas bloqueantes de dispositivo, nunca en escrituras de registros -- decisión del dueño.
+- [x] ~~`port/host/tests/` o `tools/port/test_sdl_pacing.py` -- un test que falle si el productor de audio vuelve a dormir fuera de `VSync`, y verificación de `dw1 --frames 1200` con `overflows=0 underruns=0`.~~ Superada por la opción 2 del dueño.
+- [x] `docs/implementation-artifacts/epic-3-retro-2026-10-26.md` (solo las filas A1 y A3 de Acciones), `docs/port/src-changes.md` si corresponde -- registrar el cierre con la evidencia.
+- [x] `docs/implementation-artifacts/evidence/story-e3/` -- log de la corrida de las Escenas `--state`, `sdl_frame0`, `sdl_pacing`, `native_wall_10min` y `dw1 --frames 1200`.
 
 **Acceptance Criteria:**
 - Given el disco USA, when corren `scene_map_load_compare`, `scene_newgame` y `scene_card_*_compare`, then cada una o exige la imagen exacta y pasa, o declara la excepción con motivo y medición.
@@ -98,9 +98,31 @@ para pausar, con desborde antes del siguiente pacing. `--frames 1200` termina co
 `overflows=630 underruns=3`. El ensayo se retiró; se mantienen A1 y la enmienda AD-8.
 Evidencia, comandos y verificaciones pendientes: [device-wait-followup.md](evidence/story-e3/device-wait-followup.md).
 
+2026-10-27, cierre. Con la opción 2 del dueño, la espera de `produce` se conserva como
+excepción de AD-8, así que quedan superadas las tareas de quitarla y de pacear en las esperas
+de dispositivo, junto con los criterios `rg SDL_Delay` y `--frames 1200` con `underruns=0`.
+Sigue `overflows=0`. `--frames 1200` da `underruns=2`, igual que en `main` (`73ffac1`); se
+difirió como F15 de la retro. El patch de la review (hallazgo 1) confina las diferencias de
+una Escena informativa a su caja declarada. Suites con disco en el PC del dueño:
+`native-headless` 83/83, `native-asan` 81/81 y `native` 94/94; después del patch, las escenas
+`newgame`, `card_*` y `map_load` pasan en los tres presets (`evidence/story-e3/gate-scenes.log`).
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+Review `codex-merged` (blind-hunter, verification-gap, edge-case-hunter) sobre `build/review/e3-gate.diff` (`73ffac1..0352b30`).
+
+| # | Hallazgo | Veredicto | Evidencia | Ruta |
+|---|---|---|---|---|
+| 1 | `image_informative` acepta cualquier diferencia, aunque caiga fuera de la caja medida (blind-hunter, edge-case-hunter) | medium | `run.py:757-759`: con la declaración, `compare_capture` podía dar diferencias en cualquier lugar y la corrida salía 0. Una regresión visual nueva en `newgame` o las tarjetas pasaba sin aviso. | patch: la caja declarada entra como región de `exceptions`; un píxel fuera de ella falla. Caso `outside` en `test_runner.py` |
+| 2 | Caja fuera del frame o `pixels` mayor que el área de la caja | low | Con el patch 1 la caja limita las diferencias; una caja más grande que el frame solo afloja la excepción declarada a mano. | rechazado |
+| 3 | La validación anticipada de `validate_comparison` impide regenerar un PPM obsoleto con `--state` | low | El PPM fijado por hash se regenera con `capture.py` directo; el error ya lo indica. | rechazado |
+| 4 | `image_informative` sin prueba con `--compare` | low | Mismo camino de código (`if args.compare or args.state`). | rechazado |
+| 5 | Ninguna prueba regenera un PPM distinto del hash fijado | low | La segunda `validate_comparison` cubre ese caso; para fallar hay que regenerar una referencia corrupta. | rechazado |
+| 6 | Escena informativa con dimensiones distintas sin prueba | low | `compare_capture` lanza `ValueError` por dimensiones antes de mirar excepciones (`run.py:82-83`); no hay rama que lo capture. | rechazado |
+| 7 | Con estado divergente no se genera `diff.ppm` | low | El diagnóstico principal es el estado; la imagen se obtiene en la corrida siguiente. | rechazado |
+| 8 | El criterio `rg SDL_Delay` contradice la decisión aceptada del dueño | false | No es un defecto del código: la opción 2 (Intent) conserva la espera; el criterio quedó superado y se anota en Implementation Notes. | rechazado (edita la spec) |
 
 ## Verification
 

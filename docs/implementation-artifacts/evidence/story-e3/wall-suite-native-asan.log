@@ -1,0 +1,169 @@
+build_native-asan=0
+Test project /dw/build/port/native-asan
+      Start 72: reference_card_newgame
+      Start 53: pack_disc
+      Start 44: pack
+      Start 31: test_preproc_check
+      Start  2: audio_rate
+      Start 30: preproc_check
+      Start 80: reference_capture_unit
+      Start 29: inventory
+ 1/81 Test #44: pack .............................   Passed    0.03 sec
+      Start 78: fnptr_inventory
+ 2/81 Test #78: fnptr_inventory ..................   Passed    4.79 sec
+      Start 79: shop_overlay_unit
+ 3/81 Test #79: shop_overlay_unit ................   Passed    0.06 sec
+      Start 49: scene_runner
+ 4/81 Test  #2: audio_rate .......................   Passed    6.94 sec
+      Start  7: scene_audio_unit
+ 5/81 Test #49: scene_runner .....................   Passed    2.52 sec
+      Start  6: xa_vectors
+ 6/81 Test  #6: xa_vectors .......................   Passed    0.71 sec
+      Start 43: watchdog
+ 7/81 Test  #7: scene_audio_unit .................   Passed    1.37 sec
+      Start 36: clock
+ 8/81 Test #36: clock ............................   Passed    0.29 sec
+      Start  8: scene_timing_unit
+ 9/81 Test  #8: scene_timing_unit ................   Passed    0.06 sec
+      Start  1: sjis_literals
+10/81 Test  #1: sjis_literals ....................   Passed    0.11 sec
+      Start  5: spu_vectors
+11/81 Test #43: watchdog .........................   Passed    0.91 sec
+      Start 46: libcd
+12/81 Test #46: libcd ............................   Passed    0.25 sec
+      Start 41: frame0
+13/81 Test  #5: spu_vectors ......................   Passed    0.64 sec
+      Start 51: scene_state_unit
+14/81 Test #41: frame0 ...........................   Passed    0.27 sec
+      Start  9: spu
+15/81 Test #29: inventory ........................   Passed    9.70 sec
+      Start 52: scene_audio_runtime
+16/81 Test  #9: spu ..............................   Passed    0.20 sec
+      Start 50: scene_flags
+17/81 Test #51: scene_state_unit .................   Passed    0.36 sec
+      Start 77: fnptr_scanner
+18/81 Test #77: fnptr_scanner ....................   Passed    0.15 sec
+      Start 28: gen_stubs
+19/81 Test #52: scene_audio_runtime ..............   Passed    0.23 sec
+      Start 15: cd_stream
+20/81 Test #15: cd_stream ........................   Passed    0.10 sec
+      Start  3: press_tables
+21/81 Test #50: scene_flags ......................   Passed    0.30 sec
+      Start 19: gpu
+22/81 Test  #3: press_tables .....................   Passed    0.06 sec
+      Start 17: card_host
+23/81 Test #17: card_host ........................   Passed    0.05 sec
+      Start 18: card_cli
+24/81 Test #18: card_cli .........................   Passed    0.03 sec
+      Start 14: libsnd
+25/81 Test #28: gen_stubs ........................   Passed    0.28 sec
+      Start  4: mdec_vectors
+26/81 Test  #4: mdec_vectors .....................   Passed    0.04 sec
+      Start 27: tu_list
+27/81 Test #14: libsnd ...........................   Passed    0.09 sec
+      Start 45: av_stubs
+28/81 Test #19: gpu ..............................   Passed    0.23 sec
+      Start 22: gte_tables
+29/81 Test #45: av_stubs .........................   Passed    0.05 sec
+      Start 47: libgte_host
+30/81 Test #22: gte_tables .......................   Passed    0.06 sec
+      Start 10: xa
+31/81 Test #10: xa ...............................   Passed    0.02 sec
+      Start 24: pre_commit
+32/81 Test #47: libgte_host ......................   Passed    0.07 sec
+      Start 25: rts_info
+33/81 Test #27: tu_list ..........................   Passed    0.14 sec
+      Start 16: card
+34/81 Test #16: card .............................   Passed    0.01 sec
+      Start 26: ovl_starts
+35/81 Test #24: pre_commit .......................   Passed    0.05 sec
+      Start 12: libpress
+36/81 Test #12: libpress .........................   Passed    0.01 sec
+      Start 11: mdec
+37/81 Test #25: rts_info .........................   Passed    0.06 sec
+      Start 33: psyq_prototypes
+38/81 Test #11: mdec .............................   Passed    0.01 sec
+      Start 35: ps1mem
+39/81 Test #26: ovl_starts .......................   Passed    0.05 sec
+      Start 21: libgpu
+40/81 Test #33: psyq_prototypes ..................   Passed    0.04 sec
+      Start 37: libc_heap_pad
+41/81 Test #35: ps1mem ...........................   Passed    0.04 sec
+      Start 38: gte
+42/81 Test #21: libgpu ...........................   Passed    0.04 sec
+      Start 48: dw1_foreign_pack
+43/81 Test #37: libc_heap_pad ....................   Passed    0.02 sec
+      Start 13: libspu
+44/81 Test #38: gte ..............................   Passed    0.02 sec
+      Start 32: ps1_ram_addr_range
+45/81 Test #13: libspu ...........................   Passed    0.01 sec
+      Start 20: libgs
+46/81 Test #48: dw1_foreign_pack .................   Passed    0.02 sec
+      Start 42: dw1_bad_args
+47/81 Test #20: libgs ............................   Passed    0.01 sec
+      Start 23: libgte
+48/81 Test #32: ps1_ram_addr_range ...............   Passed    0.02 sec
+      Start 34: setjmp
+49/81 Test #42: dw1_bad_args .....................   Passed    0.01 sec
+      Start 40: overlay_O2
+50/81 Test #34: setjmp ...........................   Passed    0.01 sec
+      Start 39: overlay_O0
+51/81 Test #23: libgte ...........................   Passed    0.01 sec
+52/81 Test #40: overlay_O2 .......................   Passed    0.01 sec
+53/81 Test #39: overlay_O0 .......................   Passed    0.01 sec
+54/81 Test #80: reference_capture_unit ...........   Passed   11.20 sec
+55/81 Test #30: preproc_check ....................   Passed   18.75 sec
+56/81 Test #53: pack_disc ........................   Passed   20.82 sec
+      Start 56: scene_title
+      Start 55: press_tables_disc
+      Start 54: gte_tables_disc
+      Start 76: dw1_overlay
+57/81 Test #76: dw1_overlay ......................   Passed    0.32 sec
+58/81 Test #54: gte_tables_disc ..................   Passed    0.37 sec
+59/81 Test #55: press_tables_disc ................   Passed    0.38 sec
+60/81 Test #31: test_preproc_check ...............   Passed   83.44 sec
+61/81 Test #56: scene_title ......................   Passed   66.34 sec
+62/81 Test #72: reference_card_newgame ...........   Passed  149.40 sec
+      Start 73: scene_card_newgame_compare
+63/81 Test #73: scene_card_newgame_compare .......   Passed   21.36 sec
+      Start 81: reference_title
+64/81 Test #81: reference_title ..................   Passed  889.59 sec
+      Start 74: reference_card_continue
+      Start 57: scene_title_compare
+65/81 Test #57: scene_title_compare ..............   Passed   92.11 sec
+66/81 Test #74: reference_card_continue ..........   Passed  166.54 sec
+      Start 61: reference_map_load
+67/81 Test #61: reference_map_load ...............   Passed   21.56 sec
+      Start 60: reference_newgame_state
+68/81 Test #60: reference_newgame_state ..........   Passed   92.85 sec
+      Start 58: reference_naming
+69/81 Test #58: reference_naming .................   Passed   23.11 sec
+      Start 67: reference_movie0
+70/81 Test #67: reference_movie0 .................   Passed    7.34 sec
+      Start 63: reference_title_audio
+71/81 Test #63: reference_title_audio ............   Passed    1.05 sec
+      Start 65: reference_xa_op1
+72/81 Test #65: reference_xa_op1 .................   Passed    0.73 sec
+      Start 69: reference_movie0_skip
+73/81 Test #69: reference_movie0_skip ............   Passed    0.18 sec
+      Start 62: scene_map_load_compare
+74/81 Test #62: scene_map_load_compare ...........   Passed  158.91 sec
+      Start 71: scene_newgame_state
+75/81 Test #71: scene_newgame_state ..............   Passed  529.85 sec
+      Start 59: scene_naming_compare
+76/81 Test #59: scene_naming_compare .............   Passed  160.43 sec
+      Start 68: scene_movie0_compare
+77/81 Test #68: scene_movie0_compare .............   Passed  326.68 sec
+      Start 64: scene_title_audio_compare
+78/81 Test #64: scene_title_audio_compare ........   Passed  312.26 sec
+      Start 66: scene_xa_op1_compare
+79/81 Test #66: scene_xa_op1_compare .............   Passed  151.46 sec
+      Start 75: scene_card_continue_compare
+80/81 Test #75: scene_card_continue_compare ......   Passed   19.47 sec
+      Start 70: scene_movie0_skip_compare
+81/81 Test #70: scene_movie0_skip_compare ........   Passed    4.02 sec
+
+100% tests passed, 0 tests failed out of 81
+
+Total Test time (real) = 3036.81 sec
+ctest_native-asan=0
