@@ -107,7 +107,7 @@ development_status:
   epic-7-retrospective: optional
 
   epic-8: in-progress
-  8-1-métricas-automáticas-en-status-md: backlog
+  8-1-métricas-automáticas-en-status-md: done
   8-2-pipeline-de-gitlab-ci-con-clases-a-y-b: in-progress
   8-3-merge-periódico-de-upstream-main: backlog
   8-4-registro-de-funciones-no-verificadas-y-make-compare: backlog

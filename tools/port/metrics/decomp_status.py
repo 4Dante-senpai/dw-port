@@ -61,8 +61,8 @@ def segment_status(cfg_path):
     return rows
 
 
-def main():
-    version = sys.argv[1] if len(sys.argv) > 1 else "us"
+def unit_rows(version):
+    """{(unit, lib): [C functions, C bytes, asm functions, asm bytes]} over every config yaml."""
     cfg_dir = os.path.join(ROOT, "config", version)
     rows = {}
     for fn in sorted(os.listdir(cfg_dir)):
@@ -71,15 +71,27 @@ def main():
                 acc = rows.setdefault(k, [0, 0, 0, 0])
                 for i in range(4):
                     acc[i] += v[i]
+    return rows
+
+
+def totals(rows):
+    """Sum unit_rows() per code kind: {"game": [...], "psyq": [...]}."""
+    tot = {"game": [0, 0, 0, 0], "psyq": [0, 0, 0, 0]}
+    for (_, lib), counts in rows.items():
+        for i, v in enumerate(counts):
+            tot[lib][i] += v
+    return tot
+
+
+def main():
+    version = sys.argv[1] if len(sys.argv) > 1 else "us"
+    rows = unit_rows(version)
     print("| Unidad | Código | Funciones en C | Bytes en C | Funciones en asm | Bytes en asm | % C (bytes) |")
     print("|---|---|---:|---:|---:|---:|---:|")
-    tot = {"game": [0, 0, 0, 0], "psyq": [0, 0, 0, 0]}
     for (unit, lib), (nc, bc, na, ba) in sorted(rows.items()):
         pct = 100.0 * bc / (bc + ba) if bc + ba else 0.0
         print(f"| {unit} | {lib} | {nc} | {bc} | {na} | {ba} | {pct:.2f} |")
-        for i, v in enumerate((nc, bc, na, ba)):
-            tot[lib][i] += v
-    for lib, (nc, bc, na, ba) in tot.items():
+    for lib, (nc, bc, na, ba) in totals(rows).items():
         pct = 100.0 * bc / (bc + ba) if bc + ba else 0.0
         print(f"| **total** | {lib} | {nc} | {bc} | {na} | {ba} | {pct:.2f} |")
 
