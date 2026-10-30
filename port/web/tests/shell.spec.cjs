@@ -276,8 +276,9 @@ test('a running game does not grow the browser', async ({page}) => {
   const failures = errors(page);
   await page.goto('/?frames=0&pattern=1');
   await expect.poll(() => page.evaluate(() => window.Module?.frames?.shown ?? 0), {timeout: 30000}).toBeGreaterThan(300);
-  const before = browserMemory();
+  const before = browserMemory(), shown = await page.evaluate(() => Module.frames.shown);
   await page.waitForTimeout(30000);
   expect(browserMemory() - before).toBeLessThan(100);
+  expect(await page.evaluate(() => Module.frames.shown)).toBeGreaterThan(shown + 300);
   expect(failures).toEqual([]);
 });
