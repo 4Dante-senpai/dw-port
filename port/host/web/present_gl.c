@@ -47,7 +47,7 @@ static void show(void)
 {
     EM_ASM({
         const frame = GLctx.canvas.transferToImageBitmap();
-        postMessage({frame}, [frame]);
+        postMessage({frame, sent: Date.now()}, [frame]);
     });
 }
 void plat_present(long frame)

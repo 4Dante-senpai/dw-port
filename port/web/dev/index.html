@@ -133,8 +133,12 @@ function boot(args, audioContext) {
 function showFrames() {
   const screen = document.querySelector('#screen');
   const context = screen.getContext('bitmaprenderer');
+  // Tests read the worst delay between posting and showing a frame (long.spec.cjs).
+  const frames = Module.frames = {shown: 0, latency: 0};
   const show = ({data}) => {
     if (!data.frame) return;
+    frames.shown++;
+    frames.latency = Math.max(frames.latency, Date.now() - data.sent);
     if (screen.width !== data.frame.width) screen.width = data.frame.width;
     if (screen.height !== data.frame.height) screen.height = data.frame.height;
     context.transferFromImageBitmap(data.frame);
@@ -159,7 +163,8 @@ function pauseControls() {
     button.textContent = manual ? 'Reanudar' : 'Pausa';
   }
   Module.onFinished = apply;
-  button.onclick = () => { manual = !manual; apply(); };
+  // A clicked button keeps the focus, and inputControls leaves focused controls their keys.
+  button.onclick = () => { manual = !manual; apply(); button.blur(); };
   document.addEventListener('visibilitychange', apply);
   button.hidden = false;
   apply();

@@ -3,7 +3,7 @@ title: 'Historia 4.5: Teclado y gamepad'
 type: 'feature'
 created: '2026-10-30'
 status: 'in-review'
-baseline_commit: 'bf856c03c697c7e3c2bc894a40286850ffa7558c'
+baseline_commit: 'cfcda1b27d62dbdbbb812d98350f02320b3a55b4'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -49,6 +49,8 @@ context:
 - `port/host/web/pace.c` -- precedente de bloque compartido exportado (`web_control_address`); el input usa su propio bloque.
 - `port/web/dev/index.html` -- `boot()` y `pauseControls()`: lugar para arrancar el muestreo (rAF + eventos) y la opción del stick en `#options`.
 - `port/web/tests/shell.spec.cjs` -- `running()`, `expectPaced()`, `sample()` para la prueba de conexión en caliente.
+- `port/host/web/present_gl.c`, `showFrames()` en `index.html` -- desde 4.4 el hilo del juego postea cada frame a `#screen`; ninguna capa de input pasa por ahí.
+- `port/psyq/scene.c` -- rama web de `__cyg_profile_func_enter`.
 - `docs/port/controls.md` -- mapeo nativo; agregar la tabla web por defecto.
 - Sin Pack el juego corre igual (4.4): el latch y `port_pad_value` se observan sin disco; que el juego reaccione a "Start" en el título requiere el Pack real (clase B).
 
@@ -59,13 +61,16 @@ context:
 - [x] `port/psyq/libetc.c`, `port/psyq/crt.c`, `port/host/plat.h`, `CMakeLists.txt` -- `port_pad_value`, llamada web sin captura, fuente y export; CTest `web_input`.
 - [x] `port/web/dev/index.html` -- muestreo en el hilo principal: estado de teclas por `code`, gamepads por rAF, OR, escritura de máscara y número; `blur` suelta teclas; opción "Stick izquierdo como cruceta" en `#options`; `Module.input()` para tests.
 - [x] `port/web/tests/input.spec.cjs`, `run.py` -- suite `input` clase A con toda la matriz (gamepad simulado reemplazando `navigator.getGamepads`).
-- [ ] `port/web/tests/title.spec.cjs` -- clase B: "Start" por teclado en el título cambia de escena -- PENDIENTE: requiere el Pack real y una señal de escena posterior al título; ver evidencia.
+- [x] `port/web/tests/title.spec.cjs`, `port/psyq/scene.c` -- clase B: "Start" por teclado tras el clic en «Jugar» abre el menú principal; la señal es la marca `runMainMenu` que el hook web de `-finstrument-functions` publica en `Module.marks`, sin tocar `src/`.
+- [x] `port/web/dev/index.html` -- `#pause` suelta el foco tras el clic: si no, `inputControls` ignora todo el teclado hasta el siguiente clic fuera del botón.
+- [x] `port/web/tests/long.spec.cjs`, `port/web/tests/run.py`, `port/host/web/present_gl.c`, `port/web/dev/index.html` -- suite manual `long` (clase B, L4 de la cola de frames): 10 minutos en Chromium y Firefox midiendo demora postear-mostrar, memoria y drenaje tras bloquear 2 s el hilo principal; resuelve la entrada de contrapresión de `deferred-work.md`.
 - [x] `docs/port/controls.md`, `docs/port/setup.md`, `docs/implementation-artifacts/evidence/story-4-5/` -- mapeo web por defecto, cómo correr, evidencia y pendientes.
 
 **Acceptance Criteria:**
 - Given `ctest --preset web` sin disco, when corren las suites, then `web_input` pasa en Chromium y Firefox y las suites existentes siguen verdes.
 - Given el mapeo de `docs/port/controls.md`, when el test pulsa cada uno de los 14 botones por teclado y por gamepad, then `port_pad_value` refleja exactamente ese bit en el orden de `PadRead`.
-- Given `DW1_DISC_DIR`, when el test pulsa Start en la pantalla de título, then el juego sale del título (pendiente sin disco).
+- Given `DW1_DISC_DIR`, when el test pulsa Start en la pantalla de título, then el juego sale del título (`web_scene_title`, marca `runMainMenu`).
+- Given una corrida de 10 minutos con el Pack real, when `run.py <build> long` termina, then la demora de presentación queda por debajo de 4 frames, la memoria no crece más de 10 % y la cola drena tras un bloqueo de 2 s.
 
 ## Design Notes
 
