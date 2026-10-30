@@ -508,3 +508,17 @@ Se dispara a mano (AD-14), no está en `ctest`. Necesita `build/port/web/us.pack
 cambia) y deja `long-<navegador>.json`: demora entre postear y mostrar cada frame, memoria
 residente del navegador, ritmo y drenaje tras bloquear 2 s el hilo principal. `web_shell`
 incluye la versión corta de 30 s que falla si el navegador crece.
+
+### Remapeo y `PortSettings` (historia 4.6)
+
+```sh
+ctest --preset web -R web_settings --output-on-failure
+python3 port/web/tests/run.py build/port/web settings --project chromium   # un navegador
+```
+
+La suite `settings` (clase A, sin Pack) reasigna teclas y botones de gamepad en
+Opciones, recarga y comprueba en el juego (valor de `PadRead`) el botón reasignado;
+cubre conflictos, `Escape`, «Restaurar valores por defecto», la opción del stick, la
+migración de una base sembrada con `schema_version: 1` y registros más nuevos,
+ilegibles o mal formados que no se sobrescriben. Los helpers de input están en
+`port/web/tests/input_helpers.cjs`.
