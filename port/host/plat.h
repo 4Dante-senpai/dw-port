@@ -3,6 +3,8 @@
 #include <stdint.h>
 #ifdef __EMSCRIPTEN__
 void plat_present(long frame);
+/* Applies the Shell's sampled input at each VBlank (port/host/web/input.c). */
+void plat_input_vblank(void);
 #else
 #include <pthread.h>
 /* Optional native host hooks; headless has no platform dependencies. */

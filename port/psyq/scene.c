@@ -574,8 +574,14 @@ void port_scene_finish(void)
     trace = NULL;
 }
 #else
+extern void runMainMenu(void);
 void __cyg_profile_func_enter(void *function, void *caller)
-{ (void)caller; clock_game_function_enter(function); }
+{
+    (void)caller;
+    clock_game_function_enter(function);
+    /* The web tests' signal that the title ended: src/ has no mark at the menu. */
+    if (function == (void *)runMainMenu) port_scene_mark("runMainMenu");
+}
 void __cyg_profile_func_exit(void *function, void *caller)
 { (void)caller; clock_game_function_exit(function); }
 void port_scene_prepare(const PortCapture *config) { (void)config; }

@@ -477,6 +477,34 @@ cargar debe quedar `suspended`. Firefox corre con `media.autoplay.*` bloqueando 
 Audio sin gesto. Sin servidor de audio, Firefox deja todo `AudioContext` en `suspended`,
 así que `run.py` levanta un PulseAudio con sink nulo para cada suite. El hilo del juego
 nunca vuelve a su bucle de eventos, así que cada frame llega al hilo principal como
-`ImageBitmap` y se muestra en `#screen`; un caso comprueba que cambia mientras corre. Deja `shell-{pause,visibility,play}-<navegador>.json` en
+memoria compartida y se muestra en `#screen`; un caso comprueba que cambia mientras corre. Deja `shell-{pause,visibility,play}-<navegador>.json` en
 `build/port/web/`. La clase B (`web_scene_title`) agrega un clic en «Jugar» con el Pack
 real que debe llegar a `runLandingScreen` con el `AudioContext` en `running`.
+
+### Input web (historia 4.5)
+
+```sh
+ctest --preset web -R web_input --output-on-failure
+python3 port/web/tests/run.py build/port/web input --project chromium   # un navegador
+```
+
+La suite `input` (clase A, sin Pack) pulsa los 14 botones por teclado y por un gamepad
+simulado (reemplaza `navigator.getGamepads`) y compara `Module.input().padValue` (lo que
+devolvería `PadRead`, vía `port_pad_value`) con el mapeo de `docs/port/controls.md`.
+Cubre combinación, gatillos, stick como cruceta, conexión en caliente con ritmo y sin
+resincronizaciones, foco perdido y capturas sin input. Deja `input-*-<navegador>.json`.
+
+`web_scene_title` (clase B) cierra el recorrido real: tras el clic en «Jugar», Enter en el
+título abre el menú principal, señal que da la marca `runMainMenu` en `Module.marks`.
+
+### Presentación larga (L4, historia 4.5)
+
+```sh
+DW1_DISC_DIR=/dw/game_rom/extracted python3 port/web/tests/run.py build/port/web long
+```
+
+Se dispara a mano (AD-14), no está en `ctest`. Necesita `build/port/web/us.pack`, que deja
+`ctest --preset web -R pack_disc`. Corre 10 minutos por navegador (`DW1_WEB_LONG_MINUTES` los
+cambia) y deja `long-<navegador>.json`: demora entre postear y mostrar cada frame, memoria
+residente del navegador, ritmo y drenaje tras bloquear 2 s el hilo principal. `web_shell`
+incluye la versión corta de 30 s que falla si el navegador crece.

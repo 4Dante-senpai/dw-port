@@ -2,7 +2,7 @@ const {test, expect} = require('/opt/node_modules/@playwright/test');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const {errors} = require('./storage.cjs');
+const {errors, browserMemory} = require('./storage.cjs');
 const RATE = 60.0087172527;
 // Requests that would start the game or touch OPFS through a worker.
 function runtime(page) {
@@ -269,4 +269,16 @@ test('frames reach the screen while the game thread runs', async ({page}) => {
   const first = await read();
   await expect.poll(read).not.toBe(first);
   expect(await page.evaluate(() => Module.finished)).toBeUndefined();
+});
+// Frames sent to the main thread as ImageBitmap leaked one per frame in Chromium (spec 4.5).
+test('a running game does not grow the browser', async ({page}) => {
+  test.setTimeout(120000);
+  const failures = errors(page);
+  await page.goto('/?frames=0&pattern=1');
+  await expect.poll(() => page.evaluate(() => window.Module?.frames?.shown ?? 0), {timeout: 30000}).toBeGreaterThan(300);
+  const before = browserMemory(), shown = await page.evaluate(() => Module.frames.shown);
+  await page.waitForTimeout(30000);
+  expect(browserMemory() - before).toBeLessThan(100);
+  expect(await page.evaluate(() => Module.frames.shown)).toBeGreaterThan(shown + 300);
+  expect(failures).toEqual([]);
 });
