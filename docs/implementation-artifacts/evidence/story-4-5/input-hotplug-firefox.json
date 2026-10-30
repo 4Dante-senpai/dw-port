@@ -1,0 +1,19 @@
+{
+  "rate": 59.94571316216035,
+  "start": {
+    "t": 3390.56,
+    "pause": 0,
+    "held": 0,
+    "vblanks": 165,
+    "resynchronizations": 0,
+    "pauses": 0
+  },
+  "end": {
+    "t": 5475.78,
+    "pause": 0,
+    "held": 0,
+    "vblanks": 290,
+    "resynchronizations": 0,
+    "pauses": 0
+  }
+}

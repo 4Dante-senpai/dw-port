@@ -1,10 +1,14 @@
 /* Software display -> RGBA texture, at 1x, on the game thread's OffscreenCanvas. The game thread
- * never returns to its event loop, so the browser would not compose that canvas: each frame goes
- * to the main thread as an ImageBitmap (showFrames in port/web/dev/index.html). */
+ * never returns to its event loop, so the browser would not compose that canvas, and an ImageBitmap
+ * sent to another thread is never freed (Chromium releases it on the sender's loop): each frame is
+ * read back to shared memory and the main thread paints the newest one (showFrames in
+ * port/web/dev/index.html), so nothing can queue. */
 #include <GLES3/gl3.h>
 #include <emscripten.h>
 #include <emscripten/html5.h>
+#include <stdatomic.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../plat.h"
 #include "../../backend/gpu.h"
 #include "../../psyq/port.h"
@@ -13,6 +17,12 @@ extern int plat_pattern, plat_validation;
 static EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context;
 static uint32_t display[640 * 480];
 static unsigned char rgba[640 * 480 * 4], actual[640 * 480 * 4];
+/* Painted by showFrames at each animation frame: seq is odd while the frame is being written. */
+static struct {
+    _Atomic uint32_t seq;
+    uint32_t width, height;
+    unsigned char pixels[640 * 480 * 4];
+} shown;
 static GLuint texture, program;
 static GLuint shader(GLenum type, const char *source)
 {
@@ -43,12 +53,14 @@ static void init(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glDisable(GL_DITHER);
 }
-static void show(void)
+EMSCRIPTEN_KEEPALIVE void *web_frame_address(void) { return &shown; }
+/* actual holds the frame as glReadPixels returns it, bottom row first. */
+static void show(int w, int h)
 {
-    EM_ASM({
-        const frame = GLctx.canvas.transferToImageBitmap();
-        postMessage({frame}, [frame]);
-    });
+    atomic_fetch_add(&shown.seq, 1);
+    shown.width = w; shown.height = h;
+    for (int y = 0; y < h; y++) memcpy(&shown.pixels[4 * y * w], &actual[4 * (h - 1 - y) * w], 4 * w);
+    atomic_fetch_add(&shown.seq, 1);
 }
 void plat_present(long frame)
 {
@@ -74,8 +86,8 @@ void plat_present(long frame)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     double elapsed = emscripten_get_now() - start;
-    if (!plat_validation) { show(); web_pace(); return; }
     glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, actual);
+    if (!plat_validation) { show(w, h); web_pace(); return; }
     PORT_ASSERT(glGetError() == GL_NO_ERROR);
     int different = 0, first = -1;
     for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) {
@@ -89,6 +101,6 @@ void plat_present(long frame)
     MAIN_THREAD_EM_ASM({
         Module.presentations.push({frame:$0, width:$1, height:$2, different:$3, first:$4, ms:$5, pixels:Array.from(HEAPU8.subarray($6, $6 + $1 * $2 * 4))});
     }, (int)frame, w, h, different, first, elapsed, actual);
-    show();
+    show(w, h);
     web_pace();
 }

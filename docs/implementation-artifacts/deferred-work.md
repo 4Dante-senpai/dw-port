@@ -139,5 +139,13 @@
   evidence: La 4.4 crea `Module.audioContext` en el clic de «Jugar», pero la pausa solo retiene el hilo del juego en `VSync` (`port/host/web/pace.c`); hoy ningún código consume ese contexto.
 
 - source_spec: `docs/implementation-artifacts/spec-4-4-pantallas-de-la-shell-web-y-capacidades.md`
-  summary: Presentación continua resuelta en la 4.4 con `ImageBitmap`; queda por verificar si hace falta contrapresión.
+  summary: Presentación continua resuelta en la 4.4 con `ImageBitmap`; queda por verificar si hace falta contrapresión (resuelto en 4.5: L4 sin cola; la fuga que reveló obligó a pasar a memoria compartida, donde nada puede encolarse).
   evidence: medium sin verificar. El hilo del juego envía un `ImageBitmap` por frame sin esperar confirmación, así que la cola crece si el hilo principal se bloquea. Se resuelve midiendo memoria y latencia en la prueba L4 de 10 minutos (NFR-2).
+
+- source_spec: `docs/implementation-artifacts/spec-4-5-teclado-y-gamepad.md`
+  summary: Chromium crece unos 6 MiB por minuto en la corrida larga; hay que confirmar si se estabiliza.
+  evidence: medium sin verificar. `long-chromium.json`: 866 a 933 MiB en 10 minutos, igual con `postMessage` y con `requestAnimationFrame`; Firefox queda plano. Pasa el umbral de 10 %, pero a ese ritmo serían unos 400 MiB por hora. Lo decide una corrida de 60 minutos (`DW1_WEB_LONG_MINUTES=60`) con desglose por proceso; encaja en la L4 de la 5.6.
+
+- source_spec: `docs/implementation-artifacts/spec-4-5-teclado-y-gamepad.md`
+  summary: El Renderer WebGL2 de la Épica 5 debe contar con `glReadPixels` por frame: `ImageBitmap` hacia otro hilo pierde memoria en Chromium y `glReadPixels` retiene el hilo del juego en Firefox si el hilo principal se bloquea.
+  evidence: Sondas y L4 de la 4.5. A 1× no afecta el ritmo; a escala 4× la lectura mueve 16 veces más datos. Las Design Notes de 4.4 que proponen el camino `ImageBitmap` para la Épica 5 ya no valen; la decisión se toma en la 5.1.

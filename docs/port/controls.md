@@ -34,3 +34,41 @@ La frecuencia declarada del dispositivo se convierte directamente (por ejemplo,
 47.520, 48.000 o 48.480 Hz). Un error **no declarado** del reloj del dispositivo
 se compensa con el ratio hasta ±2 %. `test_audio_rate` lo verifica al 99 % y al
 101 % durante 600,6 s simulados: 0 underruns y el nivel dentro de la banda.
+
+## Navegador (historia 4.5)
+
+El build `web` usa el mismo mapeo por defecto. El teclado se identifica por
+`KeyboardEvent.code` (posición física, igual con cualquier distribución) y los
+mandos por el mapeo estándar W3C de la Gamepad API.
+
+| PlayStation | Bit de cable | Teclado (`code`) | Gamepad estándar (índice) |
+|---|---|---|---|
+| Select | 0 | `Backspace` | 8 (Back) |
+| Start | 3 | `Enter` | 9 (Start) |
+| Arriba | 4 | `ArrowUp` o `KeyW` | 12 |
+| Derecha | 5 | `ArrowRight` o `KeyD` | 15 |
+| Abajo | 6 | `ArrowDown` o `KeyS` | 13 |
+| Izquierda | 7 | `ArrowLeft` o `KeyA` | 14 |
+| L2 | 8 | `Digit1` | 6 (gatillo, valor > 0,5) |
+| R2 | 9 | `Digit3` | 7 (gatillo, valor > 0,5) |
+| L1 | 10 | `KeyQ` | 4 |
+| R1 | 11 | `KeyE` | 5 |
+| Triangle | 12 | `KeyI` | 3 (North) |
+| Circle | 13 | `KeyL` | 1 (East) |
+| Cross | 14 | `KeyK` | 0 (South) |
+| Square | 15 | `KeyJ` | 2 (West) |
+
+Se combinan el teclado y todos los mandos conectados con `mapping === 'standard'`;
+los mandos sin mapeo estándar se ignoran (en `native`, SDL usa solo el primer mando
+con mapeo de `SDL_Gamepad`). Las teclas con Ctrl, Alt o Meta, las que van a un control
+enfocado de la Shell (por ejemplo, Enter sobre «Pausa») y las posteriores al fin de la
+corrida no se envían al juego. Con «Stick izquierdo como
+cruceta» (Opciones, desactivada por defecto y sin persistencia hasta la historia
+4.6) el eje izquierdo fuera de la zona muerta de 0,5 actúa como la cruceta. El hilo
+principal publica la máscara en cada evento de teclado y en cada
+`requestAnimationFrame`; el hilo del juego la aplica con `port_pad_latch` en cada
+VBlank (`port/host/web/input.c`). Perder el foco suelta las teclas. Conectar o
+desconectar mandos no pausa el juego. Las corridas de captura de Escena no aplican
+input en vivo, igual que `native-headless` (el preset `native` con ventana sí lo
+aplica salvo con `--inputs` o `--headless`). Un VBlank en que PsyQ no consulta el pad
+(`pad_poll_missed`) conserva el paquete anterior y no cuenta como muestra consumida.
