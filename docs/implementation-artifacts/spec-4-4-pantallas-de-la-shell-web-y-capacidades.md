@@ -61,6 +61,7 @@ context:
 - [x] `port/web/tests/{boot,launcher}.spec.cjs` -- ajustar al nuevo mensaje de aislamiento y a "Jugar" en la página.
 - [x] `port/web/tests/title.spec.cjs` -- clase B: un clic en "Jugar" con el Pack real llega a `runLandingScreen` con `AudioContext` `running`.
 - [x] `docs/port/setup.md`, `docs/implementation-artifacts/evidence/story-4-4/` -- cómo correr `web_shell`; evidencia y criterios no verificados en esta sesión.
+- [x] `tools/port/Dockerfile`, `port/web/tests/run.py` -- paquete `pulseaudio` en la imagen `dw-port` y un servidor con sink nulo por cada corrida de `run.py`: sin servidor de audio, Firefox deja todo `AudioContext` en `suspended`.
 
 **Acceptance Criteria:**
 - Given `ctest --preset web` sin disco, when corren las suites, then `web_shell` pasa en Chromium y Firefox y `web_boot`, `web_io`, `web_launcher`, `web_disc` siguen verdes.
