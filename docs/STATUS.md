@@ -435,17 +435,16 @@
   `status_table_repo` falla si los bloques y las filas de un archivo no coinciden (NFR-10) o si
   una función PsyQ del port pierde su comentario de fuente. `src-changes.md` tenía 36 bloques sin
   fila (secciones en prosa de 3.3, 3.7 y 3.10) y una fila con el símbolo equivocado
-  (`main.c`: `memcpy`, no `checkCameraMovement`). Sin cambios en `src/`. Sin verificar en este
-  entorno (sin disco, `asm/` ni `cc_mips.dll`): funciones del Juego en C y Escenas que pasan;
-  el preset `native-headless` no configura sin multilib i686, así que los tests se corrieron con
-  un configure del host (2/2, más 18 tests unitarios). Revisión con subagentes Claude: 10 parches,
-  1 diferido (`--check` de `STATUS.md`). Spec:
+  (`main.c`: `memcpy`, no `checkCameraMovement`). Sin cambios en `src/`. Verificación con disco y
+  `asm/` en el contenedor: `make compare` OK, 2741 / 2741 funciones, `status_table_*` 2/2 en
+  `native-headless`, y parseo de JUnit reales de `scene_title`, `scene_title_audio` y
+  `web_scene_title`. Revisión con subagentes Claude: 10 parches, 1 diferido (`--check` de
+  `STATUS.md`). Evidencia: `docs/implementation-artifacts/evidence/story-8-1/README.md`. Spec:
   `docs/implementation-artifacts/spec-8-1-metricas-automaticas-en-status-md.md`.
 
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2 y 4.3 ya están cerradas, y también la 8.5. La 8.1 está en revisión del dueño
-  (rama `claude/historia-8-1-epics-401pfj`).
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2 y 4.3 ya están cerradas, y también la 8.1 y la 8.5.
 
 ## Bloqueos
 
@@ -463,7 +462,7 @@ bloques `DW1_PORT` que de filas en `docs/port/src-changes.md` (NFR-10; test `sta
 <!-- status_table:begin -->
 | Métrica | Valor |
 |---|---|
-| Funciones del Juego en C / total (USA) | sin verificar (falta `asm/us/`; correr `make regenerate`) |
+| Funciones del Juego en C / total (USA) | 2741 / 2741 |
 | Funciones PsyQ implementadas / usadas (por comentario de fuente) | 187 / 202 (`dw2-pc:` 0, `asm:` 187, `stub-m2:` 0) |
 | Bloques `DW1_PORT` en `src/` e `include/` | 117 |
 | Filas de `docs/port/src-changes.md` | 117 |
@@ -473,12 +472,10 @@ bloques `DW1_PORT` que de filas en `docs/port/src-changes.md` (NFR-10; test `sta
 
 Una métrica que no se puede calcular en el entorno aparece como `sin verificar (<motivo>)`:
 
-- Funciones del Juego en C / total: requiere `asm/us/` (`make regenerate`). Último valor
-  medido a mano: 2741 / 2741 (tabla siguiente).
+- Funciones del Juego en C / total: requiere `asm/us/` (`make regenerate`).
 - Escenas que pasan (nativo y web): requieren los resultados de CTest de los tests `scene_*` y
-  `web_scene_*`, que necesitan el disco y las referencias de PCSX-Redux. En la Historia 8.1
-  (contenedor sin disco, sin `asm/` y sin `cc_mips.dll`) el parseo de JUnit se probó solo con
-  datos sintéticos y con un JUnit real de CTest 3.28 de tests ficticios.
+  `web_scene_*`, que necesitan el disco y las referencias de PCSX-Redux. Hace falta correr la suite
+  completa de Escenas: la Historia 8.1 solo corrió las de título para probar el parseo de JUnit.
 
 ### Manuales
 

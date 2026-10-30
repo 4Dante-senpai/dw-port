@@ -2,7 +2,7 @@
 title: 'Historia 8.1: Métricas automáticas en STATUS.md'
 type: 'feature'
 created: '2026-10-30'
-status: 'in-review'
+status: 'done'
 baseline_commit: 'cb6fbd4f8b9d5f620fd0518365aaa7f98c4f482b'
 route: 'dispatch'
 review_loop_iteration: 0
@@ -116,4 +116,4 @@ Pasada 1 (subagentes Claude en lugar de Codex, por pedido del dueño). BH = blin
 - `python3 -I -B tools/port/metrics/status_table.py` -- expected: exit 0, 117/117, PsyQ 187/202.
 - `ctest -R status_table` (preset `native-headless`, si configura en el entorno) -- expected: 2/2.
 
-**Sin verificar en este entorno** (sin disco, `asm/` ni `cc_mips.dll`): funciones del Juego en C / total (requiere `make regenerate`), Escenas que pasan (requieren disco y Redux; solo se prueba el parseo JUnit con datos sintéticos), `make compare` (no se toca `src/`).
+**Sin verificar en la sesión cloud** (sin disco, `asm/` ni `cc_mips.dll`): funciones del Juego en C / total, Escenas que pasan y `make compare`. Se verificaron después en el contenedor del proyecto: `docs/implementation-artifacts/evidence/story-8-1/README.md`.
