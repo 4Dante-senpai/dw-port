@@ -83,6 +83,73 @@ test('a reassigned gamepad button survives a reload and reaches PadRead', async 
   await expectLatched(page, (await input(page)).seq + 1, padRead(CIRCLE));
   await setPad(page, {buttons: {16: 0, 1: 1}});
   await expectLatched(page, (await input(page)).seq + 1, 0);
+  await setPad(page, {buttons: {1: 0}});
+  // Any assigned index follows the trigger rule, whatever the browser reports as `pressed`.
+  await setPad(page, {buttons: {16: {pressed: true, value: 0.5}}});
+  await expectLatched(page, (await input(page)).seq + 1, 0);
+  await setPad(page, {buttons: {16: {pressed: false, value: 0.6}}});
+  await expectLatched(page, (await input(page)).seq + 1, padRead(CIRCLE));
+  expect(failures).toEqual([]);
+});
+test('a gamepad button taken by another button leaves its old button', async ({page}) => {
+  test.setTimeout(120000);
+  const failures = errors(page);
+  await options(page);
+  await fakePad(page);
+  await page.locator('#controls tr[data-button=circle] .remap').click();
+  await setPad(page, {buttons: {0: 1}});
+  await expect(cell(page, 'circle', 'pads')).toHaveText('0');
+  await expect(cell(page, 'cross', 'pads')).toHaveText('—');
+  await setPad(page, {buttons: {0: 0}});
+  await expect.poll(async () => (await store(page))?.controls.gamepad.cross).toEqual([]);
+  await running(page);
+  await fakePad(page);
+  await setPad(page, {buttons: {0: 1}});
+  await expectLatched(page, (await input(page)).seq + 1, padRead(CIRCLE));
+  expect(failures).toEqual([]);
+});
+test('Tab and shortcuts pass through a capture', async ({page}) => {
+  const failures = errors(page);
+  await options(page);
+  await page.locator('#controls tr[data-button=start] .remap').click();
+  const cancelled = init => page.evaluate(init => !dispatchEvent(new KeyboardEvent('keydown', {cancelable: true, ...init})), init);
+  expect(await cancelled({code: 'Tab'})).toBe(false);
+  expect(await cancelled({code: 'KeyZ', ctrlKey: true})).toBe(false);
+  await expect(page.locator('#remap-status')).toContainText('Start');
+  await expect(cell(page, 'start', 'keys')).toHaveText('Enter');
+  expect(failures).toEqual([]);
+});
+for (const [name, write, warning] of [['a change', true, 'No se pudieron guardar'], ['a migration', false, 'No se pudo guardar']]) {
+  test(`a failed write of ${name} warns and keeps the mapping in memory`, async ({page}) => {
+    test.setTimeout(120000);
+    const failures = errors(page);
+    const v1 = {schema_version: 1, stick_dpad: false, keyboard: {KeyK: 'cross'}};
+    if (!write) await seed(page, v1);
+    await page.addInitScript(() => {
+      IDBObjectStore.prototype.put = () => { throw new DOMException('blocked for the test', 'QuotaExceededError'); };
+    });
+    await options(page);
+    if (write) {
+      await page.locator('#controls tr[data-button=cross] .remap').click();
+      await page.keyboard.press('z');
+      await expect(cell(page, 'cross', 'keys')).toHaveText('KeyZ');
+    }
+    await expect(page.locator('#settings-warning')).toContainText(warning);
+    await page.evaluate(() => boot(['--frames', '0']));
+    await expect.poll(() => page.evaluate(() => window.Module?.control?.().vblanks ?? 0), {timeout: 30000}).toBeGreaterThan(120);
+    if (write) await expectKey(page, 'z', CROSS);
+    else await expectKey(page, 'k', CROSS);
+    if (!write) expect(await record(page)).toEqual(v1);
+    expect(failures).toEqual([]);
+  });
+}
+test('a v1 record with an unknown button is never overwritten', async ({page}) => {
+  const failures = errors(page);
+  const v1 = {schema_version: 1, stick_dpad: false, keyboard: {KeyZ: 'bogus'}};
+  await seed(page, v1);
+  await options(page);
+  await expect(page.locator('#settings-warning')).toContainText('no se pueden leer');
+  expect(await record(page)).toEqual(v1);
   expect(failures).toEqual([]);
 });
 test('a gamepad button held when the capture starts does not count', async ({page}) => {
@@ -219,6 +286,10 @@ for (const [name, value, text] of [['newer', {schema_version: 99, anything: true
     await page.locator('#controls tr[data-button=cross] .remap').click();
     await page.keyboard.press('z');
     await expect(cell(page, 'cross', 'keys')).toHaveText('KeyZ');
+    // The change lives in memory for this session, and the next one starts from the defaults.
+    await page.evaluate(() => boot(['--frames', '0']));
+    await expect.poll(() => page.evaluate(() => window.Module?.control?.().vblanks ?? 0), {timeout: 30000}).toBeGreaterThan(120);
+    await expectKey(page, 'z', CROSS);
     expect(await record(page)).toEqual(value);
     await running(page);
     await expectKey(page, 'k', CROSS);

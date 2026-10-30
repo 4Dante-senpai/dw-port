@@ -214,7 +214,8 @@ const MIGRATIONS = {
   // v1, defined with v2 as the first earlier format (never published): keyboard code -> button, no gamepad map.
   1: ({keyboard = {}, ...rest}) => {
     const keys = Object.fromEntries(Object.keys(BUTTONS).map(button => [button, []]));
-    for (const [code, button] of Object.entries(keyboard)) if (Object.hasOwn(BUTTONS, button)) keys[button].push(code);
+    // An unknown button throws, which makes the record unreadable instead of dropping the key.
+    for (const [code, button] of Object.entries(keyboard)) keys[button].push(code);
     return {...rest, schema_version: 2, controls: {keyboard: keys, gamepad: defaultSettings().controls.gamepad}};
   }
 };
@@ -294,8 +295,8 @@ function controlsEditor() {
   }
   // The new key or button leaves every other PlayStation button of the same device.
   function assign(button, device, value) {
-    for (const list of Object.values(portSettings.controls[device])) {
-      const i = list.indexOf(value);
+    for (const other of Object.keys(BUTTONS)) {
+      const list = portSettings.controls[device][other], i = list.indexOf(value);
       if (i >= 0) list.splice(i, 1);
     }
     portSettings.controls[device][button] = [value];
@@ -320,11 +321,12 @@ function controlsEditor() {
     pressed().forEach(i => down.add(i));
     let frame;
     const key = e => {
+      // Modified keys stay browser shortcuts and Tab keeps keyboard navigation.
+      if (e.code === 'Tab' || e.ctrlKey || e.altKey || e.metaKey) return;
       e.preventDefault(); e.stopImmediatePropagation();
-      // Modifiers never reach the game (shortcuts), Tab keeps keyboard navigation, and a held
-      // key (autorepeat, e.g. the Enter that opened the capture) does not count.
-      if (e.repeat || !e.code || e.code === 'Unidentified' || e.code === 'Tab' ||
-          /^(Control|Alt|Meta|OS)/.test(e.code)) return;
+      // Modifiers never reach the game, and a held key (autorepeat, e.g. the Enter that opened
+      // the capture) does not count.
+      if (e.repeat || !e.code || e.code === 'Unidentified' || /^(Control|Alt|Meta|OS)/.test(e.code)) return;
       cancel();
       if (e.code === 'Escape') status.textContent = '';
       else assign(button, 'keyboard', e.code);
