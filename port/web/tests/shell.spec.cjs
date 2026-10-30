@@ -27,6 +27,12 @@ test('without cross-origin isolation the Shell names it and loads nothing', asyn
   // Browsers also withhold SharedArrayBuffer without isolation.
   await missing(page, '/isolated-off/', ['isolation', 'shared-memory']);
 });
+test('OPFS that refuses access counts as missing', async ({page}) => {
+  await page.addInitScript(() => {
+    StorageManager.prototype.getDirectory = () => Promise.reject(new DOMException('denied', 'SecurityError'));
+  });
+  await missing(page, '/', ['storage']);
+});
 test('without SharedArrayBuffer the Shell names it and loads nothing', async ({page}) => {
   await page.addInitScript(() => { delete globalThis.SharedArrayBuffer; });
   await missing(page, '/', ['shared-memory']);
@@ -76,7 +82,7 @@ async function expectPaced(page, label, result) {
   await page.waitForTimeout(2000);
   const b = await sample(page);
   result[label] = rate(a, b);
-  expect(Math.abs(result[label] - RATE) / RATE, `${label}: ${result[label]} VBlank/s`).toBeLessThan(0.1);
+  expect(Math.abs(result[label] - RATE) / RATE, `${label}: ${result[label]} VBlank/s`).toBeLessThan(0.05);
 }
 async function expectHeld(page, result, label) {
   await expect.poll(() => page.evaluate(() => Module.control().held)).toBe(1);
@@ -136,6 +142,19 @@ test('a hidden tab pauses; showing it resumes unless Pausa is active', async ({p
   expect(failures).toEqual([]);
   evidence(info, 'visibility', {...result, end});
 });
+test('a frame later than 4 VBlanks resynchronizes once, without a catch-up burst', async ({page}, info) => {
+  test.setTimeout(120000);
+  const failures = errors(page), result = {};
+  await running(page);
+  await page.evaluate(() => Module.stall(500));
+  await expect.poll(() => page.evaluate(() => Module.control().resynchronizations)).toBe(1);
+  await expectPaced(page, 'rate_after_stall', result);
+  const end = await sample(page);
+  expect(end.resynchronizations).toBe(1);
+  expect(end.pauses).toBe(0);
+  expect(failures).toEqual([]);
+  evidence(info, 'stall', {...result, end});
+});
 test('Jugar is the only gesture: game on this page with a running AudioContext', async ({page}, info) => {
   const failures = errors(page);
   const pack = fs.readFileSync(path.join(process.env.DW1_WEB_BUILD, 'synthetic.pack'));
@@ -187,6 +206,15 @@ test('Jugar is the only gesture: game on this page with a running AudioContext',
   // reaching the title is the class B Escena (title.spec.cjs).
   await expect.poll(() => page.evaluate(() => Module.finished)).toBe(1);
   await expect(page.locator('#status')).toContainText('Manifest');
+  // The finished run hides Pausa on its next use.
+  await page.locator('#pause').click();
+  await expect(page.locator('#pause')).toBeHidden();
+  // "Borrar datos" brings back the welcome and the own-copy notice.
+  await page.goto('/');
+  await page.locator('#clear').click();
+  await expect.poll(() => page.evaluate(() => [document.querySelector('#pack-status').textContent, document.querySelector('#status').textContent])).toEqual(['Pack ausente', '']);
+  await expect(page.locator('#welcome')).toBeVisible();
+  await expect(page.locator('#legal')).toBeVisible();
   expect(failures).toEqual([]);
   evidence(info, 'play', {probe_without_gesture: probe, audio_context: 'running', navigations: 0});
 });

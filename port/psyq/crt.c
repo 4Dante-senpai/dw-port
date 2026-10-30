@@ -61,7 +61,7 @@ void port_scene_mark(const char *name)
 {
 	port_trace("mark %s", name);
 #ifdef __EMSCRIPTEN__
-	MAIN_THREAD_ASYNC_EM_ASM({ (Module.marks ||= []).push(UTF8ToString($0)); }, name);
+	MAIN_THREAD_EM_ASM({ (Module.marks ||= []).push(UTF8ToString($0)); }, name);
 #endif
 	if (!marked && capture_config.mark && !strcmp(name, capture_config.mark)) {
 		marked = 1;

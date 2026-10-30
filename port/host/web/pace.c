@@ -1,4 +1,4 @@
-/* Wall pacing of the game thread at a blocking VSync (the native model, port/host/sdl/video.c),
+/* Wall pacing of the game thread at each VSync that presents a frame (the native model, port/host/sdl/video.c),
  * plus the Shell's pause: the game thread is held inside VSync, so no VBlank is dispatched. */
 #include "pace.h"
 #include <emscripten.h>
@@ -8,9 +8,11 @@
 #include "../../psyq/clock.h"
 #include "../../psyq/crt.h"
 
-/* i32 words shared with the Shell: pause (main thread: 1 = hold at the next VSync), held (1 while
- * the game thread waits), VBlanks since the anchor, resynchronizations, pauses taken. */
-enum { PAUSE, HELD, VBLANKS, RESYNCHRONIZATIONS, PAUSES, WORDS };
+/* i32 words shared with the Shell (pauseControls in port/web/dev/index.html uses these indices):
+ * pause (main thread: 1 = hold at the next VSync), held (1 while the game thread waits), VBlanks
+ * since the anchor, resynchronizations, pauses taken, and stall (main thread, tests only:
+ * milliseconds the next frame takes on the wall, to exercise the late path). */
+enum { PAUSE, HELD, VBLANKS, RESYNCHRONIZATIONS, PAUSES, STALL, WORDS };
 static _Atomic uint32_t control[WORDS];
 static uint64_t deadline, remainder;
 static uint32_t anchor_vblank, last_vblank;
@@ -31,6 +33,9 @@ static void hold(void)
 void web_pace(void)
 {
     if (port_capture_active()) return;
+    uint32_t stall = atomic_exchange(&control[STALL], 0);
+    for (double until = emscripten_get_now() + stall, left; stall && (left = until - emscripten_get_now()) > 0;)
+        emscripten_futex_wait((void *)&control[STALL], 0, left);
     uint32_t vblank = clock_vblanks();
     uint64_t now = now_ns();
     if (!anchored) {

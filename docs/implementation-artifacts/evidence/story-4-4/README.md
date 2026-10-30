@@ -14,6 +14,8 @@ y tiempos; ningún byte del disco.
 - `shell-visibility-chromium.json`: pestaña oculta retiene el juego; al volver
   visible reanuda; con «Pausa» activa, volver visible no reanuda; 0
   resincronizaciones y 2 pausas.
+- `shell-stall-chromium.json`: un frame atrasado 500 ms (`Module.stall`) cuenta una
+  resincronización y el ritmo sigue en 59,8 VBlank/s, sin ráfaga de recuperación.
 - `shell-play-chromium.json`: el contexto de control creado sin gesto queda
   `suspended`; el `AudioContext` de «Jugar» se construye con activación transitoria
   y queda `running`, sin navegación.

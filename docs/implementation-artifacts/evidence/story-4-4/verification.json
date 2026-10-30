@@ -3,7 +3,7 @@
   "environment": "sesión en la nube sin Docker: emsdk 6.0.10 y @playwright/test 1.64.0 instalados localmente; Chromium preinstalado (build 1243) enlazado como chromium-1248; Firefox no disponible (descarga bloqueada por la política de red)",
   "commands": [
     {"command": "cmake --preset web && cmake --build --preset web", "result": "ok"},
-    {"command": "python3 port/web/tests/run.py build/port/web shell --project chromium", "result": "8 passed"},
+    {"command": "python3 port/web/tests/run.py build/port/web shell --project chromium", "result": "10 passed (tras la revisión)"},
     {"command": "python3 port/web/tests/run.py build/port/web boot --project chromium", "result": "4 passed; el post-proceso de run.py falla solo por faltar timing-firefox-*.json"},
     {"command": "python3 port/web/tests/run.py build/port/web launcher --project chromium", "result": "2 passed"},
     {"command": "python3 port/web/tests/run.py build/port/web io --project chromium", "result": "6 passed"},
