@@ -162,7 +162,8 @@ function inputControls() {
   function gamepads() {
     let mask = 0;
     for (const pad of navigator.getGamepads?.() || []) {
-      if (!pad?.connected) continue;
+      // Only the W3C standard layout has known indices (native also needs an SDL gamepad mapping).
+      if (!pad?.connected || pad.mapping !== 'standard') continue;
       pad.buttons.forEach((button, i) => { if (button.pressed && i in PAD_BUTTONS) mask |= 1 << PAD_BUTTONS[i]; });
       if ((pad.buttons[6]?.value ?? 0) > 0.5) mask |= 1 << 8;
       if ((pad.buttons[7]?.value ?? 0) > 0.5) mask |= 1 << 9;
@@ -185,19 +186,23 @@ function inputControls() {
   }
   Module.input = () => ({mask: Atomics.load(words, 0), seq: Atomics.load(words, 1),
     latchedSeq: Atomics.load(words, 2), latchedVblank: Atomics.load(words, 3) >>> 0, padValue: Atomics.load(words, 4) >>> 0});
+  // Browser shortcuts, focused Shell controls (Enter on Pausa) and a finished run keep their keys.
+  const ignored = e => !(e.code in KEYS) || e.ctrlKey || e.altKey || e.metaKey ||
+    e.target?.closest?.('button,summary,input,select,textarea,a') || Module.finished !== undefined;
   addEventListener('keydown', e => {
-    if (!(e.code in KEYS)) return;
+    if (ignored(e)) return;
     e.preventDefault();
     held.add(e.code); publish();
   });
   addEventListener('keyup', e => {
-    if (!(e.code in KEYS)) return;
+    // A release always counts, so a key held before a shortcut or focus change does not stick.
+    if (!(e.code in KEYS) || !held.has(e.code)) return;
     e.preventDefault();
     held.delete(e.code); publish();
   });
   // Keys released while unfocused never send keyup.
   addEventListener('blur', () => { held.clear(); publish(); });
-  (function frame() { publish(); requestAnimationFrame(frame); })();
+  (function frame() { if (Module.finished === undefined) { publish(); requestAnimationFrame(frame); } })();
 }
 async function launch() {
   document.querySelector('#launcher').hidden = false;

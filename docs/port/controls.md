@@ -58,11 +58,17 @@ mandos por el mapeo estándar W3C de la Gamepad API.
 | Cross | 14 | `KeyK` | 0 (South) |
 | Square | 15 | `KeyJ` | 2 (West) |
 
-Se combinan el teclado y todos los mandos conectados. Con «Stick izquierdo como
+Se combinan el teclado y todos los mandos conectados con `mapping === 'standard'`;
+los mandos sin mapeo estándar se ignoran (en `native`, SDL usa solo el primer mando
+con mapeo de `SDL_Gamepad`). Las teclas con Ctrl, Alt o Meta, las que van a un control
+enfocado de la Shell (por ejemplo, Enter sobre «Pausa») y las posteriores al fin de la
+corrida no se envían al juego. Con «Stick izquierdo como
 cruceta» (Opciones, desactivada por defecto y sin persistencia hasta la historia
 4.6) el eje izquierdo fuera de la zona muerta de 0,5 actúa como la cruceta. El hilo
 principal publica la máscara en cada evento de teclado y en cada
 `requestAnimationFrame`; el hilo del juego la aplica con `port_pad_latch` en cada
 VBlank (`port/host/web/input.c`). Perder el foco suelta las teclas. Conectar o
 desconectar mandos no pausa el juego. Las corridas de captura de Escena no aplican
-input en vivo, igual que `native-headless`.
+input en vivo, igual que `native-headless` (el preset `native` con ventana sí lo
+aplica salvo con `--inputs` o `--headless`). Un VBlank en que PsyQ no consulta el pad
+(`pad_poll_missed`) conserva el paquete anterior y no cuenta como muestra consumida.

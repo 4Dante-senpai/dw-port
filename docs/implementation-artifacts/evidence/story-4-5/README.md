@@ -10,9 +10,10 @@ Los JSON contienen solo valores de `PadRead`, VBlanks y tasas.
 - `input-hotplug-chromium.json`: con un mando conectado y desconectado en la ventana,
   60,0 VBlank/s, 0 resincronizaciones, 0 pausas.
 
-Comandos (Chromium): `run.py ... input` 6/6 (tres corridas seguidas), `shell` 10/10,
+Comandos (Chromium): `run.py ... input` 8/8 (tres corridas seguidas tras la revisión), `shell` 10/10,
 `boot` 4/4, `launcher` 2/2, `io` 6/6, `disc` 19/19; `ctest --preset native-headless`
-82/82 (sin `reference_capture_unit`, que necesita `pcsx-redux`).
+80/80 (sin `reference_capture_unit`, que necesita `pcsx-redux`, ni los dos
+`preproc_check`, ya verdes en esta sesión).
 
 ## Pendiente
 

@@ -29,24 +29,32 @@ async function running(page, url = '/?frames=1000000') {
   // Past the boot frames, so rate windows measure steady pacing (as in shell.spec.cjs).
   await expect.poll(() => page.evaluate(() => window.Module?.control?.().vblanks ?? 0), {timeout: 30000}).toBeGreaterThan(120);
 }
-// The first latch that consumed sample `seq` or a later one must already show `value`.
+// Wait for the first latch that consumed sample `seq` (or a later one), then check it once: the
+// value must already be there, not after more retries.
 async function expectLatched(page, seq, value) {
-  await expect.poll(async () => { const s = await input(page); return s.latchedSeq >= seq ? s.padValue : -1; })
-    .toBe(value);
+  await expect.poll(async () => (await input(page)).latchedSeq >= seq, {intervals: [5]}).toBe(true);
+  const latch = await input(page);
+  expect(latch.padValue, `sample ${seq} latched as ${latch.latchedSeq} at VBlank ${latch.latchedVblank}`).toBe(value);
 }
-async function fakePad(page) {
-  await page.evaluate(() => {
-    window.fakePad = {id: 'fake standard pad', index: 0, connected: true, mapping: 'standard', axes: [0, 0, 0, 0],
-      buttons: Array.from({length: 17}, () => ({pressed: false, touched: false, value: 0}))};
-    Object.defineProperty(navigator, 'getGamepads', {configurable: true, value: () => [window.fakePad]});
-    dispatchEvent(Object.assign(new Event('gamepadconnected'), {gamepad: window.fakePad}));
-  });
+// Pads by slot; `null` is an empty slot. Each one starts released.
+async function fakePad(page, slots = ['standard']) {
+  await page.evaluate(slots => {
+    window.fakePads = slots.map((mapping, index) => mapping === null ? null : {id: 'fake pad ' + index, index,
+      connected: true, mapping, axes: [0, 0, 0, 0],
+      buttons: Array.from({length: 17}, () => ({pressed: false, touched: false, value: 0}))});
+    window.fakePad = window.fakePads.find(Boolean);
+    Object.defineProperty(navigator, 'getGamepads', {configurable: true, value: () => window.fakePads});
+    for (const pad of window.fakePads.filter(Boolean))
+      dispatchEvent(Object.assign(new Event('gamepadconnected'), {gamepad: pad}));
+  }, slots);
 }
-const setPad = (page, change) => page.evaluate(change => {
+// Button values (pressed past 0.5 unless given as {pressed, value}) on the pad in `slot`.
+const setPad = (page, change, slot) => page.evaluate(([change, slot]) => {
+  const pad = slot === undefined ? window.fakePad : window.fakePads[slot];
   for (const [i, value] of Object.entries(change.buttons || {}))
-    window.fakePad.buttons[i] = {pressed: value > 0.5, touched: value > 0, value};
-  if (change.axes) window.fakePad.axes = change.axes;
-}, change);
+    pad.buttons[i] = typeof value === 'object' ? {touched: true, ...value} : {pressed: value > 0.5, touched: value > 0, value};
+  if (change.axes) pad.axes = change.axes;
+}, [change, slot]);
 function evidence(info, name, data) {
   fs.writeFileSync(path.join(process.env.DW1_WEB_BUILD, `input-${name}-${info.project.name}.json`), JSON.stringify(data, null, 2));
 }
@@ -79,10 +87,12 @@ test('each of the 14 buttons reaches PadRead from a standard gamepad', async ({p
     await expectLatched(page, (await input(page)).seq + 1, 0);
     result.push({button: button.name, standard: button.pad});
   }
-  // Triggers count past half travel only.
-  await setPad(page, {buttons: {6: 0.4}});
-  await page.waitForTimeout(200);
+  // Triggers count past half travel, whatever the browser reports as `pressed`.
+  await setPad(page, {buttons: {6: {pressed: true, value: 0.4}}});
   await expectLatched(page, (await input(page)).seq + 1, 0);
+  await setPad(page, {buttons: {6: 0, 7: {pressed: false, value: 0.6}}});
+  await expectLatched(page, (await input(page)).seq + 1, padRead(1 << 9));
+  await setPad(page, {buttons: {7: 0}});
   // Keyboard and gamepad combine.
   await setPad(page, {buttons: {0: 1}});
   await page.keyboard.down('Enter');
@@ -91,6 +101,33 @@ test('each of the 14 buttons reaches PadRead from a standard gamepad', async ({p
   await setPad(page, {buttons: {0: 0}});
   expect(failures).toEqual([]);
   evidence(info, 'gamepad', result);
+});
+test('all standard gamepads combine; other layouts are ignored', async ({page}) => {
+  const failures = errors(page);
+  await running(page);
+  await fakePad(page, [null, 'standard', '', 'standard']);
+  await setPad(page, {buttons: {0: 1}}, 1);
+  await setPad(page, {buttons: {9: 1}}, 3);
+  // A pad without the standard mapping has unknown indices.
+  await setPad(page, {buttons: {1: 1, 2: 1}}, 2);
+  await expectLatched(page, (await input(page)).seq + 1, padRead((1 << 14) | (1 << 3)));
+  expect(failures).toEqual([]);
+});
+test('modified keys and focused Shell controls do not press buttons', async ({page}) => {
+  const failures = errors(page);
+  await running(page);
+  await page.keyboard.press('Control+k');
+  await page.keyboard.down('Alt'); await page.keyboard.down('j');
+  await expectLatched(page, (await input(page)).seq + 1, 0);
+  await page.keyboard.up('j'); await page.keyboard.up('Alt');
+  await page.locator('#pause').focus();
+  await page.keyboard.down('Enter');
+  // Enter activated Pausa (so no VBlank latches now) and was not published as Start.
+  await page.waitForTimeout(100);
+  expect((await input(page)).mask).toBe(0);
+  await page.keyboard.up('Enter');
+  await expect(page.locator('#pause')).toHaveText('Reanudar');
+  expect(failures).toEqual([]);
 });
 test('left stick acts as the D-pad only with the option on', async ({page}) => {
   const failures = errors(page);
@@ -153,7 +190,10 @@ test('scene captures apply no live input', async ({page}) => {
   await page.goto('/?frames=600&capture-mark=neverReached&capture-vblank=1');
   await expect.poll(() => page.evaluate(() => typeof window.Module?.input)).toBe('function');
   await page.keyboard.down('Enter');
+  // The sample was published, so only the capture guard keeps it from the game.
+  expect(await input(page)).toMatchObject({mask: 1 << 3});
   await expect.poll(() => page.evaluate(() => Module.finished), {timeout: 60000}).toBe(1);
+  await expect(page.locator('#status')).toContainText('reached frame 599');
   expect(await input(page)).toMatchObject({latchedSeq: 0, latchedVblank: 0, padValue: 0});
   await page.keyboard.up('Enter');
   expect(failures).toEqual([]);
