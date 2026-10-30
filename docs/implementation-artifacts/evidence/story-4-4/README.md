@@ -26,7 +26,7 @@ Los 59,8 VBlank/s de esos JSON son un artefacto de la ventana de 2 s, no un desv
 
 Con disco, Firefox y PulseAudio, en la imagen `dw-port` (2026-10-30):
 
-- `ctest --preset web`: 43/43, incluidos `web_shell` y `web_scene_title` en Chromium y Firefox.
+- Verificación final sobre el merge con `main` (commit `83b71a3`): `make compare` idéntico; `ctest --preset native-headless` 85/85; `ctest --preset native-asan` 83/83; `ctest --preset web` 45/45, incluidos `web_shell` y `web_scene_title` en Chromium y Firefox.
 - «Jugar», con sus argumentos reales, llegó a `runLandingScreen` en 123 s en ambos navegadores,
   con `AudioContext` en `running`, `#screen` con imagen y 0 resincronizaciones.
 - `pacing-100s.json`: 60,008 a 60,014 VBlank/s en ventanas de 100 s, antes y después de pausar,
