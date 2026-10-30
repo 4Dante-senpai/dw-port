@@ -5,7 +5,7 @@ created: '2026-10-30'
 status: 'in-review'
 baseline_commit: '3115031f0cf037991ddb04e6a05ce0705a9c22dd'
 route: 'dispatch'
-review_loop_iteration: 0
+review_loop_iteration: 1
 context:
   - '{project-root}/docs/implementation-artifacts/epic-4-context.md'
   - '{project-root}/docs/implementation-artifacts/spec-4-3-seleccion-del-disco-validacion-y-pack-en-el-navegador.md'
@@ -86,3 +86,23 @@ El lock usa `ifAvailable` para decidir el mensaje y después una petición en es
 - `cmake --preset web && cmake --build --preset web && ctest --preset web` -- expected: verde; clase B saltada.
 - `python3 port/web/tests/run.py build/port/web shell --project chromium` -- expected: todos los casos pasan.
 - `ctest --preset native-headless` -- expected: verde (`crt.c` solo cambia en `__EMSCRIPTEN__`).
+
+## Review Triage Log
+
+Revisión Codex (`codex-merged`) sobre `12268fe`, con verificación local en el contenedor del proyecto.
+
+| Hallazgo | Veredicto | Ruta | Evidencia |
+|---|---|---|---|
+| «Jugar» termina tras 300 frames y no llega al título; `title.spec.cjs` lo oculta con `DW1_PLAY_FRAMES` | high | intent_gap | Sin la sobrescritura, la prueba de un clic no llega a `runLandingScreen` en 360 s (Chromium). El Intent congelado exige la corrida de 300 frames y el criterio exige llegar al título: se contradicen. |
+| Falta presentación continua | false | rechazado | El Intent la excluye; ya está en `deferred-work.md`. Queda atada a la decisión del hallazgo anterior. |
+| `locks.request` puede rechazar sin aviso | low | patch | La promesa nunca resolvía; se agregó `.catch(reject)` a las dos esperas. |
+| Falla la descarga de `dw1.js` | medium | patch | Quedaba un canvas vacío sin mensaje; `script.onerror` lo informa, con test. |
+| «Pausa» sigue visible al terminar la corrida | low | patch | `Module.onFinished` la oculta; el test ya no necesita un clic extra. |
+| Falta `lang="es"` | low | patch | Corrección directa. |
+| Chromium sin política de autoplay explícita | low | patch | `--autoplay-policy=document-user-activation-required`; `user-gesture-required` no bloquea un `AudioContext` del mismo origen: el control negativo quedó `running`. |
+| `released()` sin prueba determinista | medium | patch | Test nuevo con un worker que retiene `us.pack`, lo libera y agota el plazo. |
+| Falta chequeo de WebGL2 y `OffscreenCanvas` | low | rechazado | Improbable en navegadores con las cuatro capacidades, y agrega rama y mensaje nuevos. |
+| `getDirectory` lanza de forma síncrona | false | rechazado | Devuelve una promesa rechazada, que `capabilities()` ya maneja. |
+| Worker de E/S falla antes de `ready` | false | rechazado | `onerror` ya rechaza y el `catch` lo informa. |
+| `AudioContext` lanza o `resume()` rechaza | low | rechazado | Improbable; el audio real llega en la 4.7. |
+| Ráfaga breve tras resincronizar | low | rechazado | `pace.c` rebasa `deadline` a `now`; una cota fina chocaría con los saltos periódicos de 187 VBlanks. |

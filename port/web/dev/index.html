@@ -1,4 +1,5 @@
 <!doctype html>
+<html lang="es">
 <meta charset="utf-8">
 <title>Digimon World (port web)</title>
 <ul id="capabilities" hidden></ul>
@@ -69,12 +70,13 @@ async function capabilities() {
 }
 // The dw1-game lock is held for the page's lifetime; it also serializes Pack builds and deletion.
 async function start() {
-  const held = await new Promise(resolve => navigator.locks.request('dw1-game', {ifAvailable: true},
-    lock => { resolve(!!lock); return lock ? forever : undefined; }));
+  const held = await new Promise((resolve, reject) => navigator.locks.request('dw1-game', {ifAvailable: true},
+    lock => { resolve(!!lock); return lock ? forever : undefined; }).catch(reject));
   if (!held) {
     const instance = document.querySelector('#instance');
     instance.hidden = false;
-    await new Promise(resolve => navigator.locks.request('dw1-game', () => { resolve(); return forever; }));
+    await new Promise((resolve, reject) =>
+      navigator.locks.request('dw1-game', () => { resolve(); return forever; }).catch(reject));
     instance.hidden = true;
   }
   if (!location.search) { launch(); return; }
@@ -119,6 +121,7 @@ function boot(args, audioContext) {
   addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
   const script = document.createElement('script');
   script.src = '/dw1.js' + (query.has('poison') ? '?poison=1' : '');
+  script.onerror = () => { status.textContent = 'No se pudo descargar el juego. Recargá la página para reintentar.'; };
   document.head.append(script);
 }
 // The game thread holds inside VSync while the pause word is 1 (port/host/web/pace.c).
@@ -138,6 +141,7 @@ function pauseControls() {
     Atomics.notify(words, 0);
     button.textContent = manual ? 'Reanudar' : 'Pausa';
   }
+  Module.onFinished = apply;
   button.onclick = () => { manual = !manual; apply(); };
   document.addEventListener('visibilitychange', apply);
   button.hidden = false;

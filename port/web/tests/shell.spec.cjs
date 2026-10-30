@@ -155,8 +155,7 @@ test('a frame later than 4 VBlanks resynchronizes once, without a catch-up burst
   expect(failures).toEqual([]);
   evidence(info, 'stall', {...result, end});
 });
-test('Jugar is the only gesture: game on this page with a running AudioContext', async ({page}, info) => {
-  const failures = errors(page);
+async function seedSynthetic(page) {
   const pack = fs.readFileSync(path.join(process.env.DW1_WEB_BUILD, 'synthetic.pack'));
   const sha = crypto.createHash('sha256').update(pack).digest('hex');
   await page.route('**/__fixture/us.pack.sha256', r => r.fulfill({status: 404, body: ''}));
@@ -169,6 +168,22 @@ test('Jugar is the only gesture: game on this page with a running AudioContext',
     };
     worker.postMessage({url: '/__fixture/synthetic.pack', sha256: sha});
   }), sha);
+}
+// Another worker keeps us.pack locked, as a page that ran the game does while it tears down.
+function holdPack(page) {
+  return page.evaluate(() => new Promise((resolve, reject) => {
+    const code = `(async () => {
+      const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle('dw1');
+      await (await dir.getFileHandle('us.pack')).createSyncAccessHandle();
+      postMessage('held');
+    })().catch(e => postMessage(e.name));`;
+    window.holder = new Worker(URL.createObjectURL(new Blob([code], {type: 'text/javascript'})));
+    holder.onmessage = ({data}) => data === 'held' ? resolve() : reject(Error(data));
+  }));
+}
+test('Jugar is the only gesture: game on this page with a running AudioContext', async ({page}, info) => {
+  const failures = errors(page);
+  await seedSynthetic(page);
   // Returning with a Pack offers "Jugar" directly, without the welcome.
   await page.goto('/');
   await expect(page.locator('#pack-status')).toHaveText('Listo para jugar');
@@ -207,8 +222,6 @@ test('Jugar is the only gesture: game on this page with a running AudioContext',
   // reaching the title is the class B Escena (title.spec.cjs).
   await expect.poll(() => page.evaluate(() => Module.finished)).toBe(1);
   await expect(page.locator('#status')).toContainText('Manifest');
-  // The finished run hides Pausa on its next use.
-  await page.locator('#pause').click();
   await expect(page.locator('#pause')).toBeHidden();
   // "Borrar datos" brings back the welcome and the own-copy notice.
   await page.goto('/');
@@ -218,4 +231,28 @@ test('Jugar is the only gesture: game on this page with a running AudioContext',
   await expect(page.locator('#legal')).toBeVisible();
   expect(failures).toEqual([]);
   evidence(info, 'play', {probe_without_gesture: probe, audio_context: 'running', navigations: 0});
+});
+test('Borrar datos waits for a held Pack and reports a handle that stays held', async ({page}) => {
+  test.setTimeout(120000);
+  await seedSynthetic(page);
+  await page.goto('/');
+  await expect(page.locator('#pack-status')).toHaveText('Listo para jugar');
+  await holdPack(page);
+  await page.locator('#clear').click();
+  await page.waitForTimeout(1000);
+  await expect(page.locator('#pack-status')).toHaveText('Listo para jugar');
+  await page.evaluate(() => holder.terminate());
+  await expect(page.locator('#pack-status')).toHaveText('Pack ausente', {timeout: 10000});
+  await seedSynthetic(page);
+  await page.goto('/');
+  await expect(page.locator('#pack-status')).toHaveText('Listo para jugar');
+  await holdPack(page);
+  await page.locator('#clear').click();
+  await expect(page.locator('#status')).not.toHaveText('', {timeout: 10000});
+  await expect(page.locator('#pack-status')).toHaveText('Listo para jugar');
+});
+test('a failed game download says so', async ({page}) => {
+  await page.route('**/dw1.js*', r => r.abort());
+  await page.goto('/?frames=1');
+  await expect(page.locator('#status')).toHaveText('No se pudo descargar el juego. Recargá la página para reintentar.');
 });
