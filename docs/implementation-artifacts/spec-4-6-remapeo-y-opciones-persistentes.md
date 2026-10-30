@@ -77,3 +77,26 @@ context:
 **Commands:**
 - `python3 port/web/tests/run.py build/port/web settings` y `... input` -- expected: todos los casos pasan.
 - `ctest --preset web` -- expected: verde; clase B saltada.
+
+## Spec Change Log
+
+- 2026-10-30, integración local: la rama cloud dejaba sin implementar la clase B y sin Firefox. Se agregaron el caso de Start reasignado con el Pack real, `?frames=0` y los ajustes por la presentación de 4.5. KEEP: `PortSettings`, migración y editor de la rama cloud.
+
+## Review Triage Log
+
+Revisión Codex (`codex-merged`) del diff contra `main` tras integrar la rama cloud.
+
+| Hallazgo | Veredicto | Ruta | Evidencia |
+|---|---|---|---|
+| `Tab` recibe `preventDefault` durante la captura | medium | patch | Bloqueaba la navegación que el comentario promete; filtrado antes de cancelar el evento. Test nuevo. |
+| Ctrl+Z asigna `KeyZ` durante la captura | medium | patch | Las teclas con Ctrl, Alt o Meta siguen siendo atajos, igual que en `inputControls`. Test nuevo. |
+| `controls` desconocido en v1 se pierde | low | rechazado | v1 nunca se publicó y `controls` no es campo suyo; no hay registros reales. |
+| Destino v1 inválido se descarta y sobrescribe el original | medium | patch | Quitar la condición hace que la migración falle y el registro quede protegido. Test nuevo. |
+| Campo extra en un mapa rompe `assign` | low | patch | Recorre solo los botones conocidos. |
+| Botón sostenido en otro mando | low | rechazado | Requiere dos mandos en la captura; soltar y pulsar lo resuelve. |
+| Listas con huecos pasan la validación | low | rechazado | Solo con un registro hecho a mano. |
+| `onblocked` deja una apertura pendiente | false | rechazado | La versión es fija en 1, sin upgrade concurrente; el Web Lock impide otra instancia. |
+| Cambios sin escritura no probados en la sesión | medium | patch | Los casos de registros protegidos arrancan el juego sin navegar y comprueban `KeyZ`. |
+| Fallos de escritura sin probar | medium | patch | Dos casos con `put` que lanza: aviso, registro intacto y mapeo en memoria. |
+| Conflicto de gamepad sin prueba | medium | patch | Test nuevo con persistencia y `PadRead`. |
+| Umbral analógico en índices reasignados | low | patch | El caso de gamepad cubre 0,5 con `pressed` y 0,6 sin él. |
