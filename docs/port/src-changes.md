@@ -67,7 +67,7 @@ Las macros de aridad eliminan solo argumentos que la definición no recibe.
 | `src/main/main.c` | `MemCardInit` | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
 | `src/main/main.c` | `MemCardStart` | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
 | `src/main/main.c` | `initializeMusic` | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
-| `src/main/main.c` | `checkCameraMovement` (retorno) | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
+| `src/main/main.c` | `memcpy` (declaración en `initializeLoadedMap`) | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
 | `src/main/map.c` | `checkFishingMap` | Ajustar aridad a la definición; solo elimina argumentos no consumidos | L0a, `make compare`, enlace WASM fatal |
 | `src/main/map.c` | `tickCameraMoveTo` | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
 | `src/main/map.c` | `tickCameraMoveTo` | Corregir declaración/retorno de llamada directa para wasm-ld, conservando parámetros consumidos | L0a, `make compare`, enlace WASM fatal |
@@ -120,6 +120,13 @@ nombres. Se verificaron los valores `0x8000, 0x8000` y la contigüidad en
 `asm/us/main/shop/script_menu.data.s` (`0x801307A0..A2`), y la lectura en
 `asm/us/shop/script_menu.s:renderNamingBox`. No cambia el array del build PS1.
 
+| Archivo | Bloque / símbolo | Motivo | Verificación |
+|---|---|---|---|
+| `src/shop/script_menu.c` | `NAMING_CTRL_BOXES` (12 shorts) | Dos shorts finales con `NAMING_ROLLOVER_CHARS[0..1]` para la lectura contigua de `renderNamingBox` | L0a; `make compare`; ASan en el selector de nombres; `script_menu.data.s` `0x801307A0..A2` |
+| `src/shop/script_menu.c` | `setupNewGameDialogueBox` | Saltear `ENTITY_TABLE[i]` NULL al buscar a Jijimon (`type == 0x75`) | L0a; `make compare`; UBSan en New Game; sonda `null-probe` |
+| `src/shop/script_menu.c` | `setupNameSelectorBox` | Saltear `ENTITY_TABLE[i]` NULL al buscar a Jijimon (`type == 0x75`) | L0a; `make compare`; sonda `null-probe` |
+| `src/shop/script_menu.c` | `setupNameDisplayBox` | Saltear `ENTITY_TABLE[i]` NULL al buscar a Jijimon (`type == 0x75`) | L0a; `make compare`; sonda `null-probe` |
+
 ## Historia 3.3: áreas de modelos y escritura en RAM baja
 
 `src/main/main.c` conserva bajo `DW1_PORT` una única área de `0xe000` bytes para
@@ -171,6 +178,18 @@ declaración original. `scene_title` y `scene_title_compare` pasan también en
 ASan, con cero píxeles RGB555 distintos respecto de la referencia.
 
 
+| Archivo | Bloque / símbolo | Motivo | Verificación |
+|---|---|---|---|
+| `src/main/main.c` | `TAMER_MODEL_BUFFER` / `MAIN_D_801A8B98` | Una sola área de `0xe000` bytes para las dos áreas contiguas del original (`BOYS.MMD` ocupa 57036 bytes) | L0a; `make compare`; ASan; `config/us/symbols.txt` |
+| `src/vs/vs_hud.c` | `MAIN_D_801A8B98` (declaración) | Declarar el puntero a la segunda parte del área de `main.c` | L0a; `make compare` |
+| `src/main/overworld.c` | `renderMapOverlays` (`startFrame == -1`) | Omitir antes el objeto con frame -1 para no leer `animSprites[-1]` | L0a; `make compare`; UBSan; asm `800B4480..44B8` |
+| `src/main/overworld.c` | `renderMapOverlays` (wrap de `currentFrame`, camino 1) | Pasar a cero `currentFrame >= 8` antes de leer el índice 8 | L0a; `make compare`; UBSan; asm `800B46A8..46C8` |
+| `src/main/overworld.c` | `renderMapOverlays` (wrap de `currentFrame`, camino 2) | Pasar a cero `currentFrame >= 8` antes de leer el índice 8 | L0a; `make compare`; UBSan; asm `800B471C..4738` |
+| `src/main/overworld.c` | `clearMapDigimon` | Escribir `isOnMap = 0` en la RAM baja de la arena PS1, como la escritura a través de NULL del original | L0a; `make compare`; asm `800B64C4..64D0` |
+| `src/main/script_interp.c` | `scriptSetEntityWalking` | Pasar a `setActiveAnim` el residuo de a1 reconstruido por `port_script_animation_residue` | L0a; `make compare`; `animation-check/run-1.log` |
+| `src/main/script_interp.c` | `scriptStartAnimation` | Pasar a `setActiveAnim` el residuo de a1 reconstruido por `port_script_animation_residue` | L0a; `make compare`; `animation-check/run-1.log` |
+| `src/mov/mov.c` | `MOV_playMovie` (`DRAWENV draw`) | Inicializar a cero el `DRAWENV` local que el original pasa sin inicializar a `PutDrawEnv` | L0a; `make compare`; `scene_title` y `scene_title_compare` en ASan; `title-watch.log` |
+
 ## Historia 3.7: espera de DMA MDEC
 
 `src/mov/mov.c`: bajo `DW1_PORT` se incluye el reloj del port y se llama
@@ -179,6 +198,11 @@ terminaciones asíncronas de `DecDCTout` y sus callbacks de slices. La rama
 PS1 mantiene exactamente el bucle original. El inventario `isr_spins.tsv`
 retira esa fila porque el bucle ya contiene una llamada explícita.
 Costes sin calibrar: [mdec.md](mdec.md), historia 3.10.
+
+| Archivo | Bloque / símbolo | Motivo | Verificación |
+|---|---|---|---|
+| `src/mov/mov.c` | `#include` de `port/psyq/clock.h` | Declarar el reloj del port para los bloques de `mov.c` | L0a; `make compare` |
+| `src/mov/mov.c` | `MOV_waitForFlip` | `clock_advance(CLOCK_MOVIE_FLIP_POLL_CYCLES)` en el bucle de espera | L0a; `make compare`; escenas `movie0` y `movie0_skip` |
 
 ### Historia 3.10: CPU de búsqueda de archivos
 
@@ -192,6 +216,13 @@ El conteo se obtiene del asm USA y se contrasta con el probe de Redux
 16 ciclos de CPU entre llamadas a `StGetNext` (ocho instrucciones RAM del
 asm USA). `StGetNext` cobra sus propios 38 ciclos medidos; no se salta al
 siguiente sector ni se cambia el latch del pad.
+
+| Archivo | Bloque / símbolo | Motivo | Verificación |
+|---|---|---|---|
+| `src/main/file.c` | `#include` de `port/psyq/clock.h` | Declarar el reloj del port para los bloques de `file.c` | L0a; `make compare` |
+| `src/main/file.c` | `lookupFileTable` (costo fijo) | Cobrar los 86 ciclos fijos del recorrido de la tabla | L0a; `make compare`; `lookup-cpu-probe` |
+| `src/main/file.c` | `lookupFileTable` (costo por entrada) | Cobrar 22 ciclos por entrada examinada | L0a; `make compare`; `lookup-cpu-probe` |
+| `src/mov/mov.c` | `MOV_readFrame` | Cobrar 16 ciclos de CPU por sondeo fallido entre llamadas a `StGetNext` | L0a; `make compare`; escenas `movie0` y `movie0_skip` |
 
 ### Historia 3.10: trabajo de CPU entre llamadas de carga de audio
 
@@ -209,3 +240,23 @@ y 18 de retorno; `SsUtGetVBaddrInSB` cobra sus 40 ciclos dentro de libsnd.
 Evidencia: `file-probe`, `vhb-tail-probe` e `intro-music-spans`. Todos los
 bloques nuevos están bajo DW1_PORT. `resume69-matching.log` confirma
 `Compiled binaries match with target binaries`.
+
+| Archivo | Bloque / símbolo | Motivo | Verificación |
+|---|---|---|---|
+| `src/main/file.c` | `readFile` (`CdControl` y `CdRead`) | Cobrar los ciclos antes de cada `CdControl` y antes de `CdRead` | L0a; `make compare`; `file-probe` |
+| `src/main/file.c` | `readFile` (`CdReadSync`) | Cobrar los 10 ciclos entre `CdRead` y `CdReadSync` | L0a; `make compare`; `file-probe` |
+| `src/main/file.c` | `readFileSectors` (`CdReadSync`) | Cobrar los 10 ciclos entre `CdRead` y `CdReadSync` | L0a; `make compare`; `file-probe` |
+| `src/main/sound.c` | `#include` de `port/psyq/clock.h` | Declarar el reloj del port para los bloques de `sound.c` | L0a; `make compare` |
+| `src/main/sound.c` | `readVHBFile` (antes de `memcpy`) | Cobrar el intervalo propio de `readVHBFile` antes de `memcpy` | L0a; `make compare`; `vhb-tail-probe` |
+| `src/main/sound.c` | `readVHBFile` (antes de `SsVabClose`) | Cobrar el intervalo propio de `readVHBFile` antes de `SsVabClose` | L0a; `make compare`; `vhb-tail-probe` |
+| `src/main/sound.c` | `readVHBFile` (antes de `SsVabOpenHeadSticky`) | Cobrar el intervalo propio de `readVHBFile` antes de `SsVabOpenHeadSticky` | L0a; `make compare`; `vhb-tail-probe` |
+| `src/main/sound.c` | `readVHBFile` (antes de `SsVabTransBody`) | Cobrar el intervalo propio de `readVHBFile` antes de `SsVabTransBody` | L0a; `make compare`; `vhb-tail-probe` |
+| `src/main/sound.c` | `readVHBFile` (antes de `SsVabTransCompleted`) | Cobrar el intervalo propio de `readVHBFile` antes de `SsVabTransCompleted` | L0a; `make compare`; `vhb-tail-probe` |
+| `src/main/sound.c` | `readVHBFile` (antes de `SsUtGetVBaddrInSB`) | Cobrar el intervalo propio de `readVHBFile` antes de `SsUtGetVBaddrInSB` | L0a; `make compare`; `vhb-tail-probe` |
+| `src/main/sound.c` | `initializeMusic` (antes de `ResetCallback`) | Cobrar el trabajo propio de `initializeMusic` antes de `ResetCallback` | L0a; `make compare`; `tick-mode-probe`, `intro-music-spans` |
+| `src/main/sound.c` | `initializeMusic` (antes de `SsInit`) | Cobrar el trabajo propio de `initializeMusic` antes de `SsInit` | L0a; `make compare`; `tick-mode-probe`, `intro-music-spans` |
+| `src/main/sound.c` | `initializeMusic` (antes de `SsSetTableSize`) | Cobrar el trabajo propio de `initializeMusic` antes de `SsSetTableSize` | L0a; `make compare`; `tick-mode-probe`, `intro-music-spans` |
+| `src/main/sound.c` | `initializeMusic` (antes de `SsSetTickMode`) | Cobrar el trabajo propio de `initializeMusic` antes de `SsSetTickMode` | L0a; `make compare`; `tick-mode-probe`, `intro-music-spans` |
+| `src/main/sound.c` | `initializeMusic` (antes de la lectura VHB de `SOUND\SS`) | Cobrar el trabajo propio de `initializeMusic` antes de la lectura VHB de `SOUND\SS` | L0a; `make compare`; `tick-mode-probe`, `intro-music-spans` |
+| `src/main/sound.c` | `initializeMusic` (antes de la lectura VHB de `SOUND\SL`) | Cobrar el trabajo propio de `initializeMusic` antes de la lectura VHB de `SOUND\SL` | L0a; `make compare`; `tick-mode-probe`, `intro-music-spans` |
+| `src/main/sound.c` | `initializeMusic` (antes de `SsStart`) | Cobrar el trabajo propio de `initializeMusic` antes de `SsStart` | L0a; `make compare`; `tick-mode-probe`, `intro-music-spans` |
