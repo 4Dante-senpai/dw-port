@@ -130,6 +130,9 @@
 - source_spec: `docs/implementation-artifacts/spec-4-3-seleccion-del-disco-validacion-y-pack-en-el-navegador.md`
   summary: El Web Lock de instancia única (historia 4.4) también debe serializar la construcción y el borrado del Pack en OPFS entre pestañas.
   evidence: `port/web/io_worker.js` usa nombres fijos (`us.pack.tmp`, `us.pack.previous`, `us.pack.sha256.tmp`); dos pestañas que construyen o borran a la vez pueden eliminar o reemplazar archivos de la otra.
+- source_spec: `docs/implementation-artifacts/spec-8-1-metricas-automaticas-en-status-md.md`
+  summary: Agregar a `status_table.py` un modo de chequeo (por ejemplo `--check docs/STATUS.md`) que falle si el bloque `<!-- status_table:begin/end -->` no coincide con lo que la herramienta genera, y usarlo en `status_table_repo`.
+  evidence: Revisión de la 8.1 (blind hunter). Hoy el bloque solo se actualiza si alguien corre `--update`; `status_table_repo` no lo compara, así que `STATUS.md` puede quedar desactualizado sin que falle nada. El chequeo cambia la interfaz de la herramienta, que la historia no pidió. Ojo: las Escenas dependen de `--junit`, así que el chequeo debería ignorar las filas `sin verificar` o correr con los mismos JUnit.
 
 - source_spec: `docs/implementation-artifacts/spec-4-4-pantallas-de-la-shell-web-y-capacidades.md`
   summary: Con audio web (historia 4.7), la pausa manual y la pestaña oculta también deben suspender y reanudar el `AudioContext` y el anillo del AudioWorklet, sin contar underruns durante la pausa.
