@@ -217,7 +217,7 @@ test('Jugar is the only gesture: game on this page with a running AudioContext',
   await expect.poll(() => page.evaluate(() => Module.audioContext?.state)).toBe('running');
   expect(page.url()).toBe(url);
   // callMain prepends the program name to Module.arguments when main starts.
-  expect((await page.evaluate(() => Module.arguments)).slice(-4)).toEqual(['--frames', '300', '--pack', 'dw1/us.pack']);
+  expect((await page.evaluate(() => Module.arguments)).slice(-4)).toEqual(['--frames', '0', '--pack', 'dw1/us.pack']);
   // The synthetic Pack reaches the game's C (via the I/O worker), which rejects its Manifest;
   // reaching the title is the class B Escena (title.spec.cjs).
   await expect.poll(() => page.evaluate(() => Module.finished)).toBe(1);
@@ -255,4 +255,18 @@ test('a failed game download says so', async ({page}) => {
   await page.route('**/dw1.js*', r => r.abort());
   await page.goto('/?frames=1');
   await expect(page.locator('#status')).toHaveText('No se pudo descargar el juego. Recargá la página para reintentar.');
+});
+test('frames reach the screen while the game thread runs', async ({page}) => {
+  await page.goto('/?frames=100000&pattern=1');
+  await expect.poll(() => page.evaluate(() => window.Module?.control?.().vblanks ?? 0), {timeout: 30000}).toBeGreaterThan(30);
+  const read = () => page.evaluate(() => {
+    const copy = document.createElement('canvas');
+    copy.width = 320; copy.height = 240;
+    const ctx = copy.getContext('2d', {willReadFrequently: true});
+    ctx.drawImage(document.querySelector('#screen'), 0, 0);
+    return Array.from(ctx.getImageData(0, 0, 320, 1).data).join();
+  });
+  const first = await read();
+  await expect.poll(read).not.toBe(first);
+  expect(await page.evaluate(() => Module.finished)).toBeUndefined();
 });

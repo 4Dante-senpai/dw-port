@@ -697,7 +697,7 @@ if(EMSCRIPTEN)
   target_link_options(dw1 PRIVATE -Wl,--fatal-warnings -sINITIAL_MEMORY=67108864 -sALLOW_MEMORY_GROWTH=0
     -sEMULATE_FUNCTION_POINTER_CASTS=1 -sOFFSCREENCANVAS_SUPPORT=1 -sPTHREAD_POOL_SIZE=5 -sEXIT_RUNTIME=0
     --pre-js ${CMAKE_SOURCE_DIR}/port/web/thread_storage_guard.js
-    -sEXPORTED_FUNCTIONS=_main,_io_mailbox_address,_web_control_address -sEXPORTED_RUNTIME_METHODS=callMain
+    -sEXPORTED_FUNCTIONS=_main,_io_mailbox_address,_web_control_address -sEXPORTED_RUNTIME_METHODS=callMain,PThread
     -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sGL_ASSERTIONS=1)
   add_test(NAME web_boot COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR})
