@@ -442,3 +442,35 @@ archivo y sidecar contra el SHA nativo conocido. Los JSON `disc-*.json` y
 `disc-real-*.json` en `build/port/web/` contienen memoria máxima, hashes y el
 tiempo desde la selección hasta «Listo para jugar» (SM-4, milisegundos). Solo se
 copian esos metadatos a `docs/implementation-artifacts/evidence/story-4-3/`.
+
+### Shell web: capacidades, instancia única y pausa (historia 4.4)
+
+`dw1.html` verifica primero aislamiento (`crossOriginIsolated`), `SharedArrayBuffer`,
+OPFS y Web Locks; si falta alguna, muestra un mensaje por capacidad
+(`#capabilities li[data-capability]`) y no carga `dw1.js` ni crea workers. Después
+toma el Web Lock `dw1-game` durante toda la vida de la página: una segunda pestaña
+muestra `#instance`, no arranca nada (tampoco construye ni borra el Pack) y continúa
+sola cuando la primera se cierra. «Jugar» crea el `AudioContext` dentro del clic y
+arranca el juego en la misma página (sin navegar), con la corrida finita de 300 frames.
+
+El hilo del juego tiene ritmo de pared en cada `VSync` bloqueante
+(`port/host/web/pace.c`, mismo modelo que `port/host/sdl/video.c`), salvo en corridas
+de captura de Escena. «Pausa» o la pestaña oculta escriben la palabra de pausa
+compartida; el hilo queda retenido dentro de `VSync`, sin despachar VBlanks, y al
+reanudar rebasa el deadline sin contar resincronización. `Module.control()` expone
+`pause`, `held`, `vblanks`, `resynchronizations` y `pauses` para los tests.
+
+```sh
+ctest --preset web -R web_shell --output-on-failure
+python3 port/web/tests/run.py build/port/web shell --project chromium   # un navegador
+```
+
+La suite `shell` (clase A) cubre las cuatro capacidades, la segunda pestaña, la
+pausa manual, la pestaña oculta (simulada redefiniendo `document.visibilityState`)
+y «Jugar» como único gesto. Como `page.evaluate` de Playwright concede activación de
+usuario, ese caso no evalúa nada en la Shell antes del clic: un init script registra
+la activación al construir cada `AudioContext` y un contexto de control creado al
+cargar debe quedar `suspended`. Firefox corre con `media.autoplay.*` bloqueando Web
+Audio sin gesto. Deja `shell-{pause,visibility,play}-<navegador>.json` en
+`build/port/web/`. La clase B (`web_scene_title`) agrega un clic en «Jugar» con el Pack
+real que debe llegar a `runLandingScreen` con el `AudioContext` en `running`.

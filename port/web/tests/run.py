@@ -17,7 +17,7 @@ suite = sys.argv[2] if len(sys.argv) > 2 else 'boot'
 if suite in ('title', 'disc_real') and not (os.environ.get('DW1_DISC_DIR') or (suite == 'title' and os.environ.get('DW1_WEB_URL'))):
     print(f'web_{"scene_title" if suite == "title" else suite}: DW1_DISC_DIR not set; skipped')
     sys.exit(77)
-if suite in ('io', 'launcher'):
+if suite in ('io', 'launcher', 'shell'):
     # Same sector/byte formula as pack/tests/test_pack.c; no disc bytes.
     data = bytes(((22 + i // 2048) * 31 + (24 + i % 2048) * 7) & 255 for i in range(5000))
     header = struct.pack('<8sII32sII8x', b'DW1PACK\0', 1, 1, bytes(32), 64, 2048)

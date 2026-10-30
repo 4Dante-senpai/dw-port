@@ -1,0 +1,16 @@
+{
+  "rate_before": 60.330320972265504,
+  "paused": {
+    "vblanks": 207,
+    "ms": 2008.9749999999767
+  },
+  "rate_after": 59.79490348106038,
+  "end": {
+    "t": 8162.569999999949,
+    "pause": 0,
+    "held": 0,
+    "vblanks": 328,
+    "resynchronizations": 0,
+    "pauses": 1
+  }
+}

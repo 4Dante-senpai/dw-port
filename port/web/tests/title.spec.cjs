@@ -30,3 +30,33 @@ for (const poison of [false, true]) {
       JSON.stringify({sha256:hash, native_sha256:process.env.DW1_NATIVE_TITLE_SHA, poison, storageAccesses}));
   });
 }
+test('one click on Jugar reaches the title with a running AudioContext', async ({page}, info) => {
+  test.setTimeout(420000);
+  const failures = errors(page);
+  await page.goto('/');
+  await expect(page.locator('#load-pack')).toBeEnabled();
+  await page.locator('#load-pack').click();
+  await expect(page.locator('#pack-status')).toHaveText('Pack disponible', {timeout:120000});
+  // A fresh document: the fixture click above must not count as the gesture.
+  await page.addInitScript(() => {
+    window.DW1_PLAY_FRAMES = 1000000;
+    const Native = AudioContext;
+    window.audioLog = [];
+    window.AudioContext = class extends Native {
+      constructor(...args) { super(...args); audioLog.push(navigator.userActivation.isActive); }
+    };
+  });
+  await page.goto('/');
+  await page.waitForTimeout(1500);
+  const start = Date.now();
+  await page.locator('#play').click();
+  expect(await page.evaluate(() => window.audioLog)).toEqual([true]);
+  await expect.poll(() => page.evaluate(() => Module.audioContext?.state)).toBe('running');
+  // Paced at 60 Hz: the title takes as long as on the console.
+  await expect.poll(() => page.evaluate(() => Module.marks || []), {timeout:360000}).toContain('runLandingScreen');
+  const control = await page.evaluate(() => Module.control());
+  expect(control.resynchronizations).toBe(0);
+  expect(failures).toEqual([]);
+  fs.writeFileSync(`${process.env.DW1_WEB_BUILD}/title-play-${info.project.name}.json`,
+    JSON.stringify({ms_to_title:Date.now() - start, control}));
+});

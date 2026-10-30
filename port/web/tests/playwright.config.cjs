@@ -14,7 +14,9 @@ module.exports = defineConfig({
       ['--unsafely-treat-insecure-origin-as-secure=' + new URL(process.env.DW1_WEB_INSECURE_ORIGIN).origin] : [])]}}},
     {name: 'firefox', use: {browserName: 'firefox', headless: false, launchOptions: {firefoxUserPrefs: {
       'webgl.force-enabled': true, 'gfx.webrender.software': true,
-      'webgl.enable-webgl2': true
+      'webgl.enable-webgl2': true,
+      // Web Audio needs a user gesture, as in a normal profile (FR-4, shell.spec.cjs).
+      'media.autoplay.default': 1, 'media.autoplay.blocking_policy': 0, 'media.autoplay.block-webaudio': true
     }}}}
   ]
 });

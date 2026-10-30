@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-30",
+  "environment": "sesión en la nube sin Docker: emsdk 6.0.10 y @playwright/test 1.64.0 instalados localmente; Chromium preinstalado (build 1243) enlazado como chromium-1248; Firefox no disponible (descarga bloqueada por la política de red)",
+  "commands": [
+    {"command": "cmake --preset web && cmake --build --preset web", "result": "ok"},
+    {"command": "python3 port/web/tests/run.py build/port/web shell --project chromium", "result": "8 passed"},
+    {"command": "python3 port/web/tests/run.py build/port/web boot --project chromium", "result": "4 passed; el post-proceso de run.py falla solo por faltar timing-firefox-*.json"},
+    {"command": "python3 port/web/tests/run.py build/port/web launcher --project chromium", "result": "2 passed"},
+    {"command": "python3 port/web/tests/run.py build/port/web io --project chromium", "result": "6 passed"},
+    {"command": "python3 port/web/tests/run.py build/port/web disc --project chromium", "result": "19 passed"},
+    {"command": "python3 port/web/tests/run.py build/port/web title", "result": "skipped (77), sin DW1_DISC_DIR"},
+    {"command": "ctest --preset native-headless", "result": "verde salvo reference_capture_unit (pcsx-redux no instalado en esta sesión); preproc_check y test_preproc_check pasan tras git fetch upstream y --unshallow"},
+    {"command": "cmake --preset native-asan", "result": "no configura: falta el runtime ASan i686 de clang en esta sesión"}
+  ],
+  "unverified": [
+    "Firefox: toda la suite shell y las suites web existentes",
+    "Clase B: un clic en «Jugar» con el Pack real llega a runLandingScreen (title.spec.cjs)",
+    "native-asan",
+    "reference_capture_unit (requiere pcsx-redux)"
+  ]
+}
