@@ -108,3 +108,14 @@ Revisión Codex (`codex-merged`) del diff completo contra `main` tras integrar l
 | Lectura no atómica de `Module.input` | low | rechazado | Solo la usan los tests, sobre un botón estable; no afecta al juego. |
 | `DW1_WEB_LONG_MINUTES` inválido | low | rechazado | Herramienta manual que falla ruidosamente. |
 | Umbral 67 ms frente a cuatro frames | low | patch | `4000 / RATE`, sin ramas nuevas. |
+
+Segunda revisión Codex, solo del cambio de presentación (`blind-hunter` y `edge-case-hunter`).
+
+| Hallazgo | Veredicto | Ruta | Evidencia |
+|---|---|---|---|
+| Pérdida del contexto WebGL deja la imagen congelada | low | rechazado | Tampoco se manejaba con `ImageBitmap`; ningún flujo del port la provoca hoy. |
+| `ms` no incluye `glReadPixels` | low | rechazado | Es informativo y sin umbral, igual que en la revisión de 4.4; el rendimiento se evalúa en la 5.6. |
+| Se eliminó la medición de latencia | false | rechazado | Sin mensajes no hay demora acumulable: cada animation frame lee el frame más nuevo. |
+| El test de memoria pasa con el juego congelado | medium | patch | `shell.spec.cjs` exige más de 300 frames pintados durante la medición. |
+| `seq` con signo en JavaScript | low | rechazado | Necesita 2^31 escrituras, unos 11 meses de corrida continua; solo afecta un contador de tests. |
+| `getContext('2d')` devuelve null | false | rechazado | `#screen` no tiene otro contexto y Shell lo crea una sola vez. |
