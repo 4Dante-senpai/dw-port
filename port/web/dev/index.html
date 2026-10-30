@@ -101,6 +101,8 @@ async function start() {
   boot(args);
 }
 function boot(args, audioContext) {
+  // Options are closed once the game starts: a pending «Reasignar» must not eat its first key.
+  cancelRemap?.();
   document.querySelector('#launcher').hidden = true;
   document.querySelector('#game').hidden = false;
   window.Module = {
@@ -165,7 +167,7 @@ const LABELS = {select: 'Select', start: 'Start', up: 'Arriba', right: 'Derecha'
   l2: 'L2', r2: 'R2', l1: 'L1', r1: 'R1', triangle: 'Triangle', circle: 'Circle', cross: 'Cross', square: 'Square'};
 // PortSettings (AD-13): JSON with snake_case keys in IndexedDB "dw1", store "settings", key "port_settings".
 const SETTINGS_VERSION = 2;
-let portSettings, settingsWritable = false;
+let portSettings, settingsWritable = false, cancelRemap;
 // The default mapping of docs/port/controls.md: keyboard codes and W3C standard gamepad indices.
 function defaultSettings() {
   return {schema_version: SETTINGS_VERSION, stick_dpad: false, controls: {
@@ -180,7 +182,7 @@ const MIGRATIONS = {
   // v1, defined with v2 as the first earlier format (never published): keyboard code -> button, no gamepad map.
   1: ({keyboard = {}, ...rest}) => {
     const keys = Object.fromEntries(Object.keys(BUTTONS).map(button => [button, []]));
-    for (const [code, button] of Object.entries(keyboard)) if (button in BUTTONS) keys[button].push(code);
+    for (const [code, button] of Object.entries(keyboard)) if (Object.hasOwn(BUTTONS, button)) keys[button].push(code);
     return {...rest, schema_version: 2, controls: {keyboard: keys, gamepad: defaultSettings().controls.gamepad}};
   }
 };
@@ -189,18 +191,28 @@ function settingsStore(mode, action) {
     const open = indexedDB.open('dw1', 1);
     open.onupgradeneeded = () => open.result.createObjectStore('settings');
     open.onerror = () => reject(open.error);
+    open.onblocked = () => reject(Error('IndexedDB blocked by another connection'));
     open.onsuccess = () => {
-      const db = open.result, tx = db.transaction('settings', mode);
-      const request = action(tx.objectStore('settings'));
-      tx.oncomplete = () => { db.close(); resolve(request.result); };
-      tx.onerror = tx.onabort = () => { db.close(); reject(tx.error || Error('IndexedDB transaction aborted')); };
+      const db = open.result;
+      try {
+        const tx = db.transaction('settings', mode);
+        const request = action(tx.objectStore('settings'));
+        tx.oncomplete = () => { db.close(); resolve(request.result); };
+        tx.onerror = tx.onabort = () => { db.close(); reject(tx.error || Error('IndexedDB transaction aborted')); };
+      } catch (e) { db.close(); reject(e); }
     };
   });
 }
 function validSettings(value) {
-  const lists = map => map && typeof map === 'object' && Object.keys(BUTTONS).every(b => Array.isArray(map[b]));
+  // Codes are non-empty strings and indices non-negative integers, each used by one button only.
+  const lists = (map, entry) => {
+    if (!map || typeof map !== 'object') return false;
+    const all = Object.keys(BUTTONS).flatMap(b => Array.isArray(map[b]) ? map[b] : [null]);
+    return all.every(entry) && new Set(all).size === all.length;
+  };
   return value && typeof value === 'object' && typeof value.stick_dpad === 'boolean' &&
-    lists(value.controls?.keyboard) && lists(value.controls?.gamepad);
+    lists(value.controls?.keyboard, c => typeof c === 'string' && c !== '') &&
+    lists(value.controls?.gamepad, i => Number.isInteger(i) && i >= 0);
 }
 // A newer or unreadable record is never overwritten: the defaults run in memory with a warning.
 async function loadSettings() {
@@ -255,7 +267,9 @@ function controlsEditor() {
       if (i >= 0) list.splice(i, 1);
     }
     portSettings.controls[device][button] = [value];
-    status.textContent = '';
+    const unbound = Object.keys(BUTTONS).filter(b => !portSettings.controls[device][b].length);
+    status.textContent = (unbound.length ? 'Sin asignar en ' + (device === 'keyboard' ? 'teclado' : 'gamepad') + ': ' +
+      unbound.map(b => LABELS[b]).join(', ') + '. ' : '') + (settingsWritable ? '' : 'Este cambio no se guarda.');
     render();
     return saveSettings();
   }
@@ -275,6 +289,10 @@ function controlsEditor() {
     let frame;
     const key = e => {
       e.preventDefault(); e.stopImmediatePropagation();
+      // Modifiers never reach the game (shortcuts), Tab keeps keyboard navigation, and a held
+      // key (autorepeat, e.g. the Enter that opened the capture) does not count.
+      if (e.repeat || !e.code || e.code === 'Unidentified' || e.code === 'Tab' ||
+          /^(Control|Alt|Meta|OS)/.test(e.code)) return;
       cancel();
       if (e.code === 'Escape') status.textContent = '';
       else assign(button, 'keyboard', e.code);
@@ -287,7 +305,9 @@ function controlsEditor() {
       cancel();
       assign(button, 'gamepad', fresh);
     };
-    cancel = () => { removeEventListener('keydown', key, true); cancelAnimationFrame(frame); cancel = null; };
+    cancel = cancelRemap = () => {
+      removeEventListener('keydown', key, true); cancelAnimationFrame(frame); cancel = cancelRemap = null;
+    };
     addEventListener('keydown', key, true);
     frame = requestAnimationFrame(poll);
   }
@@ -296,7 +316,7 @@ function controlsEditor() {
     // Fields of other options stay; controls and stick_dpad return to docs/port/controls.md.
     portSettings = {...portSettings, ...defaultSettings()};
     document.querySelector('#stick-dpad').checked = portSettings.stick_dpad;
-    status.textContent = 'Valores por defecto restaurados.';
+    status.textContent = 'Valores por defecto restaurados.' + (settingsWritable ? '' : ' Este cambio no se guarda.');
     render();
     return saveSettings();
   };

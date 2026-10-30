@@ -9,10 +9,10 @@ Firefox (errores exactos en `../story-4-4/docker-firefox-2026-10-30.md`).
   desconocido) y el registro v2 resultante: asignaciones, `stick_dpad` y el campo extra
   se conservan; el gamepad toma los valores por defecto.
 
-Comandos (Chromium): `settings` 9/9 (tres corridas), `input` 8/8 (seis de siete corridas;
-una corrida dio 7/8 y no se pudo reproducir en cinco intentos ni identificar el caso
-porque la salida quedó truncada), `shell` 10/10, `boot` 4/4, `launcher` 2/2, `io` 6/6,
-`disc` 19/19.
+Comandos (Chromium), tras la revisión: `settings` 14/14 (tres corridas), `input` 8/8
+(seis corridas con salida completa), `shell` 10/10, `boot` 4/4, `launcher` 2/2, `io` 6/6,
+`disc` 19/19. Antes de la revisión, una corrida de `input` dio 7/8 con la salida truncada;
+no se reprodujo en las 11 corridas siguientes.
 
 ## Pendiente
 
@@ -20,4 +20,4 @@ porque la salida quedó truncada), `shell` 10/10, `boot` 4/4, `launcher` 2/2, `i
 - **Juego real (clase B)**: que el juego reaccione a un botón reasignado (por ejemplo,
   Start en el título); requiere el Pack real y una señal de escena posterior al título.
 - **Formato v1**: nunca se publicó; la migración se probó con una base sembrada.
-- **Falla intermitente de `input`** (1 de 7 corridas): queda para observar en CI.
+- **Falla intermitente de `input`** (1 corrida, sin reproducir en 11): queda para observar en CI.

@@ -14,7 +14,7 @@
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
 - M3 Paridad nativa: **completo** (Épica 3 cerrada: retrospectiva `accepted-with-open-items`, 2026-10-27).
-- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades y pausa, en revisión; 4.5 teclado y gamepad, en revisión).
+- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades y pausa, en revisión; 4.5 teclado y gamepad, en revisión; 4.6 remapeo y opciones persistentes, en revisión).
 
 ## Hecho
 
@@ -232,6 +232,12 @@
   capturas. Mapeo por defecto igual al nativo (`docs/port/controls.md`) y opción de stick como
   cruceta (sin persistencia). Clase A `web_input` 8/8 en Chromium. Pendiente: Firefox, reacción del
   juego real (clase B) y mando físico. Evidencia: `docs/implementation-artifacts/evidence/story-4-5/`.
+- Historia 4.6 (remapeo y opciones persistentes, en revisión): `PortSettings` (`schema_version` 2,
+  JSON `snake_case` en IndexedDB) guarda el mapeo de teclado y gamepad por botón PS1 y el stick como
+  cruceta; Opciones reasigna con la próxima tecla o botón y restaura `docs/port/controls.md`; un
+  registro v1 se migra conservando campos y uno más nuevo o ilegible no se sobrescribe. Clase A
+  `web_settings` 14/14 en Chromium. Pendiente: Firefox y clase B. Evidencia:
+  `docs/implementation-artifacts/evidence/story-4-6/`.
 
 - Historia 8.5 (entorno de testing en el homelab): job `testing` de clase B en `main` compila nativo y
   web, arma el Pack, valida el título y despliega en el host de deploy (`HUB_DOCKER_HOST`) una imagen
@@ -446,7 +452,7 @@
 
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2 y 4.3 ya están cerradas, y también la 8.5. La 4.4 y la 4.5 están en revisión: falta correr Firefox y la clase B en el contenedor del proyecto (Docker Hub respondió 429 y el proxy bloquea las descargas de Firefox en la sesión en la nube).
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2 y 4.3 ya están cerradas, y también la 8.5. La 4.4, la 4.5 y la 4.6 están en revisión: falta correr Firefox y la clase B en el contenedor del proyecto (Docker Hub respondió 429 y el proxy bloquea las descargas de Firefox en la sesión en la nube).
 
 ## Bloqueos
 

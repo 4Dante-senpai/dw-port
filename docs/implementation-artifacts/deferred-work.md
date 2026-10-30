@@ -134,3 +134,7 @@
 - source_spec: `docs/implementation-artifacts/spec-4-4-pantallas-de-la-shell-web-y-capacidades.md`
   summary: Con audio web (historia 4.7), la pausa manual y la pestaña oculta también deben suspender y reanudar el `AudioContext` y el anillo del AudioWorklet, sin contar underruns durante la pausa.
   evidence: La 4.4 crea `Module.audioContext` en el clic de «Jugar», pero la pausa solo retiene el hilo del juego en `VSync` (`port/host/web/pace.c`); hoy ningún código consume ese contexto.
+
+- source_spec: `docs/implementation-artifacts/spec-4-6-remapeo-y-opciones-persistentes.md`
+  summary: La base IndexedDB `dw1` se abre con versión fija 1 y solo crea el almacén `settings`; las Memory cards (4.8) deben centralizar la versión y las actualizaciones de `dw1` (o usar otra base) para no romper `PortSettings`.
+  evidence: `settingsStore()` en `port/web/dev/index.html` hace `indexedDB.open('dw1', 1)`; con la base en una versión mayor fallaría con `VersionError` y la Shell usaría valores por defecto sin guardar.
