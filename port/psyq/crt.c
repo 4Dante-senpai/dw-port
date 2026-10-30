@@ -91,7 +91,9 @@ static void capture_vblank(void)
 		exit(0);
 	}
 #endif
-#ifndef __EMSCRIPTEN__
+#ifdef __EMSCRIPTEN__
+	if (!capture_config.inputs) plat_input_vblank();
+#else
 	if (!capture_config.inputs && plat_input_vblank) plat_input_vblank();
 #endif
 	if (capture_config.audio_segments) {

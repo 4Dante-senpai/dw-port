@@ -227,6 +227,11 @@
   llega al hilo principal como `ImageBitmap`, así que «Jugar» corre sin límite y muestra el juego
   en vivo (título en 123 s). La imagen `dw-port` suma PulseAudio para Firefox. `ctest --preset web`
   43/43 con disco, en Chromium y Firefox. Evidencia: `docs/implementation-artifacts/evidence/story-4-4/`.
+- Historia 4.5 (teclado y gamepad, en revisión): el hilo principal muestrea teclado
+  (`KeyboardEvent.code`) y gamepads estándar W3C y publica la máscara de los 14 botones; el hilo
+  del juego la aplica con `port_pad_latch` en cada VBlank (`port/host/web/input.c`), salvo en
+  capturas. Mapeo por defecto igual al nativo (`docs/port/controls.md`) y opción de stick como
+  cruceta (sin persistencia). Evidencia: `docs/implementation-artifacts/evidence/story-4-5/`.
 
 - Historia 8.5 (entorno de testing en el homelab): job `testing` de clase B en `main` compila nativo y
   web, arma el Pack, valida el título y despliega en el host de deploy (`HUB_DOCKER_HOST`) una imagen
