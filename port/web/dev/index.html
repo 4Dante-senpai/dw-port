@@ -129,19 +129,28 @@ function boot(args, audioContext) {
   script.onerror = () => { status.textContent = 'No se pudo descargar el juego. Recargá la página para reintentar.'; };
   document.head.append(script);
 }
-// The game thread posts each frame as an ImageBitmap (port/host/web/present_gl.c).
+// The game thread posts the address of each frame it leaves in shared memory (port/host/web/present_gl.c).
 function showFrames() {
   const screen = document.querySelector('#screen');
-  const context = screen.getContext('bitmaprenderer');
+  const context = screen.getContext('2d', {alpha: false});
   // Tests read the worst delay between posting and showing a frame (long.spec.cjs).
   const frames = Module.frames = {shown: 0, latency: 0};
+  let image, last;
   const show = ({data}) => {
     if (!data.frame) return;
     frames.shown++;
     frames.latency = Math.max(frames.latency, Date.now() - data.sent);
-    if (screen.width !== data.frame.width) screen.width = data.frame.width;
-    if (screen.height !== data.frame.height) screen.height = data.frame.height;
-    context.transferFromImageBitmap(data.frame);
+    const header = new Int32Array(HEAPU8.buffer, data.frame, 3);
+    const seq = Atomics.load(header, 0), width = header[1], height = header[2];
+    // A late message finds a newer frame; the next message paints the one being written.
+    if (seq & 1 || seq === last) return;
+    if (image?.width !== width || image?.height !== height) image = new ImageData(width, height);
+    image.data.set(HEAPU8.subarray(data.frame + 12, data.frame + 12 + width * height * 4));
+    if (Atomics.load(header, 0) !== seq) return;
+    last = seq;
+    if (screen.width !== width) screen.width = width;
+    if (screen.height !== height) screen.height = height;
+    context.putImageData(image, 0, 0);
   };
   for (const worker of Module.PThread.unusedWorkers) worker.addEventListener('message', show);
 }

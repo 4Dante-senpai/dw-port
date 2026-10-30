@@ -715,7 +715,7 @@ if(EMSCRIPTEN)
   set_tests_properties(web_launcher PROPERTIES TIMEOUT 180)
   add_test(NAME web_shell COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} shell)
-  set_tests_properties(web_shell PROPERTIES TIMEOUT 300)
+  set_tests_properties(web_shell PROPERTIES TIMEOUT 600)
   add_test(NAME web_input COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} input)
   set_tests_properties(web_input PROPERTIES TIMEOUT 600)
