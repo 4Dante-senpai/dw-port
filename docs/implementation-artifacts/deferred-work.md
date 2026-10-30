@@ -134,3 +134,7 @@
 - source_spec: `docs/implementation-artifacts/spec-4-4-pantallas-de-la-shell-web-y-capacidades.md`
   summary: Con audio web (historia 4.7), la pausa manual y la pestaña oculta también deben suspender y reanudar el `AudioContext` y el anillo del AudioWorklet, sin contar underruns durante la pausa.
   evidence: La 4.4 crea `Module.audioContext` en el clic de «Jugar», pero la pausa solo retiene el hilo del juego en `VSync` (`port/host/web/pace.c`); hoy ningún código consume ese contexto.
+
+- source_spec: `docs/implementation-artifacts/spec-4-4-pantallas-de-la-shell-web-y-capacidades.md`
+  summary: Presentación continua resuelta en la 4.4 con `ImageBitmap`; queda por verificar si hace falta contrapresión.
+  evidence: medium sin verificar. El hilo del juego envía un `ImageBitmap` por frame sin esperar confirmación, así que la cola crece si el hilo principal se bloquea. Se resuelve midiendo memoria y latencia en la prueba L4 de 10 minutos (NFR-2).

@@ -97,7 +97,7 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--frames") && i + 1 < argc) {
             char *end;
             frames = strtol(argv[++i], &end, 10);
-            if (*end || frames < 0) return 2;
+            if (end == argv[i] || *end || frames < 0) return 2;
         } else return 2;
     }
     config.capture = config.mark ? "capture.ppm" : NULL;
