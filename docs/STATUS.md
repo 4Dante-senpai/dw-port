@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-26
+Última actualización: 2026-10-30
 
 ## Modo de operación
 
@@ -428,15 +428,59 @@
   La espera del productor de audio se conserva como excepción aceptada de AD-8.
   Suites con disco: native-headless 83/83, native-asan 81/81 y native 94/94. Quedan abiertas las acciones A2 y A4–A8, y F15: `--frames 1200` da 2 underruns, igual que en `main` (`deferred-work.md`).
 
+- Historia 8.1 (métricas automáticas): `tools/port/metrics/status_table.py` calcula funciones del
+  Juego en C / total, funciones PsyQ con comentario de fuente (187 / 202, todas `asm:`), bloques
+  `DW1_PORT` (117) y filas de `src-changes.md` (117), y Escenas que pasan a partir del JUnit de
+  CTest. `--update` reescribe el bloque marcado de la sección Métricas. El test de clase A
+  `status_table_repo` falla si los bloques y las filas de un archivo no coinciden (NFR-10) o si
+  una función PsyQ del port pierde su comentario de fuente. `src-changes.md` tenía 36 bloques sin
+  fila (secciones en prosa de 3.3, 3.7 y 3.10) y una fila con el símbolo equivocado
+  (`main.c`: `memcpy`, no `checkCameraMovement`). Sin cambios en `src/`. Sin verificar en este
+  entorno (sin disco, `asm/` ni `cc_mips.dll`): funciones del Juego en C y Escenas que pasan;
+  el preset `native-headless` no configura sin multilib i686, así que los tests se corrieron con
+  un configure del host (2/2, más 18 tests unitarios). Revisión con subagentes Claude: 10 parches,
+  1 diferido (`--check` de `STATUS.md`). Spec:
+  `docs/implementation-artifacts/spec-8-1-metricas-automaticas-en-status-md.md`.
+
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2 y 4.3 ya están cerradas, y también la 8.5.
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2 y 4.3 ya están cerradas, y también la 8.5. La 8.1 está en revisión del dueño
+  (rama `claude/historia-8-1-epics-401pfj`).
 
 ## Bloqueos
 
 - Ninguno.
 
 ## Métricas
+
+### Automáticas
+
+Generadas con `tools/port/metrics/status_table.py --update docs/STATUS.md` (Historia 8.1);
+para las Escenas, agregar `--junit <archivo>` por cada `ctest --output-junit` de los presets
+nativo y web. La herramienta falla si un archivo de `src/`/`include/` tiene distinta cantidad de
+bloques `DW1_PORT` que de filas en `docs/port/src-changes.md` (NFR-10; test `status_table_repo`).
+
+<!-- status_table:begin -->
+| Métrica | Valor |
+|---|---|
+| Funciones del Juego en C / total (USA) | sin verificar (falta `asm/us/`; correr `make regenerate`) |
+| Funciones PsyQ implementadas / usadas (por comentario de fuente) | 187 / 202 (`dw2-pc:` 0, `asm:` 187, `stub-m2:` 0) |
+| Bloques `DW1_PORT` en `src/` e `include/` | 117 |
+| Filas de `docs/port/src-changes.md` | 117 |
+| Escenas que pasan (nativo) | sin verificar (sin resultados de CTest; pasar `--junit`) |
+| Escenas que pasan (web) | sin verificar (sin resultados de CTest; pasar `--junit`) |
+<!-- status_table:end -->
+
+Una métrica que no se puede calcular en el entorno aparece como `sin verificar (<motivo>)`:
+
+- Funciones del Juego en C / total: requiere `asm/us/` (`make regenerate`). Último valor
+  medido a mano: 2741 / 2741 (tabla siguiente).
+- Escenas que pasan (nativo y web): requieren los resultados de CTest de los tests `scene_*` y
+  `web_scene_*`, que necesitan el disco y las referencias de PCSX-Redux. En la Historia 8.1
+  (contenedor sin disco, sin `asm/` y sin `cc_mips.dll`) el parseo de JUnit se probó solo con
+  datos sintéticos y con un JUnit real de CTest 3.28 de tests ficticios.
+
+### Manuales
 
 | Métrica | Valor |
 |---|---|
@@ -445,7 +489,6 @@
 | Funciones PsyQ usadas / cubiertas por DW2-PC | 202 / 81 |
 | Archivos C del juego que compilan a wasm32 en el preset `web` | 119 / 119 (+ `_psstart.c` reemplazado) |
 | Archivos C del juego que compilan a i686 en el build del port | 119 / 119 (+ `_psstart.c` reemplazado) |
-| Bloques `DW1_PORT` en `src/`/`include/` | 94 apariciones del guard (`docs/port/src-changes.md`) |
 | Funciones PsyQ usadas: implementadas / stubs generados / libc del host | 187 (sin comportamiento M2: la Memory card es real desde 3.8) / 0 / 11 (de 198) |
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
