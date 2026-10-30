@@ -6,6 +6,7 @@
 #include "../plat.h"
 #include "../../backend/gpu.h"
 #include "../../psyq/port.h"
+#include "pace.h"
 extern int plat_pattern, plat_validation;
 static EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context;
 static uint32_t display[640 * 480];
@@ -64,7 +65,7 @@ void plat_present(long frame)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     double elapsed = emscripten_get_now() - start;
-    if (!plat_validation) return;
+    if (!plat_validation) { web_pace(); return; }
     glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, actual);
     PORT_ASSERT(glGetError() == GL_NO_ERROR);
     int different = 0, first = -1;
@@ -79,4 +80,5 @@ void plat_present(long frame)
     MAIN_THREAD_EM_ASM({
         Module.presentations.push({frame:$0, width:$1, height:$2, different:$3, first:$4, ms:$5, pixels:Array.from(HEAPU8.subarray($6, $6 + $1 * $2 * 4))});
     }, (int)frame, w, h, different, first, elapsed, actual);
+    web_pace();
 }

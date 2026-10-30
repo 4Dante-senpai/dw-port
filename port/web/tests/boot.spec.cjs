@@ -47,7 +47,7 @@ test('requires isolation before loading the runtime', async ({page}) => {
   page.on('pageerror', e => errors.push(String(e)));
   page.on('request', r => { if (/dw1\.(js|wasm)/.test(r.url())) runtime.push(r.url()); });
   await page.goto('/isolated-off/');
-  await expect(page.locator('#status')).toHaveText('cross-origin isolation required');
+  await expect(page.locator('#capabilities li[data-capability=isolation]')).toBeVisible();
   expect(await page.evaluate(() => typeof Module)).toBe('undefined');
   expect(runtime).toEqual([]); expect(errors).toEqual([]);
 });

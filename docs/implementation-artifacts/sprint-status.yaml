@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-11-2026 12:35
-last_updated: 2026-10-27
+last_updated: 2026-10-30
 project: dw-port
 project_key: NOKEY
 tracking_system: file-system
@@ -71,7 +71,7 @@ development_status:
   4-1-el-juego-en-wasm-con-su-propio-hilo-y-presentación: done
   4-2-worker-de-e-s-y-pantalla-de-título-en-el-navegador: done
   4-3-selección-del-disco-validación-y-pack-en-el-navegador: done
-  4-4-pantallas-de-la-shell-web-y-capacidades: backlog
+  4-4-pantallas-de-la-shell-web-y-capacidades: in-progress
   4-5-teclado-y-gamepad: backlog
   4-6-remapeo-y-opciones-persistentes: backlog
   4-7-audio-en-el-navegador: backlog

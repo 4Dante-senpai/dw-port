@@ -2,7 +2,8 @@
 title: 'Historia 4.4: Pantallas de la Shell web y capacidades'
 type: 'feature'
 created: '2026-10-30'
-status: 'draft'
+status: 'in-review'
+baseline_commit: '3115031f0cf037991ddb04e6a05ce0705a9c22dd'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -53,13 +54,13 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `port/host/web/pace.c`, `port/host/web/pace.h` -- ritmo de pared del hilo del juego (modelo de `video.c`) con bloque de control exportado (`web_control_address`: pausa pedida, retenido, VBlanks, resincronizaciones, pausas); espera con `emscripten_futex_wait` sobre la palabra de pausa para despertar al pedirla -- AD-8/FR-15.
-- [ ] `port/host/web/present_gl.c`, `port/psyq/crt.c`, `CMakeLists.txt` -- llamar al ritmo tras presentar; `Module.marks` en web; sumar `pace.c` y exportar `_web_control_address`; CTest `web_shell`.
-- [ ] `port/web/dev/index.html` -- capacidades con mensaje por capacidad (`#capabilities li[data-capability=isolation|shared-memory|storage|locks]`), lock con mensaje `#instance` y espera, secciones bienvenida/aviso legal, disco, progreso, "Jugar", opciones, Memory cards, "Borrar datos"; "Jugar" crea `AudioContext` en el gesto y llama `boot` en la página; botón `#pause` y `visibilitychange`; `Module.control()` para tests.
-- [ ] `port/web/tests/shell.spec.cjs`, `run.py`, `playwright.config.cjs` -- suite `shell` clase A con toda la matriz; autoplay bloqueado sin gesto (Chromium `--autoplay-policy=user-gesture-required`, Firefox `media.autoplay.*`).
-- [ ] `port/web/tests/{boot,launcher}.spec.cjs` -- ajustar al nuevo mensaje de aislamiento y a "Jugar" en la página.
-- [ ] `port/web/tests/title.spec.cjs` -- clase B: un clic en "Jugar" con el Pack real llega a `runLandingScreen` con `AudioContext` `running`.
-- [ ] `docs/port/setup.md`, `docs/implementation-artifacts/evidence/story-4-4/` -- cómo correr `web_shell`; evidencia y criterios no verificados en esta sesión.
+- [x] `port/host/web/pace.c`, `port/host/web/pace.h` -- ritmo de pared del hilo del juego (modelo de `video.c`) con bloque de control exportado (`web_control_address`: pausa pedida, retenido, VBlanks, resincronizaciones, pausas); espera con `emscripten_futex_wait` sobre la palabra de pausa para despertar al pedirla -- AD-8/FR-15.
+- [x] `port/host/web/present_gl.c`, `port/psyq/crt.c`, `CMakeLists.txt` -- llamar al ritmo tras presentar; `Module.marks` en web; sumar `pace.c` y exportar `_web_control_address`; CTest `web_shell`.
+- [x] `port/web/dev/index.html` -- capacidades con mensaje por capacidad (`#capabilities li[data-capability=isolation|shared-memory|storage|locks]`), lock con mensaje `#instance` y espera, secciones bienvenida/aviso legal, disco, progreso, "Jugar", opciones, Memory cards, "Borrar datos"; "Jugar" crea `AudioContext` en el gesto y llama `boot` en la página; botón `#pause` y `visibilitychange`; `Module.control()` para tests.
+- [x] `port/web/tests/shell.spec.cjs`, `run.py`, `playwright.config.cjs` -- suite `shell` clase A con toda la matriz; autoplay bloqueado sin gesto (Chromium `--autoplay-policy=user-gesture-required`, Firefox `media.autoplay.*`).
+- [x] `port/web/tests/{boot,launcher}.spec.cjs` -- ajustar al nuevo mensaje de aislamiento y a "Jugar" en la página.
+- [x] `port/web/tests/title.spec.cjs` -- clase B: un clic en "Jugar" con el Pack real llega a `runLandingScreen` con `AudioContext` `running`.
+- [x] `docs/port/setup.md`, `docs/implementation-artifacts/evidence/story-4-4/` -- cómo correr `web_shell`; evidencia y criterios no verificados en esta sesión.
 
 **Acceptance Criteria:**
 - Given `ctest --preset web` sin disco, when corren las suites, then `web_shell` pasa en Chromium y Firefox y `web_boot`, `web_io`, `web_launcher`, `web_disc` siguen verdes.
