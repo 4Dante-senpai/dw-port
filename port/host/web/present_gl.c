@@ -1,7 +1,8 @@
 /* Software display -> RGBA texture, at 1x, on the game thread's OffscreenCanvas. The game thread
  * never returns to its event loop, so the browser would not compose that canvas, and an ImageBitmap
  * sent to another thread is never freed (Chromium releases it on the sender's loop): each frame is
- * read back to shared memory and the main thread paints it (showFrames in port/web/dev/index.html). */
+ * read back to shared memory and the main thread paints the newest one (showFrames in
+ * port/web/dev/index.html), so nothing can queue. */
 #include <GLES3/gl3.h>
 #include <emscripten.h>
 #include <emscripten/html5.h>
@@ -16,7 +17,7 @@ extern int plat_pattern, plat_validation;
 static EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context;
 static uint32_t display[640 * 480];
 static unsigned char rgba[640 * 480 * 4], actual[640 * 480 * 4];
-/* Read by showFrames: seq is odd while the frame is being written. */
+/* Painted by showFrames at each animation frame: seq is odd while the frame is being written. */
 static struct {
     _Atomic uint32_t seq;
     uint32_t width, height;
@@ -52,6 +53,7 @@ static void init(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glDisable(GL_DITHER);
 }
+EMSCRIPTEN_KEEPALIVE void *web_frame_address(void) { return &shown; }
 /* actual holds the frame as glReadPixels returns it, bottom row first. */
 static void show(int w, int h)
 {
@@ -59,7 +61,6 @@ static void show(int w, int h)
     shown.width = w; shown.height = h;
     for (int y = 0; y < h; y++) memcpy(&shown.pixels[4 * y * w], &actual[4 * (h - 1 - y) * w], 4 * w);
     atomic_fetch_add(&shown.seq, 1);
-    EM_ASM({ postMessage({frame: $0, sent: Date.now()}); }, &shown);
 }
 void plat_present(long frame)
 {

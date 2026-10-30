@@ -493,3 +493,18 @@ simulado (reemplaza `navigator.getGamepads`) y compara `Module.input().padValue`
 devolvería `PadRead`, vía `port_pad_value`) con el mapeo de `docs/port/controls.md`.
 Cubre combinación, gatillos, stick como cruceta, conexión en caliente con ritmo y sin
 resincronizaciones, foco perdido y capturas sin input. Deja `input-*-<navegador>.json`.
+
+`web_scene_title` (clase B) cierra el recorrido real: tras el clic en «Jugar», Enter en el
+título abre el menú principal, señal que da la marca `runMainMenu` en `Module.marks`.
+
+### Presentación larga (L4, historia 4.5)
+
+```sh
+DW1_DISC_DIR=/dw/game_rom/extracted python3 port/web/tests/run.py build/port/web long
+```
+
+Se dispara a mano (AD-14), no está en `ctest`. Necesita `build/port/web/us.pack`, que deja
+`ctest --preset web -R pack_disc`. Corre 10 minutos por navegador (`DW1_WEB_LONG_MINUTES` los
+cambia) y deja `long-<navegador>.json`: demora entre postear y mostrar cada frame, memoria
+residente del navegador, ritmo y drenaje tras bloquear 2 s el hilo principal. `web_shell`
+incluye la versión corta de 30 s que falla si el navegador crece.

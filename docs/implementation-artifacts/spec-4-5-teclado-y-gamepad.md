@@ -63,16 +63,19 @@ context:
 - [x] `port/web/tests/input.spec.cjs`, `run.py` -- suite `input` clase A con toda la matriz (gamepad simulado reemplazando `navigator.getGamepads`).
 - [x] `port/web/tests/title.spec.cjs`, `port/psyq/scene.c` -- clase B: "Start" por teclado tras el clic en «Jugar» abre el menú principal; la señal es la marca `runMainMenu` que el hook web de `-finstrument-functions` publica en `Module.marks`, sin tocar `src/`.
 - [x] `port/web/dev/index.html` -- `#pause` suelta el foco tras el clic: si no, `inputControls` ignora todo el teclado hasta el siguiente clic fuera del botón.
-- [x] `port/web/tests/long.spec.cjs`, `port/web/tests/run.py`, `port/host/web/present_gl.c`, `port/web/dev/index.html` -- suite manual `long` (clase B, L4 de la cola de frames): 10 minutos en Chromium y Firefox midiendo demora postear-mostrar, memoria y drenaje tras bloquear 2 s el hilo principal; resuelve la entrada de contrapresión de `deferred-work.md`.
+- [x] `port/web/tests/long.spec.cjs`, `port/web/tests/run.py` -- suite manual `long` (clase B, L4 de presentación): 10 minutos en Chromium y Firefox midiendo ritmo, frames pintados, memoria del navegador y recuperación tras bloquear 2 s el hilo principal; resuelve la entrada de contrapresión de `deferred-work.md`.
+- [x] `port/host/web/present_gl.c`, `port/web/dev/index.html`, `port/web/tests/shell.spec.cjs`, `port/web/tests/storage.cjs`, `CMakeLists.txt` -- presentación por memoria compartida: `glReadPixels` en el hilo del juego y `showFrames` pinta el frame más nuevo en cada `requestAnimationFrame`; `web_shell` falla si el navegador crece en 30 s.
 - [x] `docs/port/controls.md`, `docs/port/setup.md`, `docs/implementation-artifacts/evidence/story-4-5/` -- mapeo web por defecto, cómo correr, evidencia y pendientes.
 
 **Acceptance Criteria:**
 - Given `ctest --preset web` sin disco, when corren las suites, then `web_input` pasa en Chromium y Firefox y las suites existentes siguen verdes.
 - Given el mapeo de `docs/port/controls.md`, when el test pulsa cada uno de los 14 botones por teclado y por gamepad, then `port_pad_value` refleja exactamente ese bit en el orden de `PadRead`.
 - Given `DW1_DISC_DIR`, when el test pulsa Start en la pantalla de título, then el juego sale del título (`web_scene_title`, marca `runMainMenu`).
-- Given una corrida de 10 minutos con el Pack real, when `run.py <build> long` termina, then la demora de presentación queda por debajo de 4 frames, la memoria no crece más de 10 % y la cola drena tras un bloqueo de 2 s.
+- Given una corrida de 10 minutos con el Pack real, when `run.py <build> long` termina, then se pinta más del 99 % de los frames, la memoria no crece más de 10 %, el ritmo se desvía menos de 0,1 % y el juego sigue tras un bloqueo de 2 s del hilo principal.
 
 ## Design Notes
+
+Presentación: la prueba L4 no encontró cola, pero sí una fuga en Chromium de un frame por frame (6 GB en 10 minutos con `ImageBitmap`). Sondas de 40 s en `evidence/story-4-5/frame-leak-probe-chromium.jsonl`: cerrar el bitmap en el hilo que lo creó no pierde memoria; cerrarlo en el hilo principal, sí. La hipótesis coherente es que Chromium libera el recurso en el bucle del hilo emisor, que el juego nunca devuelve. Dibujar sin transferir también crece, en el proceso GPU, y `glReadPixels` lo evita. El contexto GL sigue en el hilo del juego (AD-9). Como solo se lee memoria compartida en `requestAnimationFrame`, no hay mensajes y nada puede encolarse. En Firefox `glReadPixels` espera al hilo principal: con él bloqueado el juego se detiene (0 VBlanks en 2 s) y sigue al soltarlo.
 
 Bloque de input (u32): `mask`, `seq` (escribe el hilo principal; primero `mask`, después `seq` con `Atomics.store`); `latched_seq`, `latched_vblank`, `pad_value` (escribe el hilo del juego en el latch). El muestreo corre en `requestAnimationFrame` y en cada evento de teclado; con la pestaña oculta el juego ya está pausado (4.4).
 
@@ -82,6 +85,10 @@ Bloque de input (u32): `mask`, `seq` (escribe el hilo principal; primero `mask`,
 - `cmake --build --preset web && python3 port/web/tests/run.py build/port/web input` -- expected: todos los casos pasan.
 - `ctest --preset web` -- expected: verde; clase B saltada.
 - `ctest --preset native-headless` -- expected: verde (cambios web-only salvo `port_pad_value`).
+
+## Spec Change Log
+
+- 2026-10-30, integración local: la rama cloud dejaba sin implementar la clase B y no conocía los cambios de 4.4. Se agregaron la señal `runMainMenu` sin tocar `src/`, `?frames=0` en los tests, la suelta de foco en Pausa y la suite `long`. La L4 reveló la fuga de `ImageBitmap`: la presentación pasó a memoria compartida. Reemplaza el camino descrito en las Design Notes de 4.4; AD-9 no cambia. KEEP: máscara, latch y orden de bits de la rama cloud.
 
 ## Review Triage Log
 
