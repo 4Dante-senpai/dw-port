@@ -46,7 +46,7 @@ for (const poison of [false, true]) {
       JSON.stringify({sha256:hash, native_sha256:process.env.DW1_NATIVE_TITLE_SHA, poison, storageAccesses}));
   });
 }
-test('one click on Jugar reaches the title with a running AudioContext', async ({page}, info) => {
+test('one click on Jugar reaches the title and Start leaves it', async ({page}, info) => {
   test.setTimeout(420000);
   const failures = errors(page);
   await page.goto('/');
@@ -76,6 +76,12 @@ test('one click on Jugar reaches the title with a running AudioContext', async (
     ctx.drawImage(document.querySelector('#screen'), 0, 0);
     return ctx.getImageData(0, 0, 320, 240).data.some((v, i) => i % 4 !== 3 && v);
   })).toBe(true);
+  const marks = () => page.evaluate(() => Module.marks || []);
+  // The title waits 600 VBlanks for Start; without it the attract loop never opens the menu.
+  expect(await marks()).not.toContain('runMainMenu');
+  await page.keyboard.down('Enter');
+  await expect.poll(marks, {timeout:10000}).toContain('runMainMenu');
+  await page.keyboard.up('Enter');
   const control = await page.evaluate(() => Module.control());
   expect(control.resynchronizations).toBe(0);
   expect(failures).toEqual([]);

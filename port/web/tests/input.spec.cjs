@@ -23,7 +23,7 @@ const BUTTONS = [
 // PadRead swaps the two wire bytes (port/psyq/libetc.c).
 const padRead = wire => ((wire << 8) | (wire >> 8)) & 0xffff;
 const input = page => page.evaluate(() => Module.input());
-async function running(page, url = '/?frames=1000000') {
+async function running(page, url = '/?frames=0') {
   await page.goto(url);
   await expect.poll(() => page.evaluate(() => window.Module?.input?.().latchedSeq ?? 0), {timeout: 30000}).toBeGreaterThan(0);
   // Past the boot frames, so rate windows measure steady pacing (as in shell.spec.cjs).
@@ -127,6 +127,16 @@ test('modified keys and focused Shell controls do not press buttons', async ({pa
   expect((await input(page)).mask).toBe(0);
   await page.keyboard.up('Enter');
   await expect(page.locator('#pause')).toHaveText('Reanudar');
+  expect(failures).toEqual([]);
+});
+test('a clicked Pausa button leaves the keyboard to the game', async ({page}) => {
+  const failures = errors(page);
+  await running(page);
+  await page.locator('#pause').click();
+  await page.locator('#pause').click();
+  await page.keyboard.down('Enter');
+  await expectLatched(page, (await input(page)).seq, padRead(1 << 3));
+  await page.keyboard.up('Enter');
   expect(failures).toEqual([]);
 });
 test('left stick acts as the D-pad only with the option on', async ({page}) => {
