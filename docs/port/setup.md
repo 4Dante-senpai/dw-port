@@ -477,7 +477,7 @@ cargar debe quedar `suspended`. Firefox corre con `media.autoplay.*` bloqueando 
 Audio sin gesto. Sin servidor de audio, Firefox deja todo `AudioContext` en `suspended`,
 así que `run.py` levanta un PulseAudio con sink nulo para cada suite. El hilo del juego
 nunca vuelve a su bucle de eventos, así que cada frame llega al hilo principal como
-`ImageBitmap` y se muestra en `#screen`; un caso comprueba que cambia mientras corre. Deja `shell-{pause,visibility,play}-<navegador>.json` en
+memoria compartida y se muestra en `#screen`; un caso comprueba que cambia mientras corre. Deja `shell-{pause,visibility,play}-<navegador>.json` en
 `build/port/web/`. La clase B (`web_scene_title`) agrega un clic en «Jugar» con el Pack
 real que debe llegar a `runLandingScreen` con el `AudioContext` en `running`.
 

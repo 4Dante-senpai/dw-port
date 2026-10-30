@@ -1,3 +1,4 @@
+const {execSync} = require('child_process');
 // Seed OPFS in a temporary dedicated worker; close its exclusive writer before boot.
 async function seed(page, file) {
   await page.goto('/seed.html');
@@ -17,6 +18,18 @@ async function seed(page, file) {
     });
   }, '/__fixture/' + file);
 }
+// Resident memory, in MiB, of the browser this test worker launched.
+function browserMemory() {
+  const rows = execSync('ps -eo pid=,ppid=,rss=').toString().trim().split('\n')
+    .map(line => line.trim().split(/\s+/).map(Number));
+  const family = new Set([process.pid]);
+  for (let size = 0; size !== family.size;) {
+    size = family.size;
+    for (const [pid, ppid] of rows) if (family.has(ppid)) family.add(pid);
+  }
+  family.delete(process.pid);
+  return rows.reduce((sum, [pid, , rss]) => sum + (family.has(pid) ? rss : 0), 0) / 1024;
+}
 function errors(page) {
   const result = [];
   page.on('pageerror', e => result.push(String(e)));
@@ -24,4 +37,4 @@ function errors(page) {
   page.on('dialog', async d => {result.push(d.message()); await d.dismiss();});
   return result;
 }
-module.exports = {seed, errors};
+module.exports = {seed, errors, browserMemory};

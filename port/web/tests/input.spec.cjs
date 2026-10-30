@@ -105,15 +105,17 @@ test('each of the 14 buttons reaches PadRead from a standard gamepad', async ({p
 test('a sample reaches PadRead at the first VBlank after it was written', async ({page}, info) => {
   const failures = errors(page);
   await running(page);
-  // In the page, so nothing but the game thread runs between the write and the latch.
-  const latches = await page.evaluate(() => {
-    const result = [];
+  // In the page, so no round trip to the test separates the write from the latch. Yielding, not
+  // spinning: in Firefox the game thread's glReadPixels waits for the main thread.
+  const latches = await page.evaluate(async () => {
+    const channel = new MessageChannel(), result = [];
+    const next = () => new Promise(resolve => { channel.port1.onmessage = resolve; channel.port2.postMessage(0); });
     for (let i = 0; i < 60; i++) for (const type of ['keydown', 'keyup']) {
       const before = Module.input().latchedVblank;
       dispatchEvent(new KeyboardEvent(type, {code: 'KeyK'}));
       const {seq} = Module.input();
       let latch;
-      do latch = Module.input(); while (latch.latchedSeq < seq);
+      do { latch = Module.input(); await next(); } while (latch.latchedSeq < seq);
       result.push({vblanks: latch.latchedVblank - before, padValue: latch.padValue});
     }
     return result;
