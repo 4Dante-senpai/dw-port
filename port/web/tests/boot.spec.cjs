@@ -47,7 +47,7 @@ test('requires isolation before loading the runtime', async ({page}) => {
   page.on('pageerror', e => errors.push(String(e)));
   page.on('request', r => { if (/dw1\.(js|wasm)/.test(r.url())) runtime.push(r.url()); });
   await page.goto('/isolated-off/');
-  await expect(page.locator('#status')).toHaveText('cross-origin isolation required');
+  await expect(page.locator('#capabilities li[data-capability=isolation]')).toBeVisible();
   expect(await page.evaluate(() => typeof Module)).toBe('undefined');
   expect(runtime).toEqual([]); expect(errors).toEqual([]);
 });
@@ -61,12 +61,12 @@ test('normal run keeps validation readback disabled', async ({page}) => {
   const coordinates = [[1, 2], [31, 31], [100, 75], [319, 239]];
   const expected = coordinates.map(([x, y]) =>
     [x & 31, y & 31, (x + y) & 31].map(v => (v << 3) | (v >> 2)).concat(255));
-  // Read the displayed placeholder canvas, without touching the worker's GL buffer.
+  // Read the displayed canvas, without touching the worker's GL buffer.
   await expect.poll(() => page.evaluate(points => {
     const copy = document.createElement('canvas');
     copy.width = 320; copy.height = 240;
     const ctx = copy.getContext('2d');
-    ctx.drawImage(document.querySelector('#canvas'), 0, 0);
+    ctx.drawImage(document.querySelector('#screen'), 0, 0);
     return points.map(([x, y]) => Array.from(ctx.getImageData(x, y, 1, 1).data));
   }, coordinates)).toEqual(expected);
   expect(errors).toEqual([]);

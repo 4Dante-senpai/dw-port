@@ -1,0 +1,20 @@
+{
+  "hidden": {
+    "vblanks": 89,
+    "ms": 2005.6949999998324
+  },
+  "rate_after_visible": 59.8350049737809,
+  "manual_after_visible": {
+    "vblanks": 212,
+    "ms": 2005.2349999998696
+  },
+  "rate_after_manual": 59.7828388379243,
+  "end": {
+    "t": 10083.11499999999,
+    "pause": 0,
+    "held": 0,
+    "vblanks": 333,
+    "resynchronizations": 0,
+    "pauses": 2
+  }
+}

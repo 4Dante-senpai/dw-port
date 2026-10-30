@@ -133,3 +133,11 @@
 - source_spec: `docs/implementation-artifacts/spec-8-1-metricas-automaticas-en-status-md.md`
   summary: Agregar a `status_table.py` un modo de chequeo (por ejemplo `--check docs/STATUS.md`) que falle si el bloque `<!-- status_table:begin/end -->` no coincide con lo que la herramienta genera, y usarlo en `status_table_repo`.
   evidence: Revisión de la 8.1 (blind hunter). Hoy el bloque solo se actualiza si alguien corre `--update`; `status_table_repo` no lo compara, así que `STATUS.md` puede quedar desactualizado sin que falle nada. El chequeo cambia la interfaz de la herramienta, que la historia no pidió. Ojo: las Escenas dependen de `--junit`, así que el chequeo debería ignorar las filas `sin verificar` o correr con los mismos JUnit.
+
+- source_spec: `docs/implementation-artifacts/spec-4-4-pantallas-de-la-shell-web-y-capacidades.md`
+  summary: Con audio web (historia 4.7), la pausa manual y la pestaña oculta también deben suspender y reanudar el `AudioContext` y el anillo del AudioWorklet, sin contar underruns durante la pausa.
+  evidence: La 4.4 crea `Module.audioContext` en el clic de «Jugar», pero la pausa solo retiene el hilo del juego en `VSync` (`port/host/web/pace.c`); hoy ningún código consume ese contexto.
+
+- source_spec: `docs/implementation-artifacts/spec-4-4-pantallas-de-la-shell-web-y-capacidades.md`
+  summary: Presentación continua resuelta en la 4.4 con `ImageBitmap`; queda por verificar si hace falta contrapresión.
+  evidence: medium sin verificar. El hilo del juego envía un `ImageBitmap` por frame sin esperar confirmación, así que la cola crece si el hilo principal se bloquea. Se resuelve midiendo memoria y latencia en la prueba L4 de 10 minutos (NFR-2).
