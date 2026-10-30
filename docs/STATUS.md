@@ -14,7 +14,7 @@
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
 - M3 Paridad nativa: **completo** (Épica 3 cerrada: retrospectiva `accepted-with-open-items`, 2026-10-27).
-- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades y pausa, en revisión).
+- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo).
 
 ## Hecho
 
@@ -216,16 +216,17 @@
   SM-4 de 81 s (Chromium) y 36 s (Firefox) en el contenedor limitado a 2,5 CPU. Diferido a 4.4: el
   Web Lock también debe serializar el build y el borrado del Pack. Evidencia:
   `docs/implementation-artifacts/evidence/story-4-3/`.
-- Historia 4.4 (pantallas de la Shell web y capacidades, en revisión): la Shell verifica
+- Historia 4.4 (pantallas de la Shell web y capacidades): la Shell verifica
   aislamiento, `SharedArrayBuffer`, OPFS y Web Locks con un mensaje por capacidad y sin cargar el
   juego; toma el Web Lock `dw1-game` (una segunda pestaña espera con un mensaje; también serializa
   el build y el borrado del Pack, diferido de 4.3); muestra bienvenida y aviso de copia propia,
   disco, progreso, «Jugar», opciones y Memory cards (contenido en 4.5-4.8) y «Borrar datos».
   «Jugar» crea el `AudioContext` en el clic y arranca el juego en la misma página. El hilo del
   juego tiene ritmo de pared en `VSync` (`port/host/web/pace.c`) con pausa manual y por pestaña
-  oculta: VBlanks quietos y 0 resincronizaciones al reanudar (59,8 VBlank/s medidos). Clase A
-  `web_shell` verde en Chromium; Firefox y la clase B quedan sin verificar en esta sesión (sin
-  Docker ni disco). Evidencia: `docs/implementation-artifacts/evidence/story-4-4/`.
+  oculta: VBlanks quietos y 0 resincronizaciones al reanudar (60,01 VBlank/s en 100 s). Cada frame
+  llega al hilo principal como `ImageBitmap`, así que «Jugar» corre sin límite y muestra el juego
+  en vivo (título en 123 s). La imagen `dw-port` suma PulseAudio para Firefox. `ctest --preset web`
+  43/43 con disco, en Chromium y Firefox. Evidencia: `docs/implementation-artifacts/evidence/story-4-4/`.
 
 - Historia 8.5 (entorno de testing en el homelab): job `testing` de clase B en `main` compila nativo y
   web, arma el Pack, valida el título y despliega en el host de deploy (`HUB_DOCKER_HOST`) una imagen
@@ -440,7 +441,7 @@
 
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2 y 4.3 ya están cerradas, y también la 8.5. La 4.4 está en revisión: falta correr Firefox y la clase B en el contenedor del proyecto.
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2, 4.3 y 4.4 ya están cerradas, y también la 8.5.
 
 ## Bloqueos
 

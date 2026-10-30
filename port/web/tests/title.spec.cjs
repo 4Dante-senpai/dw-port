@@ -23,6 +23,22 @@ for (const poison of [false, true]) {
     const bytes = await page.evaluate(() => Module.capture);
     const hash = crypto.createHash('sha256').update(Buffer.from(bytes)).digest('hex');
     expect(hash).toBe(process.env.DW1_NATIVE_TITLE_SHA);
+    // The visible canvas shows the same frame the capture took.
+    await expect.poll(() => page.evaluate(() => {
+      const bytes = Uint8Array.from(Module.capture);
+      const fields = new TextDecoder().decode(bytes.slice(0, 32)).match(/^P6\s+(\d+)\s+(\d+)\s+255\s/);
+      const [width, height] = [Number(fields[1]), Number(fields[2])];
+      const pixels = bytes.subarray(fields[0].length);
+      const copy = document.createElement('canvas');
+      copy.width = width; copy.height = height;
+      const ctx = copy.getContext('2d');
+      ctx.drawImage(document.querySelector('#screen'), 0, 0);
+      const shown = ctx.getImageData(0, 0, width, height).data;
+      let different = 0;
+      for (let i = 0; i < width * height; i++)
+        for (let c = 0; c < 3; c++) if (shown[4 * i + c] !== pixels[3 * i + c]) { different++; break; }
+      return different;
+    })).toBe(0);
     const storageAccesses = await page.evaluate(() => Module.storageAccesses);
     expect(storageAccesses).toBe(0);
     expect(failures).toEqual([]);

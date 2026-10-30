@@ -2,7 +2,7 @@
 title: 'Historia 4.4: Pantallas de la Shell web y capacidades'
 type: 'feature'
 created: '2026-10-30'
-status: 'in-review'
+status: 'done'
 baseline_commit: '3115031f0cf037991ddb04e6a05ce0705a9c22dd'
 route: 'dispatch'
 review_loop_iteration: 1
@@ -113,3 +113,14 @@ Revisión Codex (`codex-merged`) sobre `12268fe`, con verificación local en el 
 | Worker de E/S falla antes de `ready` | false | rechazado | `onerror` ya rechaza y el `catch` lo informa. |
 | `AudioContext` lanza o `resume()` rechaza | low | rechazado | Improbable; el audio real llega en la 4.7. |
 | Ráfaga breve tras resincronizar | low | rechazado | `pace.c` rebasa `deadline` a `now`; una cota fina chocaría con los saltos periódicos de 187 VBlanks. |
+
+Segunda revisión Codex, sobre `68de4ca` (presentación continua):
+
+| Hallazgo | Veredicto | Ruta | Evidencia |
+|---|---|---|---|
+| El test de «Jugar» acepta una imagen congelada | medium | patch | `title.spec.cjs` compara ahora `#screen` con `Module.capture` píxel por píxel en ambos navegadores. |
+| `--frames` vacío corre sin límite | low | patch | `end == argv[i]` lo rechaza. |
+| Sin contrapresión de `ImageBitmap` | maybe-false | defer | La cola solo crece con el hilo principal bloqueado; lo decide la prueba L4 de 10 minutos. |
+| `bitmaprenderer` puede devolver `null` | false | rechazado | `#screen` no tiene otro contexto, y las capacidades exigidas ya implican soporte. |
+| `elapsed` no mide la transferencia | low | rechazado | Es informativo y sin umbral; medirlo agrega código, y el rendimiento se evalúa en la 5.6. |
+
