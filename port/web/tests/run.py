@@ -53,7 +53,8 @@ cli = Path('/opt/node_modules/@playwright/test/cli.js')
 version = json.loads(cli.with_name('package.json').read_text())['version']
 if version != '1.64.0':
     sys.exit(f'Playwright 1.64.0 required, found {version}')
-pulse = tempfile.TemporaryDirectory(prefix='dw1-pulse-')
+# pulseaudio --kill does not wait, so its socket can still be there at cleanup.
+pulse = tempfile.TemporaryDirectory(prefix='dw1-pulse-', ignore_cleanup_errors=True)
 env['XDG_RUNTIME_DIR'] = pulse.name
 try:
     # Firefox keeps every AudioContext suspended without an audio server.

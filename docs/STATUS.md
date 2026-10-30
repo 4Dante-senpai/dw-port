@@ -14,7 +14,7 @@
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
 - M3 Paridad nativa: **completo** (Épica 3 cerrada: retrospectiva `accepted-with-open-items`, 2026-10-27).
-- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo).
+- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo; 4.5 teclado y gamepad).
 
 ## Hecho
 
@@ -227,11 +227,15 @@
   llega al hilo principal como `ImageBitmap`, así que «Jugar» corre sin límite y muestra el juego
   en vivo (título en 123 s). La imagen `dw-port` suma PulseAudio para Firefox. `ctest --preset web`
   43/43 con disco, en Chromium y Firefox. Evidencia: `docs/implementation-artifacts/evidence/story-4-4/`.
-- Historia 4.5 (teclado y gamepad, en revisión): el hilo principal muestrea teclado
-  (`KeyboardEvent.code`) y gamepads estándar W3C y publica la máscara de los 14 botones; el hilo
-  del juego la aplica con `port_pad_latch` en cada VBlank (`port/host/web/input.c`), salvo en
-  capturas. Mapeo por defecto igual al nativo (`docs/port/controls.md`) y opción de stick como
-  cruceta (sin persistencia). Evidencia: `docs/implementation-artifacts/evidence/story-4-5/`.
+- Historia 4.5 (teclado y gamepad): el hilo principal muestrea teclado (`KeyboardEvent.code`) y
+  gamepads estándar W3C y publica la máscara de los 14 botones; el hilo del juego la aplica con
+  `port_pad_latch` en cada VBlank (`port/host/web/input.c`), salvo en capturas: 120/120 muestras en
+  el VBlank siguiente. Start en el título abre el menú con el Pack real, en Chromium y Firefox.
+  La L4 de 10 minutos no halló cola, pero sí una fuga de `ImageBitmap` en Chromium (6 GB): cada
+  frame se lee con `glReadPixels` a memoria compartida y el hilo principal pinta el más nuevo en
+  `requestAnimationFrame`. Ritmo dentro de 0,1 %, 0 resincronizaciones, 878 a 936 MiB en Chromium.
+  `make compare` idéntico, nativa 85/85, ASan 83/83, web con disco en verde.
+  Evidencia: `docs/implementation-artifacts/evidence/story-4-5/`.
 
 - Historia 8.5 (entorno de testing en el homelab): job `testing` de clase B en `main` compila nativo y
   web, arma el Pack, valida el título y despliega en el host de deploy (`HUB_DOCKER_HOST`) una imagen
@@ -460,7 +464,7 @@
 
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2, 4.3 y 4.4 ya están cerradas, y también la 8.1 y la 8.5.
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2, 4.3, 4.4 y 4.5 ya están cerradas, y también la 8.1 y la 8.5.
 
 ## Bloqueos
 

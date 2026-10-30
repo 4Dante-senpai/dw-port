@@ -23,6 +23,17 @@ solo valores de `PadRead`, VBlanks, tasas y memoria.
   en el hilo del juego), 2 (sin transferir) y 3 (cerrado en el hilo principal), con y sin
   headless shell. Antes del cambio, la misma L4 midió 972 a 6.077 MiB en Chromium.
 
+## Verificación final
+
+Sobre `aa21acd` y `25e77db`, en `tools/port/remote_run.sh` con `DW1_DISC_DIR=/dw/game_rom/extracted`:
+`make compare` idéntico; `ctest --preset native-headless` 85/85; `ctest --preset native-asan` 83/83;
+`ctest --preset web` 45/46, incluidos `web_input`, `web_shell` y `web_scene_title` en Chromium y Firefox.
+La falla fue `web_launcher`: Playwright pasó 4/4 y `run.py` cayó al borrar el directorio de
+PulseAudio, porque `pulseaudio --kill` no espera. Con `ignore_cleanup_errors` pasó 3/3 corridas.
+
+`web_scene_title` cubre el criterio de disco: tras el clic en «Jugar», Enter en el título abre
+`runMainMenu` en ambos navegadores.
+
 ## Pendiente
 
 - **Mando físico**: solo se probó un gamepad simulado con el mapeo estándar W3C.
