@@ -78,7 +78,8 @@ En Opciones, «Reasignar» toma la próxima tecla (`KeyboardEvent.code`) o el pr
 botón de un gamepad estándar (índice W3C, pulsado con `value > 0,5`, igual que los
 gatillos) y la asigna a ese botón PlayStation; reemplaza las asignaciones previas de
 ese dispositivo para ese botón y la quita de cualquier otro botón. `Escape` cancela.
-Los botones ya pulsados al empezar no cuentan. «Restaurar valores por defecto»
+Los botones ya pulsados al empezar no cuentan; `Tab` y los atajos con Ctrl, Alt o Meta
+siguen siendo del navegador. «Restaurar valores por defecto»
 vuelve a la tabla de arriba y desmarca el stick. El remapeo se hace en el lanzador,
 antes de «Jugar».
 
