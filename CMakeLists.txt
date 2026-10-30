@@ -285,6 +285,14 @@ add_test(NAME gen_stubs COMMAND python3 -I -B tools/port/psyq/test_gen_stubs.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME inventory COMMAND python3 -I -B tools/port/metrics/test_inventory.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+# STATUS.md metrics (story 8.1); the repo test fails when a DW1_PORT block has no
+# src-changes.md row (NFR-10).
+add_test(NAME status_table_unit COMMAND python3 -I -B tools/port/metrics/test_status_table.py
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_test(NAME status_table_repo COMMAND python3 -I -B tools/port/metrics/status_table.py
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+# A PsyQ function defined without a source comment does not change the exit status.
+set_tests_properties(status_table_repo PROPERTIES FAIL_REGULAR_EXPRESSION "without a source comment")
 add_test(NAME preproc_check COMMAND sh tools/port/ci/preproc_check.sh
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME test_preproc_check COMMAND sh tools/port/ci/test_preproc_check.sh
