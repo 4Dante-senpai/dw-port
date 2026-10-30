@@ -23,7 +23,9 @@ context:
 
 **Always:** sin una capacidad (aislamiento, memoria compartida, OPFS, Web Locks) la Shell muestra un mensaje por cada capacidad faltante y no carga `dw1.js` ni crea workers; la segunda pestaña muestra un mensaje, no carga el juego ni toca OPFS (el lock también serializa construcción y borrado del Pack, deferred de 4.3) y continúa sola al liberarse el lock; la pausa retiene al hilo del juego dentro de `VSync`, el conteo de VBlanks no avanza y al reanudar el deadline se rebasa sin contar resincronización; las corridas con captura de Escena siguen sin ritmo de pared (como `native`); un solo reloj virtual, la pared nunca ordena eventos; textos de la Shell en español; IDs existentes de la Shell (`#pack-status`, `#disc`, `#play`, `#clear`, `#load-pack`, `#progress`, `#status`, `#storage-warning`, `#version`, `#drop-zone`) se conservan; tests clase A sin bytes del disco, clase B salta con 77 sin `DW1_DISC_DIR`.
 
-**Never:** contenido de opciones, input, audio real, Memory cards (4.5–4.8: aquí solo sus secciones con el aviso de que llegan después); presentación continua (diferida en `deferred-work.md`; "Jugar" mantiene la corrida finita de 300 frames); service worker (4.9); cambios en `src/`; ASYNCIFY/JSPI; tocar el formato del Pack o el C del Pack.
+**Decisión del dueño (2026-10-30):** la presentación continua entra en esta historia, porque la corrida finita de 300 frames no llega al título y 4.5 en adelante necesitan ver el juego en vivo. "Jugar" corre sin límite de frames y cada frame llega a la pantalla mientras corre.
+
+**Never:** contenido de opciones, input, audio real, Memory cards (4.5–4.8: aquí solo sus secciones con el aviso de que llegan después); service worker (4.9); cambios en `src/`; ASYNCIFY/JSPI; tocar el formato del Pack o el C del Pack.
 
 ## I/O & Edge-Case Matrix
 
@@ -35,7 +37,7 @@ context:
 | Segunda pestaña | lock `dw1-game` tomado por otra | mensaje "abierto en otra pestaña" | sin juego ni workers; al cerrar la primera, continúa |
 | Pausa manual | juego corriendo | VBlanks quietos, botón "Reanudar" | al reanudar: 0 resincronizaciones, ~60 VBlank/s |
 | Pestaña oculta | `visibilitychange` a `hidden` | igual que pausa | al volver visible reanuda salvo pausa manual activa |
-| "Jugar" | Pack disponible, autoplay bloqueado sin gesto | un clic: juego en la misma página, `AudioContext` `running` | — |
+| "Jugar" | Pack disponible, autoplay bloqueado sin gesto | un clic: juego en la misma página, `AudioContext` `running`, frames visibles mientras corre y sin límite de frames | — |
 | Recarga con Pack | Pack + sidecar | "Jugar" directo, sin bienvenida | — |
 
 </frozen-after-approval>
@@ -60,13 +62,16 @@ context:
 - [x] `port/web/tests/shell.spec.cjs`, `run.py`, `playwright.config.cjs` -- suite `shell` clase A con toda la matriz; autoplay bloqueado sin gesto (Chromium `--autoplay-policy=user-gesture-required`, Firefox `media.autoplay.*`).
 - [x] `port/web/tests/{boot,launcher}.spec.cjs` -- ajustar al nuevo mensaje de aislamiento y a "Jugar" en la página.
 - [x] `port/web/tests/title.spec.cjs` -- clase B: un clic en "Jugar" con el Pack real llega a `runLandingScreen` con `AudioContext` `running`.
+- [x] `port/host/web/present_gl.c`, `port/host/web/main.c`, `CMakeLists.txt`, `port/web/dev/index.html` -- presentación continua: cada frame sale del `OffscreenCanvas` del hilo del juego como `ImageBitmap` y el hilo principal lo muestra en `#screen` (`bitmaprenderer`); `--frames 0` en web corre sin límite y "Jugar" lo usa.
+- [x] `port/web/tests/{shell,title,boot,launcher}.spec.cjs` -- test de frames en vivo; "Jugar" llega al título con su configuración real y el `#screen` no queda negro.
 - [x] `docs/port/setup.md`, `docs/implementation-artifacts/evidence/story-4-4/` -- cómo correr `web_shell`; evidencia y criterios no verificados en esta sesión.
 - [x] `tools/port/Dockerfile`, `port/web/tests/run.py` -- paquete `pulseaudio` en la imagen `dw-port` y un servidor con sink nulo por cada corrida de `run.py`: sin servidor de audio, Firefox deja todo `AudioContext` en `suspended`.
 
 **Acceptance Criteria:**
 - Given `ctest --preset web` sin disco, when corren las suites, then `web_shell` pasa en Chromium y Firefox y `web_boot`, `web_io`, `web_launcher`, `web_disc` siguen verdes.
 - Given el juego corriendo con ritmo, when se pausa 2 s y se reanuda, then los VBlanks no cambian durante la pausa, las resincronizaciones siguen en 0 y la tasa medida tras reanudar está dentro del 10 % de 60,0087 Hz.
-- Given `DW1_DISC_DIR`, when corre `web_scene_title`, then un único clic en "Jugar" llega a `runLandingScreen` con el `AudioContext` en `running`.
+- Given `DW1_DISC_DIR`, when corre `web_scene_title`, then un único clic en "Jugar", con sus argumentos reales, llega a `runLandingScreen` con el `AudioContext` en `running` y con `#screen` mostrando imagen.
+- Given una corrida sin terminar, when se lee `#screen` dos veces, then el contenido cambia sin que el hilo del juego haya vuelto a su bucle de eventos.
 
 ## Design Notes
 
@@ -80,11 +85,13 @@ if (atomic_load(&control.pause)) { hold(); deadline = now_ns(); remainder = 0; }
 
 El lock usa `ifAvailable` para decidir el mensaje y después una petición en espera, así la recarga (el documento viejo aún no liberó) no falla. El mensaje de audio de FR-4 se verifica con autoplay bloqueado: un `AudioContext` creado sin gesto queda `suspended` (control negativo del test).
 
+Presentación continua. `emscripten_webgl_commit_frame()` se descartó con un prototipo: en Chromium `#canvas` no cambió y Firefox se colgó. JSPI/ASYNCIFY siguen excluidos. `transferToImageBitmap()` conserva AD-9, porque el contexto GL sigue en el hilo del juego, y no necesita que ese hilo vuelva a su bucle: `postMessage` sin `cmd` llega al `worker.onmessage` de Emscripten, que lo ignora, y `showFrames` escucha en cada worker de `Module.PThread.unusedWorkers`. El Renderer WebGL2 de la Épica 5 puede usar el mismo camino.
+
 ## Verification
 
 **Commands:**
 - `cmake --preset web && cmake --build --preset web && ctest --preset web` -- expected: verde; clase B saltada.
-- `python3 port/web/tests/run.py build/port/web shell --project chromium` -- expected: todos los casos pasan.
+- `python3 port/web/tests/run.py build/port/web shell` -- expected: todos los casos pasan en Chromium y Firefox.
 - `ctest --preset native-headless` -- expected: verde (`crt.c` solo cambia en `__EMSCRIPTEN__`).
 
 ## Review Triage Log
@@ -93,8 +100,8 @@ Revisión Codex (`codex-merged`) sobre `12268fe`, con verificación local en el 
 
 | Hallazgo | Veredicto | Ruta | Evidencia |
 |---|---|---|---|
-| «Jugar» termina tras 300 frames y no llega al título; `title.spec.cjs` lo oculta con `DW1_PLAY_FRAMES` | high | intent_gap | Sin la sobrescritura, la prueba de un clic no llega a `runLandingScreen` en 360 s (Chromium). El Intent congelado exige la corrida de 300 frames y el criterio exige llegar al título: se contradicen. |
-| Falta presentación continua | false | rechazado | El Intent la excluye; ya está en `deferred-work.md`. Queda atada a la decisión del hallazgo anterior. |
+| «Jugar» termina tras 300 frames y no llega al título; `title.spec.cjs` lo oculta con `DW1_PLAY_FRAMES` | high | intent_gap, resuelto | Sin la sobrescritura, la prueba de un clic no llegaba a `runLandingScreen` en 360 s (Chromium). El dueño eligió resolverlo en esta historia; `DW1_PLAY_FRAMES` se eliminó. |
+| Falta presentación continua | high | intent_gap, resuelto | Misma decisión del dueño: implementada con `ImageBitmap`. |
 | `locks.request` puede rechazar sin aviso | low | patch | La promesa nunca resolvía; se agregó `.catch(reject)` a las dos esperas. |
 | Falla la descarga de `dw1.js` | medium | patch | Quedaba un canvas vacío sin mensaje; `script.onerror` lo informa, con test. |
 | «Pausa» sigue visible al terminar la corrida | low | patch | `Module.onFinished` la oculta; el test ya no necesita un clic extra. |

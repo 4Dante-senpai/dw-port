@@ -34,7 +34,7 @@ test('launcher copies with progress, persists sidecar, detects stale Pack and st
   await expect(page.locator('#play')).toBeEnabled();
   await page.locator('#play').click();
   await expect(page.locator('#game')).toBeVisible();
-  expect(await page.evaluate(() => Module.arguments)).toEqual(['--frames', '300', '--pack', 'dw1/us.pack']);
+  expect((await page.evaluate(() => Module.arguments)).slice(-4)).toEqual(['--frames', '0', '--pack', 'dw1/us.pack']);
   expect(failures).toEqual([]);
 });
 test('failed replacement invalidates the existing sidecar', async ({page}) => {

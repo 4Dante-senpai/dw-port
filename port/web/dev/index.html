@@ -5,7 +5,8 @@
 <ul id="capabilities" hidden></ul>
 <p id="instance" hidden>Digimon World ya está abierto en otra pestaña. Esta pestaña continúa cuando la otra se cierre.</p>
 <div id="game" hidden>
-  <canvas id="canvas" width="320" height="240"></canvas>
+  <canvas id="canvas" width="320" height="240" hidden></canvas>
+  <canvas id="screen" width="320" height="240"></canvas>
   <button id="pause" hidden>Pausa</button>
 </div>
 <pre id="status"></pre>
@@ -102,6 +103,7 @@ function boot(args, audioContext) {
   Module.onRuntimeInitialized = async () => {
     try {
       pauseControls();
+      showFrames();
       if (args.includes('--pack') || query.has('io-test')) {
         Module.ioWorker = new Worker('/io_worker.js');
         await new Promise((resolve, reject) => {
@@ -123,6 +125,18 @@ function boot(args, audioContext) {
   script.src = '/dw1.js' + (query.has('poison') ? '?poison=1' : '');
   script.onerror = () => { status.textContent = 'No se pudo descargar el juego. Recargá la página para reintentar.'; };
   document.head.append(script);
+}
+// The game thread posts each frame as an ImageBitmap (port/host/web/present_gl.c).
+function showFrames() {
+  const screen = document.querySelector('#screen');
+  const context = screen.getContext('bitmaprenderer');
+  const show = ({data}) => {
+    if (!data.frame) return;
+    if (screen.width !== data.frame.width) screen.width = data.frame.width;
+    if (screen.height !== data.frame.height) screen.height = data.frame.height;
+    context.transferFromImageBitmap(data.frame);
+  };
+  for (const worker of Module.PThread.unusedWorkers) worker.addEventListener('message', show);
 }
 // The game thread holds inside VSync while the pause word is 1 (port/host/web/pace.c).
 function pauseControls() {
@@ -229,13 +243,11 @@ async function launch() {
   } catch (e) { status.textContent = e.message; }
   busy(false);
   // "Jugar" is the only gesture: the AudioContext is created inside it and the game starts on this
-  // page, which keeps the user activation. ponytail: a finite run, because the game thread's
-  // OffscreenCanvas only shows a frame once the thread returns to its event loop; an endless run
-  // stays blank. Continuous presentation is deferred.
+  // page, which keeps the user activation.
   play.onclick = () => {
     const audio = new AudioContext();
     audio.resume().catch(() => {});
-    boot(['--frames', String(window.DW1_PLAY_FRAMES || 300), '--pack', 'dw1/us.pack'], audio);
+    boot(['--frames', '0', '--pack', 'dw1/us.pack'], audio);
   };
   load.onclick = () => {
     busy(true);

@@ -39,7 +39,6 @@ test('one click on Jugar reaches the title with a running AudioContext', async (
   await expect(page.locator('#pack-status')).toHaveText('Pack disponible', {timeout:120000});
   // A fresh document: the fixture click above must not count as the gesture.
   await page.addInitScript(() => {
-    window.DW1_PLAY_FRAMES = 1000000;
     const Native = AudioContext;
     window.audioLog = [];
     window.AudioContext = class extends Native {
@@ -54,6 +53,13 @@ test('one click on Jugar reaches the title with a running AudioContext', async (
   await expect.poll(() => page.evaluate(() => Module.audioContext?.state)).toBe('running');
   // Paced at 60 Hz: the title takes as long as on the console.
   await expect.poll(() => page.evaluate(() => Module.marks || []), {timeout:360000}).toContain('runLandingScreen');
+  await expect.poll(() => page.evaluate(() => {
+    const copy = document.createElement('canvas');
+    copy.width = 320; copy.height = 240;
+    const ctx = copy.getContext('2d');
+    ctx.drawImage(document.querySelector('#screen'), 0, 0);
+    return ctx.getImageData(0, 0, 320, 240).data.some((v, i) => i % 4 !== 3 && v);
+  })).toBe(true);
   const control = await page.evaluate(() => Module.control());
   expect(control.resynchronizations).toBe(0);
   expect(failures).toEqual([]);

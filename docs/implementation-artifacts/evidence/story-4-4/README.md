@@ -20,19 +20,15 @@ y tiempos; ningún byte del disco.
   `suspended`; el `AudioContext` de «Jugar» se construye con activación transitoria
   y queda `running`, sin navegación.
 
-## Criterios sin verificar en esta sesión
+Los 59,8 VBlank/s de esos JSON son un artefacto de la ventana de 2 s, no un desvío del ritmo.
 
-- **Firefox** (todas las suites web): requiere la imagen `dw-port` o el job de CI.
-- **Clase B** (`web_scene_title`, test «one click on Jugar reaches the title»):
-  requiere `DW1_DISC_DIR` y el Pack real; salta con 77.
-- **`native-asan`** y **`reference_capture_unit`**: falta el runtime ASan i686 y
-  `pcsx-redux` en esta sesión. El cambio en `port/psyq/crt.c` está dentro de
-  `#ifdef __EMSCRIPTEN__`.
+## Verificación en el contenedor del proyecto
 
-Para cerrarlos, en el contenedor del proyecto:
+Con disco, Firefox y PulseAudio, en la imagen `dw-port` (2026-10-30):
 
-```sh
-tools/port/docker_run.sh sh -c 'cmake --preset web && cmake --build --preset web && ctest --preset web'
-tools/port/docker_run.sh sh -c 'cmake --build --preset native-headless && cmake --build --preset web && cd build/port/web && DW1_DISC_DIR=/dw/game_rom/extracted ctest -R "pack_disc|native_title_capture|web_scene_title"'
-tools/port/docker_run.sh sh -c 'cmake --preset native-asan && cmake --build --preset native-asan && ctest --preset native-asan'
-```
+- `ctest --preset web`: 43/43, incluidos `web_shell` y `web_scene_title` en Chromium y Firefox.
+- «Jugar», con sus argumentos reales, llegó a `runLandingScreen` en 123 s en ambos navegadores,
+  con `AudioContext` en `running`, `#screen` con imagen y 0 resincronizaciones.
+- `pacing-100s.json`: 60,008 a 60,014 VBlank/s en ventanas de 100 s, antes y después de pausar,
+  con 0 resincronizaciones. El juego sin Pack avanza a saltos de hasta 187 VBlanks, por eso una
+  ventana corta oscila.
