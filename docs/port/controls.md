@@ -63,8 +63,7 @@ los mandos sin mapeo estándar se ignoran (en `native`, SDL usa solo el primer m
 con mapeo de `SDL_Gamepad`). Las teclas con Ctrl, Alt o Meta, las que van a un control
 enfocado de la Shell (por ejemplo, Enter sobre «Pausa») y las posteriores al fin de la
 corrida no se envían al juego. Con «Stick izquierdo como
-cruceta» (Opciones, desactivada por defecto y sin persistencia hasta la historia
-4.6) el eje izquierdo fuera de la zona muerta de 0,5 actúa como la cruceta. El hilo
+cruceta» (Opciones, desactivada por defecto) el eje izquierdo fuera de la zona muerta de 0,5 actúa como la cruceta. El hilo
 principal publica la máscara en cada evento de teclado y en cada
 `requestAnimationFrame`; el hilo del juego la aplica con `port_pad_latch` en cada
 VBlank (`port/host/web/input.c`). Perder el foco suelta las teclas. Conectar o
@@ -72,3 +71,30 @@ desconectar mandos no pausa el juego. Las corridas de captura de Escena no aplic
 input en vivo, igual que `native-headless` (el preset `native` con ventana sí lo
 aplica salvo con `--inputs` o `--headless`). Un VBlank en que PsyQ no consulta el pad
 (`pad_poll_missed`) conserva el paquete anterior y no cuenta como muestra consumida.
+
+## Remapeo y `PortSettings` (historia 4.6)
+
+En Opciones, «Reasignar» toma la próxima tecla (`KeyboardEvent.code`) o el próximo
+botón de un gamepad estándar (índice W3C, pulsado con `value > 0,5`, igual que los
+gatillos) y la asigna a ese botón PlayStation; reemplaza las asignaciones previas de
+ese dispositivo para ese botón y la quita de cualquier otro botón. `Escape` cancela.
+Los botones ya pulsados al empezar no cuentan. «Restaurar valores por defecto»
+vuelve a la tabla de arriba y desmarca el stick. El remapeo se hace en el lanzador,
+antes de «Jugar».
+
+Se guarda en IndexedDB (base `dw1`, almacén `settings`, clave `port_settings`) al
+instante, como JSON con claves `snake_case`:
+
+```json
+{"schema_version": 2, "stick_dpad": false,
+ "controls": {"keyboard": {"cross": ["KeyK"], "up": ["ArrowUp", "KeyW"]},
+              "gamepad": {"cross": [0], "l2": [6]}}}
+```
+
+Botones: `select`, `start`, `up`, `right`, `down`, `left`, `l2`, `r2`, `l1`, `r1`,
+`triangle`, `circle`, `cross`, `square`. La versión 1 (`{"schema_version": 1,
+"stick_dpad": bool, "keyboard": {"KeyK": "cross"}}`) **no se publicó**: se definió
+junto con la 2 como formato anterior para la cadena de migraciones y su test. Cada
+migración `n → n + 1` conserva los campos que no conoce. Un registro de una versión
+más nueva, ilegible o con forma inválida no se sobrescribe nunca: la Shell avisa y
+usa los valores por defecto en memoria (los cambios de esa sesión no se guardan).
