@@ -19,7 +19,7 @@ for (const poison of [false, true]) {
     }
     await page.goto('/?pack=1&frames=10000&capture-mark=runLandingScreen&capture-vblank=60' +
                     (poison ? '&poison=1' : ''));
-    await expect.poll(() => page.evaluate(() => Module.finished), {timeout:120000}).toBe(0);
+    await expect.poll(() => page.evaluate(() => window.Module?.finished), {timeout:120000}).toBe(0);
     const bytes = await page.evaluate(() => Module.capture);
     const hash = crypto.createHash('sha256').update(Buffer.from(bytes)).digest('hex');
     expect(hash).toBe(process.env.DW1_NATIVE_TITLE_SHA);

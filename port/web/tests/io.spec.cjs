@@ -5,7 +5,7 @@ test('concurrent positional reads sleep while the worker delays responses', asyn
   const failures = errors(page);
   await seed(page, 'synthetic.pack');
   await page.goto('/?io-test=1&poison=1');
-  await expect.poll(() => page.evaluate(() => Module.finished)).toBe(0);
+  await expect.poll(() => page.evaluate(() => window.Module?.finished)).toBe(0);
   const result = await page.evaluate(() => Module.ioResult);
   expect(result.failed).toBe(0);
   expect(result.requests).toBeGreaterThanOrEqual(80);
@@ -20,7 +20,7 @@ test('storage guard records exactly one hit per reader pthread', async ({page}, 
   const failures = errors(page);
   await seed(page, 'synthetic.pack');
   await page.goto('/?io-test=guard&poison=1');
-  await expect.poll(() => page.evaluate(() => Module.finished)).toBe(0);
+  await expect.poll(() => page.evaluate(() => window.Module?.finished)).toBe(0);
   const result = await page.evaluate(() => ({
     ...Module.ioResult,
     storageAccesses: Module.storageAccesses,
@@ -48,7 +48,7 @@ for (const [file, message] of [['corrupt.pack', 'not a Pack'], ['synthetic.pack'
     await seed(page, file);
     await page.goto('/?pack=1&poison=1');
     await expect(page.locator('#status')).toContainText(message);
-    await expect.poll(() => page.evaluate(() => Module.finished)).toBe(1);
+    await expect.poll(() => page.evaluate(() => window.Module?.finished)).toBe(1);
     expect(await page.locator('#status').textContent()).not.toContain('stack verified');
     expect(failures).toEqual([]);
   });
