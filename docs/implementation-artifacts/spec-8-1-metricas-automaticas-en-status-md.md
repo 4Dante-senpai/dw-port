@@ -2,7 +2,7 @@
 title: 'Historia 8.1: Métricas automáticas en STATUS.md'
 type: 'feature'
 created: '2026-10-30'
-status: 'review'
+status: 'in-review'
 baseline_commit: 'cb6fbd4f8b9d5f620fd0518365aaa7f98c4f482b'
 route: 'dispatch'
 review_loop_iteration: 0
