@@ -31,8 +31,9 @@ aislamiento aparece `cross-origin isolation required`.
 La página muestra el commit, el estado del Pack y los botones «Cargar Pack» y
 «Jugar». La copia usa streaming y muestra bytes de progreso; solo al terminar se
 escribe el sidecar `dw1/us.pack.sha256` en OPFS. Un sidecar distinto al servido
-marca el Pack como desactualizado y requiere volver a copiarlo. «Jugar» abre
-`/?pack=1&frames=300`: corre 300 frames sin ritmo y deja el último en pantalla (el título). Una corrida sin fin queda en blanco: el `OffscreenCanvas` del hilo del juego solo muestra un frame cuando ese hilo vuelve a su bucle de eventos, y hoy no vuelve hasta terminar. No incluye selector de disco, audio ni controles.
+marca el Pack como desactualizado y requiere volver a copiarlo. «Jugar» arranca el juego en la
+misma página, sin límite de frames y con ritmo de 60 Hz; el hilo del juego deja cada frame en
+memoria compartida y el hilo principal lo pinta en `#screen`.
 
 Después del healthcheck, Playwright Chromium valida contra la URL desplegada
 el commit y el SHA-256 del título nativo, con el origen marcado como seguro.

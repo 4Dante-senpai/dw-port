@@ -106,7 +106,7 @@ test('a sample reaches PadRead at the first VBlank after it was written', async 
   const failures = errors(page);
   await running(page);
   // In the page, so no round trip to the test separates the write from the latch. Yielding, not
-  // spinning: in Firefox the game thread's glReadPixels waits for the main thread.
+  // spinning: in Firefox the game thread's glReadPixels waits for the main thread (spec 4.5).
   const latches = await page.evaluate(async () => {
     const channel = new MessageChannel(), result = [];
     const next = () => new Promise(resolve => { channel.port1.onmessage = resolve; channel.port2.postMessage(0); });

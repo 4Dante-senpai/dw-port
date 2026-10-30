@@ -3,108 +3,108 @@
     "button": "Select",
     "key": "Backspace",
     "padRead": 256,
-    "latchedVblank": 531
+    "latchedVblank": 517
   },
   {
     "button": "Start",
     "key": "Enter",
     "padRead": 2048,
-    "latchedVblank": 534
+    "latchedVblank": 520
   },
   {
     "button": "Up",
     "key": "ArrowUp",
     "padRead": 4096,
-    "latchedVblank": 536
+    "latchedVblank": 522
   },
   {
     "button": "Up",
     "key": "w",
     "padRead": 4096,
-    "latchedVblank": 538
+    "latchedVblank": 524
   },
   {
     "button": "Right",
     "key": "ArrowRight",
     "padRead": 8192,
-    "latchedVblank": 540
+    "latchedVblank": 527
   },
   {
     "button": "Right",
     "key": "d",
     "padRead": 8192,
-    "latchedVblank": 542
+    "latchedVblank": 529
   },
   {
     "button": "Down",
     "key": "ArrowDown",
     "padRead": 16384,
-    "latchedVblank": 544
+    "latchedVblank": 531
   },
   {
     "button": "Down",
     "key": "s",
     "padRead": 16384,
-    "latchedVblank": 546
+    "latchedVblank": 533
   },
   {
     "button": "Left",
     "key": "ArrowLeft",
     "padRead": 32768,
-    "latchedVblank": 548
+    "latchedVblank": 535
   },
   {
     "button": "Left",
     "key": "a",
     "padRead": 32768,
-    "latchedVblank": 550
+    "latchedVblank": 537
   },
   {
     "button": "L2",
     "key": "1",
     "padRead": 1,
-    "latchedVblank": 552
+    "latchedVblank": 540
   },
   {
     "button": "R2",
     "key": "3",
     "padRead": 2,
-    "latchedVblank": 555
+    "latchedVblank": 543
   },
   {
     "button": "L1",
     "key": "q",
     "padRead": 4,
-    "latchedVblank": 557
+    "latchedVblank": 546
   },
   {
     "button": "R1",
     "key": "e",
     "padRead": 8,
-    "latchedVblank": 560
+    "latchedVblank": 548
   },
   {
     "button": "Triangle",
     "key": "i",
     "padRead": 16,
-    "latchedVblank": 562
+    "latchedVblank": 550
   },
   {
     "button": "Circle",
     "key": "l",
     "padRead": 32,
-    "latchedVblank": 564
+    "latchedVblank": 552
   },
   {
     "button": "Cross",
     "key": "k",
     "padRead": 64,
-    "latchedVblank": 566
+    "latchedVblank": 554
   },
   {
     "button": "Square",
     "key": "j",
     "padRead": 128,
-    "latchedVblank": 568
+    "latchedVblank": 556
   }
 ]
