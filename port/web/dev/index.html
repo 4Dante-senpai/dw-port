@@ -23,12 +23,19 @@
   </label>
   <progress id="progress" hidden></progress>
   <p id="storage-warning"></p>
+  <p id="settings-warning"></p>
   <button id="load-pack" hidden disabled>Cargar Pack</button>
   <button id="play" disabled>Jugar</button>
   <details id="options">
     <summary>Opciones</summary>
     <label><input id="stick-dpad" type="checkbox"> Stick izquierdo como cruceta</label>
-    <p>Mapeo por defecto en <code>docs/port/controls.md</code>. Video, audio y remapeo llegan en
+    <table id="controls">
+      <thead><tr><th>PlayStation</th><th>Teclado</th><th>Gamepad</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <p id="remap-status"></p>
+    <button id="restore-defaults">Restaurar valores por defecto</button>
+    <p>Valores por defecto en <code>docs/port/controls.md</code>. Video y audio llegan en
       próximas versiones.</p>
   </details>
   <details id="cards">
@@ -79,6 +86,11 @@ async function start() {
     await new Promise(resolve => navigator.locks.request('dw1-game', () => { resolve(); return forever; }));
     instance.hidden = true;
   }
+  const loaded = await loadSettings();
+  portSettings = loaded.settings;
+  settingsWritable = loaded.writable;
+  if (loaded.warning) { document.querySelector('#settings-warning').textContent = loaded.warning; console.warn(loaded.warning); }
+  document.querySelector('#stick-dpad').checked = portSettings.stick_dpad;
   if (!location.search) { launch(); return; }
   const args = ['--frames', query.get('frames') || '1', ...(query.get('pattern') === '1' ? ['--pattern'] : []),
     ...(query.get('validate') === '1' ? ['--validate'] : [])];
@@ -146,12 +158,151 @@ function pauseControls() {
   button.hidden = false;
   apply();
 }
-// Default mapping (docs/port/controls.md) to the wire bits of port_pad_latch: select 0, start 3,
-// up 4, right 5, down 6, left 7, L2 8, R2 9, L1 10, R1 11, triangle 12, circle 13, cross 14, square 15.
-const KEYS = {Backspace: 0, Enter: 3, ArrowUp: 4, KeyW: 4, ArrowRight: 5, KeyD: 5, ArrowDown: 6, KeyS: 6,
-  ArrowLeft: 7, KeyA: 7, Digit1: 8, Digit3: 9, KeyQ: 10, KeyE: 11, KeyI: 12, KeyL: 13, KeyK: 14, KeyJ: 15};
-// W3C standard gamepad buttons; the triggers (6, 7) count past half travel.
-const PAD_BUTTONS = {8: 0, 9: 3, 12: 4, 15: 5, 13: 6, 14: 7, 4: 10, 5: 11, 3: 12, 1: 13, 0: 14, 2: 15};
+// PlayStation buttons and their wire bits in port_pad_latch, in docs/port/controls.md order.
+const BUTTONS = {select: 0, start: 3, up: 4, right: 5, down: 6, left: 7, l2: 8, r2: 9, l1: 10, r1: 11,
+  triangle: 12, circle: 13, cross: 14, square: 15};
+const LABELS = {select: 'Select', start: 'Start', up: 'Arriba', right: 'Derecha', down: 'Abajo', left: 'Izquierda',
+  l2: 'L2', r2: 'R2', l1: 'L1', r1: 'R1', triangle: 'Triangle', circle: 'Circle', cross: 'Cross', square: 'Square'};
+// PortSettings (AD-13): JSON with snake_case keys in IndexedDB "dw1", store "settings", key "port_settings".
+const SETTINGS_VERSION = 2;
+let portSettings, settingsWritable = false;
+// The default mapping of docs/port/controls.md: keyboard codes and W3C standard gamepad indices.
+function defaultSettings() {
+  return {schema_version: SETTINGS_VERSION, stick_dpad: false, controls: {
+    keyboard: {select: ['Backspace'], start: ['Enter'], up: ['ArrowUp', 'KeyW'], right: ['ArrowRight', 'KeyD'],
+      down: ['ArrowDown', 'KeyS'], left: ['ArrowLeft', 'KeyA'], l2: ['Digit1'], r2: ['Digit3'], l1: ['KeyQ'],
+      r1: ['KeyE'], triangle: ['KeyI'], circle: ['KeyL'], cross: ['KeyK'], square: ['KeyJ']},
+    gamepad: {select: [8], start: [9], up: [12], right: [15], down: [13], left: [14], l2: [6], r2: [7], l1: [4],
+      r1: [5], triangle: [3], circle: [1], cross: [0], square: [2]}}};
+}
+// Each migration takes schema n to n + 1 and keeps every field it does not know.
+const MIGRATIONS = {
+  // v1, defined with v2 as the first earlier format (never published): keyboard code -> button, no gamepad map.
+  1: ({keyboard = {}, ...rest}) => {
+    const keys = Object.fromEntries(Object.keys(BUTTONS).map(button => [button, []]));
+    for (const [code, button] of Object.entries(keyboard)) if (button in BUTTONS) keys[button].push(code);
+    return {...rest, schema_version: 2, controls: {keyboard: keys, gamepad: defaultSettings().controls.gamepad}};
+  }
+};
+function settingsStore(mode, action) {
+  return new Promise((resolve, reject) => {
+    const open = indexedDB.open('dw1', 1);
+    open.onupgradeneeded = () => open.result.createObjectStore('settings');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const db = open.result, tx = db.transaction('settings', mode);
+      const request = action(tx.objectStore('settings'));
+      tx.oncomplete = () => { db.close(); resolve(request.result); };
+      tx.onerror = tx.onabort = () => { db.close(); reject(tx.error || Error('IndexedDB transaction aborted')); };
+    };
+  });
+}
+function validSettings(value) {
+  const lists = map => map && typeof map === 'object' && Object.keys(BUTTONS).every(b => Array.isArray(map[b]));
+  return value && typeof value === 'object' && typeof value.stick_dpad === 'boolean' &&
+    lists(value.controls?.keyboard) && lists(value.controls?.gamepad);
+}
+// A newer or unreadable record is never overwritten: the defaults run in memory with a warning.
+async function loadSettings() {
+  let stored;
+  try { stored = await settingsStore('readonly', store => store.get('port_settings')); }
+  catch (e) { return {settings: defaultSettings(), writable: false, warning: 'No se pudieron leer las opciones (' + e.message + '); se usan los valores por defecto.'}; }
+  if (stored === undefined) return {settings: defaultSettings(), writable: true};
+  const version = stored?.schema_version;
+  if (Number.isInteger(version) && version > SETTINGS_VERSION)
+    return {settings: defaultSettings(), writable: false, warning: 'Las opciones guardadas son de una versión más nueva del port; se usan los valores por defecto sin modificarlas.'};
+  let settings = stored;
+  try { while (settings.schema_version < SETTINGS_VERSION) settings = MIGRATIONS[settings.schema_version](settings); }
+  catch (_) { settings = null; }
+  if (!Number.isInteger(version) || !validSettings(settings))
+    return {settings: defaultSettings(), writable: false, warning: 'Las opciones guardadas no se pueden leer; se usan los valores por defecto sin modificarlas.'};
+  if (settings === stored) return {settings, writable: true};
+  try { await settingsStore('readwrite', store => store.put(settings, 'port_settings')); }
+  catch (e) { return {settings, writable: false, warning: 'No se pudo guardar la migración de las opciones: ' + e.message}; }
+  return {settings, writable: true};
+}
+async function saveSettings() {
+  const warning = document.querySelector('#settings-warning');
+  if (!settingsWritable) return;
+  try { await settingsStore('readwrite', store => store.put(portSettings, 'port_settings')); }
+  catch (e) { warning.textContent = 'No se pudieron guardar las opciones: ' + e.message; }
+}
+// Options: one row per PlayStation button; "Reasignar" takes the next key or standard gamepad button.
+function controlsEditor() {
+  const body = document.querySelector('#controls tbody');
+  const status = document.querySelector('#remap-status');
+  let cancel;
+  function render() {
+    body.replaceChildren(...Object.keys(BUTTONS).map(button => {
+      const row = document.createElement('tr');
+      row.dataset.button = button;
+      const remap = document.createElement('button');
+      remap.className = 'remap'; remap.textContent = 'Reasignar';
+      remap.onclick = () => capture(button);
+      row.append(...[LABELS[button], portSettings.controls.keyboard[button].join(', ') || '—',
+        portSettings.controls.gamepad[button].join(', ') || '—'].map((text, i) => {
+        const cell = document.createElement('td');
+        cell.className = ['name', 'keys', 'pads'][i]; cell.textContent = text; return cell;
+      }), document.createElement('td'));
+      row.lastChild.append(remap);
+      return row;
+    }));
+  }
+  // The new key or button leaves every other PlayStation button of the same device.
+  function assign(button, device, value) {
+    for (const list of Object.values(portSettings.controls[device])) {
+      const i = list.indexOf(value);
+      if (i >= 0) list.splice(i, 1);
+    }
+    portSettings.controls[device][button] = [value];
+    status.textContent = '';
+    render();
+    return saveSettings();
+  }
+  function capture(button) {
+    cancel?.();
+    status.textContent = 'Pulse una tecla o un botón del gamepad para ' + LABELS[button] + ' (Escape cancela).';
+    // Buttons already down when the capture starts do not count.
+    const down = new Set();
+    const pressed = () => {
+      const result = [];
+      for (const pad of navigator.getGamepads?.() || [])
+        if (pad?.connected && pad.mapping === 'standard')
+          pad.buttons.forEach((b, i) => { if (b.value > 0.5) result.push(i); });
+      return result;
+    };
+    pressed().forEach(i => down.add(i));
+    let frame;
+    const key = e => {
+      e.preventDefault(); e.stopImmediatePropagation();
+      cancel();
+      if (e.code === 'Escape') status.textContent = '';
+      else assign(button, 'keyboard', e.code);
+    };
+    const poll = () => {
+      const now = pressed();
+      const fresh = now.find(i => !down.has(i));
+      for (const i of [...down]) if (!now.includes(i)) down.delete(i);
+      if (fresh === undefined) { frame = requestAnimationFrame(poll); return; }
+      cancel();
+      assign(button, 'gamepad', fresh);
+    };
+    cancel = () => { removeEventListener('keydown', key, true); cancelAnimationFrame(frame); cancel = null; };
+    addEventListener('keydown', key, true);
+    frame = requestAnimationFrame(poll);
+  }
+  document.querySelector('#restore-defaults').onclick = () => {
+    cancel?.();
+    // Fields of other options stay; controls and stick_dpad return to docs/port/controls.md.
+    portSettings = {...portSettings, ...defaultSettings()};
+    document.querySelector('#stick-dpad').checked = portSettings.stick_dpad;
+    status.textContent = 'Valores por defecto restaurados.';
+    render();
+    return saveSettings();
+  };
+  document.querySelector('#stick-dpad').onchange = e => { portSettings.stick_dpad = e.target.checked; saveSettings(); };
+  render();
+}
 // The main thread samples; the game thread latches the last sample at each VBlank (port/host/web/input.c).
 function inputControls() {
   // Indices of the enum in port/host/web/input.c.
@@ -159,14 +310,19 @@ function inputControls() {
   const stick = document.querySelector('#stick-dpad');
   const held = new Set();
   let seq = 0;
+  // The mapping loaded from PortSettings; Options are only editable before the game starts.
+  const keys = {}, pads = {};
+  for (const [button, bit] of Object.entries(BUTTONS)) {
+    for (const code of portSettings.controls.keyboard[button]) keys[code] = (keys[code] || 0) | 1 << bit;
+    for (const index of portSettings.controls.gamepad[button]) pads[index] = (pads[index] || 0) | 1 << bit;
+  }
   function gamepads() {
     let mask = 0;
     for (const pad of navigator.getGamepads?.() || []) {
       // Only the W3C standard layout has known indices (native also needs an SDL gamepad mapping).
       if (!pad?.connected || pad.mapping !== 'standard') continue;
-      pad.buttons.forEach((button, i) => { if (button.pressed && i in PAD_BUTTONS) mask |= 1 << PAD_BUTTONS[i]; });
-      if ((pad.buttons[6]?.value ?? 0) > 0.5) mask |= 1 << 8;
-      if ((pad.buttons[7]?.value ?? 0) > 0.5) mask |= 1 << 9;
+      // Past half travel, so triggers on any index follow the 4.5 rule (digital buttons report 1).
+      pad.buttons.forEach((button, i) => { if (button.value > 0.5 && i in pads) mask |= pads[i]; });
       if (stick.checked) {
         const [x = 0, y = 0] = pad.axes;
         if (y < -0.5) mask |= 1 << 4;
@@ -179,7 +335,7 @@ function inputControls() {
   }
   function publish() {
     let mask = gamepads();
-    for (const code of held) mask |= 1 << KEYS[code];
+    for (const code of held) mask |= keys[code];
     Atomics.store(words, 0, mask);
     Atomics.store(words, 1, ++seq);
     return seq;
@@ -187,7 +343,7 @@ function inputControls() {
   Module.input = () => ({mask: Atomics.load(words, 0), seq: Atomics.load(words, 1),
     latchedSeq: Atomics.load(words, 2), latchedVblank: Atomics.load(words, 3) >>> 0, padValue: Atomics.load(words, 4) >>> 0});
   // Browser shortcuts, focused Shell controls (Enter on Pausa) and a finished run keep their keys.
-  const ignored = e => !(e.code in KEYS) || e.ctrlKey || e.altKey || e.metaKey ||
+  const ignored = e => !(e.code in keys) || e.ctrlKey || e.altKey || e.metaKey ||
     e.target?.closest?.('button,summary,input,select,textarea,a') || Module.finished !== undefined;
   addEventListener('keydown', e => {
     if (ignored(e)) return;
@@ -196,7 +352,7 @@ function inputControls() {
   });
   addEventListener('keyup', e => {
     // A release always counts, so a key held before a shortcut or focus change does not stick.
-    if (!(e.code in KEYS) || !held.has(e.code)) return;
+    if (!held.has(e.code)) return;
     e.preventDefault();
     held.delete(e.code); publish();
   });
@@ -206,6 +362,7 @@ function inputControls() {
 }
 async function launch() {
   document.querySelector('#launcher').hidden = false;
+  controlsEditor();
   const state = document.querySelector('#pack-status');
   const load = document.querySelector('#load-pack');
   const play = document.querySelector('#play');
