@@ -1,42 +1,110 @@
 <!doctype html>
+<html lang="es">
 <meta charset="utf-8">
-<title>DW1 development host</title>
-<canvas id="canvas" width="320" height="240"></canvas>
+<title>Digimon World (port web)</title>
+<ul id="capabilities" hidden></ul>
+<p id="instance" hidden>Digimon World ya está abierto en otra pestaña. Esta pestaña continúa cuando la otra se cierre.</p>
+<div id="game" hidden>
+  <canvas id="canvas" width="320" height="240" hidden></canvas>
+  <canvas id="screen" width="320" height="240"></canvas>
+  <button id="pause" hidden>Pausa</button>
+</div>
 <pre id="status"></pre>
 <section id="launcher" hidden>
+  <section id="welcome">
+    <h1>Digimon World (USA)</h1>
+    <p>Este port necesita tu propia copia del disco de Digimon World para PlayStation, versión
+      USA (SLUS-01032), como imagen <code>.bin</code> (con o sin <code>.cue</code>).</p>
+    <p id="legal">No se distribuye ningún dato del juego. El disco se valida y se convierte en este
+      navegador; el Pack y las partidas quedan solo en este dispositivo.</p>
+  </section>
   <p>Commit: <span id="version">dev</span></p>
   <p id="pack-status">Pack ausente</p>
   <label id="drop-zone">Seleccionar o arrastrar el disco
     <input id="disc" type="file" disabled multiple accept=".bin,.cue">
   </label>
-  <button id="clear" disabled>Borrar datos</button>
+  <progress id="progress" hidden></progress>
   <p id="storage-warning"></p>
   <button id="load-pack" hidden disabled>Cargar Pack</button>
   <button id="play" disabled>Jugar</button>
-  <progress id="progress" hidden></progress>
+  <details id="options">
+    <summary>Opciones</summary>
+    <p>Video, audio y controles llegan en próximas versiones.</p>
+  </details>
+  <details id="cards">
+    <summary>Memory cards</summary>
+    <p>La gestión de Memory cards llega en una próxima versión.</p>
+  </details>
+  <button id="clear" disabled>Borrar datos</button>
 </section>
 <script>
 const status = document.querySelector('#status');
-if (!crossOriginIsolated) {
-  status.textContent = 'cross-origin isolation required';
-} else if (!location.search) {
-  launch();
-} else {
-  const query = new URLSearchParams(location.search);
-  var Module = {
+const query = new URLSearchParams(location.search);
+const forever = new Promise(() => {});
+capabilities().then(missing => {
+  if (!missing.length) { start().catch(e => { status.textContent = e.message; }); return; }
+  const list = document.querySelector('#capabilities');
+  for (const [name, text] of missing) {
+    const item = document.createElement('li');
+    item.dataset.capability = name;
+    item.textContent = text;
+    list.append(item);
+  }
+  list.hidden = false;
+  status.textContent = 'El juego no puede arrancar en este navegador.';
+});
+// Each missing capability gets its own message; nothing is loaded without all of them.
+async function capabilities() {
+  const result = [];
+  // OPFS can exist and still be refused (e.g. Firefox private windows).
+  const opfs = typeof navigator.storage?.getDirectory === 'function' &&
+    await navigator.storage.getDirectory().then(() => true, () => false);
+  if (!window.crossOriginIsolated) result.push(['isolation', 'La página no está aislada (crossOriginIsolated): ' +
+    'el servidor debe enviar Cross-Origin-Opener-Policy y Cross-Origin-Embedder-Policy.']);
+  if (typeof SharedArrayBuffer !== 'function') result.push(['shared-memory',
+    'El navegador no ofrece memoria compartida (SharedArrayBuffer), necesaria para el hilo del juego.']);
+  if (!opfs) result.push(['storage',
+    'El navegador no ofrece almacenamiento privado de archivos (OPFS), necesario para guardar el Pack.']);
+  if (typeof navigator.locks?.request !== 'function') result.push(['locks',
+    'El navegador no ofrece Web Locks, necesarios para impedir dos instancias del juego.']);
+  return result;
+}
+// The dw1-game lock is held for the page's lifetime; it also serializes Pack builds and deletion.
+async function start() {
+  const held = await new Promise((resolve, reject) => navigator.locks.request('dw1-game', {ifAvailable: true},
+    lock => { resolve(!!lock); return lock ? forever : undefined; }).catch(reject));
+  if (!held) {
+    const instance = document.querySelector('#instance');
+    instance.hidden = false;
+    await new Promise((resolve, reject) =>
+      navigator.locks.request('dw1-game', () => { resolve(); return forever; }).catch(reject));
+    instance.hidden = true;
+  }
+  if (!location.search) { launch(); return; }
+  const args = ['--frames', query.get('frames') || '1', ...(query.get('pattern') === '1' ? ['--pattern'] : []),
+    ...(query.get('validate') === '1' ? ['--validate'] : [])];
+  if (query.has('pack')) args.push('--pack', 'dw1/us.pack');
+  if (query.has('io-test')) args.push(query.get('io-test') === 'guard' ? '--io-guard-test' : '--io-test');
+  if (query.has('capture-mark')) args.push('--capture-mark', query.get('capture-mark'),
+      '--capture-vblank', query.get('capture-vblank'));
+  boot(args);
+}
+function boot(args, audioContext) {
+  document.querySelector('#launcher').hidden = true;
+  document.querySelector('#game').hidden = false;
+  window.Module = {
     noInitialRun: true,
     canvas: document.querySelector('#canvas'),
-    arguments: ['--frames', query.get('frames') || '1', ...(query.get('pattern') === '1' ? ['--pattern'] : []), ...(query.get('validate') === '1' ? ['--validate'] : [])],
+    arguments: args,
+    audioContext,
     print: text => { console.log(text); status.textContent += text + '\n'; },
     printErr: text => { console.error(text); status.textContent += text + '\n'; }
   };
-  if (query.has('pack')) Module.arguments.push('--pack', 'dw1/us.pack');
-  if (query.has('io-test')) Module.arguments.push(query.get('io-test') === 'guard' ? '--io-guard-test' : '--io-test');
-  if (query.has('capture-mark')) Module.arguments.push('--capture-mark', query.get('capture-mark'),
-      '--capture-vblank', query.get('capture-vblank'));
   Module.onRuntimeInitialized = async () => {
     try {
-      if (query.has('pack') || query.has('io-test')) {
+      pauseControls();
+      showFrames();
+      if (args.includes('--pack') || query.has('io-test')) {
         Module.ioWorker = new Worker('/io_worker.js');
         await new Promise((resolve, reject) => {
           Module.ioWorker.onmessage = ({data}) => data.ready ? resolve() : reject(Error(data.error));
@@ -49,12 +117,51 @@ if (!crossOriginIsolated) {
     } catch (error) { Module.printErr(error.message); Module.finished = 1; }
   };
   if (query.get('validate') === '1') Module.presentations = [];
+  // The I/O worker's OPFS handle would outlive this page (bfcache) and block the next page's
+  // "Borrar datos" or Pack build; a restored page reloads instead of resuming a dead game.
+  addEventListener('pagehide', () => Module.ioWorker?.terminate());
+  addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
   const script = document.createElement('script');
   script.src = '/dw1.js' + (query.has('poison') ? '?poison=1' : '');
+  script.onerror = () => { status.textContent = 'No se pudo descargar el juego. Recargá la página para reintentar.'; };
   document.head.append(script);
 }
+// The game thread posts each frame as an ImageBitmap (port/host/web/present_gl.c).
+function showFrames() {
+  const screen = document.querySelector('#screen');
+  const context = screen.getContext('bitmaprenderer');
+  const show = ({data}) => {
+    if (!data.frame) return;
+    if (screen.width !== data.frame.width) screen.width = data.frame.width;
+    if (screen.height !== data.frame.height) screen.height = data.frame.height;
+    context.transferFromImageBitmap(data.frame);
+  };
+  for (const worker of Module.PThread.unusedWorkers) worker.addEventListener('message', show);
+}
+// The game thread holds inside VSync while the pause word is 1 (port/host/web/pace.c).
+function pauseControls() {
+  // Indices of the enum in port/host/web/pace.c.
+  const words = new Int32Array(HEAPU8.buffer, Module._web_control_address(), 6);
+  const button = document.querySelector('#pause');
+  let manual = false;
+  Module.control = () => ({pause: Atomics.load(words, 0), held: Atomics.load(words, 1),
+    vblanks: Atomics.load(words, 2) >>> 0, resynchronizations: Atomics.load(words, 3), pauses: Atomics.load(words, 4)});
+  Module.stall = ms => { Atomics.store(words, 5, ms); Atomics.notify(words, 5); };
+  // Scene captures run without wall time, so there is nothing to pause.
+  if (Module.arguments.includes('--capture-mark')) return;
+  function apply() {
+    if (Module.finished !== undefined) { button.hidden = true; return; }
+    Atomics.store(words, 0, manual || document.visibilityState === 'hidden' ? 1 : 0);
+    Atomics.notify(words, 0);
+    button.textContent = manual ? 'Reanudar' : 'Pausa';
+  }
+  Module.onFinished = apply;
+  button.onclick = () => { manual = !manual; apply(); };
+  document.addEventListener('visibilitychange', apply);
+  button.hidden = false;
+  apply();
+}
 async function launch() {
-  document.querySelector('#canvas').hidden = true;
   document.querySelector('#launcher').hidden = false;
   const state = document.querySelector('#pack-status');
   const load = document.querySelector('#load-pack');
@@ -63,6 +170,7 @@ async function launch() {
   const disc = document.querySelector('#disc');
   const clear = document.querySelector('#clear');
   const warning = document.querySelector('#storage-warning');
+  const welcome = document.querySelector('#welcome');
   let expected, available = false;
   function request(data, onProgress) {
     return new Promise((resolve, reject) => {
@@ -81,6 +189,8 @@ async function launch() {
     load.disabled = value || !expected;
     play.disabled = value || !available;
     progress.hidden = !value;
+    // With a Pack the Shell offers "Jugar" directly.
+    welcome.hidden = available;
     if (value) { progress.removeAttribute('value'); status.textContent = ''; }
   }
   async function select(files) {
@@ -116,7 +226,6 @@ async function launch() {
     const stored = await request({type:'status'});
     available = !!stored.sha256;
     state.textContent = available ? 'Listo para jugar' : 'Pack ausente';
-    play.disabled = !available;
     try {
       const version = await fetch('/version.txt');
       if (version.ok) document.querySelector('#version').textContent = (await version.text()).trim();
@@ -124,26 +233,31 @@ async function launch() {
       if (response.ok) {
         expected = (await response.text()).trim();
         if (!/^[a-f0-9]{64}$/.test(expected)) throw Error('invalid Pack SHA-256');
-        load.hidden = false; load.disabled = false;
+        load.hidden = false;
         if (available) {
           state.textContent = stored.sha256 === expected ? 'Pack disponible' : 'Pack desactualizado';
           available = stored.sha256 === expected;
-          play.disabled = !available;
         }
       }
     } catch (_) { /* The fixture is optional on the user's host. */ }
   } catch (e) { status.textContent = e.message; }
   busy(false);
-  // ponytail: a finite run, because the game thread's OffscreenCanvas only shows a frame once the
-  // thread returns to its event loop; an endless run stays blank. Continuous presentation is deferred.
-  play.onclick = () => { location.href = '/?pack=1&frames=300'; };
+  // "Jugar" is the only gesture: the AudioContext is created inside it and the game starts on this
+  // page, which keeps the user activation.
+  play.onclick = () => {
+    const audio = new AudioContext();
+    audio.resume().catch(() => {});
+    boot(['--frames', '0', '--pack', 'dw1/us.pack'], audio);
+  };
   load.onclick = () => {
     busy(true);
     const worker = new Worker('/seed_worker.js');
     const finish = error => {
-      worker.terminate(); busy(false);
-      if (error) { available = false; play.disabled = true; status.textContent = error; state.textContent = 'Pack ausente'; }
-      else { available = true; status.textContent = ''; state.textContent = 'Pack disponible'; play.disabled = false; }
+      worker.terminate();
+      available = !error;
+      busy(false);
+      if (error) { status.textContent = error; state.textContent = 'Pack ausente'; }
+      else { status.textContent = ''; state.textContent = 'Pack disponible'; }
     };
     worker.onmessage = ({data}) => {
       if (data.step) { status.textContent = data.step; return; }

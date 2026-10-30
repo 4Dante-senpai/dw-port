@@ -1,4 +1,6 @@
-/* Software display -> RGBA texture, at 1x, on the game thread's OffscreenCanvas. */
+/* Software display -> RGBA texture, at 1x, on the game thread's OffscreenCanvas. The game thread
+ * never returns to its event loop, so the browser would not compose that canvas: each frame goes
+ * to the main thread as an ImageBitmap (showFrames in port/web/dev/index.html). */
 #include <GLES3/gl3.h>
 #include <emscripten.h>
 #include <emscripten/html5.h>
@@ -6,6 +8,7 @@
 #include "../plat.h"
 #include "../../backend/gpu.h"
 #include "../../psyq/port.h"
+#include "pace.h"
 extern int plat_pattern, plat_validation;
 static EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context;
 static uint32_t display[640 * 480];
@@ -40,6 +43,13 @@ static void init(void)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glDisable(GL_DITHER);
 }
+static void show(void)
+{
+    EM_ASM({
+        const frame = GLctx.canvas.transferToImageBitmap();
+        postMessage({frame}, [frame]);
+    });
+}
 void plat_present(long frame)
 {
     double start = emscripten_get_now();
@@ -64,7 +74,7 @@ void plat_present(long frame)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     double elapsed = emscripten_get_now() - start;
-    if (!plat_validation) return;
+    if (!plat_validation) { show(); web_pace(); return; }
     glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, actual);
     PORT_ASSERT(glGetError() == GL_NO_ERROR);
     int different = 0, first = -1;
@@ -79,4 +89,6 @@ void plat_present(long frame)
     MAIN_THREAD_EM_ASM({
         Module.presentations.push({frame:$0, width:$1, height:$2, different:$3, first:$4, ms:$5, pixels:Array.from(HEAPU8.subarray($6, $6 + $1 * $2 * 4))});
     }, (int)frame, w, h, different, first, elapsed, actual);
+    show();
+    web_pace();
 }

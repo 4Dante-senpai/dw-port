@@ -1,0 +1,8 @@
+{
+  "probe_without_gesture": {
+    "state": "suspended",
+    "activated": false
+  },
+  "audio_context": "running",
+  "navigations": 0
+}

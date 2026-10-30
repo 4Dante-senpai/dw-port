@@ -1,0 +1,11 @@
+{
+  "rate_after_stall": 59.82098570028882,
+  "end": {
+    "t": 4821.465000000084,
+    "pause": 0,
+    "held": 0,
+    "vblanks": 231,
+    "resynchronizations": 1,
+    "pauses": 0
+  }
+}

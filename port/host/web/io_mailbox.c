@@ -30,6 +30,6 @@ int io_read(uint64_t offset, void *out, uint32_t length)
 }
 void web_finish(int code)
 {
-    MAIN_THREAD_EM_ASM({ Module.finished = $0; }, code);
+    MAIN_THREAD_EM_ASM({ Module.finished = $0; Module.onFinished?.(); }, code);
     pthread_exit(NULL);
 }

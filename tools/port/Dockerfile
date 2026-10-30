@@ -170,6 +170,12 @@ RUN dpkg --add-architecture i386 && apt-get update && \
     rm -rf /tmp/sdl3-native32 /tmp/sdl3-src
 ENV SDL3_NATIVE32_PREFIX=/opt/sdl3/native32
 
+# Firefox keeps every AudioContext suspended without an audio server; port/web/tests/run.py starts
+# a null sink (story 4.4). Last, so the emulator layers above keep their cache.
+RUN apt-get update && apt-get install -y --no-install-recommends pulseaudio && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    python3 -c 'import struct; assert struct.calcsize("P") == 8, "python3 must stay amd64"'
+
 # Writable by any uid so tools/port/docker_run.sh can run as the host user
 RUN chmod -R a+rwX /opt/emsdk/upstream/emscripten/cache /dw/.venv
 

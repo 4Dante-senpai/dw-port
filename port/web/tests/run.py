@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import threading
 import functools
 import importlib.util
@@ -17,7 +18,7 @@ suite = sys.argv[2] if len(sys.argv) > 2 else 'boot'
 if suite in ('title', 'disc_real') and not (os.environ.get('DW1_DISC_DIR') or (suite == 'title' and os.environ.get('DW1_WEB_URL'))):
     print(f'web_{"scene_title" if suite == "title" else suite}: DW1_DISC_DIR not set; skipped')
     sys.exit(77)
-if suite in ('io', 'launcher'):
+if suite in ('io', 'launcher', 'shell'):
     # Same sector/byte formula as pack/tests/test_pack.c; no disc bytes.
     data = bytes(((22 + i // 2048) * 31 + (24 + i % 2048) * 7) & 255 for i in range(5000))
     header = struct.pack('<8sII32sII8x', b'DW1PACK\0', 1, 1, bytes(32), 64, 2048)
@@ -52,7 +53,12 @@ cli = Path('/opt/node_modules/@playwright/test/cli.js')
 version = json.loads(cli.with_name('package.json').read_text())['version']
 if version != '1.64.0':
     sys.exit(f'Playwright 1.64.0 required, found {version}')
+pulse = tempfile.TemporaryDirectory(prefix='dw1-pulse-')
+env['XDG_RUNTIME_DIR'] = pulse.name
 try:
+    # Firefox keeps every AudioContext suspended without an audio server.
+    subprocess.run(['pulseaudio', '-n', '--daemonize=yes', '--exit-idle-time=-1',
+        '--load=module-null-sink sink_name=dw1', '--load=module-native-protocol-unix'], env=env, check=True)
     result = subprocess.run(['xvfb-run', '-a', 'node', str(cli), 'test', '--config',
         str(Path(__file__).with_name('playwright.config.cjs')), *sys.argv[3:]], env=env, cwd=build)
     if result.returncode == 0 and suite == 'boot':
@@ -61,6 +67,8 @@ try:
         (build / 'present-timing.json').write_text(json.dumps(timings, indent=2) + '\n')
     sys.exit(result.returncode)
 finally:
+    subprocess.run(['pulseaudio', '--kill'], env=env)
+    pulse.cleanup()
     if server:
         server.shutdown()
         server.server_close()

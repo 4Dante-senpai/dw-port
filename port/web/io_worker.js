@@ -7,6 +7,7 @@ onmessage = async ({data}) => {
       else {
         const root = await navigator.storage.getDirectory();
         if (data.type === 'clear') {
+          await released(root);
           try { await root.removeEntry('dw1', {recursive: true}); }
           catch (e) { if (e.name !== 'NotFoundError') throw e; }
           postMessage({ready: true});
@@ -122,6 +123,7 @@ async function build(data) {
     }
     FS.writeFile('/manifest/us.tsv', data.manifest);
     const root = await navigator.storage.getDirectory();
+    await released(root);
     dir = await root.getDirectoryHandle('dw1', {create: true});
     const tmp = await dir.getFileHandle('us.pack.tmp', {create: true});
     output = await tmp.createSyncAccessHandle();
@@ -196,4 +198,19 @@ async function commitPack(dir, tmp, sha256) {
     catch (e) { if (e.name !== 'NotFoundError') throw e; }
   }
   if (moved) await dir.removeEntry('us.pack.previous');
+}
+
+// A page that ran the game may still be tearing down its reader worker, whose sync handle locks
+// us.pack for a moment after navigation. Wait (bounded) until the Pack can be opened.
+async function released(root) {
+  let file;
+  try { file = await (await root.getDirectoryHandle('dw1')).getFileHandle('us.pack'); }
+  catch (e) { if (e.name === 'NotFoundError') return; throw e; }
+  for (let i = 0; ; i++) {
+    try { (await file.createSyncAccessHandle()).close(); return; }
+    catch (e) {
+      if (e.name !== 'NoModificationAllowedError' || i === 50) throw e;
+      await new Promise(r => setTimeout(r, 100));
+    }
+  }
 }
