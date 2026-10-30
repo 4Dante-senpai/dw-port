@@ -201,7 +201,8 @@ test('Jugar is the only gesture: game on this page with a running AudioContext',
   await expect(page.locator('#game')).toBeVisible();
   await expect.poll(() => page.evaluate(() => Module.audioContext?.state)).toBe('running');
   expect(page.url()).toBe(url);
-  expect(await page.evaluate(() => Module.arguments)).toEqual(['--frames', '300', '--pack', 'dw1/us.pack']);
+  // callMain prepends the program name to Module.arguments when main starts.
+  expect((await page.evaluate(() => Module.arguments)).slice(-4)).toEqual(['--frames', '300', '--pack', 'dw1/us.pack']);
   // The synthetic Pack reaches the game's C (via the I/O worker), which rejects its Manifest;
   // reaching the title is the class B Escena (title.spec.cjs).
   await expect.poll(() => page.evaluate(() => Module.finished)).toBe(1);

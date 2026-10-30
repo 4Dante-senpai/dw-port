@@ -1,0 +1,38 @@
+{
+  "chromium": {
+    "before": {
+      "seconds": 100.0,
+      "vblanks": 5999,
+      "rate": 60.0076,
+      "largest_step": 187,
+      "resynchronizations": 0,
+      "pauses": 0
+    },
+    "after": {
+      "seconds": 99.9,
+      "vblanks": 5997,
+      "rate": 60.009,
+      "largest_step": 187,
+      "resynchronizations": 0,
+      "pauses": 1
+    }
+  },
+  "firefox": {
+    "before": {
+      "seconds": 99.9,
+      "vblanks": 5998,
+      "rate": 60.0144,
+      "largest_step": 187,
+      "resynchronizations": 0,
+      "pauses": 0
+    },
+    "after": {
+      "seconds": 99.9,
+      "vblanks": 5998,
+      "rate": 60.011,
+      "largest_step": 187,
+      "resynchronizations": 0,
+      "pauses": 1
+    }
+  }
+}

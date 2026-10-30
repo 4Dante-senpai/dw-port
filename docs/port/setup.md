@@ -474,6 +474,7 @@ y «Jugar» como único gesto. Como `page.evaluate` de Playwright concede activa
 usuario, ese caso no evalúa nada en la Shell antes del clic: un init script registra
 la activación al construir cada `AudioContext` y un contexto de control creado al
 cargar debe quedar `suspended`. Firefox corre con `media.autoplay.*` bloqueando Web
-Audio sin gesto. Deja `shell-{pause,visibility,play}-<navegador>.json` en
+Audio sin gesto. Sin servidor de audio, Firefox deja todo `AudioContext` en `suspended`,
+así que `run.py` levanta un PulseAudio con sink nulo para cada suite. Deja `shell-{pause,visibility,play}-<navegador>.json` en
 `build/port/web/`. La clase B (`web_scene_title`) agrega un clic en «Jugar» con el Pack
 real que debe llegar a `runLandingScreen` con el `AudioContext` en `running`.

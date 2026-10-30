@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import threading
 import functools
 import importlib.util
@@ -52,7 +53,12 @@ cli = Path('/opt/node_modules/@playwright/test/cli.js')
 version = json.loads(cli.with_name('package.json').read_text())['version']
 if version != '1.64.0':
     sys.exit(f'Playwright 1.64.0 required, found {version}')
+pulse = tempfile.TemporaryDirectory(prefix='dw1-pulse-')
+env['XDG_RUNTIME_DIR'] = pulse.name
 try:
+    # Firefox keeps every AudioContext suspended without an audio server.
+    subprocess.run(['pulseaudio', '-n', '--daemonize=yes', '--exit-idle-time=-1',
+        '--load=module-null-sink sink_name=dw1', '--load=module-native-protocol-unix'], env=env, check=True)
     result = subprocess.run(['xvfb-run', '-a', 'node', str(cli), 'test', '--config',
         str(Path(__file__).with_name('playwright.config.cjs')), *sys.argv[3:]], env=env, cwd=build)
     if result.returncode == 0 and suite == 'boot':
@@ -61,6 +67,8 @@ try:
         (build / 'present-timing.json').write_text(json.dumps(timings, indent=2) + '\n')
     sys.exit(result.returncode)
 finally:
+    subprocess.run(['pulseaudio', '--kill'], env=env)
+    pulse.cleanup()
     if server:
         server.shutdown()
         server.server_close()
