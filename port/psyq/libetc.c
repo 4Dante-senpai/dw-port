@@ -61,6 +61,12 @@ void port_pad_latch(uint16_t wire_buttons)
 	pad_poll_missed = 0;
 }
 
+/* Whether port_pad_latch would publish now (PsyQ ACKs a VBlank without polling when missed). */
+int port_pad_latch_applies(void)
+{
+	return !pad_started || !pad_poll_missed;
+}
+
 /* What PadRead would return, without its cost: lets the host observe the latched pad. */
 uint32_t port_pad_value(void)
 {

@@ -10,6 +10,7 @@
 
 extern void port_pad_latch(uint16_t wire);
 extern uint32_t port_pad_value(void);
+extern int port_pad_latch_applies(void);
 
 /* u32 words shared with the Shell (inputControls in port/web/dev/index.html uses these indices):
  * mask and sample number (main thread: mask first, then the number), then the number, VBlank and
@@ -22,7 +23,10 @@ void plat_input_vblank(void)
     /* Scene captures replay no live input, as in native-headless. */
     if (port_capture_active()) return;
     uint32_t seq = atomic_load(&block[SEQ]);
+    /* A VBlank whose poll PsyQ skipped keeps the previous packet: that sample was not consumed. */
+    int applies = port_pad_latch_applies();
     port_pad_latch((uint16_t)atomic_load(&block[MASK]));
+    if (!applies) return;
     atomic_store(&block[PAD_VALUE], port_pad_value());
     atomic_store(&block[LATCHED_VBLANK], clock_vblanks());
     atomic_store(&block[LATCHED_SEQ], seq);

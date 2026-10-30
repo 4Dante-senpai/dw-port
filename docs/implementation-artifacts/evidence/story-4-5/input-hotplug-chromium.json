@@ -1,18 +1,18 @@
 {
-  "rate": 59.896031217451764,
+  "rate": 59.93392650054059,
   "start": {
-    "t": 3310.0449999999255,
+    "t": 3316.6400000001304,
     "pause": 0,
     "held": 0,
-    "vblanks": 165,
+    "vblanks": 167,
     "resynchronizations": 0,
     "pauses": 0
   },
   "end": {
-    "t": 5547.255000000005,
+    "t": 5368.90000000014,
     "pause": 0,
     "held": 0,
-    "vblanks": 299,
+    "vblanks": 290,
     "resynchronizations": 0,
     "pauses": 0
   }

@@ -14,7 +14,7 @@
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
 - M3 Paridad nativa: **completo** (Épica 3 cerrada: retrospectiva `accepted-with-open-items`, 2026-10-27).
-- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades y pausa, en revisión).
+- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades y pausa, en revisión; 4.5 teclado y gamepad, en revisión).
 
 ## Hecho
 
@@ -226,6 +226,12 @@
   oculta: VBlanks quietos y 0 resincronizaciones al reanudar (59,8 VBlank/s medidos). Clase A
   `web_shell` verde en Chromium; Firefox y la clase B quedan sin verificar en esta sesión (sin
   Docker ni disco). Evidencia: `docs/implementation-artifacts/evidence/story-4-4/`.
+- Historia 4.5 (teclado y gamepad, en revisión): el hilo principal muestrea teclado
+  (`KeyboardEvent.code`) y gamepads estándar W3C y publica la máscara de los 14 botones; el hilo
+  del juego la aplica con `port_pad_latch` en cada VBlank (`port/host/web/input.c`), salvo en
+  capturas. Mapeo por defecto igual al nativo (`docs/port/controls.md`) y opción de stick como
+  cruceta (sin persistencia). Clase A `web_input` 8/8 en Chromium. Pendiente: Firefox, reacción del
+  juego real (clase B) y mando físico. Evidencia: `docs/implementation-artifacts/evidence/story-4-5/`.
 
 - Historia 8.5 (entorno de testing en el homelab): job `testing` de clase B en `main` compila nativo y
   web, arma el Pack, valida el título y despliega en el host de deploy (`HUB_DOCKER_HOST`) una imagen
@@ -440,7 +446,7 @@
 
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2 y 4.3 ya están cerradas, y también la 8.5. La 4.4 está en revisión: falta correr Firefox y la clase B en el contenedor del proyecto.
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2 y 4.3 ya están cerradas, y también la 8.5. La 4.4 y la 4.5 están en revisión: falta correr Firefox y la clase B en el contenedor del proyecto (Docker Hub respondió 429 y el proxy bloquea las descargas de Firefox en la sesión en la nube).
 
 ## Bloqueos
 
