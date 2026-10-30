@@ -453,12 +453,15 @@ muestra `#instance`, no arranca nada (tampoco construye ni borra el Pack) y cont
 sola cuando la primera se cierra. «Jugar» crea el `AudioContext` dentro del clic y
 arranca el juego en la misma página (sin navegar), con la corrida finita de 300 frames.
 
-El hilo del juego tiene ritmo de pared en cada `VSync` bloqueante
-(`port/host/web/pace.c`, mismo modelo que `port/host/sdl/video.c`), salvo en corridas
-de captura de Escena. «Pausa» o la pestaña oculta escriben la palabra de pausa
+El hilo del juego tiene ritmo de pared en cada `VSync` que presenta un frame
+(`port/host/web/pace.c`, mismo cálculo que `port/host/sdl/video.c`; el ancla es la
+primera presentación), salvo en corridas de captura de Escena, que no muestran «Pausa».
+La pausa actúa en el siguiente frame presentado: una carga larga sin presentar no se
+retiene hasta terminar. «Pausa» o la pestaña oculta escriben la palabra de pausa
 compartida; el hilo queda retenido dentro de `VSync`, sin despachar VBlanks, y al
 reanudar rebasa el deadline sin contar resincronización. `Module.control()` expone
-`pause`, `held`, `vblanks`, `resynchronizations` y `pauses` para los tests.
+`pause`, `held`, `vblanks`, `resynchronizations` y `pauses` para los tests, y
+`Module.stall(ms)` atrasa el siguiente frame para probar la resincronización.
 
 ```sh
 ctest --preset web -R web_shell --output-on-failure

@@ -130,3 +130,7 @@
 - source_spec: `docs/implementation-artifacts/spec-4-3-seleccion-del-disco-validacion-y-pack-en-el-navegador.md`
   summary: El Web Lock de instancia única (historia 4.4) también debe serializar la construcción y el borrado del Pack en OPFS entre pestañas.
   evidence: `port/web/io_worker.js` usa nombres fijos (`us.pack.tmp`, `us.pack.previous`, `us.pack.sha256.tmp`); dos pestañas que construyen o borran a la vez pueden eliminar o reemplazar archivos de la otra.
+
+- source_spec: `docs/implementation-artifacts/spec-4-4-pantallas-de-la-shell-web-y-capacidades.md`
+  summary: Con audio web (historia 4.7), la pausa manual y la pestaña oculta también deben suspender y reanudar el `AudioContext` y el anillo del AudioWorklet, sin contar underruns durante la pausa.
+  evidence: La 4.4 crea `Module.audioContext` en el clic de «Jugar», pero la pausa solo retiene el hilo del juego en `VSync` (`port/host/web/pace.c`); hoy ningún código consume ese contexto.

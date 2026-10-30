@@ -1,19 +1,19 @@
 {
   "hidden": {
-    "vblanks": 84,
-    "ms": 2008.4850000001024
+    "vblanks": 89,
+    "ms": 2005.6949999998324
   },
-  "rate_after_visible": 60.30250928209972,
+  "rate_after_visible": 59.8350049737809,
   "manual_after_visible": {
-    "vblanks": 207,
-    "ms": 2007.3099999999395
+    "vblanks": 212,
+    "ms": 2005.2349999998696
   },
-  "rate_after_manual": 60.3194939144614,
+  "rate_after_manual": 59.7828388379243,
   "end": {
-    "t": 10069.544999999925,
+    "t": 10083.11499999999,
     "pause": 0,
     "held": 0,
-    "vblanks": 328,
+    "vblanks": 333,
     "resynchronizations": 0,
     "pauses": 2
   }
