@@ -82,3 +82,22 @@ Bloque de input (u32): `mask`, `seq` (escribe el hilo principal; primero `mask`,
 - `cmake --build --preset web && python3 port/web/tests/run.py build/port/web input` -- expected: todos los casos pasan.
 - `ctest --preset web` -- expected: verde; clase B saltada.
 - `ctest --preset native-headless` -- expected: verde (cambios web-only salvo `port_pad_value`).
+
+## Review Triage Log
+
+Revisión Codex (`codex-merged`) del diff completo contra `main` tras integrar la rama cloud.
+
+| Hallazgo | Veredicto | Ruta | Evidencia |
+|---|---|---|---|
+| `input.c`: máscara y número se leen por separado | false | rechazado | Se lee `seq` antes que `mask` y el hilo principal escribe en orden inverso: la máscara aplicada nunca es más vieja que el número publicado, que es la garantía que usan los tests. |
+| Pulsación y soltado entre dos VBlanks se pierden | low | rechazado | Mismo modelo que `native` (`sdl/input.c`): el spec congela una máscara por latch; una pulsación menor a 16,7 ms es rara y conservarla agrega estado. |
+| El checkbox del stick retiene el foco | false | rechazado | La opción vive en `#launcher`, que queda oculto al arrancar: el foco vuelve a `body`. |
+| Enter sobre Pausa se repite como Start después del `blur` | medium | patch | Reproducible al reanudar con Enter sostenido. `keydown` con `repeat` ya no publica; cubierto en `input.spec.cjs`. |
+| `getGamepads` que lanza detiene el muestreo | low | rechazado | Exige una `Permissions-Policy` que el port no envía; no hay camino demostrado. |
+| Las pruebas no verifican el primer VBlank elegible | medium | patch | Test nuevo que mide en la página la distancia entre el último latch y el que consume la muestra. |
+| `port_pad_latch_applies` sin prueba propia | low | patch | `pad_irq_publication` en `test_clock.c` ahora comprueba `port_pad_latch_applies` y `port_pad_value` en el sondeo omitido. |
+| La suite `long` no corre en CI | false | rechazado | AD-14 define L4 como disparo manual antes de cerrar M4 y M5. |
+| La memoria suma procesos de otros navegadores | false | rechazado | En el contenedor corre un solo navegador por proyecto (`workers: 1`). |
+| Lectura no atómica de `Module.input` | low | rechazado | Solo la usan los tests, sobre un botón estable; no afecta al juego. |
+| `DW1_WEB_LONG_MINUTES` inválido | low | rechazado | Herramienta manual que falla ruidosamente. |
+| Umbral 67 ms frente a cuatro frames | low | patch | `4000 / RATE`, sin ramas nuevas. |
