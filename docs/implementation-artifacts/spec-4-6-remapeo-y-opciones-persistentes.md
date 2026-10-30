@@ -51,10 +51,10 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `port/web/dev/index.html` -- carga/guardado/migración de `PortSettings` (base `dw1`, almacén `settings`, clave `port_settings`); mapeo de input derivado de los ajustes; editor en Opciones (una fila por botón PS1 con teclas y botones actuales, "Reasignar", captura de la próxima tecla o botón de gamepad, `Escape` cancela), "Restaurar valores por defecto", `stick_dpad` persistente, avisos.
-- [ ] `port/web/tests/settings.spec.cjs`, `CMakeLists.txt` -- suite `settings` clase A con toda la matriz; CTest `web_settings`.
-- [ ] `port/web/tests/input.spec.cjs` -- seguir verde con el mapeo por defecto cargado de los ajustes.
-- [ ] `docs/port/controls.md`, `docs/port/setup.md`, `docs/implementation-artifacts/evidence/story-4-6/` -- esquema `PortSettings` v1/v2, remapeo, cómo correr, evidencia y pendientes.
+- [x] `port/web/dev/index.html` -- carga/guardado/migración de `PortSettings` (base `dw1`, almacén `settings`, clave `port_settings`); mapeo de input derivado de los ajustes; editor en Opciones (una fila por botón PS1 con teclas y botones actuales, "Reasignar", captura de la próxima tecla o botón de gamepad, `Escape` cancela), "Restaurar valores por defecto", `stick_dpad` persistente, avisos.
+- [x] `port/web/tests/settings.spec.cjs`, `CMakeLists.txt` -- suite `settings` clase A con toda la matriz; CTest `web_settings`.
+- [x] `port/web/tests/input.spec.cjs` -- seguir verde con el mapeo por defecto cargado de los ajustes.
+- [x] `docs/port/controls.md`, `docs/port/setup.md`, `docs/implementation-artifacts/evidence/story-4-6/` -- esquema `PortSettings` v1/v2, remapeo, cómo correr, evidencia y pendientes.
 
 **Acceptance Criteria:**
 - Given `ctest --preset web` sin disco, when corren las suites, then `web_settings` y `web_input` pasan en Chromium y Firefox.
