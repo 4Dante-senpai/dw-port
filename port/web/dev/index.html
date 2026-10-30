@@ -215,6 +215,8 @@ function inputControls() {
   addEventListener('keydown', e => {
     if (ignored(e)) return;
     e.preventDefault();
+    // A repeat is no new press: the Enter that activated Pausa keeps repeating after the blur.
+    if (e.repeat) return;
     held.add(e.code); publish();
   });
   addEventListener('keyup', e => {

@@ -51,8 +51,8 @@ test('a long run keeps the frame queue empty', async ({page}, info) => {
   expect(Math.abs(result.vblanks - result.expected_vblanks) / result.expected_vblanks).toBeLessThan(0.001);
   expect(result.resynchronizations).toBe(0);
   // Under four frames of delay, at most one queued behind the one being shown.
-  expect(result.max_latency_ms).toBeLessThan(67);
+  expect(result.max_latency_ms).toBeLessThan(4000 / RATE);
   expect(result.rss_last_minute_mib / result.rss_second_minute_mib).toBeLessThan(1.1);
   expect(result.blocked_latency_ms).toBeGreaterThan(1000);
-  expect(result.drained_latency_ms).toBeLessThan(67);
+  expect(result.drained_latency_ms).toBeLessThan(4000 / RATE);
 });

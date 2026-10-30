@@ -102,6 +102,29 @@ test('each of the 14 buttons reaches PadRead from a standard gamepad', async ({p
   expect(failures).toEqual([]);
   evidence(info, 'gamepad', result);
 });
+test('a sample reaches PadRead at the first VBlank after it was written', async ({page}, info) => {
+  const failures = errors(page);
+  await running(page);
+  // In the page, so nothing but the game thread runs between the write and the latch.
+  const latches = await page.evaluate(() => {
+    const result = [];
+    for (let i = 0; i < 60; i++) for (const type of ['keydown', 'keyup']) {
+      const before = Module.input().latchedVblank;
+      dispatchEvent(new KeyboardEvent(type, {code: 'KeyK'}));
+      const {seq} = Module.input();
+      let latch;
+      do latch = Module.input(); while (latch.latchedSeq < seq);
+      result.push({vblanks: latch.latchedVblank - before, padValue: latch.padValue});
+    }
+    return result;
+  });
+  latches.forEach((latch, i) => expect(latch.padValue).toBe(i % 2 ? 0 : padRead(1 << 14)));
+  // One VBlank, or two if the write raced the latch; a poll PsyQ skipped delays one more.
+  const late = latches.filter(latch => latch.vblanks > 2);
+  expect(late.length, JSON.stringify(late)).toBeLessThanOrEqual(1);
+  expect(failures).toEqual([]);
+  evidence(info, 'latency', latches.map(latch => latch.vblanks));
+});
 test('all standard gamepads combine; other layouts are ignored', async ({page}) => {
   const failures = errors(page);
   await running(page);
@@ -124,6 +147,7 @@ test('modified keys and focused Shell controls do not press buttons', async ({pa
   await page.keyboard.down('Enter');
   // Enter activated Pausa (so no VBlank latches now) and was not published as Start.
   await page.waitForTimeout(100);
+  await page.evaluate(() => dispatchEvent(new KeyboardEvent('keydown', {code: 'Enter', repeat: true})));
   expect((await input(page)).mask).toBe(0);
   await page.keyboard.up('Enter');
   await expect(page.locator('#pause')).toHaveText('Reanudar');

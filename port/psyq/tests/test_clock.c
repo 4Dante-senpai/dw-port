@@ -11,6 +11,8 @@
 #include "../clock.h"
 #include "../psyq.h"
 extern void port_pad_latch(uint16_t buttons);
+extern int port_pad_latch_applies(void);
+extern uint32_t port_pad_value(void);
 
 static int failures;
 static unsigned vsync_returns;
@@ -455,7 +457,12 @@ static void first_vsync_origin(void)
 	CHECK(vsync_returns == 3);
 }
 
-static void pad_observer(void) { port_pad_latch(0x4000); }
+static int pad_applied;
+static void pad_observer(void)
+{
+	pad_applied = port_pad_latch_applies();
+	port_pad_latch(0x4000);
+}
 static void sound_callback(void) { clock_advance_cost(6403, CLOCK_COST_CPU); }
 static void sound_irq(void *arg) { (void)arg; psyq_raise_irq(6); }
 static void pad_irq_publication(void)
@@ -475,6 +482,8 @@ static void pad_irq_publication(void)
 		uint64_t vb = clock_vblank_cycle(clock_vblanks() + 1);
 		clock_schedule(vb - clock_now() - offsets[i], sound_irq, NULL);
 		clock_advance(vb - clock_now() + 20000);
+		CHECK(pad_applied == (i != 1));
+		CHECK(port_pad_value() == (i == 1 ? 0u : 0x40u));
 		CHECK(PadRead(0) == (i == 1 ? 0u : 0x40u));
 		clock_advance(clock_vblank_cycle(clock_vblanks() + 1) - clock_now());
 		CHECK(PadRead(0) == 0x40u);
