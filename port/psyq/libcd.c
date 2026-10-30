@@ -472,10 +472,11 @@ static int read_finished(void *arg)
 	return rd.aborted || rd.done >= rd.count;
 }
 
+extern void psyq_vsync_query_cost(void);
+
 /* asm: CdReadSync -- sectors still to read (0 = done); mode 0 waits for the end. result (the
  * last status, from CdReady) is left untouched: the game always passes NULL.
  * An aborted read returns -1, including in blocking mode. */
-extern void psyq_vsync_query_cost(void);
 
 int CdReadSync(int mode, unsigned char *result)
 {
@@ -592,6 +593,7 @@ CdlFILE *CdSearchFile(CdlFILE *fp, char *name)
 	return fp;
 }
 
+/* asm: CdIntToPos -- sector number to BCD minute/second/sector. */
 CdlLOC *CdIntToPos(int i, CdlLOC *p)
 {
 	clock_advance_cost(CLOCK_CD_INT_TO_POS_CPU_CYCLES, CLOCK_COST_CPU);
@@ -599,6 +601,7 @@ CdlLOC *CdIntToPos(int i, CdlLOC *p)
 	return p;
 }
 
+/* asm: CdPosToInt -- BCD minute/second/sector to sector number. */
 int CdPosToInt(CdlLOC *p)
 {
 	clock_psyq_entry();
