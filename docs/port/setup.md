@@ -477,3 +477,16 @@ cargar debe quedar `suspended`. Firefox corre con `media.autoplay.*` bloqueando 
 Audio sin gesto. Deja `shell-{pause,visibility,play}-<navegador>.json` en
 `build/port/web/`. La clase B (`web_scene_title`) agrega un clic en «Jugar» con el Pack
 real que debe llegar a `runLandingScreen` con el `AudioContext` en `running`.
+
+### Input web (historia 4.5)
+
+```sh
+ctest --preset web -R web_input --output-on-failure
+python3 port/web/tests/run.py build/port/web input --project chromium   # un navegador
+```
+
+La suite `input` (clase A, sin Pack) pulsa los 14 botones por teclado y por un gamepad
+simulado (reemplaza `navigator.getGamepads`) y compara `Module.input().padValue` (lo que
+devolvería `PadRead`, vía `port_pad_value`) con el mapeo de `docs/port/controls.md`.
+Cubre combinación, gatillos, stick como cruceta, conexión en caliente con ritmo y sin
+resincronizaciones, foco perdido y capturas sin input. Deja `input-*-<navegador>.json`.

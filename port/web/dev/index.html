@@ -27,7 +27,9 @@
   <button id="play" disabled>Jugar</button>
   <details id="options">
     <summary>Opciones</summary>
-    <p>Video, audio y controles llegan en próximas versiones.</p>
+    <label><input id="stick-dpad" type="checkbox"> Stick izquierdo como cruceta</label>
+    <p>Mapeo por defecto en <code>docs/port/controls.md</code>. Video, audio y remapeo llegan en
+      próximas versiones.</p>
   </details>
   <details id="cards">
     <summary>Memory cards</summary>
@@ -100,6 +102,7 @@ function boot(args, audioContext) {
   Module.onRuntimeInitialized = async () => {
     try {
       pauseControls();
+      inputControls();
       if (args.includes('--pack') || query.has('io-test')) {
         Module.ioWorker = new Worker('/io_worker.js');
         await new Promise((resolve, reject) => {
@@ -142,6 +145,59 @@ function pauseControls() {
   document.addEventListener('visibilitychange', apply);
   button.hidden = false;
   apply();
+}
+// Default mapping (docs/port/controls.md) to the wire bits of port_pad_latch: select 0, start 3,
+// up 4, right 5, down 6, left 7, L2 8, R2 9, L1 10, R1 11, triangle 12, circle 13, cross 14, square 15.
+const KEYS = {Backspace: 0, Enter: 3, ArrowUp: 4, KeyW: 4, ArrowRight: 5, KeyD: 5, ArrowDown: 6, KeyS: 6,
+  ArrowLeft: 7, KeyA: 7, Digit1: 8, Digit3: 9, KeyQ: 10, KeyE: 11, KeyI: 12, KeyL: 13, KeyK: 14, KeyJ: 15};
+// W3C standard gamepad buttons; the triggers (6, 7) count past half travel.
+const PAD_BUTTONS = {8: 0, 9: 3, 12: 4, 15: 5, 13: 6, 14: 7, 4: 10, 5: 11, 3: 12, 1: 13, 0: 14, 2: 15};
+// The main thread samples; the game thread latches the last sample at each VBlank (port/host/web/input.c).
+function inputControls() {
+  // Indices of the enum in port/host/web/input.c.
+  const words = new Int32Array(HEAPU8.buffer, Module._web_input_address(), 5);
+  const stick = document.querySelector('#stick-dpad');
+  const held = new Set();
+  let seq = 0;
+  function gamepads() {
+    let mask = 0;
+    for (const pad of navigator.getGamepads?.() || []) {
+      if (!pad?.connected) continue;
+      pad.buttons.forEach((button, i) => { if (button.pressed && i in PAD_BUTTONS) mask |= 1 << PAD_BUTTONS[i]; });
+      if ((pad.buttons[6]?.value ?? 0) > 0.5) mask |= 1 << 8;
+      if ((pad.buttons[7]?.value ?? 0) > 0.5) mask |= 1 << 9;
+      if (stick.checked) {
+        const [x = 0, y = 0] = pad.axes;
+        if (y < -0.5) mask |= 1 << 4;
+        if (x > 0.5) mask |= 1 << 5;
+        if (y > 0.5) mask |= 1 << 6;
+        if (x < -0.5) mask |= 1 << 7;
+      }
+    }
+    return mask;
+  }
+  function publish() {
+    let mask = gamepads();
+    for (const code of held) mask |= 1 << KEYS[code];
+    Atomics.store(words, 0, mask);
+    Atomics.store(words, 1, ++seq);
+    return seq;
+  }
+  Module.input = () => ({mask: Atomics.load(words, 0), seq: Atomics.load(words, 1),
+    latchedSeq: Atomics.load(words, 2), latchedVblank: Atomics.load(words, 3) >>> 0, padValue: Atomics.load(words, 4) >>> 0});
+  addEventListener('keydown', e => {
+    if (!(e.code in KEYS)) return;
+    e.preventDefault();
+    held.add(e.code); publish();
+  });
+  addEventListener('keyup', e => {
+    if (!(e.code in KEYS)) return;
+    e.preventDefault();
+    held.delete(e.code); publish();
+  });
+  // Keys released while unfocused never send keyup.
+  addEventListener('blur', () => { held.clear(); publish(); });
+  (function frame() { publish(); requestAnimationFrame(frame); })();
 }
 async function launch() {
   document.querySelector('#launcher').hidden = false;

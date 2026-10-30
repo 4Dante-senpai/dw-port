@@ -1,0 +1,58 @@
+[
+  {
+    "button": "Select",
+    "standard": 8
+  },
+  {
+    "button": "Start",
+    "standard": 9
+  },
+  {
+    "button": "Up",
+    "standard": 12
+  },
+  {
+    "button": "Right",
+    "standard": 15
+  },
+  {
+    "button": "Down",
+    "standard": 13
+  },
+  {
+    "button": "Left",
+    "standard": 14
+  },
+  {
+    "button": "L2",
+    "standard": 6
+  },
+  {
+    "button": "R2",
+    "standard": 7
+  },
+  {
+    "button": "L1",
+    "standard": 4
+  },
+  {
+    "button": "R1",
+    "standard": 5
+  },
+  {
+    "button": "Triangle",
+    "standard": 3
+  },
+  {
+    "button": "Circle",
+    "standard": 1
+  },
+  {
+    "button": "Cross",
+    "standard": 0
+  },
+  {
+    "button": "Square",
+    "standard": 2
+  }
+]
