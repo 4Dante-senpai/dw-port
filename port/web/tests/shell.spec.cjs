@@ -72,7 +72,7 @@ test('a second tab waits for the dw1-game lock without starting anything', async
 const sample = page => page.evaluate(() => ({t: performance.now(), ...Module.control()}));
 async function running(page) {
   await page.goto('/?frames=1000000');
-  await expect.poll(() => page.evaluate(() => Module.control?.().vblanks ?? 0), {timeout:30000}).toBeGreaterThan(60);
+  await expect.poll(() => page.evaluate(() => window.Module?.control?.().vblanks ?? 0), {timeout:30000}).toBeGreaterThan(60);
   await expect(page.locator('#pause')).toHaveText('Pausa');
 }
 // VBlanks per second of wall time between two samples; frames end on whole VBlanks.

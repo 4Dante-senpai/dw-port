@@ -688,7 +688,7 @@ if(EMSCRIPTEN)
   configure_file(port/web/tests/seed_worker.js ${CMAKE_BINARY_DIR}/seed_worker.js COPYONLY)
   configure_file(port/web/io_worker.js ${CMAKE_BINARY_DIR}/io_worker.js COPYONLY)
   configure_file(port/web/dev/index.html ${CMAKE_BINARY_DIR}/dw1.html COPYONLY)
-  add_executable(dw1 port/host/web/main.c port/host/web/present_gl.c port/host/web/pace.c
+  add_executable(dw1 port/host/web/main.c port/host/web/present_gl.c port/host/web/pace.c port/host/web/input.c
     ${DW1_PSYQ_STUBS} $<TARGET_OBJECTS:dw1_game_objs>)
   target_link_libraries(dw1 dw1_runtime)
   set_property(TARGET dw1 APPEND PROPERTY LINK_DEPENDS
@@ -697,7 +697,7 @@ if(EMSCRIPTEN)
   target_link_options(dw1 PRIVATE -Wl,--fatal-warnings -sINITIAL_MEMORY=67108864 -sALLOW_MEMORY_GROWTH=0
     -sEMULATE_FUNCTION_POINTER_CASTS=1 -sOFFSCREENCANVAS_SUPPORT=1 -sPTHREAD_POOL_SIZE=5 -sEXIT_RUNTIME=0
     --pre-js ${CMAKE_SOURCE_DIR}/port/web/thread_storage_guard.js
-    -sEXPORTED_FUNCTIONS=_main,_io_mailbox_address,_web_control_address -sEXPORTED_RUNTIME_METHODS=callMain
+    -sEXPORTED_FUNCTIONS=_main,_io_mailbox_address,_web_control_address,_web_input_address -sEXPORTED_RUNTIME_METHODS=callMain
     -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sGL_ASSERTIONS=1)
   add_test(NAME web_boot COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR})
@@ -708,6 +708,9 @@ if(EMSCRIPTEN)
   add_test(NAME web_shell COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} shell)
   set_tests_properties(web_shell PROPERTIES TIMEOUT 300)
+  add_test(NAME web_input COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} input)
+  set_tests_properties(web_input PROPERTIES TIMEOUT 300)
   add_test(NAME testing_deploy COMMAND python3 -B
     ${CMAKE_SOURCE_DIR}/tools/port/testing/test_deploy.py)
   add_test(NAME testing_context COMMAND python3 -B

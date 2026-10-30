@@ -61,6 +61,12 @@ void port_pad_latch(uint16_t wire_buttons)
 	pad_poll_missed = 0;
 }
 
+/* What PadRead would return, without its cost: lets the host observe the latched pad. */
+uint32_t port_pad_value(void)
+{
+	return ~pad_buf;
+}
+
 /* asm:asm/us/main/psyq/libetc.s:PadRead -- first controller, active-high PsyQ byte order. */
 unsigned long PadRead(int id)
 {
