@@ -1,7 +1,7 @@
 const {test, expect} = require('/opt/node_modules/@playwright/test');
 const fs = require('fs');
 const path = require('path');
-const {errors} = require('./storage.cjs');
+const {errors, store} = require('./storage.cjs');
 const {padRead, input, running, expectLatched, fakePad, setPad} = require('./input_helpers.cjs');
 const CROSS = 1 << 14, CIRCLE = 1 << 13, SQUARE = 1 << 15;
 // docs/port/controls.md, as PortSettings v2.
@@ -11,21 +11,6 @@ const DEFAULTS = {schema_version: 2, stick_dpad: false, controls: {
     r1: ['KeyE'], triangle: ['KeyI'], circle: ['KeyL'], cross: ['KeyK'], square: ['KeyJ']},
   gamepad: {select: [8], start: [9], up: [12], right: [15], down: [13], left: [14], l2: [6], r2: [7], l1: [4],
     r1: [5], triangle: [3], circle: [1], cross: [0], square: [2]}}};
-// IndexedDB "dw1" / "settings" / "port_settings", read and written from a page without the Shell.
-function store(page, value) {
-  return page.evaluate(value => new Promise((resolve, reject) => {
-    const open = indexedDB.open('dw1', 1);
-    open.onupgradeneeded = () => open.result.createObjectStore('settings');
-    open.onerror = () => reject(open.error);
-    open.onsuccess = () => {
-      const db = open.result, tx = db.transaction('settings', value === undefined ? 'readonly' : 'readwrite');
-      const request = value === undefined ? tx.objectStore('settings').get('port_settings')
-        : tx.objectStore('settings').put(value, 'port_settings');
-      tx.oncomplete = () => { db.close(); resolve(value === undefined ? request.result : undefined); };
-      tx.onerror = tx.onabort = () => reject(tx.error || Error('aborted'));
-    };
-  }), value);
-}
 async function seed(page, value) { await page.goto('/seed.html'); await store(page, value); }
 async function record(page) { await page.goto('/seed.html'); return store(page); }
 async function options(page) {
@@ -213,6 +198,8 @@ test('a key taken by another button leaves its old button; Escape cancels', asyn
   await page.keyboard.press('k');
   await expect(cell(page, 'square', 'keys')).toHaveText('KeyK');
   await expect(cell(page, 'cross', 'keys')).toHaveText('—');
+  // The write is asynchronous; a navigation right after it would abort it.
+  await expect.poll(async () => (await store(page))?.controls.keyboard.square).toEqual(['KeyK']);
   await running(page);
   await expectKey(page, 'k', SQUARE);
   await expectKey(page, 'j', 0);

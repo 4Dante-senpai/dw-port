@@ -30,6 +30,21 @@ function browserMemory() {
   family.delete(process.pid);
   return rows.reduce((sum, [pid, , rss]) => sum + (family.has(pid) ? rss : 0), 0) / 1024;
 }
+// IndexedDB "dw1" / "settings" / "port_settings", read and written from a page without the Shell.
+function store(page, value) {
+  return page.evaluate(value => new Promise((resolve, reject) => {
+    const open = indexedDB.open('dw1', 1);
+    open.onupgradeneeded = () => open.result.createObjectStore('settings');
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const db = open.result, tx = db.transaction('settings', value === undefined ? 'readonly' : 'readwrite');
+      const request = value === undefined ? tx.objectStore('settings').get('port_settings')
+        : tx.objectStore('settings').put(value, 'port_settings');
+      tx.oncomplete = () => { db.close(); resolve(value === undefined ? request.result : undefined); };
+      tx.onerror = tx.onabort = () => reject(tx.error || Error('aborted'));
+    };
+  }), value);
+}
 function errors(page) {
   const result = [];
   page.on('pageerror', e => result.push(String(e)));
@@ -37,4 +52,4 @@ function errors(page) {
   page.on('dialog', async d => {result.push(d.message()); await d.dismiss();});
   return result;
 }
-module.exports = {seed, errors, browserMemory};
+module.exports = {seed, errors, browserMemory, store};

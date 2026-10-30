@@ -1,5 +1,5 @@
 const {test, expect} = require('/opt/node_modules/@playwright/test');
-const {seed, errors} = require('./storage.cjs');
+const {seed, errors, store} = require('./storage.cjs');
 const crypto = require('crypto');
 const fs = require('fs');
 for (const poison of [false, true]) {
@@ -59,7 +59,7 @@ test('a reassigned Start leaves the title after a reload', async ({page}) => {
   await page.locator('#options summary').click();
   await page.locator('#controls tr[data-button=start] .remap').click();
   await page.keyboard.press('z');
-  await expect(page.locator('#controls tr[data-button=start] .keys')).toHaveText('KeyZ');
+  await expect.poll(async () => (await store(page))?.controls.keyboard.start).toEqual(['KeyZ']);
   await page.reload();
   await expect(page.locator('#play')).toBeEnabled();
   await page.locator('#play').click();
