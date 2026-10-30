@@ -46,13 +46,39 @@ for (const poison of [false, true]) {
       JSON.stringify({sha256:hash, native_sha256:process.env.DW1_NATIVE_TITLE_SHA, poison, storageAccesses}));
   });
 }
-test('one click on Jugar reaches the title and Start leaves it', async ({page}, info) => {
-  test.setTimeout(420000);
-  const failures = errors(page);
+const seedPack = async page => {
   await page.goto('/');
   await expect(page.locator('#load-pack')).toBeEnabled();
   await page.locator('#load-pack').click();
   await expect(page.locator('#pack-status')).toHaveText('Pack disponible', {timeout:120000});
+};
+test('a reassigned Start leaves the title after a reload', async ({page}) => {
+  test.setTimeout(420000);
+  const failures = errors(page);
+  await seedPack(page);
+  await page.locator('#options summary').click();
+  await page.locator('#controls tr[data-button=start] .remap').click();
+  await page.keyboard.press('z');
+  await expect(page.locator('#controls tr[data-button=start] .keys')).toHaveText('KeyZ');
+  await page.reload();
+  await expect(page.locator('#play')).toBeEnabled();
+  await page.locator('#play').click();
+  const marks = () => page.evaluate(() => Module.marks || []);
+  await expect.poll(marks, {timeout:360000}).toContain('runLandingScreen');
+  await page.waitForTimeout(1000);
+  // Enter no longer means Start.
+  await page.keyboard.press('Enter', {delay:200});
+  await page.waitForTimeout(1000);
+  expect(await marks()).not.toContain('runMainMenu');
+  await page.keyboard.down('z');
+  await expect.poll(marks, {timeout:10000}).toContain('runMainMenu');
+  await page.keyboard.up('z');
+  expect(failures).toEqual([]);
+});
+test('one click on Jugar reaches the title and Start leaves it', async ({page}, info) => {
+  test.setTimeout(420000);
+  const failures = errors(page);
+  await seedPack(page);
   // A fresh document: the fixture click above must not count as the gesture.
   await page.addInitScript(() => {
     const Native = AudioContext;

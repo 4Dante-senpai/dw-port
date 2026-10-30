@@ -149,3 +149,7 @@
 - source_spec: `docs/implementation-artifacts/spec-4-5-teclado-y-gamepad.md`
   summary: El Renderer WebGL2 de la Épica 5 debe contar con `glReadPixels` por frame: `ImageBitmap` hacia otro hilo pierde memoria en Chromium y `glReadPixels` retiene el hilo del juego en Firefox si el hilo principal se bloquea.
   evidence: Sondas y L4 de la 4.5. A 1× no afecta el ritmo; a escala 4× la lectura mueve 16 veces más datos. Las Design Notes de 4.4 que proponen el camino `ImageBitmap` para la Épica 5 ya no valen; la decisión se toma en la 5.1.
+
+- source_spec: `docs/implementation-artifacts/spec-4-6-remapeo-y-opciones-persistentes.md`
+  summary: La base IndexedDB `dw1` se abre con versión fija 1 y solo crea el almacén `settings`; las Memory cards (4.8) deben centralizar la versión y las actualizaciones de `dw1` (o usar otra base) para no romper `PortSettings`.
+  evidence: `settingsStore()` en `port/web/dev/index.html` hace `indexedDB.open('dw1', 1)`; con la base en una versión mayor fallaría con `VersionError` y la Shell usaría valores por defecto sin guardar.
