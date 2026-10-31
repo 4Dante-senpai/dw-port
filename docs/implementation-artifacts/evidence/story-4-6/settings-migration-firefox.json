@@ -1,0 +1,97 @@
+{
+  "seeded": {
+    "schema_version": 1,
+    "stick_dpad": true,
+    "keyboard": {
+      "KeyZ": "cross",
+      "KeyX": "circle",
+      "Enter": "start"
+    },
+    "unknown_future_field": {
+      "kept": [
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "migrated": {
+    "schema_version": 2,
+    "stick_dpad": true,
+    "unknown_future_field": {
+      "kept": [
+        1,
+        2,
+        3
+      ]
+    },
+    "controls": {
+      "keyboard": {
+        "select": [],
+        "start": [
+          "Enter"
+        ],
+        "up": [],
+        "right": [],
+        "down": [],
+        "left": [],
+        "l2": [],
+        "r2": [],
+        "l1": [],
+        "r1": [],
+        "triangle": [],
+        "circle": [
+          "KeyX"
+        ],
+        "cross": [
+          "KeyZ"
+        ],
+        "square": []
+      },
+      "gamepad": {
+        "select": [
+          8
+        ],
+        "start": [
+          9
+        ],
+        "up": [
+          12
+        ],
+        "right": [
+          15
+        ],
+        "down": [
+          13
+        ],
+        "left": [
+          14
+        ],
+        "l2": [
+          6
+        ],
+        "r2": [
+          7
+        ],
+        "l1": [
+          4
+        ],
+        "r1": [
+          5
+        ],
+        "triangle": [
+          3
+        ],
+        "circle": [
+          1
+        ],
+        "cross": [
+          0
+        ],
+        "square": [
+          2
+        ]
+      }
+    }
+  }
+}

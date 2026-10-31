@@ -14,7 +14,7 @@
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
 - M3 Paridad nativa: **completo** (Épica 3 cerrada: retrospectiva `accepted-with-open-items`, 2026-10-27).
-- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo; 4.5 teclado y gamepad).
+- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo; 4.5 teclado y gamepad; 4.6 remapeo y opciones persistentes).
 
 ## Hecho
 
@@ -236,6 +236,11 @@
   `requestAnimationFrame`. Ritmo dentro de 0,1 %, 0 resincronizaciones, 878 a 936 MiB en Chromium.
   `make compare` idéntico, nativa 85/85, ASan 83/83, web con disco en verde.
   Evidencia: `docs/implementation-artifacts/evidence/story-4-5/`.
+- Historia 4.6 (remapeo y opciones persistentes): `PortSettings` v2 en IndexedDB con migración
+  desde v1, editor en Opciones, «Restaurar valores por defecto» y `stick_dpad` persistente. Un
+  registro más nuevo o ilegible no se sobrescribe. Start reasignado abre el menú con el Pack real,
+  en Chromium y Firefox. `make compare` idéntico, nativa 85/85, ASan 83/83, web 47/47 con disco.
+  Evidencia: `docs/implementation-artifacts/evidence/story-4-6/`.
 
 - Historia 8.5 (entorno de testing en el homelab): job `testing` de clase B en `main` compila nativo y
   web, arma el Pack, valida el título y despliega en el host de deploy (`HUB_DOCKER_HOST`) una imagen
@@ -464,7 +469,7 @@
 
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1, 4.2, 4.3, 4.4 y 4.5 ya están cerradas, y también la 8.1 y la 8.5.
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 a 4.6 ya están cerradas, y también la 8.1 y la 8.5. Sigue la 4.7.
 
 ## Bloqueos
 
