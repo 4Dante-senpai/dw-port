@@ -22,21 +22,26 @@ test('ramp is ordered, live gain halves output, mute keeps consuming, pause and 
   await running(page);
   stages.push({stage: "started", ...await stats(page)});
   await page.evaluate(() => {
-    Module.beforeGain = Module.audioContext.createAnalyser();
-    Module.afterGain = Module.audioContext.createAnalyser();
-    Module.beforeGain.fftSize = Module.afterGain.fftSize = 2048;
-    Module.audioNode.connect(Module.beforeGain); Module.audioGain.connect(Module.afterGain);
+    const context = Module.audioContext, merger = context.createChannelMerger(2), silent = context.createGain();
+    Module.afterGain = context.createAnalyser();
+    Module.afterGain.fftSize = 2048;
+    Module.audioGain.connect(Module.afterGain);
+    // Both signals must come from one render window: the ramp's RMS moves up to 2.6x between
+    // windows, so two analyser reads a few quanta apart do not measure the gain.
+    Module.gainProbe = context.createScriptProcessor(2048, 2, 1);
+    const rms = samples => Math.sqrt(samples.reduce((sum, x) => sum + x*x, 0) / samples.length);
+    Module.gainProbe.onaudioprocess = e => {
+      Module.gainRatio = rms(e.inputBuffer.getChannelData(1)) / rms(e.inputBuffer.getChannelData(0));
+    };
+    silent.gain.value = 0;
+    Module.audioNode.connect(merger, 0, 0); Module.audioGain.connect(merger, 0, 1);
+    merger.connect(Module.gainProbe); Module.gainProbe.connect(silent); silent.connect(context.destination);
   });
   await volume(page, '50', false);
   expect(await page.evaluate(() => Module.audioGain.gain.value)).toBe(0.5);
   expect(await store(page)).toBeUndefined();
-  await page.waitForTimeout(250);
-  const ratio = await page.evaluate(() => {
-    const rms = node => { const samples = new Float32Array(node.fftSize); node.getFloatTimeDomainData(samples);
-      return Math.sqrt(samples.reduce((sum, x) => sum + x*x, 0) / samples.length); };
-    return rms(Module.afterGain) / rms(Module.beforeGain);
-  });
-  expect(ratio).toBeGreaterThan(0.45); expect(ratio).toBeLessThan(0.55);
+  await expect.poll(() => page.evaluate(() => Module.gainRatio), {timeout:10000}).toBeCloseTo(0.5, 3);
+  const ratio = await page.evaluate(() => { Module.gainProbe.disconnect(); return Module.gainRatio; });
   expect(await page.locator('#volume').evaluate(e => e === document.activeElement)).toBe(true);
   await volume(page, '0');
   await page.waitForTimeout(250);
