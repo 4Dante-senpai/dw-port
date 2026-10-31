@@ -11,7 +11,7 @@ variables:
   GIT_SUBMODULE_PATHS: external/psyq_headers
 
 default:
-  image: $CI_REGISTRY_IMAGE/dw-port@sha256:423f2c139431f42cd80eaebb724d7acbecf0f07cf93c39ffcead1603d6d41725
+  image: $CI_REGISTRY_IMAGE/dw-port@sha256:66f358c69d3a376a1cc167a5a5e72d3e9feb6712dc5201ef1be1208bea147181
   before_script:
     - git config --global --add safe.directory "$CI_PROJECT_DIR"
     - git fetch --quiet https://github.com/jype0/dw_decomp.git main:refs/remotes/upstream/main
@@ -103,7 +103,7 @@ native-asan-disc:
 matching:
   extends: .class_b
   # dw-port lacks gcc-mipsel-linux-gnu (docs/port/setup.md)
-  image: $CI_REGISTRY_IMAGE/dw-build@sha256:6ad8c939a6aec8e0bac71d61a93755788df4cfcde831fc6375bb0feba5e7cd09
+  image: $CI_REGISTRY_IMAGE/dw-build@sha256:a23607cda8f33500b22ec9bab00deefba4efecbfcf40f120d21d556702a9cd16
   script:
     - tools/dl_deps.sh > /dev/null
     - mkdir -p bin/cc_mips && cp /private/mwcc/cc_mips_40.dll bin/cc_mips/
