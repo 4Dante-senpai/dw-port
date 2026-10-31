@@ -174,6 +174,11 @@ add_library(dw1_backend STATIC port/backend/cdrom.c port/backend/gte.c port/back
   port/backend/gpu_soft/gpu_soft.c)
 target_link_libraries(dw1_backend PUBLIC dw1_pack_lib)
 target_compile_options(dw1_backend PRIVATE -Wall -Wextra -Werror)
+if(EMSCRIPTEN)
+  # Mixing and decoding share the game's real-time budget. Keep debug asserts,
+  # but avoid the unoptimized backend's cumulative lateness in Firefox.
+  target_compile_options(dw1_backend PRIVATE -O2)
+endif()
 
 add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c port/psyq/clock.c
   port/psyq/game_clock.c port/psyq/libetc.c port/psyq/libapi.c port/psyq/libc.c port/psyq/libgs.c port/psyq/libcd.c
@@ -202,6 +207,18 @@ else()
   add_test(NAME audio_rate COMMAND test_audio_rate)
 endif()
 set_tests_properties(audio_rate PROPERTIES TIMEOUT 120)
+add_executable(audio_rate_vectors port/host/tests/audio_rate_vectors.c)
+if(EMSCRIPTEN)
+  add_library(dw1_web_audio_rate STATIC port/host/audio_rate.c)
+  target_compile_options(dw1_web_audio_rate PRIVATE -Wall -Wextra -Werror)
+  # Match audio_worklet.js; web_audio_rate_parity checks the configured C variant.
+  target_compile_definitions(dw1_web_audio_rate PUBLIC AUDIO_RATE_TARGET=6144u AUDIO_RATE_DEADBAND=1536u)
+  target_link_libraries(audio_rate_vectors dw1_web_audio_rate)
+  add_test(NAME web_audio_rate_parity COMMAND ${DW1_NODE_EXECUTABLE}
+    ${CMAKE_SOURCE_DIR}/port/web/tests/audio_rate_parity.cjs $<TARGET_FILE:audio_rate_vectors>)
+else()
+  target_link_libraries(audio_rate_vectors dw1_audio_rate)
+endif()
 
 add_test(NAME press_tables COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/psyq/test_press_tables.py)
 add_test(NAME mdec_vectors COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/video/mdec_vectors.py --check)
@@ -694,18 +711,19 @@ if(EMSCRIPTEN)
   configure_file(port/web/tests/disc_hash_worker.js ${CMAKE_BINARY_DIR}/disc_hash_worker.js COPYONLY)
   configure_file(port/web/tests/seed.html ${CMAKE_BINARY_DIR}/seed.html COPYONLY)
   configure_file(port/web/tests/seed_worker.js ${CMAKE_BINARY_DIR}/seed_worker.js COPYONLY)
+  configure_file(port/web/audio_worklet.js ${CMAKE_BINARY_DIR}/audio_worklet.js COPYONLY)
   configure_file(port/web/io_worker.js ${CMAKE_BINARY_DIR}/io_worker.js COPYONLY)
   configure_file(port/web/dev/index.html ${CMAKE_BINARY_DIR}/dw1.html COPYONLY)
-  add_executable(dw1 port/host/web/main.c port/host/web/present_gl.c port/host/web/pace.c port/host/web/input.c
+  add_executable(dw1 port/host/web/main.c port/host/web/present_gl.c port/host/web/pace.c port/host/web/input.c port/host/web/audio.c
     ${DW1_PSYQ_STUBS} $<TARGET_OBJECTS:dw1_game_objs>)
-  target_link_libraries(dw1 dw1_runtime)
+  target_link_libraries(dw1 dw1_runtime dw1_web_audio_rate)
   set_property(TARGET dw1 APPEND PROPERTY LINK_DEPENDS
     ${CMAKE_SOURCE_DIR}/port/web/thread_storage_guard.js)
   target_compile_options(dw1 PRIVATE -Wall -Wextra -Werror)
   target_link_options(dw1 PRIVATE -Wl,--fatal-warnings -sINITIAL_MEMORY=67108864 -sALLOW_MEMORY_GROWTH=0
     -sEMULATE_FUNCTION_POINTER_CASTS=1 -sOFFSCREENCANVAS_SUPPORT=1 -sPTHREAD_POOL_SIZE=5 -sEXIT_RUNTIME=0
     --pre-js ${CMAKE_SOURCE_DIR}/port/web/thread_storage_guard.js
-    -sEXPORTED_FUNCTIONS=_main,_io_mailbox_address,_web_control_address,_web_input_address,_web_frame_address -sEXPORTED_RUNTIME_METHODS=callMain
+    -sEXPORTED_FUNCTIONS=_main,_io_mailbox_address,_web_control_address,_web_input_address,_web_frame_address,_web_audio_address,_web_audio_delivery_address,_web_audio_enable -sEXPORTED_RUNTIME_METHODS=callMain
     -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sGL_ASSERTIONS=1)
   add_test(NAME web_boot COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR})
@@ -719,6 +737,9 @@ if(EMSCRIPTEN)
   add_test(NAME web_input COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} input)
   set_tests_properties(web_input PROPERTIES TIMEOUT 600)
+  add_test(NAME web_audio COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} audio)
+  set_tests_properties(web_audio PROPERTIES TIMEOUT 900)
   add_test(NAME web_settings COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} settings)
   set_tests_properties(web_settings PROPERTIES TIMEOUT 600)
@@ -742,6 +763,14 @@ if(EMSCRIPTEN)
     "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py title --build native-headless --pack ${CMAKE_BINARY_DIR}/us.pack")
   set_tests_properties(native_title_capture PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1200
     FIXTURES_REQUIRED disc_pack FIXTURES_SETUP native_title WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+  add_test(NAME native_title_audio COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/scenes/pcm.py --pack ${CMAKE_BINARY_DIR}/us.pack)
+  set_tests_properties(native_title_audio PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1800
+    FIXTURES_REQUIRED disc_pack FIXTURES_SETUP native_title_audio)
+  add_test(NAME web_scene_title_audio COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} title_audio)
+  set_tests_properties(web_scene_title_audio PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 2400
+    FIXTURES_REQUIRED "disc_pack;native_title_audio")
   add_test(NAME web_scene_title COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} title)
   set_tests_properties(web_scene_title PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1200

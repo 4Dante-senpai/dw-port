@@ -17,7 +17,27 @@
 
 extern void port_pad_latch(uint16_t buttons);
 static const PortCapture *config;
-static FILE *input, *trace;
+static FILE *input, *trace, *pcm_output, *resolved_output;
+static void raw_pcm(const int16_t *pcm, unsigned frames, void *arg);
+void port_scene_audio_output_init(void)
+{
+    if (pcm_output) spu_set_output(raw_pcm, NULL);
+}
+static unsigned resolved_mask;
+static void raw_pcm(const int16_t *pcm, unsigned frames, void *arg)
+{
+    (void)arg;
+    if (fwrite(pcm, 4, frames, pcm_output) != frames) { perror("scene: raw PCM"); exit(1); }
+}
+void port_scene_resolved_input(uint16_t mask)
+{
+    if (resolved_output && mask != resolved_mask) {
+        if (fprintf(resolved_output, "%u %04x\n", clock_vblanks(), mask) < 0 || fflush(resolved_output)) {
+            perror("scene: resolved inputs"); exit(1);
+        }
+        resolved_mask = mask;
+    }
+}
 static int have_origin, have_mark, pending;
 static uint32_t origin, mark, event_k, previous_k;
 static FILE *timing;
@@ -335,6 +355,14 @@ void port_scene_prepare(const PortCapture *value)
         if (!timing) fail("cannot open timing trace");
     }
     config = value;
+    if (config->audio_pcm) {
+        pcm_output = audio_open(config->audio_pcm, "wb");
+        if (!pcm_output) fail("cannot open raw PCM output");
+    }
+    if (config->resolved_inputs) {
+        resolved_output = audio_open(config->resolved_inputs, "w");
+        if (!resolved_output) fail("cannot open resolved input output");
+    }
     if (config->audio_segments) {
         FILE *file = fopen(config->audio_segments, "r");
         if (!file) fail("cannot open audio segment declarations");
@@ -568,6 +596,11 @@ void port_scene_tick(void)
 }
 void port_scene_finish(void)
 {
+    if (pcm_output && fclose(pcm_output)) fail("cannot close raw PCM");
+    pcm_output = NULL;
+    if (resolved_output && fclose(resolved_output)) fail("cannot close resolved inputs");
+    resolved_output = NULL;
+    printf("port: final absolute VBlank %u\n", clock_vblanks());
     if (timing && fclose(timing)) fail("cannot close timing trace");
     timing = NULL;
     if (trace && fclose(trace)) fail("cannot close state trace");
@@ -584,6 +617,8 @@ void __cyg_profile_func_enter(void *function, void *caller)
 }
 void __cyg_profile_func_exit(void *function, void *caller)
 { (void)caller; clock_game_function_exit(function); }
+void port_scene_audio_output_init(void) {}
+void port_scene_resolved_input(uint16_t mask) { (void)mask; }
 void port_scene_prepare(const PortCapture *config) { (void)config; }
 void port_scene_origin(void) {}
 void port_scene_start(void) {}

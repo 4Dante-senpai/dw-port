@@ -12,6 +12,8 @@ typedef struct {
 	const char *state_trace;
 	const char *checkpoints;
 	const char *audio_segments;
+	const char *audio_pcm;
+	const char *resolved_inputs;
 	unsigned long vblank_limit; /* Stop N VBlanks after frame 0; independent of capture. */
 } PortCapture;
 

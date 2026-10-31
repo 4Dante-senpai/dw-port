@@ -1,6 +1,9 @@
 #ifndef PORT_SCENE_H
 #define PORT_SCENE_H
+#include <stdint.h>
 #include "crt.h"
+void port_scene_audio_output_init(void);
+void port_scene_resolved_input(uint16_t mask);
 void port_scene_prepare(const PortCapture *config);
 void port_scene_origin(void);
 void port_scene_start(void);

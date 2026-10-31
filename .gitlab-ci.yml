@@ -138,7 +138,7 @@ testing:
     - cmake --preset web
     - cmake --build --preset web
     - ctest --preset web --output-on-failure
-    - ctest --preset web -R "pack_disc|native_title_capture|web_scene_title|web_disc_real|web_launcher|testing_deploy|testing_context"
+    - ctest --preset web -R "pack_disc|native_title_capture|native_title_audio|web_scene_title|web_scene_title_audio|web_disc_real|web_launcher|testing_deploy|testing_context"
     - tools/port/testing/install-docker.sh /tmp/dw1-docker-cli
     - export PATH="/tmp/dw1-docker-cli:$PATH"
     - |
