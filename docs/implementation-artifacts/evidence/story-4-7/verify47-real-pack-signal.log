@@ -1,0 +1,15 @@
+W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+
+Running 2 tests using 1 worker
+
+(node:40316) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/2] [chromium] › ../../../port/web/tests/title.spec.cjs:78:1 › one click on Jugar reaches the title and Start leaves it
+(node:40485) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[2/2] [firefox] › ../../../port/web/tests/title.spec.cjs:78:1 › one click on Jugar reaches the title and Start leaves it
+  2 passed (4.6m)

@@ -1,0 +1,15 @@
+Test project /dw/build/port/web
+    Start 45: pack_disc
+1/5 Test #45: pack_disc ........................   Passed   23.58 sec
+    Start 46: native_title_capture
+2/5 Test #46: native_title_capture .............   Passed   84.72 sec
+    Start 47: native_title_audio
+3/5 Test #47: native_title_audio ...............   Passed   88.62 sec
+    Start 48: web_scene_title_audio
+4/5 Test #48: web_scene_title_audio ............   Passed  599.56 sec
+    Start 49: web_scene_title
+5/5 Test #49: web_scene_title ..................   Passed  671.03 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Total Test time (real) = 1467.51 sec

@@ -9,6 +9,7 @@
   <canvas id="screen" width="320" height="240"></canvas>
   <button id="pause" hidden>Pausa</button>
 </div>
+<p id="audio-warning" role="status"></p>
 <pre id="status"></pre>
 <section id="launcher" hidden>
   <section id="welcome">
@@ -31,13 +32,14 @@
   <details id="options">
     <summary>Opciones</summary>
     <label><input id="stick-dpad" type="checkbox"> Stick izquierdo como cruceta</label>
+    <label id="volume-control">Volumen <input id="volume" type="range" min="0" max="100" value="100"><output id="volume-value">100 %</output></label>
     <table id="controls">
       <thead><tr><th>PlayStation</th><th>Teclado</th><th>Gamepad</th><th></th></tr></thead>
       <tbody></tbody>
     </table>
     <p id="remap-status"></p>
     <button id="restore-defaults">Restaurar valores por defecto</button>
-    <p>Valores por defecto en <code>docs/port/controls.md</code>. Video y audio llegan en
+    <p>Valores por defecto en <code>docs/port/controls.md</code>. Las opciones de video llegan en
       próximas versiones.</p>
   </details>
   <details id="cards">
@@ -94,6 +96,7 @@ async function start() {
   settingsWritable = loaded.writable;
   if (loaded.warning) { document.querySelector('#settings-warning').textContent = loaded.warning; console.warn(loaded.warning); }
   document.querySelector('#stick-dpad').checked = portSettings.stick_dpad;
+  volumeControls();
   if (!location.search) { launch(); return; }
   const args = ['--frames', query.get('frames') || '1', ...(query.get('pattern') === '1' ? ['--pattern'] : []),
     ...(query.get('validate') === '1' ? ['--validate'] : [])];
@@ -101,13 +104,96 @@ async function start() {
   if (query.has('io-test')) args.push(query.get('io-test') === 'guard' ? '--io-guard-test' : '--io-test');
   if (query.has('capture-mark')) args.push('--capture-mark', query.get('capture-mark'),
       '--capture-vblank', query.get('capture-vblank'));
-  boot(args);
+  if (query.has('replay')) args.push('--replay', 'replay.txt');
+  if (query.has('vblanks')) args.push('--vblanks', query.get('vblanks'));
+  if (query.has('audio-ramp')) args.push('--audio-ramp');
+  if (query.get('audio') === '1') {
+    const play = document.querySelector('#play');
+    document.querySelector('#launcher').hidden = false;
+    play.disabled = false;
+    play.onclick = () => boot(args, createAudio());
+  } else boot(args);
+}
+function audioWarning(error) {
+  document.querySelector('#audio-warning').textContent = 'Audio no disponible; el juego continúa sin audio: ' + error.message;
+}
+function audioTimeout(promise) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(Error('El dispositivo de audio no responde')), 5000);
+    Promise.resolve(promise).then(value => { clearTimeout(timer); resolve(value); },
+      error => { clearTimeout(timer); reject(error); });
+  });
+}
+function createAudio() {
+  try {
+    const context = new AudioContext();
+    audioTimeout(context.resume()).catch(audioWarning);
+    return context;
+  } catch (error) { audioWarning(error); return null; }
+}
+function volumeControls() {
+  const slider = document.querySelector('#volume'), output = document.querySelector('#volume-value');
+  slider.value = Math.round(portSettings.volume * 100);
+  output.value = slider.value + ' %';
+  slider.oninput = () => {
+    portSettings.volume = Number(slider.value) / 100;
+    output.value = slider.value + ' %';
+    if (window.Module?.audioGain) Module.audioGain.gain.value = portSettings.volume;
+  };
+  slider.onchange = () => { slider.oninput(); saveSettings(); };
+  slider.onpointerup = () => slider.blur();
+}
+async function setupAudio(context) {
+  const address = Module._web_audio_address();
+  const words = new Int32Array(HEAPU8.buffer, address + 8192 * 4, 4);
+  const delivery = new Int32Array(HEAPU8.buffer, Module._web_audio_delivery_address(), 4);
+  Module.audioStats = () => {
+    const read = Atomics.load(words, 0) >>> 0, write = Atomics.load(words, 1) >>> 0;
+    return {underruns: Atomics.load(words, 2) >>> 0, overflows: Atomics.load(words, 3) >>> 0,
+      level: (write - read) >>> 0, written: write,
+      max_delivery_gap_us: Atomics.load(delivery, 0) >>> 0, max_gap_level: Atomics.load(delivery, 1) >>> 0,
+      starvation_gap_us: Atomics.load(delivery, 2) >>> 0, starvation_gap_level: Atomics.load(delivery, 3) >>> 0};
+  };
+  Module._web_audio_enable(0);
+  if (!context) return;
+  try {
+    await audioTimeout(context.audioWorklet.addModule('/audio_worklet.js'));
+    const node = new AudioWorkletNode(context, 'dw1-audio', {numberOfInputs: 0, numberOfOutputs: 1,
+      outputChannelCount: [2], processorOptions: {memory: HEAPU8.buffer, address,
+        control: Module._web_control_address(), tap: query.has('tap')}});
+    const gain = context.createGain();
+    gain.gain.value = portSettings.volume;
+    node.connect(gain).connect(context.destination);
+    Module.audioNode = node; Module.audioGain = gain;
+    let ticket = 0;
+    const waiting = new Map();
+    Module.audioReady = () => {
+      const ready = ++ticket;
+      return audioTimeout(new Promise(resolve => {
+        waiting.set(ready, resolve);
+        node.port.postMessage({ready});
+      })).finally(() => waiting.delete(ready));
+    };
+    if (query.has('tap')) Module.audioTap = [];
+    node.port.onmessage = ({data}) => {
+      if (data.ready !== undefined) { waiting.get(data.ready)?.(); waiting.delete(data.ready); }
+      else Module.audioTap?.push(data);
+    };
+    await Module.audioReady();
+    Module._web_audio_enable(1);
+  } catch (error) {
+    Module.audioNode?.disconnect();
+    Module.audioNode = null;
+    audioWarning(error);
+    context.suspend().catch(() => {});
+  }
 }
 function boot(args, audioContext) {
   // Options are closed once the game starts: a pending «Reasignar» must not eat its first key.
   cancelRemap?.();
   document.querySelector('#launcher').hidden = true;
   document.querySelector('#game').hidden = false;
+  document.querySelector('#game').append(document.querySelector('#volume-control'));
   window.Module = {
     noInitialRun: true,
     canvas: document.querySelector('#canvas'),
@@ -118,6 +204,7 @@ function boot(args, audioContext) {
   };
   Module.onRuntimeInitialized = async () => {
     try {
+      await setupAudio(audioContext);
       pauseControls();
       showFrames();
       inputControls();
@@ -130,8 +217,13 @@ function boot(args, audioContext) {
             delay: query.has('io-test') ? 5 : 0});
         });
       }
+      if (query.has('replay')) {
+        const response = await fetch('/__fixture/replay.txt');
+        if (!response.ok) throw Error('Replay HTTP ' + response.status);
+        FS.writeFile('replay.txt', await response.text());
+      }
       Module.callMain(Module.arguments);
-    } catch (error) { Module.printErr(error.message); Module.finished = 1; }
+    } catch (error) { Module.printErr(error.message); Module.finished = 1; Module.onFinished?.(); }
   };
   if (query.get('validate') === '1') Module.presentations = [];
   // The I/O worker's OPFS handle would outlive this page (bfcache) and block the next page's
@@ -179,11 +271,26 @@ function pauseControls() {
   Module.stall = ms => { Atomics.store(words, 5, ms); Atomics.notify(words, 5); };
   // Scene captures run without wall time, so there is nothing to pause.
   if (Module.arguments.includes('--capture-mark')) return;
+  let revision = 0;
   function apply() {
-    if (Module.finished !== undefined) { button.hidden = true; return; }
-    Atomics.store(words, 0, manual || document.visibilityState === 'hidden' ? 1 : 0);
-    Atomics.notify(words, 0);
+    const current = ++revision;
+    const finished = Module.finished !== undefined;
+    const paused = finished || manual || document.visibilityState === 'hidden';
+    button.hidden = finished;
     button.textContent = manual ? 'Reanudar' : 'Pausa';
+    const publish = value => { Atomics.store(words, 0, value); Atomics.notify(words, 0); };
+    if (paused) {
+      publish(1);
+      Module.audioContext?.suspend().catch(audioWarning);
+    } else if (Module.audioContext && Module.audioNode) {
+      // A resumed device can take longer than the producer's 100 ms budget (Firefox/Pulse).
+      // Keep both producer and consumer paused until the device is actually ready.
+      publish(1);
+      audioTimeout(Module.audioContext.resume()).then(() => Module.audioReady()).then(() => { if (current === revision) publish(0); }, error => {
+        audioWarning(error);
+        if (current === revision) publish(0);
+      });
+    } else publish(0);
   }
   Module.onFinished = apply;
   // A clicked button keeps the focus, and inputControls leaves focused controls their keys.
@@ -198,11 +305,11 @@ const BUTTONS = {select: 0, start: 3, up: 4, right: 5, down: 6, left: 7, l2: 8, 
 const LABELS = {select: 'Select', start: 'Start', up: 'Arriba', right: 'Derecha', down: 'Abajo', left: 'Izquierda',
   l2: 'L2', r2: 'R2', l1: 'L1', r1: 'R1', triangle: 'Triangle', circle: 'Circle', cross: 'Cross', square: 'Square'};
 // PortSettings (AD-13): JSON with snake_case keys in IndexedDB "dw1", store "settings", key "port_settings".
-const SETTINGS_VERSION = 2;
+const SETTINGS_VERSION = 3;
 let portSettings, settingsWritable = false, cancelRemap;
 // The default mapping of docs/port/controls.md: keyboard codes and W3C standard gamepad indices.
 function defaultSettings() {
-  return {schema_version: SETTINGS_VERSION, stick_dpad: false, controls: {
+  return {schema_version: SETTINGS_VERSION, stick_dpad: false, volume: 1, controls: {
     keyboard: {select: ['Backspace'], start: ['Enter'], up: ['ArrowUp', 'KeyW'], right: ['ArrowRight', 'KeyD'],
       down: ['ArrowDown', 'KeyS'], left: ['ArrowLeft', 'KeyA'], l2: ['Digit1'], r2: ['Digit3'], l1: ['KeyQ'],
       r1: ['KeyE'], triangle: ['KeyI'], circle: ['KeyL'], cross: ['KeyK'], square: ['KeyJ']},
@@ -217,7 +324,8 @@ const MIGRATIONS = {
     // An unknown button throws, which makes the record unreadable instead of dropping the key.
     for (const [code, button] of Object.entries(keyboard)) keys[button].push(code);
     return {...rest, schema_version: 2, controls: {keyboard: keys, gamepad: defaultSettings().controls.gamepad}};
-  }
+  },
+  2: value => ({...value, schema_version: 3, volume: 1})
 };
 function settingsStore(mode, action) {
   return new Promise((resolve, reject) => {
@@ -244,6 +352,7 @@ function validSettings(value) {
     return all.every(entry) && new Set(all).size === all.length;
   };
   return value && typeof value === 'object' && typeof value.stick_dpad === 'boolean' &&
+    typeof value.volume === 'number' && Number.isFinite(value.volume) && value.volume >= 0 && value.volume <= 1 &&
     lists(value.controls?.keyboard, c => typeof c === 'string' && c !== '') &&
     lists(value.controls?.gamepad, i => Number.isInteger(i) && i >= 0);
 }
@@ -348,7 +457,8 @@ function controlsEditor() {
   document.querySelector('#restore-defaults').onclick = () => {
     cancel?.();
     // Fields of other options stay; controls and stick_dpad return to docs/port/controls.md.
-    portSettings = {...portSettings, ...defaultSettings()};
+    const defaults = defaultSettings();
+    portSettings = {...portSettings, controls: defaults.controls, stick_dpad: defaults.stick_dpad};
     document.querySelector('#stick-dpad').checked = portSettings.stick_dpad;
     status.textContent = 'Valores por defecto restaurados.' + (settingsWritable ? '' : ' Este cambio no se guarda.');
     render();
@@ -501,8 +611,7 @@ async function launch() {
   // "Jugar" is the only gesture: the AudioContext is created inside it and the game starts on this
   // page, which keeps the user activation.
   play.onclick = () => {
-    const audio = new AudioContext();
-    audio.resume().catch(() => {});
+    const audio = createAudio();
     boot(['--frames', '0', '--pack', 'dw1/us.pack'], audio);
   };
   load.onclick = () => {

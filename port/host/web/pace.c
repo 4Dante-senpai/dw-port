@@ -19,7 +19,7 @@ static uint32_t anchor_vblank, last_vblank;
 static int anchored;
 EMSCRIPTEN_KEEPALIVE void *web_control_address(void) { return control; }
 static uint64_t now_ns(void) { return (uint64_t)(emscripten_get_now() * 1e6); }
-static void hold(void)
+void web_pace_hold(void)
 {
     atomic_store(&control[HELD], 1);
     atomic_fetch_add(&control[PAUSES], 1);
@@ -57,5 +57,5 @@ void web_pace(void)
     atomic_store(&control[VBLANKS], vblank - anchor_vblank);
     while ((now = now_ns()) < deadline && !atomic_load(&control[PAUSE]))
         emscripten_futex_wait((void *)&control[PAUSE], 0, (deadline - now) / 1e6);
-    if (atomic_load(&control[PAUSE])) hold();
+    if (atomic_load(&control[PAUSE])) web_pace_hold();
 }

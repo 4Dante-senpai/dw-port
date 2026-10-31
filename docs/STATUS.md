@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-30
+Última actualización: 2026-10-31
 
 ## Modo de operación
 
@@ -14,7 +14,7 @@
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
 - M3 Paridad nativa: **completo** (Épica 3 cerrada: retrospectiva `accepted-with-open-items`, 2026-10-27).
-- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo; 4.5 teclado y gamepad; 4.6 remapeo y opciones persistentes).
+- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo; 4.5 teclado y gamepad; 4.6 remapeo y opciones persistentes; 4.7 audio en el navegador).
 
 ## Hecho
 
@@ -241,6 +241,15 @@
   registro más nuevo o ilegible no se sobrescribe. Start reasignado abre el menú con el Pack real,
   en Chromium y Firefox. `make compare` idéntico, nativa 85/85, ASan 83/83, web 47/47 con disco.
   Evidencia: `docs/implementation-artifacts/evidence/story-4-6/`.
+- Historia 4.7 (audio en el navegador): AudioWorklet que consume el anillo en memoria compartida y
+  replica `audio_rate_pull`, volumen con `GainNode` en `PortSettings` v3, y pausa, visibilidad y fin
+  suspenden el contexto. El PCM del título es idéntico byte a byte al nativo en Chromium y Firefox
+  (51.369.620 bytes). L4 de 10 minutos: Chromium 1/1 y Firefox 2/2 con 0 underruns, overflows y
+  resincronizaciones en el PC del dueño (20 CPU). Con 2,5 CPU, Firefox falló 1 de 2 antes de los
+  parches finales; se atribuye a falta de CPU, sin probarlo, y la aceptación en hardware de referencia
+  es de la 5.6. La latencia web es 139 ms (nativa 50 ms); la sincronía con video no se midió.
+  `make compare` idéntico, nativa 85/85, web 51/51 y 5/5 con disco.
+  Evidencia: `docs/implementation-artifacts/evidence/story-4-7/`.
 
 - Historia 8.5 (entorno de testing en el homelab): job `testing` de clase B en `main` compila nativo y
   web, arma el Pack, valida el título y despliega en el host de deploy (`HUB_DOCKER_HOST`) una imagen
@@ -469,7 +478,7 @@
 
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 a 4.6 ya están cerradas, y también la 8.1 y la 8.5. Sigue la 4.7.
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 a 4.6 ya están cerradas, y también la 8.1 y la 8.5. La 4.7 está implementada y verificada en su rama; falta aprobar la enmienda de AD-8 para mergearla.
 
 ## Bloqueos
 

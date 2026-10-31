@@ -57,7 +57,7 @@ class DeployTest(unittest.TestCase):
             state.write_text(json.dumps({'images': {}, 'calls': []}))
             build = directory / 'build'
             build.mkdir()
-            for name in ('dw1.html', 'dw1.js', 'dw1.wasm', 'io_worker.js', 'dw1_pack.js', 'dw1_pack.wasm', 'us.tsv', 'seed.html', 'seed_worker.js'):
+            for name in ('dw1.html', 'dw1.js', 'dw1.wasm', 'io_worker.js', 'audio_worklet.js', 'dw1_pack.js', 'dw1_pack.wasm', 'us.tsv', 'seed.html', 'seed_worker.js'):
                 (build / name).write_text('synthetic web asset')
             (build / 'us.pack').write_bytes(b'DW1PACK\0synthetic test only')
             env = dict(os.environ, PATH=str(directory) + ':' + os.environ['PATH'],

@@ -197,8 +197,12 @@ test('Jugar is the only gesture: game on this page with a running AudioContext',
   await page.addInitScript(() => {
     const Native = AudioContext;
     window.audioLog = [];
+    window.audioStates = [];
     window.AudioContext = class extends Native {
-      constructor(...args) { super(...args); audioLog.push(navigator.userActivation.isActive); }
+      constructor(...args) {
+        super(...args); audioLog.push(navigator.userActivation.isActive);
+        this.addEventListener('statechange', () => audioStates.push(this.state));
+      }
     };
     addEventListener('load', () => {
       const probe = new Native();
@@ -214,13 +218,14 @@ test('Jugar is the only gesture: game on this page with a running AudioContext',
   expect(await page.evaluate(() => window.audioLog)).toEqual([true]);
   await expect(page.locator('#launcher')).toBeHidden();
   await expect(page.locator('#game')).toBeVisible();
-  await expect.poll(() => page.evaluate(() => Module.audioContext?.state)).toBe('running');
+  await expect.poll(() => page.evaluate(() => audioStates.includes('running'))).toBe(true);
   expect(page.url()).toBe(url);
   // callMain prepends the program name to Module.arguments when main starts.
   expect((await page.evaluate(() => Module.arguments)).slice(-4)).toEqual(['--frames', '0', '--pack', 'dw1/us.pack']);
   // The synthetic Pack reaches the game's C (via the I/O worker), which rejects its Manifest;
   // reaching the title is the class B Escena (title.spec.cjs).
   await expect.poll(() => page.evaluate(() => Module.finished)).toBe(1);
+  await expect.poll(() => page.evaluate(() => Module.audioContext.state)).toBe('suspended');
   await expect(page.locator('#status')).toContainText('Manifest');
   await expect(page.locator('#pause')).toBeHidden();
   // "Borrar datos" brings back the welcome and the own-copy notice.
@@ -230,7 +235,7 @@ test('Jugar is the only gesture: game on this page with a running AudioContext',
   await expect(page.locator('#welcome')).toBeVisible();
   await expect(page.locator('#legal')).toBeVisible();
   expect(failures).toEqual([]);
-  evidence(info, 'play', {probe_without_gesture: probe, audio_context: 'running', navigations: 0});
+  evidence(info, 'play', {probe_without_gesture: probe, audio_context: 'running then suspended at finish', navigations: 0});
 });
 test('Borrar datos waits for a held Pack and reports a handle that stays held', async ({page}) => {
   test.setTimeout(120000);

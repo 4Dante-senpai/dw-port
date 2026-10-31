@@ -5,6 +5,9 @@
 #include <pthread.h>
 #include <emscripten.h>
 #include "io_mailbox.h"
+#include "audio.h"
+#include "input.h"
+#include <errno.h>
 #include "../../backend/cdrom.h"
 #include "../../psyq/libgte.h"
 #include "../pack/pack.h"
@@ -93,6 +96,19 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--capture-mark") && i + 1 < argc) config.mark = argv[++i];
         else if (!strcmp(argv[i], "--capture-vblank") && i + 1 < argc) config.vblank = strtoul(argv[++i], NULL, 10);
         else if (!strcmp(argv[i], "--pattern")) plat_pattern = 1;
+        else if (!strcmp(argv[i], "--audio-ramp")) web_audio_ramp(1);
+        else if (!strcmp(argv[i], "--replay") && i + 1 < argc) {
+            if (web_input_replay(argv[++i])) return 2;
+            web_audio_replay(1);
+        }
+        else if (!strcmp(argv[i], "--vblanks") && i + 1 < argc) {
+            char *end;
+            const char *value = argv[++i];
+            errno = 0;
+            config.vblank_limit = strtoul(value, &end, 10);
+            if (errno || *value < '0' || *value > '9' || *end ||
+                !config.vblank_limit || config.vblank_limit > UINT32_MAX) return 2;
+        }
         else if (!strcmp(argv[i], "--validate")) plat_validation = 1;
         else if (!strcmp(argv[i], "--frames") && i + 1 < argc) {
             char *end;

@@ -135,8 +135,8 @@
   evidence: Revisión de la 8.1 (blind hunter). Hoy el bloque solo se actualiza si alguien corre `--update`; `status_table_repo` no lo compara, así que `STATUS.md` puede quedar desactualizado sin que falle nada. El chequeo cambia la interfaz de la herramienta, que la historia no pidió. Ojo: las Escenas dependen de `--junit`, así que el chequeo debería ignorar las filas `sin verificar` o correr con los mismos JUnit.
 
 - source_spec: `docs/implementation-artifacts/spec-4-4-pantallas-de-la-shell-web-y-capacidades.md`
-  summary: Con audio web (historia 4.7), la pausa manual y la pestaña oculta también deben suspender y reanudar el `AudioContext` y el anillo del AudioWorklet, sin contar underruns durante la pausa.
-  evidence: La 4.4 crea `Module.audioContext` en el clic de «Jugar», pero la pausa solo retiene el hilo del juego en `VSync` (`port/host/web/pace.c`); hoy ningún código consume ese contexto.
+  summary: Pausa de audio web resuelta en 4.7: la pausa manual y la pestaña oculta suspenden y reanudan `AudioContext`; el worklet conserva el anillo sin contar underruns.
+  evidence: `web_audio` prueba pausa de 30 s, pestaña oculta, reanudación y contadores. El pendiente nativo de `--frames 1200` permanece separado; no se modifican SDL ni sus constantes.
 
 - source_spec: `docs/implementation-artifacts/spec-4-4-pantallas-de-la-shell-web-y-capacidades.md`
   summary: Presentación continua resuelta en la 4.4 con `ImageBitmap`; queda por verificar si hace falta contrapresión (resuelto en 4.5: L4 sin cola; la fuga que reveló obligó a pasar a memoria compartida, donde nada puede encolarse).

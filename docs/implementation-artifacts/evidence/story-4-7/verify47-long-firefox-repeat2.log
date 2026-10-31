@@ -1,0 +1,174 @@
+/usr/bin/pulseaudio
+W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+
+Running 1 test using 1 worker
+
+[1/1] [firefox] › ../../../port/web/tests/long.spec.cjs:9:1 › a long run paints every frame without growing
+[firefox] › ../../../port/web/tests/long.spec.cjs:9:1 › a long run paints every frame without growing
+
+
+
+
+
+
+
+
+
+
+
+
+{"minute":1,"t":69131.9,"pause":0,"held":0,"vblanks":3729,"resynchronizations":0,"pauses":0,"shown":1859,"presented":1860,"underruns":0,"overflows":0,"level":4958,"written":3001450,"max_delivery_gap_us":77660,"max_gap_level":7762,"starvation_gap_us":0,"starvation_gap_level":0,"rss":1006.18359375}
+
+
+
+
+
+
+
+
+
+
+
+
+
+{"minute":2,"t":129235.74,"pause":0,"held":0,"vblanks":7335,"resynchronizations":0,"pauses":0,"shown":3651,"presented":3654,"underruns":0,"overflows":0,"level":4609,"written":5651475,"max_delivery_gap_us":77660,"max_gap_level":7762,"starvation_gap_us":0,"starvation_gap_level":0,"rss":1003.02734375}
+
+dw1: pacing resynchronization vblank=7574 late_ns=70844006
+
+
+
+
+
+
+
+
+
+
+
+
+
+{"minute":3,"t":189319.64,"pause":0,"held":0,"vblanks":10937,"resynchronizations":1,"pauses":0,"shown":5645,"presented":5676,"underruns":0,"overflows":0,"level":5059,"written":8298560,"max_delivery_gap_us":91760,"max_gap_level":7899,"starvation_gap_us":0,"starvation_gap_level":0,"rss":1004.56640625}
+
+
+
+
+
+
+
+
+
+
+
+
+
+{"minute":4,"t":249407.4,"pause":0,"held":0,"vblanks":14543,"resynchronizations":1,"pauses":0,"shown":7447,"presented":7479,"underruns":0,"overflows":0,"level":5003,"written":10948585,"max_delivery_gap_us":91760,"max_gap_level":7899,"starvation_gap_us":0,"starvation_gap_level":0,"rss":1005.76953125}
+
+
+
+
+
+
+
+
+
+
+
+
+
+{"minute":5,"t":309504.36,"pause":0,"held":0,"vblanks":18150,"resynchronizations":1,"pauses":0,"shown":9443,"presented":9495,"underruns":0,"overflows":0,"level":6176,"written":13599345,"max_delivery_gap_us":91760,"max_gap_level":7899,"starvation_gap_us":0,"starvation_gap_level":0,"rss":1005.26953125}
+
+
+
+
+
+
+
+
+
+
+
+
+
+{"minute":6,"t":369604.36,"pause":0,"held":0,"vblanks":21755,"resynchronizations":1,"pauses":0,"shown":11242,"presented":11297,"underruns":0,"overflows":0,"level":5525,"written":16249370,"max_delivery_gap_us":91760,"max_gap_level":7899,"starvation_gap_us":0,"starvation_gap_level":0,"rss":1006.47265625}
+
+
+
+
+
+
+
+
+
+
+
+
+
+{"minute":7,"t":429704.9,"pause":0,"held":0,"vblanks":25362,"resynchronizations":1,"pauses":0,"shown":13228,"presented":13313,"underruns":0,"overflows":0,"level":5265,"written":18899395,"max_delivery_gap_us":91760,"max_gap_level":7899,"starvation_gap_us":0,"starvation_gap_level":0,"rss":1007.125}
+
+
+
+
+
+
+
+
+
+
+
+
+
+{"minute":8,"t":489811.7,"pause":0,"held":0,"vblanks":28969,"resynchronizations":1,"pauses":0,"shown":15031,"presented":15116,"underruns":0,"overflows":0,"level":5164,"written":21550155,"max_delivery_gap_us":91760,"max_gap_level":7899,"starvation_gap_us":0,"starvation_gap_level":0,"rss":1008.62890625}
+
+
+
+
+
+
+
+
+
+
+
+
+
+{"minute":9,"t":549914.56,"pause":0,"held":0,"vblanks":32575,"resynchronizations":1,"pauses":0,"shown":17020,"presented":17132,"underruns":0,"overflows":0,"level":5423,"written":24201650,"max_delivery_gap_us":91760,"max_gap_level":7899,"starvation_gap_us":0,"starvation_gap_level":0,"rss":1007.52734375}
+
+
+
+
+
+
+
+
+
+
+
+
+
+{"minute":10,"t":610025.16,"pause":0,"held":0,"vblanks":36183,"resynchronizations":1,"pauses":0,"shown":18822,"presented":18935,"underruns":0,"overflows":0,"level":4867,"written":26851675,"max_delivery_gap_us":91760,"max_gap_level":7899,"starvation_gap_us":0,"starvation_gap_level":0,"rss":1011.02734375}
+
+dw1: pacing resynchronization vblank=36184 late_ns=1989834836
+
+  1) [firefox] › ../../../port/web/tests/long.spec.cjs:9:1 › a long run paints every frame without growing 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: 1
+
+      53 |   expect(result.underruns).toBe(0); expect(result.overflows).toBe(0);
+      54 |   expect(Math.abs(result.vblanks - result.expected_vblanks) / result.expected_vblanks).toBeLessThan(0.001);
+    > 55 |   expect(result.resynchronizations).toBe(0);
+         |                                     ^
+      56 |   expect(result.shown / result.presented).toBeGreaterThan(0.99);
+      57 |   expect(result.rss_last_minute_mib / result.rss_second_minute_mib).toBeLessThan(1.1);
+      58 |   expect(result.shown_after_block).toBeGreaterThan(100);
+        at /dw/port/web/tests/long.spec.cjs:55:37
+
+    Error Context: playwright-results-long/long-a-long-run-paints-every-frame-without-growing-firefox/error-context.md
+
+
+  Slow test file: [firefox] › ../../../port/web/tests/long.spec.cjs (10.3m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  1 failed
+    [firefox] › ../../../port/web/tests/long.spec.cjs:9:1 › a long run paints every frame without growing 

@@ -3,6 +3,7 @@
 import argparse
 import functools
 import http.server
+import os
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -18,6 +19,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         requested = urlsplit(path).path
         if requested.startswith('/__fixture/'):
             name = requested.removeprefix('/__fixture/')
+            if name in ('replay.txt', 'fixture.json'):
+                return str(Path(os.environ.get('DW1_PCM_DIR', '/tmp/dw1-web-title-audio')) / name)
             if name in ('synthetic.pack', 'corrupt.pack', 'bad-index.pack', 'us.pack', 'us.pack.sha256'):
                 return str(Path(self.directory) / name)
         if urlsplit(path).path in ('/', '/index.html', '/isolated-off/'):

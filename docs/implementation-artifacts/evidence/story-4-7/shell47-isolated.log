@@ -1,0 +1,15 @@
+W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+
+Running 2 tests using 1 worker
+
+(node:40858) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/2] [chromium] › ../../../port/web/tests/shell.spec.cjs:184:1 › Jugar is the only gesture: game on this page with a running AudioContext
+(node:40995) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[2/2] [firefox] › ../../../port/web/tests/shell.spec.cjs:184:1 › Jugar is the only gesture: game on this page with a running AudioContext
+  2 passed (13.0s)
