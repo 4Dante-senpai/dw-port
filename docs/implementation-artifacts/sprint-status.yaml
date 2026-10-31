@@ -74,7 +74,7 @@ development_status:
   4-4-pantallas-de-la-shell-web-y-capacidades: done
   4-5-teclado-y-gamepad: done
   4-6-remapeo-y-opciones-persistentes: done
-  4-7-audio-en-el-navegador: review
+  4-7-audio-en-el-navegador: done
   4-8-memory-cards-en-el-navegador: backlog
   4-9-offline-y-actualizaciones: backlog
   4-10-checks-del-build-web-ritmo-tamaño-reproducibilidad-red-y-dat: backlog

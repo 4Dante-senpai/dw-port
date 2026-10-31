@@ -117,7 +117,7 @@ Revisión Codex (`codex-merged`) del diff contra `bd572cd`.
 
 **Riesgos a verificar, no suponer.** (1) `libsnd.c` lleva instrumentación solo en nativo: si esos hooks cobran ciclos, el tiempo virtual diverge. (2) Firefox y `Pulse` entregan cuantos en ráfagas: `AUDIO_RATE_TARGET` (50 ms) puede quedar corto en web; es la perilla de calibración, sin tocar la nativa. (3) Los 2 underruns nativos con `--frames 1200` tienen causa desconocida: si reaparecen en web hay que encontrarla, no filtrarlos.
 
-**Contrapresión.** Sin ella, `CdInit` y `DecDCTvlcBuild` adelantan el reloj virtual sin pasar por `VSync` y desbordan el anillo, como se midió en nativo. Web adopta la excepción de AD-8 aceptada por el dueño el 2026-10-26; el pendiente de quitarla sigue en `deferred-work.md`.
+**Contrapresión.** Sin ella, `CdInit` y `DecDCTvlcBuild` adelantan el reloj virtual sin pasar por `VSync` y desbordan el anillo, como se midió en nativo. Web adopta la excepción de AD-8 aceptada por el dueño el 2026-10-26; el dueño aprobó su extensión a web el 2026-10-31. El pendiente de quitarla sigue en `deferred-work.md`.
 
 ## Verification
 
