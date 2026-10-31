@@ -495,7 +495,8 @@ Cubre combinación, gatillos, stick como cruceta, conexión en caliente con ritm
 resincronizaciones, foco perdido y capturas sin input. Deja `input-*-<navegador>.json`.
 
 `web_scene_title` (clase B) cierra el recorrido real: tras el clic en «Jugar», Enter en el
-título abre el menú principal, señal que da la marca `runMainMenu` en `Module.marks`.
+título abre el menú principal, señal que da la marca `runMainMenu` en `Module.marks`. Otro caso
+reasigna Start, recarga y comprueba que solo la tecla nueva sale del título.
 
 ### Presentación larga (L4, historia 4.5)
 

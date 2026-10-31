@@ -1,23 +1,24 @@
 # Evidencia de la historia 4.6
 
-Verificación del 2026-10-30 en la sesión en la nube, sin Docker, sin disco y sin
-Firefox (errores exactos en `../story-4-4/docker-firefox-2026-10-30.md`).
+Verificación del 2026-10-30 en el contenedor del proyecto, con Chromium, Firefox y el disco real,
+sobre `3fcf411`. Reemplaza a la de la sesión en la nube, que no tuvo disco ni Firefox.
 
-- `settings-keyboard-chromium.json`: registro `PortSettings` v2 tras reasignar Cross a
-  `KeyZ`; tras recargar, Z llega a `PadRead` como Cross y K ya no.
-- `settings-migration-chromium.json`: base sembrada con `schema_version: 1` (con un campo
-  desconocido) y el registro v2 resultante: asignaciones, `stick_dpad` y el campo extra
-  se conservan; el gamepad toma los valores por defecto.
+- `settings-keyboard-<navegador>.json`: registro `PortSettings` v2 tras reasignar Cross a `KeyZ`;
+  tras recargar, Z llega a `PadRead` como Cross y K ya no.
+- `settings-migration-<navegador>.json`: base sembrada con `schema_version: 1` y un campo
+  desconocido, y el registro v2 resultante: asignaciones, `stick_dpad` y el campo extra se
+  conservan; el gamepad toma los valores por defecto.
 
-Comandos (Chromium), tras la revisión: `settings` 14/14 (tres corridas), `input` 8/8
-(seis corridas con salida completa), `shell` 10/10, `boot` 4/4, `launcher` 2/2, `io` 6/6,
-`disc` 19/19. Antes de la revisión, una corrida de `input` dio 7/8 con la salida truncada;
-no se reprodujo en las 11 corridas siguientes.
+Comandos, en `tools/port/remote_run.sh` con `DW1_DISC_DIR=/dw/game_rom/extracted`:
+`make compare` idéntico; `ctest --preset native-headless` 85/85; `ctest --preset native-asan` 83/83;
+`ctest --preset web` 47/47. `web_settings` son 38 casos, 19 por navegador; pasó también en tres
+corridas seguidas. `web_scene_title` reasigna Start a `KeyZ`, recarga y pulsa «Jugar» con el Pack
+real: Enter ya no sale del título y Z abre `runMainMenu`, en Chromium y Firefox.
+
+La falla intermitente de `input` que registró la sesión en la nube venía de navegar con la escritura
+de IndexedDB en curso; los tests ahora esperan el registro antes de recargar.
 
 ## Pendiente
 
-- **Firefox**: suites `settings` e `input`.
-- **Juego real (clase B)**: que el juego reaccione a un botón reasignado (por ejemplo,
-  Start en el título); requiere el Pack real y una señal de escena posterior al título.
 - **Formato v1**: nunca se publicó; la migración se probó con una base sembrada.
-- **Falla intermitente de `input`** (1 corrida, sin reproducir en 11): queda para observar en CI.
+- **Mando físico**: el remapeo de gamepad solo se probó con un mando simulado.
