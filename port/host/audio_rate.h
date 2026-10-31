@@ -4,8 +4,12 @@
 #include <stdatomic.h>
 
 #define AUDIO_RATE_CAPACITY 8192u
+#ifndef AUDIO_RATE_TARGET
 #define AUDIO_RATE_TARGET 2208u /* Approximately three NTSC VBlanks at 44100 Hz. */
+#endif
+#ifndef AUDIO_RATE_DEADBAND
 #define AUDIO_RATE_DEADBAND 384u
+#endif
 #define AUDIO_RATE_MAX_ADJUST 0.02 /* covers a device clock off by +/-1% with margin */
 #define AUDIO_RATE_GAIN 0.00005   /* ratio change per frame of error past the dead band */
 

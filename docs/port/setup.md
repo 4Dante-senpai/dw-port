@@ -455,7 +455,7 @@ OPFS y Web Locks; si falta alguna, muestra un mensaje por capacidad
 toma el Web Lock `dw1-game` durante toda la vida de la página: una segunda pestaña
 muestra `#instance`, no arranca nada (tampoco construye ni borra el Pack) y continúa
 sola cuando la primera se cierra. «Jugar» crea el `AudioContext` dentro del clic y
-arranca el juego en la misma página (sin navegar), con la corrida finita de 300 frames.
+arranca el juego en la misma página (sin navegar), sin límite de frames.
 
 El hilo del juego tiene ritmo de pared en cada `VSync` que presenta un frame
 (`port/host/web/pace.c`, mismo cálculo que `port/host/sdl/video.c`; el ancla es la
@@ -527,3 +527,60 @@ cubre conflictos, `Escape`, «Restaurar valores por defecto», la opción del st
 migración de una base sembrada con `schema_version: 1` y registros más nuevos,
 ilegibles o mal formados que no se sobrescriben. Los helpers de input están en
 `port/web/tests/input_helpers.cjs`.
+
+
+### Audio web (historia 4.7)
+
+```sh
+cmake --build --preset native-headless
+cmake --build --preset web
+ctest --preset web --output-on-failure
+DW1_DISC_DIR=/ruta/al/disco ctest --preset web -R web_scene_title_audio --output-on-failure
+DW1_DISC_DIR=/ruta/al/disco python3 port/web/tests/run.py build/port/web long
+```
+
+`web_audio` recorre la matriz de audio y ajustes en Chromium y Firefox con PCM de
+rampa (`--audio-ramp`). `web_audio_rate_parity` compara el remuestreador C compilado
+con el JS en Node a 44.100, 48.000 y 96.000 Hz, incluyendo arranque, deriva,
+starvation, recuperación, wrap y desbordes. El worklet ejecuta únicamente JS.
+
+El productor usa el layout de `AudioRate`: 8192 frames s16 estéreo y cuatro u32
+atómicos (`read`, `write`, `underruns`, `overflows`). El worklet posee `phase`,
+`ratio`, `started`, `ramp` y `last`. C y JS web usan objetivo 6144 frames
+(139,3 ms), banda muerta 1536, ajuste máximo 0,02 y ganancia 0,00005.
+El objetivo nativo conserva 2208 frames y banda muerta 384. La banda web
+cubre lotes de varios VBlanks sin corregir por esa oscilación de corto plazo. La corrida piloto aislada con el objetivo nativo de 2208 frames
+registró tres underruns en dos minutos sin resincronizaciones de video; la
+calibración y sus resultados se guardan en `evidence/story-4-7`.
+La contrapresión usa futex hasta 100 ms por bloque; el replay espera sin pérdida.
+El backend de hardware se compila con `-O2` solo en web, también en Debug,
+conservando los asserts. La mezcla y decodificación sin optimizar acumularon
+retraso en Firefox durante el ciclo del video de atracción; no se modifican el
+reloj virtual, los umbrales de pacing ni la compilación nativa.
+Al iniciar o reanudar, la shell espera una confirmación del callback del worklet
+antes de liberar al productor: `AudioContext.resume()` puede resolverse antes
+de la primera entrega efectiva del dispositivo. Si el dispositivo no confirma
+el arranque en cinco segundos, se muestra un aviso y el juego arranca sin audio.
+`Module.audioStats()` expone `underruns`, `overflows`, `level` y `written` (frames).
+También registra el mayor intervalo entre entregas del productor en microsegundos
+(`max_delivery_gap_us`, `max_gap_level`) y el último intervalo que excede la
+duración nominal de su cola (`starvation_gap_us`, `starvation_gap_level`). Estas
+medidas son de pared; no intervienen en el reloj ni descuentan underruns.
+Sin contexto no hay escrituras; `?audio=1` espera «Jugar» para crearlo.
+
+La fixture clase B corre `title_audio` nativo sin Redux ni tarjetas, reutilizando
+las declaraciones de inputs/checkpoints/segmentos de `run_audio`. `--audio-pcm FILE`
+guarda todo el PCM s16 little endian y `--resolved-inputs FILE` los cambios de
+máscara aplicados, en VBlank absoluto y hex. `pcm.py --pack FILE` escribe en
+`DW1_PCM_DIR` (por defecto `/tmp/dw1-web-title-audio`, siempre fuera del repositorio),
+con SHA-256 y VBlank final. El navegador usa `--replay FILE --vblanks N`; el límite
+web es absoluto. El `tap` copia antes de liberar cada slot y antes del remuestreo.
+La comparación exige cubrir todo el PCM nativo y reporta el primer byte/frame
+distinto. Los dieciséis VBlanks adicionales cubren el anillo completo al drenar
+la cola nativa; no se omiten muestras.
+
+L4 de Firefox se corre con `tools/port/remote_run.sh` (20 CPU): con el tope local de 2,5 CPU de
+`docker_run.sh` puede dar una resincronización cerca del VBlank 7500 (evidencia de la historia 4.7).
+L4 requiere 10 minutos por navegador y falla ante cualquier underrun o overflow;
+guarda ambos contadores junto con las métricas de ritmo en `long-*.json`. No
+reemplaza la medición final en hardware de referencia (historia 5.6).

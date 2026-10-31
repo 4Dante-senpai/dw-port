@@ -4,8 +4,8 @@ const path = require('path');
 const {errors, store} = require('./storage.cjs');
 const {padRead, input, running, expectLatched, fakePad, setPad} = require('./input_helpers.cjs');
 const CROSS = 1 << 14, CIRCLE = 1 << 13, SQUARE = 1 << 15;
-// docs/port/controls.md, as PortSettings v2.
-const DEFAULTS = {schema_version: 2, stick_dpad: false, controls: {
+// docs/port/controls.md, as PortSettings v3.
+const DEFAULTS = {schema_version: 3, volume: 1, stick_dpad: false, controls: {
   keyboard: {select: ['Backspace'], start: ['Enter'], up: ['ArrowUp', 'KeyW'], right: ['ArrowRight', 'KeyD'],
     down: ['ArrowDown', 'KeyS'], left: ['ArrowLeft', 'KeyA'], l2: ['Digit1'], r2: ['Digit3'], l1: ['KeyQ'],
     r1: ['KeyE'], triangle: ['KeyI'], circle: ['KeyL'], cross: ['KeyK'], square: ['KeyJ']},
@@ -43,7 +43,7 @@ test('a reassigned key survives a reload and reaches PadRead', async ({page}, in
   await page.locator('#options summary').click();
   await expect(cell(page, 'cross', 'keys')).toHaveText('KeyZ');
   const stored = await record(page);
-  expect(stored.schema_version).toBe(2);
+  expect(stored.schema_version).toBe(3);
   expect(stored.controls.keyboard.cross).toEqual(['KeyZ']);
   await running(page);
   await expectKey(page, 'z', CROSS);
@@ -247,7 +247,7 @@ test('a schema_version 1 record migrates without losing data', async ({page}, in
   await expect(cell(page, 'cross', 'keys')).toHaveText('KeyZ');
   await expect(page.locator('#stick-dpad')).toBeChecked();
   const migrated = await record(page);
-  expect(migrated).toEqual({schema_version: 2, stick_dpad: true, unknown_future_field: {kept: [1, 2, 3]},
+  expect(migrated).toEqual({schema_version: 3, volume: 1, stick_dpad: true, unknown_future_field: {kept: [1, 2, 3]},
     controls: {keyboard: {...Object.fromEntries(Object.keys(DEFAULTS.controls.keyboard).map(b => [b, []])),
       cross: ['KeyZ'], circle: ['KeyX'], start: ['Enter']}, gamepad: DEFAULTS.controls.gamepad}});
   await running(page);

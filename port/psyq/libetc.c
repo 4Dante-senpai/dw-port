@@ -50,14 +50,17 @@ void PadInit(int mode)
 }
 
 /* PCSX-Redux overrides use wire bit order; PadRead swaps the two packet bytes. */
+extern void port_scene_resolved_input(uint16_t buttons) __attribute__((weak));
 void port_pad_latch(uint16_t wire_buttons)
 {
 	/* Keep the wire input at its original VBlank. OpenBIOS only publishes a
 	 * packet when its SIO verifier sees VBlank. A VBlank arriving after that
 	 * check, inside a timer callback, is ACKed by PsyQ's inner IRQ loop and
 	 * leaves the previously published packet intact. */
-	if (!pad_started || !pad_poll_missed)
+	if (!pad_started || !pad_poll_missed) {
 		pad_buf = ~((uint32_t)((wire_buttons << 8) | (wire_buttons >> 8)) & 0xffffu);
+        if (port_scene_resolved_input) port_scene_resolved_input(wire_buttons);
+    }
 	pad_poll_missed = 0;
 }
 

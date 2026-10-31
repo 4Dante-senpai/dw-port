@@ -33,6 +33,7 @@ static int usage(const char *argv0)
 	                "  --inputs FILE --inputs-from frame0|mark  latch wire button masks per VBlank\n"
 	                "  --checkpoints FILE  capture ordered symbol[#n] entries and VBlank windows\n"
 	                "  --state-vars FILE --state-trace FILE  record typed state and rand outputs\n"
+	                "  --audio-pcm FILE --resolved-inputs FILE  raw stereo s16 and absolute input changes\n"
 	                "  --audio-segments FILE  capture SPU trace/WAV segments instead of an image\n"
 	                "  --until-overlay  exit with status 0 once the first overlay is loaded\n",
 	        argv0);
@@ -72,6 +73,8 @@ int native_cli_parse(int argc, char **argv, NativeCli *options)
 			}
 			if (!strcmp(argv[i], "--card1")) { cards[0] = argv[++i]; continue; }
 			if (!strcmp(argv[i], "--card2")) { cards[1] = argv[++i]; continue; }
+			if (!strcmp(argv[i], "--audio-pcm")) { config.audio_pcm = argv[++i]; continue; }
+			if (!strcmp(argv[i], "--resolved-inputs")) { config.resolved_inputs = argv[++i]; continue; }
 			if (!strcmp(argv[i], "--audio-segments")) { config.audio_segments = argv[++i]; continue; }
 			if (!strcmp(argv[i], "--inputs")) { config.inputs = argv[++i]; continue; }
 			if (!strcmp(argv[i], "--checkpoints")) { config.checkpoints = argv[++i]; continue; }

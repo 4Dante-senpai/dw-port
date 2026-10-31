@@ -1,0 +1,259 @@
+Test project /dw/build/port/web
+      Start  1: sjis_literals
+ 1/51 Test  #1: sjis_literals ....................   Passed    0.16 sec
+      Start  2: audio_rate
+ 2/51 Test  #2: audio_rate .......................   Passed    5.85 sec
+      Start  3: web_audio_rate_parity
+ 3/51 Test  #3: web_audio_rate_parity ............   Passed    0.37 sec
+      Start  4: press_tables
+ 4/51 Test  #4: press_tables .....................   Passed    0.18 sec
+      Start  5: mdec_vectors
+ 5/51 Test  #5: mdec_vectors .....................   Passed    0.09 sec
+      Start  6: spu_vectors
+ 6/51 Test  #6: spu_vectors ......................   Passed    1.27 sec
+      Start  7: xa_vectors
+ 7/51 Test  #7: xa_vectors .......................   Passed    1.14 sec
+      Start  8: scene_audio_unit
+ 8/51 Test  #8: scene_audio_unit .................   Passed    2.64 sec
+      Start  9: scene_timing_unit
+ 9/51 Test  #9: scene_timing_unit ................   Passed    0.10 sec
+      Start 10: spu
+10/51 Test #10: spu ..............................   Passed    0.53 sec
+      Start 11: xa
+11/51 Test #11: xa ...............................   Passed    0.12 sec
+      Start 12: mdec
+12/51 Test #12: mdec .............................   Passed    0.16 sec
+      Start 13: libpress
+13/51 Test #13: libpress .........................   Passed    0.08 sec
+      Start 14: libspu
+14/51 Test #14: libspu ...........................   Passed    0.09 sec
+      Start 15: libsnd
+15/51 Test #15: libsnd ...........................   Passed    0.32 sec
+      Start 16: cd_stream
+16/51 Test #16: cd_stream ........................   Passed    0.25 sec
+      Start 17: card
+17/51 Test #17: card .............................   Passed    0.08 sec
+      Start 18: gte_tables
+18/51 Test #18: gte_tables .......................   Passed    0.17 sec
+      Start 19: pre_commit
+19/51 Test #19: pre_commit .......................   Passed    0.13 sec
+      Start 20: rts_info
+20/51 Test #20: rts_info .........................   Passed    0.12 sec
+      Start 21: ovl_starts
+21/51 Test #21: ovl_starts .......................   Passed    0.13 sec
+      Start 22: tu_list
+22/51 Test #22: tu_list ..........................   Passed    0.39 sec
+      Start 23: gen_stubs
+23/51 Test #23: gen_stubs ........................   Passed    0.58 sec
+      Start 24: inventory
+24/51 Test #24: inventory ........................   Passed   20.51 sec
+      Start 25: status_table_unit
+25/51 Test #25: status_table_unit ................   Passed    0.30 sec
+      Start 26: status_table_repo
+26/51 Test #26: status_table_repo ................   Passed    8.06 sec
+      Start 27: preproc_check
+27/51 Test #27: preproc_check ....................   Passed   52.78 sec
+      Start 28: test_preproc_check
+28/51 Test #28: test_preproc_check ...............   Passed  145.18 sec
+      Start 29: ps1_ram_addr_range
+29/51 Test #29: ps1_ram_addr_range ...............   Passed    0.12 sec
+      Start 30: psyq_prototypes
+30/51 Test #30: psyq_prototypes ..................   Passed    0.14 sec
+      Start 31: setjmp
+31/51 Test #31: setjmp ...........................   Passed    0.05 sec
+      Start 32: fnptr_scanner
+32/51 Test #32: fnptr_scanner ....................   Passed    0.24 sec
+      Start 33: fnptr_inventory
+33/51 Test #33: fnptr_inventory ..................   Passed   37.07 sec
+      Start 34: web_boot
+34/51 Test #34: web_boot .........................   Passed   27.70 sec
+      Start 35: web_launcher
+35/51 Test #35: web_launcher .....................   Passed   11.63 sec
+      Start 36: web_shell
+36/51 Test #36: web_shell ........................***Failed  176.00 sec
+W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+
+Running 28 tests using 1 worker
+
+(node:27551) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:26:1 › without cross-origin isolation the Shell names it and loads nothing
+[2/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:30:1 › OPFS that refuses access counts as missing
+[3/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:36:1 › without SharedArrayBuffer the Shell names it and loads nothing
+[4/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:40:1 › without OPFS the Shell names it and loads nothing
+[5/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:44:1 › without Web Locks the Shell names it and loads nothing
+[6/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:48:1 › a second tab waits for the dw1-game lock without starting anything
+[7/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:106:1 › Pausa freezes VBlanks and resumes without owing the paused wall time
+[8/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:124:1 › a hidden tab pauses; showing it resumes unless Pausa is active
+[9/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:145:1 › a frame later than 4 VBlanks resynchronizes once, without a catch-up burst
+[10/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:184:1 › Jugar is the only gesture: game on this page with a running AudioContext
+[11/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:235:1 › Borrar datos waits for a held Pack and reports a handle that stays held
+[12/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:254:1 › a failed game download says so
+[13/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:259:1 › frames reach the screen while the game thread runs
+[14/28] [chromium] › ../../../port/web/tests/shell.spec.cjs:274:1 › a running game does not grow the browser
+[chromium] › ../../../port/web/tests/shell.spec.cjs:274:1 › a running game does not grow the browser
+
+
+
+
+(node:28087) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[15/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:26:1 › without cross-origin isolation the Shell names it and loads nothing
+[16/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:30:1 › OPFS that refuses access counts as missing
+[17/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:36:1 › without SharedArrayBuffer the Shell names it and loads nothing
+[18/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:40:1 › without OPFS the Shell names it and loads nothing
+[19/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:44:1 › without Web Locks the Shell names it and loads nothing
+[20/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:48:1 › a second tab waits for the dw1-game lock without starting anything
+[21/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:106:1 › Pausa freezes VBlanks and resumes without owing the paused wall time
+[22/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:124:1 › a hidden tab pauses; showing it resumes unless Pausa is active
+[23/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:145:1 › a frame later than 4 VBlanks resynchronizes once, without a catch-up burst
+[24/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:184:1 › Jugar is the only gesture: game on this page with a running AudioContext
+  1) [firefox] › ../../../port/web/tests/shell.spec.cjs:184:1 › Jugar is the only gesture: game on this page with a running AudioContext 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "running"
+    Received: "suspended"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      215 |   await expect(page.locator('#launcher')).toBeHidden();
+      216 |   await expect(page.locator('#game')).toBeVisible();
+    > 217 |   await expect.poll(() => page.evaluate(() => Module.audioContext?.state)).toBe('running');
+          |                                                                            ^
+      218 |   expect(page.url()).toBe(url);
+      219 |   // callMain prepends the program name to Module.arguments when main starts.
+      220 |   expect((await page.evaluate(() => Module.arguments)).slice(-4)).toEqual(['--frames', '0', '--pack', 'dw1/us.pack']);
+        at /dw/port/web/tests/shell.spec.cjs:217:76
+
+    Error Context: playwright-results-shell/shell-Jugar-is-the-only-ge-75302-with-a-running-AudioContext-firefox/error-context.md
+
+
+(node:28921) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[25/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:235:1 › Borrar datos waits for a held Pack and reports a handle that stays held
+[26/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:254:1 › a failed game download says so
+[27/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:259:1 › frames reach the screen while the game thread runs
+[28/28] [firefox] › ../../../port/web/tests/shell.spec.cjs:274:1 › a running game does not grow the browser
+[firefox] › ../../../port/web/tests/shell.spec.cjs:274:1 › a running game does not grow the browser
+
+
+
+
+  1 failed
+    [firefox] › ../../../port/web/tests/shell.spec.cjs:184:1 › Jugar is the only gesture: game on this page with a running AudioContext 
+  27 passed (2.9m)
+
+      Start 37: web_input
+37/51 Test #37: web_input ........................***Failed  113.01 sec
+W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+
+Running 20 tests using 1 worker
+
+(node:29475) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/20] [chromium] › ../../../port/web/tests/input.spec.cjs:28:1 › each of the 14 buttons reaches PadRead from the keyboard
+[2/20] [chromium] › ../../../port/web/tests/input.spec.cjs:44:1 › each of the 14 buttons reaches PadRead from a standard gamepad
+[3/20] [chromium] › ../../../port/web/tests/input.spec.cjs:71:1 › a sample reaches PadRead at the first VBlank after it was written
+[4/20] [chromium] › ../../../port/web/tests/input.spec.cjs:96:1 › all standard gamepads combine; other layouts are ignored
+[5/20] [chromium] › ../../../port/web/tests/input.spec.cjs:107:1 › modified keys and focused Shell controls do not press buttons
+[6/20] [chromium] › ../../../port/web/tests/input.spec.cjs:124:1 › a clicked Pausa button leaves the keyboard to the game
+[7/20] [chromium] › ../../../port/web/tests/input.spec.cjs:134:1 › left stick acts as the D-pad only with the option on
+[8/20] [chromium] › ../../../port/web/tests/input.spec.cjs:154:1 › connecting and disconnecting a gamepad keeps the game paced
+[9/20] [chromium] › ../../../port/web/tests/input.spec.cjs:179:1 › losing focus releases the keyboard
+[10/20] [chromium] › ../../../port/web/tests/input.spec.cjs:189:1 › scene captures apply no live input
+(node:30088) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[11/20] [firefox] › ../../../port/web/tests/input.spec.cjs:28:1 › each of the 14 buttons reaches PadRead from the keyboard
+[12/20] [firefox] › ../../../port/web/tests/input.spec.cjs:44:1 › each of the 14 buttons reaches PadRead from a standard gamepad
+[13/20] [firefox] › ../../../port/web/tests/input.spec.cjs:71:1 › a sample reaches PadRead at the first VBlank after it was written
+[14/20] [firefox] › ../../../port/web/tests/input.spec.cjs:96:1 › all standard gamepads combine; other layouts are ignored
+[15/20] [firefox] › ../../../port/web/tests/input.spec.cjs:107:1 › modified keys and focused Shell controls do not press buttons
+[16/20] [firefox] › ../../../port/web/tests/input.spec.cjs:124:1 › a clicked Pausa button leaves the keyboard to the game
+[17/20] [firefox] › ../../../port/web/tests/input.spec.cjs:134:1 › left stick acts as the D-pad only with the option on
+[18/20] [firefox] › ../../../port/web/tests/input.spec.cjs:154:1 › connecting and disconnecting a gamepad keeps the game paced
+  1) [firefox] › ../../../port/web/tests/input.spec.cjs:154:1 › connecting and disconnecting a gamepad keeps the game paced 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: 1
+
+      171 |   const rate = (b.vblanks - a.vblanks) * 1000 / (b.t - a.t);
+      172 |   expect(Math.abs(rate - RATE) / RATE, `${rate} VBlank/s`).toBeLessThan(0.05);
+    > 173 |   expect(b.resynchronizations).toBe(0);
+          |                                ^
+      174 |   expect(b.pauses).toBe(0);
+      175 |   expect(b.held).toBe(0);
+      176 |   expect(failures).toEqual([]);
+        at /dw/port/web/tests/input.spec.cjs:173:32
+
+    Error Context: playwright-results-input/input-connecting-and-disco-295cf-amepad-keeps-the-game-paced-firefox/error-context.md
+
+
+(node:31150) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[19/20] [firefox] › ../../../port/web/tests/input.spec.cjs:179:1 › losing focus releases the keyboard
+[20/20] [firefox] › ../../../port/web/tests/input.spec.cjs:189:1 › scene captures apply no live input
+  1 failed
+    [firefox] › ../../../port/web/tests/input.spec.cjs:154:1 › connecting and disconnecting a gamepad keeps the game paced 
+  19 passed (1.9m)
+
+      Start 38: web_audio
+38/51 Test #38: web_audio ........................   Passed  131.44 sec
+      Start 39: web_settings
+39/51 Test #39: web_settings .....................   Passed  168.16 sec
+      Start 40: testing_deploy
+40/51 Test #40: testing_deploy ...................   Passed    4.59 sec
+      Start 41: testing_context
+41/51 Test #41: testing_context ..................   Passed    0.06 sec
+      Start 42: web_disc
+42/51 Test #42: web_disc .........................   Passed   52.66 sec
+      Start 45: pack_disc
+43/51 Test #45: pack_disc ........................***Skipped   0.00 sec
+      Start 43: web_disc_real
+44/51 Test #43: web_disc_real ....................***Skipped   0.04 sec
+      Start 44: web_io
+45/51 Test #44: web_io ...........................   Passed   16.81 sec
+      Start 46: native_title_capture
+46/51 Test #46: native_title_capture .............***Skipped   0.00 sec
+      Start 47: native_title_audio
+47/51 Test #47: native_title_audio ...............***Skipped   0.07 sec
+      Start 48: web_scene_title_audio
+48/51 Test #48: web_scene_title_audio ............***Skipped   0.04 sec
+      Start 49: web_scene_title
+49/51 Test #49: web_scene_title ..................***Skipped   0.04 sec
+      Start 50: shop_overlay_unit
+50/51 Test #50: shop_overlay_unit ................   Passed    0.06 sec
+      Start 51: reference_capture_unit
+51/51 Test #51: reference_capture_unit ...........   Passed   13.73 sec
+
+96% tests passed, 2 tests failed out of 51
+
+Total Test time (real) = 995.48 sec
+
+The following tests did not run:
+	 43 - web_disc_real (Skipped)
+	 45 - pack_disc (Skipped)
+	 46 - native_title_capture (Skipped)
+	 47 - native_title_audio (Skipped)
+	 48 - web_scene_title_audio (Skipped)
+	 49 - web_scene_title (Skipped)
+
+The following tests FAILED:
+	 36 - web_shell (Failed)
+	 37 - web_input (Failed)
+Errors while running CTest
