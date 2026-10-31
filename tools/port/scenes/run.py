@@ -469,6 +469,21 @@ def compare_saved_state(saved, loaded, variables, checkpoints, window):
     print(f"save/load match: {len(snapshots[0])} values after loadSavegame")
 
 
+def write_audio_files(scene, checkpoints, output, index):
+    """Shared scene declarations for reference comparison and raw PCM fixtures."""
+    inputs, cp_file = output / "inputs.txt", output / "checkpoints.txt"
+    inputs.write_text("".join(f"{e['after']} {e['vblank']} {sum(1 << b for b in set(e['buttons'])):04x}\n"
+                              for e in scene.get("inputs", [])))
+    cp_file.write_text("".join(f"{cp['label']} 0 {cp.get('after', '-')}\n" for cp in checkpoints))
+    declarations = output / f"segments-{index}.txt"
+    declarations.write_text("".join(
+        f"{seg['start']} {seg.get('finish', '-')} {seg.get('vblanks', 0)} "
+        f"{output}/run-{index}-{i}.spu {output}/run-{index}-{i}.wav "
+        f"{','.join(seg.get('stop_on', [])) or '-'} {seg.get('anchor', '-')}\n"
+        for i, seg in enumerate(scene["audio"], 1)))
+    return inputs, cp_file, declarations
+
+
 def run_audio(args, scene, build, checkpoints, pack):
     audio.validate_segments(scene)
     for segment in scene["audio"]:
@@ -520,18 +535,9 @@ def run_audio(args, scene, build, checkpoints, pack):
     if any(character.isspace() for character in str(output)):
         raise ValueError("audio output directory cannot contain whitespace")
     output.mkdir(parents=True, exist_ok=True)
-    inputs, cp_file = output / "inputs.txt", output / "checkpoints.txt"
-    inputs.write_text("".join(f"{e['after']} {e['vblank']} {sum(1 << b for b in set(e['buttons'])):04x}\n"
-                              for e in scene.get("inputs", [])))
-    cp_file.write_text("".join(f"{cp['label']} 0 {cp.get('after', '-')}\n" for cp in checkpoints))
     all_hashes = []
     for index in (1, 2):
-        declarations = output / f"segments-{index}.txt"
-        declarations.write_text("".join(
-            f"{seg['start']} {seg.get('finish', '-')} {seg.get('vblanks', 0)} "
-            f"{output}/run-{index}-{i}.spu {output}/run-{index}-{i}.wav "
-            f"{','.join(seg.get('stop_on', [])) or '-'} {seg.get('anchor', '-')}\n"
-            for i, seg in enumerate(scene["audio"], 1)))
+        inputs, cp_file, declarations = write_audio_files(scene, checkpoints, output, index)
         paths = [output / f"run-{index}-{i}.{suffix}" for i in range(1,len(scene["audio"])+1) for suffix in (("spu", "wav", "xa.wav") if scene.get("xa") else ("spu", "wav"))]
         for path in paths:
             path.unlink(missing_ok=True)
@@ -629,6 +635,12 @@ def main():
         raise ValueError("--compare-audio cannot be combined with --compare or --state")
     build = ROOT / "build/port" / args.build
     output = build / "scenes" / args.id
+    pack = args.pack.resolve() if args.pack else build / "us.pack"
+    # Check the optional disc fixture before validating dependent private cards
+    # or reference evidence, which may be absent in a no-disc test run.
+    if args.pack is None and not pack.is_file() and not os.environ.get("DW1_DISC_DIR"):
+        print(f"scene {args.id}: no Pack or DW1_DISC_DIR; skipped")
+        return 77
     if args.compare or args.state:
         (output / "diff.ppm").unlink(missing_ok=True)
     scene = tomllib.loads((ROOT / "tools/port/scenes" / f"{args.id}.toml").read_text())
@@ -652,7 +664,6 @@ def main():
             command += ["--timeout", "7200"]
         status = subprocess.run(command).returncode
         if status: return status
-    pack = args.pack.resolve() if args.pack else build / "us.pack"
     if not pack.is_file():
         if args.pack is not None:
             raise ValueError(f"Pack file does not exist: {pack}")

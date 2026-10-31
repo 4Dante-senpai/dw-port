@@ -12,6 +12,8 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include "../host/web/io_mailbox.h"
+#include "../host/web/input.h"
+#include "../host/web/audio.h"
 #include <emscripten/threading.h>
 #endif
 
@@ -83,6 +85,9 @@ static void capture_vblank(void)
 {
 	spu_sync();
 	port_scene_tick();
+#ifdef __EMSCRIPTEN__
+    if (capture_config.vblank_limit && clock_vblanks() >= capture_config.vblank_limit) web_finish(0);
+#endif
 #ifndef __EMSCRIPTEN__
 	if (have_frame0 && capture_config.vblank_limit &&
 	    clock_vblanks() - frame0_vblank >= capture_config.vblank_limit) {
@@ -204,8 +209,11 @@ static void *game_thread(void *arg)
 {
 	(void)arg;
 	clock_advance(CLOCK_BOOT_SCAN_PHASE_CYCLES);
-#ifndef __EMSCRIPTEN__
-	if (plat_game_init) plat_game_init();
+#ifdef __EMSCRIPTEN__
+    plat_game_init();
+#else
+    if (plat_game_init) plat_game_init();
+    port_scene_audio_output_init();
 #endif
 #ifdef __EMSCRIPTEN__
     if (web_prepare()) web_finish(1);

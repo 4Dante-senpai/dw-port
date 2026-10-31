@@ -87,7 +87,7 @@ Se guarda en IndexedDB (base `dw1`, almacén `settings`, clave `port_settings`) 
 instante, como JSON con claves `snake_case`:
 
 ```json
-{"schema_version": 2, "stick_dpad": false,
+{"schema_version": 3, "stick_dpad": false, "volume": 1,
  "controls": {"keyboard": {"cross": ["KeyK"], "up": ["ArrowUp", "KeyW"]},
               "gamepad": {"cross": [0], "l2": [6]}}}
 ```
@@ -99,3 +99,19 @@ junto con la 2 como formato anterior para la cadena de migraciones y su test. Ca
 migración `n → n + 1` conserva los campos que no conoce. Un registro de una versión
 más nueva, ilegible o con forma inválida no se sobrescribe nunca: la Shell avisa y
 usa los valores por defecto en memoria (los cambios de esa sesión no se guardan).
+
+
+## Volumen (historia 4.7)
+
+El volumen general va de 0 a 100 % en Opciones y pasa a la pantalla del juego al
+arrancar. El cambio se oye en vivo mediante un `GainNode`; se guarda al soltar el
+control. El control pierde foco después de cambiar para dejar las teclas al juego.
+0 % silencia la salida y sigue consumiendo PCM. Restaurar controles conserva el
+volumen. `PortSettings` v3 agrega `volume` numérico y finito en [0, 1]; la migración
+v2 → v3 agrega 1 y conserva controles y campos desconocidos. Un volumen inválido
+protege el registro completo, usa valores por defecto y muestra un aviso.
+
+«Jugar» habilita el audio con un gesto. Pausa manual y pestaña oculta suspenden el
+contexto y conservan el anillo; reanudar continúa sin contar underruns por la pausa.
+Un fallo al crear el contexto o cargar el worklet muestra un aviso y permite jugar
+sin audio.

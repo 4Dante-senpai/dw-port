@@ -105,12 +105,31 @@ test('one click on Jugar reaches the title and Start leaves it', async ({page}, 
   const marks = () => page.evaluate(() => Module.marks || []);
   // The title waits 600 VBlanks for Start; without it the attract loop never opens the menu.
   expect(await marks()).not.toContain('runMainMenu');
+  await page.evaluate(() => {
+    const analyser = Module.audioContext.createAnalyser();
+    Module.audioGain.connect(analyser); Module.outputAnalyser = analyser;
+  });
+  // runLandingScreen is silent until its original Start sound. Observe that
+  // sound during the title's 40-VBlank fade, before runMainMenu is entered.
   await page.keyboard.down('Enter');
+  let signal;
+  await expect.poll(async () => {
+    signal = await page.evaluate(() => {
+      const samples = new Float32Array(Module.outputAnalyser.fftSize);
+      Module.outputAnalyser.getFloatTimeDomainData(samples);
+      return {...Module.audioStats(), output_nonzero: samples.some(v => v !== 0),
+        context_state: Module.audioContext.state,
+        in_title: !Module.marks.includes('runMainMenu')};
+    });
+    return signal.in_title && signal.output_nonzero && signal.context_state === 'running' &&
+      signal.level >= 6144 - 1536 && signal.level <= 6144 + 1536;
+  }, {timeout:10000, intervals:[16]}).toBe(true);
+  expect(signal.underruns).toBe(0); expect(signal.overflows).toBe(0);
   await expect.poll(marks, {timeout:10000}).toContain('runMainMenu');
   await page.keyboard.up('Enter');
   const control = await page.evaluate(() => Module.control());
   expect(control.resynchronizations).toBe(0);
   expect(failures).toEqual([]);
   fs.writeFileSync(`${process.env.DW1_WEB_BUILD}/title-play-${info.project.name}.json`,
-    JSON.stringify({ms_to_title:Date.now() - start, control}));
+    JSON.stringify({ms_to_title:Date.now() - start, control, audio: signal}));
 });
