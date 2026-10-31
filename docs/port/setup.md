@@ -196,6 +196,10 @@ Devcontainer: `.devcontainer/port/devcontainer.json` (construye `dw-build` en
 | `native-disc` | B | `dw-port` | CTest `pack_disc` y `dw1_overlay` con `DW1_DISC_DIR=/private/disc` |
 | `matching` | B | `dw-build` | `dumpsxiso` + `make regenerate` + `make` + `make compare` |
 
+Los jobs de clase B corren en serie, después de la clase A: las pruebas de reloj de pared
+(`native_wall_10min`, ritmo web) no admiten resincronizaciones y compartir el runner las hace
+fallar. `testing` corre al final y solo despliega si todo lo anterior pasó.
+
 Los jobs usan `dw-build` y `dw-port` del registry del proyecto
 (`$CI_REGISTRY_IMAGE`), fijadas por digest en `.gitlab-ci.yml`. El job
 manual `images` (también automático si cambia un Dockerfile o `requirements.txt`) las construye en

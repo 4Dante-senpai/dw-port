@@ -5,6 +5,10 @@
 #
 # Jobs pin the toolchain images by digest (AD-16); the images job publishes new ones.
 
+# Wall-clock tests (native_wall_10min, web pacing) allow 0 resynchronizations, so class B jobs
+# never share the runner: stages run in order and dw1-disc admits one job at a time.
+stages: [test, disc, testing]
+
 variables:
   GIT_DEPTH: 0                         # preproc_check needs the merge-base with upstream/main
   GIT_SUBMODULE_STRATEGY: normal
@@ -17,6 +21,8 @@ default:
     - git fetch --quiet https://github.com/jype0/dw_decomp.git main:refs/remotes/upstream/main
 
 .class_b:
+  stage: disc
+  resource_group: dw1-disc
   tags: [dw1-data]
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "schedule"
@@ -62,7 +68,7 @@ web-objects:
 
 native-disc:
   extends: .class_b
-  timeout: 3h                          # full reference recapture plus the four card scenes (story 3.8) can exceed 2 h
+  timeout: 4h                          # a full reference recapture took 2 h 52 min in pipeline 138
   cache:
     key:
       files: [.gitlab-ci.yml]
@@ -85,8 +91,8 @@ native-disc:
 native-asan-disc:
   extends: .class_b
   # Serial on purpose: captures have wall-clock timeouts, so parallel ASan + Redux could flake.
-  # Pipeline 125 hit 2 h with a full reference recapture; story 3.8 adds four card scenes.
-  timeout: 4h
+  # A full reference recapture took 3 h 58 min in pipeline 138.
+  timeout: 5h
   cache:
     key:
       files: [.gitlab-ci.yml]
@@ -125,6 +131,7 @@ matching:
 
 testing:
   extends: .testing_base
+  stage: testing
   script:
     - cmake --preset native-headless
     - cmake --build --preset native-headless
@@ -148,6 +155,7 @@ testing:
 
 testing-rollback:
   extends: .testing_base
+  stage: test                          # stays available when a later stage fails
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_REF_PROTECTED == "true" && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "schedule")'
       when: manual
