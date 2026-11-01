@@ -157,3 +157,7 @@
 ## Pipeline 141: `#play` deshabilitado tras recargar en Firefox (2026-11-01)
 
 `web_disc_real` falló una vez en el job `testing` de CI: tras `page.reload()`, `#play` siguió deshabilitado 5 s en Firefox. La causa no está identificada. No se reprodujo en 6 de 6 repeticiones de Firefox con 2,5 CPU en el PC remoto, donde el botón se habilitó en unos 150 ms. El log de CI no registró `#pack-status` ni `#status`, así que no distingue lentitud de un bloqueo real. El test ahora afirma esos estados antes de `#play`, con 60 s de margen; si reaparece, el fallo mostrará el estado alcanzado.
+
+## Pipeline 141: `Target crashed` de Firefox en `web_scene_title_audio` (2026-11-01)
+
+En el reintento del job `testing`, el test pasó en la primera ronda y Firefox se cayó con `Target crashed` en la segunda, dentro de la espera de `Module.finished`. La causa no está identificada. No se reprodujo en 4 de 4 repeticiones con 2,5 CPU en el PC remoto; el muestreo cada 20 s mostró 0 KB en `/dev/shm` y un pico de 1,8 GB de RSS, así que no hay evidencia de que falte `/dev/shm`. El job no conserva volcados ni el estado de memoria del runner: si reaparece, hay que capturarlos antes de descartar un fallo del port.
