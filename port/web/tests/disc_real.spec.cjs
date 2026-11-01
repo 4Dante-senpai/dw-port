@@ -44,7 +44,11 @@ test('own disc produces the native Pack, persists and clears', async ({page, bro
   expect(hashes).toEqual({sha256:nativeSha, sidecar:nativeSha});
   h.evidence(browserName, 'disc-real', {native_sha256:nativeSha, ...hashes,
     memory_max_bytes:memory, sm4_ms:sm4});
-  await page.reload(); await expect(page.locator('#play')).toBeEnabled();
+  await page.reload();
+  // Assert the state first: pipeline 141 only reported "disabled", which hides why Play stayed off.
+  await expect(page.locator('#pack-status')).toHaveText('Listo para jugar', {timeout:60000});
+  await expect(page.locator('#status')).toHaveText('');
+  await expect(page.locator('#play')).toBeEnabled({timeout:60000});
   await page.locator('#clear').click();
   await expect(page.locator('#pack-status')).toHaveText('Pack ausente');
   expect(await h.entries(page)).toEqual([]);

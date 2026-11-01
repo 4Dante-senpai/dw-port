@@ -132,6 +132,7 @@ matching:
 testing:
   extends: .testing_base
   stage: testing
+  timeout: 2h                          # two ctest passes plus the title audio tests exceeded 1 h in pipeline 141
   script:
     - cmake --preset native-headless
     - cmake --build --preset native-headless
