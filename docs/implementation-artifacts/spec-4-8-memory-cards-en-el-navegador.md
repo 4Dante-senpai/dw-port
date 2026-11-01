@@ -2,8 +2,8 @@
 title: 'Historia 4.8: Memory cards en el navegador'
 type: 'feature'
 created: '2026-11-01'
-status: 'in-progress'
-baseline_commit: 'PENDING'
+status: 'done'
+baseline_commit: 'd78d16a531511ceaf854ca6eb6dd228ed93486a8'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -68,17 +68,17 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `port/psyq/card_image.c` -- quitar la rama web de `card_image_attach`.
-- [ ] `port/host/web/card.c`, `CMakeLists.txt` -- crear: dos ranuras con `_Atomic uint32_t seq` e imagen de instantánea; `web_card_address(port)`; `web_card_attach(port, blank)`, llamable desde el hilo principal antes de `callMain`, que usa `card_image_new` si `blank` y `card_image_attach` con un `CardCommit` que hace seqlock (impar, `memcpy`, par) y `MAIN_THREAD_ASYNC_EM_ASM` hacia `Module.cards.committed(port)`; `web_card_test(n)` que, en el hilo del juego, llena la ranura 1 con un patrón por iteración, llama `card_image_commit`, espera 5 ms con futex y termina con `web_finish(0)`. Exportar las funciones y sumar el fuente al objetivo web.
-- [ ] `port/host/web/main.c`, `port/host/web/input.c` -- `--card-test N`; aplicar el replay también con captura activa.
-- [ ] `port/web/dev/index.html` -- un solo `dwStore(name, mode, action, options)` con `open('dw1', 2)` y `onupgradeneeded` por `oldVersion`; `settings` lo usa sin cambiar comportamiento. Almacén `cards`, clave `0|1`, valor `ArrayBuffer` de 131.072 bytes, escrito con `{durability: 'strict'}`. `Module.cards` con `committed`, `flush` (en `pagehide`, antes de terminar el worker) y `stats()` (`seq`, `persisted` y `failures` por ranura); `?cards=1` o «Jugar» cargan y adjuntan antes de `callMain`; `?replay=<nombre>` pide ese fixture (`1` sigue siendo `replay.txt`); `?card-test=N`; `?card-hold=1` ignora los avisos para que solo `pagehide` persista (tests). `<p id="card-warning" role="status">` fuera del launcher.
-- [ ] `port/web/dev/index.html` -- `#cards`: dos filas `#card-slot-1|2` con estado («Vacía», «Con datos», «Ilegible»), `input type=file accept=.mcd,.mcr` y botón Exportar (`Blob` + `<a download>`, `digimon-world-card-<n>.mcd`); mensaje `#card-status`; `confirm()` antes de reemplazar datos. Unificar `persist()` en una función llamada tras construir el Pack, al volver con Pack y al importar, con el aviso «denegado» más la sugerencia de exportar.
-- [ ] `tools/port/scenes/cards.py`, `CMakeLists.txt` -- crear, siguiendo `pcm.py` y reutilizando `run.py`: corre `native-headless` de `card_newgame` (tarjetas nuevas) y `card_continue` (con el `.mcd` resultante), más un control de `card_continue` con tarjeta nueva que debe dar otra imagen; deja en un directorio fuera del repo `.mcd`, `<escena>.replay.txt`, SHA-256 de la captura y `fixture.json`. Test `native_cards`, `SKIP_RETURN_CODE 77`, fixture `native_cards`.
-- [ ] `port/web/tests/cards.spec.cjs`, `port/web/tests/storage.cjs`, `port/web/tests/run.py`, `port/web/tests/playwright.config.cjs` (si hace falta), `CMakeLists.txt` -- clase A `web_cards`, Chromium y Firefox: toda la matriz con `--card-test`; `durability === 'strict'` observado envolviendo `IDBDatabase.prototype.transaction`; corte por `tx.abort()` y por `page.close()` al ejecutarse el `put`, cada uno repetido al menos 5 veces, con la entrada igual byte a byte a la anterior o a la nueva; `pagehide` con `?card-hold=1`, repetido 5 veces; descarga exportada igual a la entrada; bucle de 20 recargas con Pack sintético que mide el tiempo hasta `#play` habilitado y registra `#instance`, `#pack-status` y `#status`, en un JSON de evidencia.
-- [ ] `port/web/tests/cards_real.spec.cjs`, `port/web/tests/run.py`, `port/web/dev/serve.py`, `CMakeLists.txt` -- clase B `web_cards_real`, `FIXTURES_REQUIRED "disc_pack;native_cards"`: replay de `card_newgame` con captura, entrada igual byte a byte al `.mcd` nativo y frame igual al nativo; cerrar la página, reabrir, Shell «Con datos», replay de `card_continue` y frame igual al nativo; en otro contexto, importar el `.mcd` nativo por la Shell, exportar y comparar bytes, y replay de `card_continue`; en cada recarga, afirmar `#instance`, `#pack-status`, `#status` y `#play`, en ese orden.
-- [ ] `port/web/tests/cards_redux.spec.cjs` o variante por variable de entorno, `port/web/tests/run.py` -- suite manual `cards_redux` (no entra en CTest, como `long`): `capture.py card_newgame --state --card-build native-headless --reuse`, importar ese `.mcd` de Redux y continuar en web con frame igual al nativo; luego exportar la ranura 1 y correr `capture.py card_continue --state --card1 <exportado>`, con estado tras `loadSavegame` igual al de la referencia con la tarjeta nativa. Sin copiar la salida de una corrida sobre otra.
-- [ ] `port/web/tests/disc_real.spec.cjs` -- antes de `#pack-status`, tras cada recarga, afirmar `#instance` oculto: distingue espera del Web Lock de otras causas si reaparece el fallo.
-- [ ] `docs/port/setup.md`, `docs/planning-artifacts/architecture/architecture-dw-port-2026-10-11/ARCHITECTURE-SPINE.md`, `docs/implementation-artifacts/deferred-work.md`, `docs/implementation-artifacts/evidence/story-4-8/` -- cómo correr las suites; aclarar en AD-13 que `schema_version` es de `PortSettings` y que las tarjetas son `.mcd` crudo versionado por la base `dw1`; resolver la entrada de la 4.6; evidencia.
+- [x] `port/psyq/card_image.c` -- quitar la rama web de `card_image_attach`.
+- [x] `port/host/web/card.c`, `CMakeLists.txt` -- crear: dos ranuras con `_Atomic uint32_t seq` e imagen de instantánea; `web_card_address(port)`; `web_card_attach(port, blank)`, llamable desde el hilo principal antes de `callMain`, que usa `card_image_new` si `blank` y `card_image_attach` con un `CardCommit` que hace seqlock (impar, `memcpy`, par) y `MAIN_THREAD_ASYNC_EM_ASM` hacia `Module.cards.committed(port)`; `web_card_test(n)` que, en el hilo del juego, llena la ranura 1 con un patrón por iteración, llama `card_image_commit`, espera 5 ms con futex y termina con `web_finish(0)`. Exportar las funciones y sumar el fuente al objetivo web.
+- [x] `port/host/web/main.c`, `port/host/web/input.c` -- `--card-test N`; aplicar el replay también con captura activa.
+- [x] `port/web/dev/index.html` -- un solo `dwStore(name, mode, action, options)` con `open('dw1', 2)` y `onupgradeneeded` por `oldVersion`; `settings` lo usa sin cambiar comportamiento. Almacén `cards`, clave `0|1`, valor `ArrayBuffer` de 131.072 bytes, escrito con `{durability: 'strict'}`. `Module.cards` con `committed`, `flush` (en `pagehide`, antes de terminar el worker) y `stats()` (`seq`, `persisted` y `failures` por ranura); `?cards=1` o «Jugar» cargan y adjuntan antes de `callMain`; `?replay=<nombre>` pide ese fixture (`1` sigue siendo `replay.txt`); `?card-test=N`; `?card-hold=1` ignora los avisos para que solo `pagehide` persista (tests). `<p id="card-warning" role="status">` fuera del launcher.
+- [x] `port/web/dev/index.html` -- `#cards`: dos filas `#card-slot-1|2` con estado («Vacía», «Con datos», «Ilegible»), `input type=file accept=.mcd,.mcr` y botón Exportar (`Blob` + `<a download>`, `digimon-world-card-<n>.mcd`); mensaje `#card-status`; `confirm()` antes de reemplazar datos. Unificar `persist()` en una función llamada tras construir el Pack, al volver con Pack y al importar, con el aviso «denegado» más la sugerencia de exportar.
+- [x] `tools/port/scenes/cards.py`, `CMakeLists.txt` -- crear, siguiendo `pcm.py` y reutilizando `run.py`: corre `native-headless` de `card_newgame` (tarjetas nuevas) y `card_continue` (con el `.mcd` resultante), más un control de `card_continue` con tarjeta nueva que debe dar otra imagen; deja en un directorio fuera del repo `.mcd`, `<escena>.replay.txt`, SHA-256 de la captura y `fixture.json`. Test `native_cards`, `SKIP_RETURN_CODE 77`, fixture `native_cards`.
+- [x] `port/web/tests/cards.spec.cjs`, `port/web/tests/storage.cjs`, `port/web/tests/run.py`, `port/web/tests/playwright.config.cjs` (si hace falta), `CMakeLists.txt` -- clase A `web_cards`, Chromium y Firefox: toda la matriz con `--card-test`; `durability === 'strict'` observado envolviendo `IDBDatabase.prototype.transaction`; corte por `tx.abort()` y por `page.close()` al ejecutarse el `put`, cada uno repetido al menos 5 veces, con la entrada igual byte a byte a la anterior o a la nueva; `pagehide` con `?card-hold=1`, repetido 5 veces; descarga exportada igual a la entrada; bucle de 20 recargas con Pack sintético que mide el tiempo hasta `#play` habilitado y registra `#instance`, `#pack-status` y `#status`, en un JSON de evidencia.
+- [x] `port/web/tests/cards_real.spec.cjs`, `port/web/tests/run.py`, `port/web/dev/serve.py`, `CMakeLists.txt` -- clase B `web_cards_real`, `FIXTURES_REQUIRED "disc_pack;native_cards"`: replay de `card_newgame` con captura, entrada igual byte a byte al `.mcd` nativo y frame igual al nativo; cerrar la página, reabrir, Shell «Con datos», replay de `card_continue` y frame igual al nativo; en otro contexto, importar el `.mcd` nativo por la Shell, exportar y comparar bytes, y replay de `card_continue`; en cada recarga, afirmar `#instance`, `#pack-status`, `#status` y `#play`, en ese orden.
+- [x] `port/web/tests/cards_redux.spec.cjs` o variante por variable de entorno, `port/web/tests/run.py` -- suite manual `cards_redux` (no entra en CTest, como `long`): `capture.py card_newgame --state --card-build native-headless --reuse`, importar ese `.mcd` de Redux y continuar en web con frame igual al nativo; luego exportar la ranura 1 y correr `capture.py card_continue --state --card1 <exportado>`, con estado tras `loadSavegame` igual al de la referencia con la tarjeta nativa. Sin copiar la salida de una corrida sobre otra.
+- [x] `port/web/tests/disc_real.spec.cjs` -- antes de `#pack-status`, tras cada recarga, afirmar `#instance` oculto: distingue espera del Web Lock de otras causas si reaparece el fallo.
+- [x] `docs/port/setup.md`, `docs/planning-artifacts/architecture/architecture-dw-port-2026-10-11/ARCHITECTURE-SPINE.md`, `docs/implementation-artifacts/deferred-work.md`, `docs/implementation-artifacts/evidence/story-4-8/` -- cómo correr las suites; aclarar en AD-13 que `schema_version` es de `PortSettings` y que las tarjetas son `.mcd` crudo versionado por la base `dw1`; resolver la entrada de la 4.6; evidencia.
 
 **Acceptance Criteria:**
 - Given `ctest --preset web` sin disco, when corren las suites, then `web_cards` y las existentes pasan en Chromium y Firefox, y las de disco se saltean.
@@ -87,9 +87,35 @@ context:
 - Given el bucle de recargas, when se habilita `#play`, then ninguna iteración supera 5 s; si alguna lo hace, el JSON identifica el estado alcanzado.
 - Given `web_scene_title` y `web_scene_title_audio`, when corren, then siguen idénticas a nativo.
 
+## Implementation Notes
+
+- Codex implementó en una corrida de 50 min; verificación con disco en el PC remoto. La imagen local no trae PulseAudio: se corrió con una copia de la remota, `dw-port:remote`.
+- Desvío del Approach: el envío se fuerza en `beforeunload` y en `pagehide`. Con solo `pagehide`, Chromium no persistió el `put` de 128 KB (test de salida, hash nulo) y Firefox sí. Causa sin verificar. Un cierre sin `beforeunload` puede perder la última escritura no atendida en Chromium: queda el estado anterior, válido.
+- `tx.commit()` explícito y conexión `dw1` abierta: sin ellos el `put` del cierre no llegaba a la base.
+- `web_cards_real` compara 600 VBlanks después de `loadSavegame`, con `cards.py` reproduciendo los inputs resueltos más allá de los checkpoints. El frame del menú no probaba la carga.
+- `cards_redux` exporta una tarjeta guardada en web, no la importada de Redux.
+- Fuera del Code Map: `port/psyq/scene.c` (marca `MOV_playMovie` en web) y `port/psyq/tests/test_card.c` (sin ramas web: ahora corre el test real).
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+Revisión Codex (`codex-merged`) del diff contra `d78d16a`.
+
+| Hallazgo | Veredicto | Ruta | Evidencia |
+|---|---|---|---|
+| Segunda ranura sin recorrido C → IndexedDB (gap) | medium | patch | `web_card_test` solo publica la ranura 1; un `commit` que siempre avise `0` pasaría todas las pruebas. |
+| «Jugar» real sin prueba de adjunto (gap) | medium | patch | `cards.spec.cjs:97` llama `attachCards` directo y el resto usa `cards=1`: quitar `!location.search` no rompería nada. Es el camino del jugador. |
+| Cinco salidas con el mismo patrón (gap, edge) | medium | patch | `cards.spec.cjs:202`: tras la primera salida, las otras cuatro pasarían sin flush. |
+| `cardWarning` sugiere exportar desde la partida (blind, edge) | medium | patch | El exportador está en el launcher oculto y usa bytes previos a la partida. Exportar en partida es un Never del spec: se quita la sugerencia. |
+| `card-hold` no aísla `pagehide` (edge, claim) | medium | rechazado | Es cierto y la corrección sería editar este spec. En Chromium `pagehide` solo no persiste un `put` de 128 KB (medido); en Firefox sí. Queda en Implementation Notes. |
+| `snapshot()` abandona tras 4 intentos (blind, edge) | low | rechazado | La matriz lo pide: reintento acotado y persiste la anterior. El estado queda válido. |
+| Sin flush en `visibilitychange` (blind) | low | rechazado | `committed` persiste en cuanto llega el aviso, también oculto; solo perdería un aviso sin atender en el instante de matar el proceso, y queda el estado anterior. |
+| `attachCards` sin plazo ante lectura estancada (blind, edge) | low | rechazado | Sin caso alcanzable mostrado; el plazo agrega rama y recuperación. |
+| Desborde de `seq` uint32 (blind, edge) | false | rechazado | Requiere 2^31 comandos de escritura. |
+| `cards.py` no verifica `native-headless` (blind) | false | rechazado | Mismo contrato que `pcm.py`: sin binario falla de forma visible, y CI lo construye antes. |
+| Seqlock sin copia previa ni escritor que termina (blind) | low | rechazado | El caso sin copia no persiste nada y deja la entrada anterior, lo que la matriz admite. |
+| `cards_redux.py` fija `build/port/web` (edge) | low | rechazado | Suite manual, siempre con ese directorio. |
 
 ## Design Notes
 

@@ -1,0 +1,15 @@
+{
+  "native_bytes": 51369620,
+  "web_bytes": 51392468,
+  "first_difference_byte": -1,
+  "first_difference_frame": -1,
+  "sha256": "70ae581c607a99df57a281f8d67447efe498101c3d7956178946b4aa18849ef5",
+  "underruns": 2,
+  "overflows": 0,
+  "level": 6046,
+  "written": 12854163,
+  "max_delivery_gap_us": 121434,
+  "max_gap_level": 7887,
+  "starvation_gap_us": 11104,
+  "starvation_gap_level": 216
+}

@@ -1,0 +1,6 @@
+{
+  "browser": "firefox",
+  "native_reference": "/tmp/dw1-web-cards/redux/native-continue/run-1.state",
+  "web_export_reference": "/tmp/dw1-web-cards/redux/export-firefox/run-1.state",
+  "loadSavegame_match": true
+}

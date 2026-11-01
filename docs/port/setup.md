@@ -584,3 +584,53 @@ L4 de Firefox se corre con `tools/port/remote_run.sh` (20 CPU): con el tope loca
 L4 requiere 10 minutos por navegador y falla ante cualquier underrun o overflow;
 guarda ambos contadores junto con las métricas de ritmo en `long-*.json`. No
 reemplaza la medición final en hardware de referencia (historia 5.6).
+
+### Memory cards en web (historia 4.8)
+
+La Shell ofrece dos ranuras antes de «Jugar». Importa `.mcd` y `.mcr` crudos de
+131.072 bytes; rechaza cabeceras VGS y otros tamaños. Reemplazar una entrada existente,
+incluso ilegible, requiere confirmación. Exporta `digimon-world-card-<n>.mcd`.
+Si se pulsa «Jugar» durante una importación, el arranque espera a que esta termine.
+«Borrar datos» elimina únicamente el Pack. Si el navegador deniega persistencia,
+conviene exportar la Memory card para conservar la partida.
+
+`dw1` v2 agrega el almacén `cards` sin modificar `settings`. La carga ocurre antes de
+`callMain`; una entrada ausente genera una tarjeta formateada sin escribirla a IndexedDB.
+Una entrada inválida o inaccesible deja la ranura ausente en el Juego, con aviso.
+Cada comando de escritura publica una instantánea con seqlock en memoria compartida;
+el hilo principal hace un solo `put` del ArrayBuffer completo con durabilidad `strict`.
+`tx.commit()` inicia el commit explícitamente antes de abandonar el evento de cierre.
+El envío se fuerza en `beforeunload` y en `pagehide`: en Chromium un `put` de 128 KB iniciado
+solo en `pagehide` no llega a persistir (medido en esta historia), y el de `beforeunload` sí.
+Los fallos no detienen el Juego; el próximo comando vuelve a intentar guardar.
+`Module.cards.stats()` expone `seq`, `persisted` y `failures` por ranura.
+
+Dentro del contenedor:
+
+```sh
+cmake --build --preset web
+ctest --preset web --output-on-failure
+DW1_DISC_DIR=/ruta/al/disco ctest --preset web -R 'native_cards|web_cards_real' --output-on-failure
+DW1_DISC_DIR=/ruta/al/disco python3 port/web/tests/run.py build/port/web cards_redux
+```
+
+`web_cards` es clase A en Chromium y Firefox, sin disco: transacciones estrictas,
+cortes repetidos, importación/exportación y 20 recargas con Pack sintético por navegador.
+Los tiempos y estados quedan en `build/port/web/cards-reloads-<browser>.json`.
+`native_cards` genera tarjetas, replays absolutos y hashes de frames en
+`DW1_CARD_DIR_WEB` (por defecto `/tmp/dw1-web-cards`, siempre fuera del repo).
+`web_cards_real` requiere los fixtures `disc_pack;native_cards` y compara los bytes y
+frames de `card_newgame` y `card_continue`, también tras cerrar la página e importar.
+Las capturas nativas terminan al completar los checkpoints; el fixture registra el
+VBlank efectivo para que web capture el mismo instante sin portar el motor de Escenas.
+
+`cards_redux` es manual y no entra en CTest. Requiere PCSX-Redux, OpenBIOS y el disco
+`.cue/.bin`: obtiene una tarjeta de Redux, la continúa en web y compara su frame con
+nativo. Después exporta la ranura y ejecuta otra captura de Redux con esa tarjeta,
+comparando el estado tras `loadSavegame` con una captura independiente de la tarjeta
+nativa. Las salidas de referencia y de cada navegador tienen directorios distintos
+bajo `DW1_CARD_DIR_WEB/redux`; nunca se reemplaza un estado por el de otra corrida.
+Los arranques por query conservan tarjetas ausentes salvo `cards=1`. Para pruebas:
+`?cards=1&card-test=N` publica N patrones sin Pack; `card-hold=1` ignora avisos para
+verificar el flush de cierre; `replay=<nombre>` carga `<nombre>.replay.txt` del fixture
+(`replay=1` conserva `replay.txt`).

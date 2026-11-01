@@ -1,0 +1,26 @@
+{
+  "card_newgame": {
+    "mark": "MOV_playMovie",
+    "capture_vblank": 1074,
+    "final_vblank": 1557,
+    "sha256": "f55a228f5d89c885f3246ada95f861d07d744d41ba0133de855996c579e2ef8b",
+    "card_sha256": "18509839ea2e902ff1edc0c00db558d9cd2a98ec63ee13c7bf69f858263886dc",
+    "replay_sha256": "2a97324ad67bdde5e9988efe4ec137854a6cba304ebb0e0c30db5bdd72a76703"
+  },
+  "card_continue": {
+    "mark": "MOV_playMovie",
+    "capture_vblank": 904,
+    "final_vblank": 1387,
+    "sha256": "67de550e4adae825ac879c63876c555d8e80c4b265e2d8627d4791f024bfb9c6",
+    "card_sha256": "18509839ea2e902ff1edc0c00db558d9cd2a98ec63ee13c7bf69f858263886dc",
+    "replay_sha256": "ad6025694e00b3fb275434c96bff3d35cf6ea899997601c17add3ff4d9a74b66"
+  },
+  "control": {
+    "mark": "MOV_playMovie",
+    "capture_vblank": 904,
+    "final_vblank": 1387,
+    "sha256": "7da12618a78c506d6afd7a721aa9135434033f3e947a49fca6e33b69fe6fec73",
+    "card_sha256": "78b6d4ac9ab4d23caf7e5f04f83539bf5d994cccfb0a709d14ac53d05c8e21ef",
+    "replay_sha256": "ad6025694e00b3fb275434c96bff3d35cf6ea899997601c17add3ff4d9a74b66"
+  }
+}

@@ -151,12 +151,16 @@
   evidence: Sondas y L4 de la 4.5. A 1× no afecta el ritmo; a escala 4× la lectura mueve 16 veces más datos. Las Design Notes de 4.4 que proponen el camino `ImageBitmap` para la Épica 5 ya no valen; la decisión se toma en la 5.1.
 
 - source_spec: `docs/implementation-artifacts/spec-4-6-remapeo-y-opciones-persistentes.md`
-  summary: La base IndexedDB `dw1` se abre con versión fija 1 y solo crea el almacén `settings`; las Memory cards (4.8) deben centralizar la versión y las actualizaciones de `dw1` (o usar otra base) para no romper `PortSettings`.
-  evidence: `settingsStore()` en `port/web/dev/index.html` hace `indexedDB.open('dw1', 1)`; con la base en una versión mayor fallaría con `VersionError` y la Shell usaría valores por defecto sin guardar.
+  summary: Resuelto en 4.8: `dwStore` centraliza la base `dw1` v2 y migra por `oldVersion`, conservando `settings` y creando `cards`.
+  evidence: `port/web/dev/index.html`; `web_cards` verifica la migración desde v1 y protege una base posterior a v2 sin sobrescribirla. `schema_version` sigue versionando únicamente `PortSettings`.
+
+- source_spec: `docs/implementation-artifacts/spec-4-8-memory-cards-en-el-navegador.md`
+  summary: En Chromium, un `put` de 128 KB iniciado solo en `pagehide` no persiste; por eso `flush` corre también en `beforeunload`, y un cierre sin ese evento puede perder la última escritura sin atender (queda el estado anterior).
+  evidence: `web_cards` con solo `pagehide`: entrada nula en Chromium y correcta en Firefox (`build/port/remote48-cards.log`). Hipótesis sin verificar: Chromium envuelve los valores grandes en un paso asíncrono. Se resuelve probando con un valor de menos de 64 KB o con una traza de IndexedDB. Severidad low: la ventana es el tiempo entre `commit` y su aviso.
 
 ## Pipeline 141: `#play` deshabilitado tras recargar en Firefox (2026-11-01)
 
-`web_disc_real` falló una vez en el job `testing` de CI: tras `page.reload()`, `#play` siguió deshabilitado 5 s en Firefox. La causa no está identificada. No se reprodujo en 6 de 6 repeticiones de Firefox con 2,5 CPU en el PC remoto, donde el botón se habilitó en unos 150 ms. El log de CI no registró `#pack-status` ni `#status`, así que no distingue lentitud de un bloqueo real. El test ahora afirma esos estados antes de `#play`, con 60 s de margen; si reaparece, el fallo mostrará el estado alcanzado.
+`web_disc_real` falló una vez en el job `testing` de CI: tras `page.reload()`, `#play` siguió deshabilitado 5 s en Firefox. La causa no está identificada. No se reprodujo en 6 de 6 repeticiones de Firefox con 2,5 CPU en el PC remoto, donde el botón se habilitó en unos 150 ms. El log de CI no registró `#pack-status` ni `#status`, así que no distingue lentitud de un bloqueo real. El test ahora afirma esos estados antes de `#play`, con 60 s de margen; si reaparece, el fallo mostrará el estado alcanzado. En la 4.8 no reapareció (2026-11-01): 3 pasadas de 20 recargas por navegador con máximo de 169 ms y `web_disc_real` verde, y el test afirma además `#instance` oculto para detectar una espera del Web Lock.
 
 ## Pipeline 141: `Target crashed` de Firefox en `web_scene_title_audio` (2026-11-01)
 

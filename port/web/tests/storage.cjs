@@ -1,22 +1,24 @@
 const {execSync} = require('child_process');
 // Seed OPFS in a temporary dedicated worker; close its exclusive writer before boot.
-async function seed(page, file) {
+async function seed(page, file, sha256) {
   await page.goto('/seed.html');
-  await page.evaluate(async url => {
+  await page.evaluate(async ({url, sha256}) => {
     await new Promise((resolve, reject) => {
       const worker = new Worker('/seed_worker.js');
       let step = 'worker startup';
       const timer = setTimeout(() => {worker.terminate(); reject(Error('OPFS fixture stalled at ' + step));}, 45000);
       worker.onmessage = ({data}) => {
         if (data.step) {step = data.step; return;}
+        if (data.progress !== undefined) {step = 'copy Pack'; return;}
         clearTimeout(timer);
         worker.terminate();
         data.error ? reject(Error(data.error)) : resolve(data.size);
       };
       worker.onerror = e => reject(Error(e.message));
-      worker.postMessage(new URL(url, location.href).href);
+      const address = new URL(url, location.href).href;
+      worker.postMessage(sha256 ? {url:address, sha256} : address);
     });
-  }, '/__fixture/' + file);
+  }, {url:'/__fixture/' + file, sha256});
 }
 // Resident memory, in MiB, of the browser this test worker launched.
 function browserMemory() {
@@ -33,7 +35,7 @@ function browserMemory() {
 // IndexedDB "dw1" / "settings" / "port_settings", read and written from a page without the Shell.
 function store(page, value) {
   return page.evaluate(value => new Promise((resolve, reject) => {
-    const open = indexedDB.open('dw1', 1);
+    const open = indexedDB.open('dw1');
     open.onupgradeneeded = () => open.result.createObjectStore('settings');
     open.onerror = () => reject(open.error);
     open.onsuccess = () => {
