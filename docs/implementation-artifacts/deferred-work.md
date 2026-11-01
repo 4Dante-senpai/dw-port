@@ -153,3 +153,7 @@
 - source_spec: `docs/implementation-artifacts/spec-4-6-remapeo-y-opciones-persistentes.md`
   summary: La base IndexedDB `dw1` se abre con versión fija 1 y solo crea el almacén `settings`; las Memory cards (4.8) deben centralizar la versión y las actualizaciones de `dw1` (o usar otra base) para no romper `PortSettings`.
   evidence: `settingsStore()` en `port/web/dev/index.html` hace `indexedDB.open('dw1', 1)`; con la base en una versión mayor fallaría con `VersionError` y la Shell usaría valores por defecto sin guardar.
+
+## Pipeline 141: `#play` deshabilitado tras recargar en Firefox (2026-11-01)
+
+`web_disc_real` falló una vez en el job `testing` de CI: tras `page.reload()`, `#play` siguió deshabilitado 5 s en Firefox. La causa no está identificada. No se reprodujo en 6 de 6 repeticiones de Firefox con 2,5 CPU en el PC remoto, donde el botón se habilitó en unos 150 ms. El log de CI no registró `#pack-status` ni `#status`, así que no distingue lentitud de un bloqueo real. El test ahora afirma esos estados antes de `#play`, con 60 s de margen; si reaparece, el fallo mostrará el estado alcanzado.
