@@ -6,7 +6,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#ifndef __EMSCRIPTEN__
 static unsigned commits;
 static int commit_fails;
 static int commit(void *arg, const uint8_t *data, size_t size)
@@ -17,7 +16,6 @@ static int commit(void *arg, const uint8_t *data, size_t size)
 	commits++;
 	return commit_fails;
 }
-#endif
 static unsigned event_calls;
 static long event_callback(void)
 {
@@ -39,7 +37,6 @@ static void init(void)
 	MemCardInit(1);
 	MemCardStart();
 }
-#ifndef __EMSCRIPTEN__
 static unsigned called;
 static unsigned long callback_result;
 static void callback(unsigned long c, unsigned long r)
@@ -91,7 +88,6 @@ static void malformed_directories(void)
 		card_image_detach(0);
 	}
 }
-#endif
 int main(void)
 {
 	static uint8_t blank[CARD_IMAGE_SIZE];
@@ -114,19 +110,13 @@ int main(void)
 	assert(MemCardAccept(16));
 	assert(sync_result(2) == 1);
 	long out[2048];
-#ifndef __EMSCRIPTEN__
 	long data[2048];
 	for (unsigned i = 0; i < 2048; i++) {
 		data[i] = (long)(i * 0x1020304u);
 	}
-#endif
 	assert(!MemCardReadFile(0, "SAVE", out, 0, 4));
 	assert(MemCardReadFile(0, "SAVE", out, 0, 128));
 	assert(sync_result(3) == 1);
-#ifdef __EMSCRIPTEN__
-	card_image_attach(0, blank, 0, 0);
-	assert(!card_image_data(0));
-#else
 	card_image_attach(0, blank, commit, 0);
 	init();
 	assert(MemCardExist(0));
@@ -198,7 +188,6 @@ int main(void)
 	MemCardStop();
 	card_image_detach(1);
 	malformed_directories();
-#endif
 	long e = OpenEvent(CARD_SW, 4, 0x2000, 0);
 	assert(e != -1);
 	EnableEvent(e);

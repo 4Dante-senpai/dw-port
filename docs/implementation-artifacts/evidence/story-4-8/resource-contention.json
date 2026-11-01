@@ -1,0 +1,15 @@
+{
+  "cpu_max": "250000 100000",
+  "cpu_stat": {
+    "usage_usec": "2054331292",
+    "user_usec": "1707036500",
+    "system_usec": "347294792",
+    "core_sched.force_idle_usec": "0",
+    "nr_periods": "11847",
+    "nr_throttled": "4018",
+    "throttled_usec": "147644853",
+    "nr_bursts": "0",
+    "burst_usec": "0"
+  },
+  "observation": "web_input Firefox: resynchronizations=1, late_ns=77221687 at VBlank 42, while full web + title + title_audio overlapped; resource pressure is a hypothesis, not a confirmed product defect."
+}

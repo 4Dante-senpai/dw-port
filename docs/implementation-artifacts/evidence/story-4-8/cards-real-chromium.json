@@ -1,0 +1,17 @@
+{
+  "card_sha256": "18509839ea2e902ff1edc0c00db558d9cd2a98ec63ee13c7bf69f858263886dc",
+  "stats": [
+    {
+      "seq": 4,
+      "persisted": 4,
+      "failures": 0
+    },
+    {
+      "seq": 0,
+      "persisted": 0,
+      "failures": 0
+    }
+  ],
+  "save_and_continue": true,
+  "import_and_continue": true
+}

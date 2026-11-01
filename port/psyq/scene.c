@@ -608,12 +608,14 @@ void port_scene_finish(void)
 }
 #else
 extern void runMainMenu(void);
+extern int32_t MOV_playMovie(int32_t movie_id);
 void __cyg_profile_func_enter(void *function, void *caller)
 {
     (void)caller;
     clock_game_function_enter(function);
     /* The web tests' signal that the title ended: src/ has no mark at the menu. */
     if (function == (void *)runMainMenu) port_scene_mark("runMainMenu");
+    if (function == (void *)MOV_playMovie) port_scene_mark("MOV_playMovie");
 }
 void __cyg_profile_func_exit(void *function, void *caller)
 { (void)caller; clock_game_function_exit(function); }

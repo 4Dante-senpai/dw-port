@@ -19,6 +19,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         requested = urlsplit(path).path
         if requested.startswith('/__fixture/'):
             name = requested.removeprefix('/__fixture/')
+            if name in ('card_newgame.mcd', 'card_continue.mcd', 'card_newgame.replay.txt',
+                        'card_continue.replay.txt', 'cards-fixture.json'):
+                return str(Path(os.environ.get('DW1_CARD_DIR_WEB', '/tmp/dw1-web-cards')) /
+                           ('fixture.json' if name == 'cards-fixture.json' else name))
             if name in ('replay.txt', 'fixture.json'):
                 return str(Path(os.environ.get('DW1_PCM_DIR', '/tmp/dw1-web-title-audio')) / name)
             if name in ('synthetic.pack', 'corrupt.pack', 'bad-index.pack', 'us.pack', 'us.pack.sha256'):

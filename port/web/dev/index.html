@@ -10,6 +10,7 @@
   <button id="pause" hidden>Pausa</button>
 </div>
 <p id="audio-warning" role="status"></p>
+<p id="card-warning" role="status"></p>
 <pre id="status"></pre>
 <section id="launcher" hidden>
   <section id="welcome">
@@ -44,7 +45,8 @@
   </details>
   <details id="cards">
     <summary>Memory cards</summary>
-    <p>La gestión de Memory cards llega en una próxima versión.</p>
+    <div id="card-slots"></div>
+    <p id="card-status" role="status"></p>
   </details>
   <button id="clear" disabled>Borrar datos</button>
 </section>
@@ -104,6 +106,7 @@ async function start() {
   if (query.has('io-test')) args.push(query.get('io-test') === 'guard' ? '--io-guard-test' : '--io-test');
   if (query.has('capture-mark')) args.push('--capture-mark', query.get('capture-mark'),
       '--capture-vblank', query.get('capture-vblank'));
+  if (query.has('card-test')) args.push('--card-test', query.get('card-test'));
   if (query.has('replay')) args.push('--replay', 'replay.txt');
   if (query.has('vblanks')) args.push('--vblanks', query.get('vblanks'));
   if (query.has('audio-ramp')) args.push('--audio-ramp');
@@ -204,6 +207,7 @@ function boot(args, audioContext) {
   };
   Module.onRuntimeInitialized = async () => {
     try {
+      if (!location.search || query.get('cards') === '1') await attachCards();
       await setupAudio(audioContext);
       pauseControls();
       showFrames();
@@ -218,7 +222,7 @@ function boot(args, audioContext) {
         });
       }
       if (query.has('replay')) {
-        const response = await fetch('/__fixture/replay.txt');
+        const response = await fetch('/__fixture/' + (query.get('replay') === '1' ? 'replay.txt' : encodeURIComponent(query.get('replay')) + '.replay.txt'));
         if (!response.ok) throw Error('Replay HTTP ' + response.status);
         FS.writeFile('replay.txt', await response.text());
       }
@@ -228,7 +232,9 @@ function boot(args, audioContext) {
   if (query.get('validate') === '1') Module.presentations = [];
   // The I/O worker's OPFS handle would outlive this page (bfcache) and block the next page's
   // "Borrar datos" or Pack build; a restored page reloads instead of resuming a dead game.
-  addEventListener('pagehide', () => Module.ioWorker?.terminate());
+  // Chromium drops a 128 KB put started in pagehide (measured in story 4.8); beforeunload still commits it.
+  addEventListener('beforeunload', () => Module.cards?.flush());
+  addEventListener('pagehide', () => { Module.cards?.flush(); Module.ioWorker?.terminate(); });
   addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
   const script = document.createElement('script');
   script.src = '/dw1.js' + (query.has('poison') ? '?poison=1' : '');
@@ -327,22 +333,154 @@ const MIGRATIONS = {
   },
   2: value => ({...value, schema_version: 3, volume: 1})
 };
-function settingsStore(mode, action) {
+// Keep the ready connection so pagehide can start its transaction synchronously.
+let dwDatabase;
+function dwStore(name, mode, action, options) {
   return new Promise((resolve, reject) => {
-    const open = indexedDB.open('dw1', 1);
-    open.onupgradeneeded = () => open.result.createObjectStore('settings');
+    function run(db) {
+      try {
+        const tx = db.transaction(name, mode, options);
+        const request = action(tx.objectStore(name));
+        tx.oncomplete = () => resolve(request.result);
+        tx.onerror = tx.onabort = () => reject(tx.error || Error('IndexedDB transaction aborted'));
+        // pagehide may destroy the document before automatic commit's next event-loop turn.
+        if (mode === 'readwrite') tx.commit();
+      } catch (e) { reject(e); }
+    }
+    if (dwDatabase) { run(dwDatabase); return; }
+    const open = indexedDB.open('dw1', 2);
+    let abandoned = false;
+    open.onupgradeneeded = event => {
+      if (abandoned) { open.transaction.abort(); return; }
+      if (event.oldVersion < 1) open.result.createObjectStore('settings');
+      if (event.oldVersion < 2) open.result.createObjectStore('cards');
+    };
     open.onerror = () => reject(open.error);
-    open.onblocked = () => reject(Error('IndexedDB blocked by another connection'));
+    open.onblocked = () => { abandoned = true; reject(Error('IndexedDB blocked by another connection')); };
     open.onsuccess = () => {
       const db = open.result;
-      try {
-        const tx = db.transaction('settings', mode);
-        const request = action(tx.objectStore('settings'));
-        tx.oncomplete = () => { db.close(); resolve(request.result); };
-        tx.onerror = tx.onabort = () => { db.close(); reject(tx.error || Error('IndexedDB transaction aborted')); };
-      } catch (e) { db.close(); reject(e); }
+      if (abandoned) { db.close(); return; }
+      dwDatabase = db;
+      db.onclose = () => { if (dwDatabase === db) dwDatabase = undefined; };
+      db.onversionchange = () => { db.close(); db.onclose(); };
+      run(db);
     };
   });
+}
+function settingsStore(mode, action) { return dwStore('settings', mode, action); }
+const CARD_SIZE = 131072;
+let cardSlots;
+const cardImports = new Set();
+function cardWarning(error) {
+  document.querySelector('#card-warning').textContent = 'No se pudo acceder a la Memory card: ' + error.message + '.';
+}
+async function readCards() {
+  return Promise.all([0, 1].map(async port => {
+    try {
+      const data = await dwStore('cards', 'readonly', store => store.get(port));
+      if (data === undefined) return {state: 'Vacía', writable: true};
+      if (!(data instanceof ArrayBuffer) || data.byteLength !== CARD_SIZE) {
+        cardWarning(Error('Ranura ' + (port + 1) + ' ilegible'));
+        return {state: 'Ilegible', writable: false, existing: true};
+      }
+      return {state: 'Con datos', writable: true, existing: true, data};
+    } catch (error) { cardWarning(error); return {state: 'Ilegible', writable: false, existing: true}; }
+  }));
+}
+async function requestPersistence() {
+  const warning = document.querySelector('#storage-warning');
+  try {
+    if (!await navigator.storage.persist()) warning.textContent =
+      'Almacenamiento persistente denegado: el navegador puede borrar los datos. Conviene exportar la Memory card para conservar la partida.';
+  } catch (error) { warning.textContent = 'No se pudo solicitar almacenamiento persistente: ' + error.message +
+      '. Conviene exportar la Memory card para conservar la partida.'; }
+}
+async function cardsEditor() {
+  cardSlots = await readCards();
+  const body = document.querySelector('#card-slots');
+  const message = document.querySelector('#card-status');
+  body.replaceChildren(...cardSlots.map((slot, port) => {
+    const row = document.createElement('div'); row.id = 'card-slot-' + (port + 1);
+    const label = document.createElement('span');
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.mcd,.mcr';
+    input.setAttribute('aria-label', 'Importar Memory card ' + (port + 1));
+    const button = document.createElement('button'); button.textContent = 'Exportar';
+    const render = () => { label.textContent = 'Ranura ' + (port + 1) + ': ' + slot.state; button.disabled = !slot.data; };
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+      input.disabled = true;
+      let complete;
+      const pending = new Promise(resolve => { complete = resolve; });
+      cardImports.add(pending);
+      try {
+        if (file.size !== CARD_SIZE) throw Error('Tamaño inválido: ' + file.size + ' bytes; se requieren 131072 bytes.');
+        if (slot.existing && !confirm('¿Reemplazar la Memory card de la ranura ' + (port + 1) + '?')) return;
+        const data = await file.arrayBuffer();
+        if (data.byteLength !== CARD_SIZE) throw Error('Tamaño inválido: ' + data.byteLength + ' bytes.');
+        await dwStore('cards', 'readwrite', store => store.put(data, port), {durability: 'strict'});
+        Object.assign(slot, {state: 'Con datos', data, existing: true, writable: true});
+        render(); message.textContent = 'Memory card importada en la ranura ' + (port + 1) + '.';
+        requestPersistence();
+      } catch (error) { message.textContent = error.message; }
+      finally { input.value = ''; input.disabled = false; cardImports.delete(pending); complete(); }
+    };
+    button.onclick = () => {
+      const url = URL.createObjectURL(new Blob([slot.data], {type: 'application/octet-stream'}));
+      const link = document.createElement('a'); link.href = url;
+      link.download = 'digimon-world-card-' + (port + 1) + '.mcd'; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
+    row.append(label, input, button); render(); return row;
+  }));
+}
+async function attachCards() {
+  // Finish imports started in the Shell before the game takes ownership of the cards.
+  await Promise.all([...cardImports]);
+  const slots = await readCards();
+  const jobs = new Set();
+  const states = slots.map((slot, port) => {
+    const address = Module._web_card_address(port);
+    if (slot.writable) {
+      if (slot.data) HEAPU8.set(new Uint8Array(slot.data), address + 4);
+      Module._web_card_attach(port, slot.data ? 0 : 1);
+    }
+    return {address, seq: 0, persisted: 0, failures: 0, scheduled: 0, writable: slot.writable, snapshot: null};
+  });
+  function snapshot(slot) {
+    const word = new Int32Array(HEAPU8.buffer, slot.address, 1);
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const seq = Atomics.load(word, 0) >>> 0;
+      if (seq & 1) continue;
+      if (!seq || seq === slot.seq) return slot.snapshot;
+      const bytes = new Uint8Array(CARD_SIZE);
+      bytes.set(HEAPU8.subarray(slot.address + 4, slot.address + 4 + CARD_SIZE));
+      const data = bytes.buffer;
+      if ((Atomics.load(word, 0) >>> 0) === seq) {
+        slot.seq = seq; slot.snapshot = {seq, data}; return slot.snapshot;
+      }
+    }
+    return slot.snapshot;
+  }
+  function persist(port) {
+    const slot = states[port];
+    if (!slot?.writable) return;
+    const copy = snapshot(slot);
+    if (!copy || copy.seq <= slot.scheduled) return;
+    slot.scheduled = copy.seq;
+    const job = dwStore('cards', 'readwrite', store => store.put(copy.data, port), {durability: 'strict'})
+      .then(() => { slot.persisted = copy.seq; }, error => {
+        slot.failures++; if (slot.scheduled === copy.seq) slot.scheduled = slot.persisted;
+        cardWarning(error);
+      }).finally(() => jobs.delete(job));
+    jobs.add(job);
+  }
+  Module.cards = {
+    committed: port => { if (query.get('card-hold') !== '1') persist(port); },
+    flush: () => { persist(0); persist(1); return Promise.all([...jobs]); },
+    stats: () => states.map(slot => ({seq: Atomics.load(new Int32Array(HEAPU8.buffer, slot.address, 1), 0) >>> 0,
+      persisted: slot.persisted, failures: slot.failures}))
+  };
 }
 function validSettings(value) {
   // Codes are non-empty strings and indices non-negative integers, each used by one button only.
@@ -529,6 +667,7 @@ function inputControls() {
 async function launch() {
   document.querySelector('#launcher').hidden = false;
   controlsEditor();
+  cardsEditor();
   const state = document.querySelector('#pack-status');
   const load = document.querySelector('#load-pack');
   const play = document.querySelector('#play');
@@ -570,9 +709,7 @@ async function launch() {
       });
       available = true;
       state.textContent = 'Listo para jugar';
-      navigator.storage.persist().then(granted => {
-        if (!granted) warning.textContent = 'Almacenamiento persistente denegado: el navegador puede borrar los datos.';
-      }).catch(e => { warning.textContent = 'No se pudo solicitar almacenamiento persistente: ' + e.message; });
+      requestPersistence();
     } catch (e) { status.textContent = e.message; }
     finally { busy(false); disc.value = ''; }
   }
@@ -591,6 +728,7 @@ async function launch() {
   try {
     const stored = await request({type:'status'});
     available = !!stored.sha256;
+    if (available) requestPersistence();
     state.textContent = available ? 'Listo para jugar' : 'Pack ausente';
     try {
       const version = await fetch('/version.txt');

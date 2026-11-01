@@ -15,10 +15,10 @@ import importlib.util
 root = Path(__file__).resolve().parents[3]
 build = Path(sys.argv[1]).resolve()
 suite = sys.argv[2] if len(sys.argv) > 2 else 'boot'
-if suite in ('title', 'title_audio', 'disc_real', 'long') and not (os.environ.get('DW1_DISC_DIR') or (suite == 'title' and os.environ.get('DW1_WEB_URL'))):
+if suite in ('title', 'title_audio', 'disc_real', 'cards_real', 'cards_redux', 'long') and not (os.environ.get('DW1_DISC_DIR') or (suite == 'title' and os.environ.get('DW1_WEB_URL'))):
     print(f'web_{"scene_title" if suite == "title" else suite}: DW1_DISC_DIR not set; skipped')
     sys.exit(77)
-if suite in ('io', 'launcher', 'shell'):
+if suite in ('io', 'launcher', 'shell', 'cards'):
     # Same sector/byte formula as pack/tests/test_pack.c; no disc bytes.
     data = bytes(((22 + i // 2048) * 31 + (24 + i % 2048) * 7) & 255 for i in range(5000))
     header = struct.pack('<8sII32sII8x', b'DW1PACK\0', 1, 1, bytes(32), 64, 2048)
@@ -33,9 +33,12 @@ if suite in ('io', 'launcher', 'shell'):
     corrupt[64 + 80] ^= 1
     (build / 'bad-index.pack').write_bytes(corrupt)
 
+if suite == 'cards_redux':
+    prepared = subprocess.run([sys.executable, '-I', '-B', str(root / 'tools/port/scenes/cards_redux.py'), 'prepare'])
+    if prepared.returncode: sys.exit(prepared.returncode)
 env = dict(os.environ, DW1_WEB_SUITE=suite, DW1_WEB_BUILD=str(build))
 server = None
-if suite in ('title', 'title_audio', 'disc_real', 'long') and not env.get('DW1_WEB_URL'):
+if suite in ('title', 'title_audio', 'disc_real', 'cards_real', 'cards_redux', 'long') and not env.get('DW1_WEB_URL'):
     with (build / 'us.pack').open('rb') as pack_file:
         (build / 'us.pack.sha256').write_text(hashlib.file_digest(pack_file, 'sha256').hexdigest() + '\n')
 if not env.get('DW1_WEB_URL'):

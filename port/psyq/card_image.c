@@ -30,19 +30,12 @@ void card_image_attach(int port, const uint8_t *image, CardCommit commit, void *
 	if (port < 0 || port > 1) {
 		return;
 	}
-#ifdef __EMSCRIPTEN__
-	(void)image;
-	(void)commit;
-	(void)context;
-	cards[port].present = 0; /* Native persistence only; web support is Epic 4. */
-#else
 	if (image) {
 		memcpy(cards[port].data, image, CARD_IMAGE_SIZE);
 	}
 	cards[port].present = image != NULL;
 	cards[port].commit = commit;
 	cards[port].context = context;
-#endif
 }
 uint8_t *card_image_data(int port)
 {

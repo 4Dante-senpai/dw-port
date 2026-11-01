@@ -6,6 +6,7 @@
 #include <emscripten.h>
 #include "io_mailbox.h"
 #include "audio.h"
+#include "card.h"
 #include "input.h"
 #include <errno.h>
 #include "../../backend/cdrom.h"
@@ -17,6 +18,7 @@ int plat_pattern;
 int plat_validation;
 static const char *pack_path;
 static int io_test;
+static unsigned card_test;
 static int io_guard_test;
 /* Synchronously record each guard hit on the main thread before throwing. */
 EMSCRIPTEN_KEEPALIVE void web_storage_guard_hit(void)
@@ -59,6 +61,7 @@ static void *reader(void *arg)
 }
 int web_prepare(void)
 {
+    if (card_test) web_card_test(card_test);
     if (io_test) {
         pthread_t threads[4];
         for (unsigned i = 0; i < 4; i++)
@@ -96,6 +99,13 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--capture-mark") && i + 1 < argc) config.mark = argv[++i];
         else if (!strcmp(argv[i], "--capture-vblank") && i + 1 < argc) config.vblank = strtoul(argv[++i], NULL, 10);
         else if (!strcmp(argv[i], "--pattern")) plat_pattern = 1;
+        else if (!strcmp(argv[i], "--card-test") && i + 1 < argc) {
+            char *end;
+            const char *value = argv[++i];
+            unsigned long n = strtoul(value, &end, 10);
+            if (*value < '0' || *value > '9' || *end || !n || n > 100000) return 2;
+            card_test = n;
+        }
         else if (!strcmp(argv[i], "--audio-ramp")) web_audio_ramp(1);
         else if (!strcmp(argv[i], "--replay") && i + 1 < argc) {
             if (web_input_replay(argv[++i])) return 2;

@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-10-31
+Última actualización: 2026-11-01
 
 ## Modo de operación
 
@@ -14,7 +14,7 @@
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
 - M3 Paridad nativa: **completo** (Épica 3 cerrada: retrospectiva `accepted-with-open-items`, 2026-10-27).
-- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo; 4.5 teclado y gamepad; 4.6 remapeo y opciones persistentes; 4.7 audio en el navegador).
+- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo; 4.5 teclado y gamepad; 4.6 remapeo y opciones persistentes; 4.7 audio en el navegador; 4.8 Memory cards en el navegador).
 
 ## Hecho
 
@@ -250,6 +250,7 @@
   es de la 5.6. La latencia web es 139 ms (nativa 50 ms); la sincronía con video no se midió.
   `make compare` idéntico, nativa 85/85, web 51/51 y 5/5 con disco.
   Evidencia: `docs/implementation-artifacts/evidence/story-4-7/`.
+- Historia 4.8 (Memory cards en el navegador): dos ranuras en IndexedDB `dw1` v2, cada una un `.mcd` crudo de 131.072 bytes escrito con un solo `put` `durability: 'strict'`. El hilo del juego publica una instantánea con seqlock al terminar cada comando de `libmcrd` y el hilo principal la persiste. La Shell muestra las ranuras e importa y exporta; un tamaño distinto se rechaza, y si se deniega `persist()` sugiere exportar. Bytes guardados en web idénticos a nativo, y Continue da el frame nativo 600 VBlanks después de `loadSavegame`, tras cerrar la página y tras importar, en Chromium y Firefox. `cards_redux` (manual, fuera de CI): web carga el `.mcd` de Redux y Redux carga uno exportado por web. Desvío: el envío se fuerza también en `beforeunload`, porque en Chromium `pagehide` solo no persiste 128 KB; causa sin verificar (`deferred-work.md`). Web 54/54 y nativa 85/85 con disco, sin omisiones. Sin cambios en `src/`. Evidencia: `docs/implementation-artifacts/evidence/story-4-8/`.
 
 - Historia 8.5 (entorno de testing en el homelab): job `testing` de clase B en `main` compila nativo y
   web, arma el Pack, valida el título y despliega en el host de deploy (`HUB_DOCKER_HOST`) una imagen
@@ -478,7 +479,7 @@
 
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 a 4.7 ya están cerradas, y también la 8.1 y la 8.5. El dueño aprobó el 2026-10-31 extender a web la excepción de contrapresión de AD-8. El pipeline 142 de `main` (`832a3b1`) quedó verde, con despliegue al entorno de testing. Siguen sin causa identificada dos fallos intermitentes de Firefox en CI, anotados en `deferred-work.md`: `#play` deshabilitado tras recargar y `Target crashed` en `web_scene_title_audio`.
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 a 4.8 ya están cerradas, y también la 8.1 y la 8.5. El dueño aprobó el 2026-10-31 extender a web la excepción de contrapresión de AD-8. El pipeline 142 de `main` (`832a3b1`) quedó verde, con despliegue al entorno de testing. Siguen sin causa identificada dos fallos intermitentes de Firefox en CI, anotados en `deferred-work.md`: `#play` deshabilitado tras recargar y `Target crashed` en `web_scene_title_audio`.
 
 ## Bloqueos
 
@@ -524,7 +525,7 @@ Una métrica que no se puede calcular en el entorno aparece como `sin verificar 
 | Macros inline GTE implementadas / stubs | 11 / 0 |
 | Archivos del disco en el Manifest USA | 818 (+ `@exe`) |
 | Escenas que funcionan (nativo) | 10 (`card_newgame`: crea el save, `.mcd` idéntico a Redux; `card_continue`: carga el save con estado idéntico; `movie0`: OP1 completo por MDEC, 3636 frames dentro de tolerancia salvo 4 componentes aceptados; `movie0_skip`: salida con Start en el mismo VBlank que la referencia; `xa_op1`: XA de OP1 a 54,42 dB contra la referencia; título idéntico a referencia OpenBIOS, sin excepciones; `newgame` con estado idéntico en 9 puntos de control; `map_load` con estado idéntico en 12 puntos de control, incluida la carga de SHOP; `naming`: grilla de nombres exacta salvo el modelo 3D; `title_audio` con escrituras de voz idénticas en 2 tramos) |
-| Escenas que funcionan (web) | 1 (título, igual a nativo, Chromium y Firefox) |
+| Escenas que funcionan (web) | 3 (título, `card_newgame` y `card_continue`, iguales a nativo, Chromium y Firefox) |
 | Llamadas con firma distinta inventariadas / sin resolver | 1031 / 0 (`fnptr_casts.tsv`) |
 
 ## Notas

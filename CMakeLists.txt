@@ -714,7 +714,7 @@ if(EMSCRIPTEN)
   configure_file(port/web/audio_worklet.js ${CMAKE_BINARY_DIR}/audio_worklet.js COPYONLY)
   configure_file(port/web/io_worker.js ${CMAKE_BINARY_DIR}/io_worker.js COPYONLY)
   configure_file(port/web/dev/index.html ${CMAKE_BINARY_DIR}/dw1.html COPYONLY)
-  add_executable(dw1 port/host/web/main.c port/host/web/present_gl.c port/host/web/pace.c port/host/web/input.c port/host/web/audio.c
+  add_executable(dw1 port/host/web/main.c port/host/web/present_gl.c port/host/web/pace.c port/host/web/input.c port/host/web/audio.c port/host/web/card.c
     ${DW1_PSYQ_STUBS} $<TARGET_OBJECTS:dw1_game_objs>)
   target_link_libraries(dw1 dw1_runtime dw1_web_audio_rate)
   set_property(TARGET dw1 APPEND PROPERTY LINK_DEPENDS
@@ -723,7 +723,7 @@ if(EMSCRIPTEN)
   target_link_options(dw1 PRIVATE -Wl,--fatal-warnings -sINITIAL_MEMORY=67108864 -sALLOW_MEMORY_GROWTH=0
     -sEMULATE_FUNCTION_POINTER_CASTS=1 -sOFFSCREENCANVAS_SUPPORT=1 -sPTHREAD_POOL_SIZE=5 -sEXIT_RUNTIME=0
     --pre-js ${CMAKE_SOURCE_DIR}/port/web/thread_storage_guard.js
-    -sEXPORTED_FUNCTIONS=_main,_io_mailbox_address,_web_control_address,_web_input_address,_web_frame_address,_web_audio_address,_web_audio_delivery_address,_web_audio_enable -sEXPORTED_RUNTIME_METHODS=callMain
+    -sEXPORTED_FUNCTIONS=_main,_io_mailbox_address,_web_control_address,_web_input_address,_web_frame_address,_web_audio_address,_web_audio_delivery_address,_web_audio_enable,_web_card_address,_web_card_attach,_card_image_data -sEXPORTED_RUNTIME_METHODS=callMain
     -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sGL_ASSERTIONS=1)
   add_test(NAME web_boot COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR})
@@ -740,6 +740,17 @@ if(EMSCRIPTEN)
   add_test(NAME web_audio COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} audio)
   set_tests_properties(web_audio PROPERTIES TIMEOUT 900)
+  add_test(NAME web_cards COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} cards)
+  set_tests_properties(web_cards PROPERTIES TIMEOUT 900)
+  add_test(NAME native_cards COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/scenes/cards.py --pack ${CMAKE_BINARY_DIR}/us.pack)
+  set_tests_properties(native_cards PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 5400
+    FIXTURES_REQUIRED disc_pack FIXTURES_SETUP native_cards)
+  add_test(NAME web_cards_real COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} cards_real)
+  set_tests_properties(web_cards_real PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 5400
+    FIXTURES_REQUIRED "disc_pack;native_cards")
   add_test(NAME web_settings COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} settings)
   set_tests_properties(web_settings PROPERTIES TIMEOUT 600)

@@ -53,14 +53,14 @@ int web_input_replay(const char *path)
 }
 void plat_input_vblank(void)
 {
-    /* Scene captures replay no live input, as in native-headless. */
-    if (port_capture_active()) return;
     if (replay) {
         while (next_event < event_count && events[next_event].vblank <= clock_vblanks())
             replay_mask = events[next_event++].mask;
         port_pad_latch(replay_mask);
         return;
     }
+    /* Scene captures take no live input, as in native-headless. */
+    if (port_capture_active()) return;
     uint32_t seq = atomic_load(&block[SEQ]);
     /* A VBlank whose poll PsyQ skipped keeps the previous packet: that sample was not consumed. */
     int applies = port_pad_latch_applies();
