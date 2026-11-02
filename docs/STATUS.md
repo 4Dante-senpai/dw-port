@@ -480,7 +480,7 @@
 
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 a 4.9 ya están cerradas, y también la 8.1 y la 8.5. El dueño aprobó el 2026-10-31 extender a web la excepción de contrapresión de AD-8. El pipeline 144 de `main` (`d8ab7d0`, historia 4.8) quedó verde, con despliegue al entorno de testing. Siguen sin causa identificada dos fallos intermitentes de Firefox en CI, anotados en `deferred-work.md` y no repetidos en el pipeline 144: `#play` deshabilitado tras recargar y `Target crashed` en `web_scene_title_audio`.
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 a 4.9 ya están cerradas, y también la 8.1 y la 8.5. El dueño aprobó el 2026-10-31 extender a web la excepción de contrapresión de AD-8. El pipeline 146 de `main` (`68070e3`, historia 4.9) quedó verde, sin reintentos, con despliegue al entorno de testing. Siguen sin causa identificada dos fallos intermitentes de Firefox en CI, anotados en `deferred-work.md` y no repetidos en los pipelines 144 ni 146: `#play` deshabilitado tras recargar y `Target crashed` en `web_scene_title_audio`.
 
 ## Bloqueos
 
