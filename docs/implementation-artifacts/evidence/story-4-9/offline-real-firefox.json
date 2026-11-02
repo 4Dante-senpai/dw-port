@@ -1,0 +1,13 @@
+{
+  "browser": "firefox",
+  "before": {
+    "sha256": "c01e5c3680ffdf50d0342f16ec978c6d107a33529688dae6a817bd63947f0cf6",
+    "sidecar": "c01e5c3680ffdf50d0342f16ec978c6d107a33529688dae6a817bd63947f0cf6"
+  },
+  "after": {
+    "sha256": "c01e5c3680ffdf50d0342f16ec978c6d107a33529688dae6a817bd63947f0cf6",
+    "sidecar": "c01e5c3680ffdf50d0342f16ec978c6d107a33529688dae6a817bd63947f0cf6"
+  },
+  "vblanks": 618,
+  "updatedVblanks": 604
+}

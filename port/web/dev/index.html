@@ -10,6 +10,7 @@
   <button id="pause" hidden>Pausa</button>
 </div>
 <p id="audio-warning" role="status"></p>
+<p id="update-status" role="status"></p>
 <p id="card-warning" role="status"></p>
 <pre id="status"></pre>
 <section id="launcher" hidden>
@@ -53,6 +54,13 @@
 <script>
 const status = document.querySelector('#status');
 const query = new URLSearchParams(location.search);
+let gameStarted = false, mainStarted = false, interacted = false;
+const controlledOnOpen = !!navigator.serviceWorker?.controller;
+navigator.serviceWorker?.addEventListener('controllerchange', () => {
+  if (controlledOnOpen && !mainStarted) location.reload();
+});
+for (const event of ['pointerdown', 'keydown', 'dragenter'])
+  addEventListener(event, () => { interacted = true; }, {capture:true, once:true});
 const forever = new Promise(() => {});
 capabilities().then(missing => {
   if (!missing.length) { start().catch(e => { status.textContent = e.message; }); return; }
@@ -192,6 +200,7 @@ async function setupAudio(context) {
   }
 }
 function boot(args, audioContext) {
+  gameStarted = true;
   // Options are closed once the game starts: a pending «Reasignar» must not eat its first key.
   cancelRemap?.();
   document.querySelector('#launcher').hidden = true;
@@ -213,11 +222,13 @@ function boot(args, audioContext) {
       showFrames();
       inputControls();
       if (args.includes('--pack') || query.has('io-test')) {
+        Module.ioShutdown = new Int32Array(new SharedArrayBuffer(4));
         Module.ioWorker = new Worker('/io_worker.js');
         await new Promise((resolve, reject) => {
-          Module.ioWorker.onmessage = ({data}) => data.ready ? resolve() : reject(Error(data.error));
+          Module.ioWorker.onmessage = ({data}) => data.closed ? Module.ioWorker.terminate() :
+            data.ready ? resolve() : reject(Error(data.error));
           Module.ioWorker.onerror = e => reject(Error(e.message));
-          Module.ioWorker.postMessage({memory: HEAPU8.buffer, address: Module._io_mailbox_address(),
+          Module.ioWorker.postMessage({memory: HEAPU8.buffer, shutdown: Module.ioShutdown.buffer, address: Module._io_mailbox_address(),
             delay: query.has('io-test') ? 5 : 0});
         });
       }
@@ -226,6 +237,7 @@ function boot(args, audioContext) {
         if (!response.ok) throw Error('Replay HTTP ' + response.status);
         FS.writeFile('replay.txt', await response.text());
       }
+      mainStarted = true;
       Module.callMain(Module.arguments);
     } catch (error) { Module.printErr(error.message); Module.finished = 1; Module.onFinished?.(); }
   };
@@ -233,8 +245,13 @@ function boot(args, audioContext) {
   // The I/O worker's OPFS handle would outlive this page (bfcache) and block the next page's
   // "Borrar datos" or Pack build; a restored page reloads instead of resuming a dead game.
   // Chromium drops a 128 KB put started in pagehide (measured in story 4.8); beforeunload still commits it.
-  addEventListener('beforeunload', () => Module.cards?.flush());
-  addEventListener('pagehide', () => { Module.cards?.flush(); Module.ioWorker?.terminate(); });
+  function closeIO() {
+    if (!Module.ioShutdown) return;
+    Atomics.store(Module.ioShutdown, 0, 1);
+    Atomics.notify(new Int32Array(HEAPU8.buffer, Module._io_mailbox_address(), 1), 0);
+  }
+  addEventListener('beforeunload', () => { Module.cards?.flush(); closeIO(); });
+  addEventListener('pagehide', () => { Module.cards?.flush(); closeIO(); });
   addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
   const script = document.createElement('script');
   script.src = '/dw1.js' + (query.has('poison') ? '?poison=1' : '');
@@ -676,7 +693,8 @@ async function launch() {
   const clear = document.querySelector('#clear');
   const warning = document.querySelector('#storage-warning');
   const welcome = document.querySelector('#welcome');
-  let expected, available = false;
+  let expected, available = false, working = true, packSha256 = '';
+  let metadata = Promise.resolve();
   function request(data, onProgress) {
     return new Promise((resolve, reject) => {
       const worker = new Worker('/io_worker.js');
@@ -690,6 +708,7 @@ async function launch() {
     });
   }
   function busy(value) {
+    working = value;
     disc.disabled = clear.disabled = value;
     load.disabled = value || !expected;
     play.disabled = value || !available;
@@ -704,9 +723,10 @@ async function launch() {
     try {
       const response = await fetch('/us.tsv');
       if (!response.ok) throw Error('Manifest HTTP ' + response.status);
-      await request({type:'build', files:Array.from(files), manifest:await response.text()}, data => {
+      const built = await request({type:'build', files:Array.from(files), manifest:await response.text()}, data => {
         progress.max = data.total; progress.value = data.progress;
       });
+      packSha256 = built.sha256;
       available = true;
       state.textContent = 'Listo para jugar';
       requestPersistence();
@@ -721,29 +741,51 @@ async function launch() {
     busy(true);
     try {
       await request({type:'clear'});
+      packSha256 = '';
       available = false; state.textContent = 'Pack ausente'; warning.textContent = '';
     } catch (e) { status.textContent = e.message; }
     finally { busy(false); }
   };
   try {
     const stored = await request({type:'status'});
-    available = !!stored.sha256;
+    available = !!stored.sha256 && !stored.stale && !stored.newer;
+    if (stored.newer) state.textContent = 'Pack de una versión más nueva del port';
+    else if (stored.stale) {
+      state.textContent = 'Pack desactualizado';
+      busy(true);
+      try {
+        const response = await fetch('/us.tsv');
+        if (!response.ok) throw Error('Manifest HTTP ' + response.status);
+        const migrated = await request({type:'migrate', manifest:await response.text()}, data => {
+          progress.max = data.total; progress.value = data.progress;
+        });
+        stored.sha256 = migrated.sha256;
+        available = true;
+      } catch (error) { status.textContent = error.message; }
+    }
+    packSha256 = stored.sha256;
     if (available) requestPersistence();
-    state.textContent = available ? 'Listo para jugar' : 'Pack ausente';
-    try {
-      const version = await fetch('/version.txt');
-      if (version.ok) document.querySelector('#version').textContent = (await version.text()).trim();
-      const response = await fetch('/__fixture/us.pack.sha256');
-      if (response.ok) {
-        expected = (await response.text()).trim();
-        if (!/^[a-f0-9]{64}$/.test(expected)) throw Error('invalid Pack SHA-256');
-        load.hidden = false;
-        if (available) {
-          state.textContent = stored.sha256 === expected ? 'Pack disponible' : 'Pack desactualizado';
-          available = stored.sha256 === expected;
+    if (available || !stored.stale && !stored.newer)
+      state.textContent = available ? 'Listo para jugar' : 'Pack ausente';
+    metadata = (async () => {
+      try {
+        const version = await fetch('/version.txt');
+        const versionText = await version.text();
+        if (version.ok) document.querySelector('#version').textContent = versionText.trim();
+        const response = await fetch('/__fixture/us.pack.sha256');
+        const fixtureText = await response.text();
+        if (response.ok) {
+          expected = fixtureText.trim();
+          if (!/^[a-f0-9]{64}$/.test(expected)) throw Error('invalid Pack SHA-256');
+          load.hidden = false;
+          if (available) {
+            state.textContent = packSha256 === expected ? 'Pack disponible' : 'Pack desactualizado';
+            available = packSha256 === expected;
+          }
         }
-      }
-    } catch (_) { /* The fixture is optional on the user's host. */ }
+      } catch (_) { /* The fixture is optional on the user's host. */ }
+      if (!gameStarted) { load.disabled = working || !expected; play.disabled = working || !available; }
+    })();
   } catch (e) { status.textContent = e.message; }
   busy(false);
   // "Jugar" is the only gesture: the AudioContext is created inside it and the game starts on this
@@ -758,6 +800,7 @@ async function launch() {
     const finish = error => {
       worker.terminate();
       available = !error;
+      packSha256 = error ? '' : expected;
       busy(false);
       if (error) { status.textContent = error; state.textContent = 'Pack ausente'; }
       else { status.textContent = ''; state.textContent = 'Pack disponible'; }
@@ -774,5 +817,37 @@ async function launch() {
     worker.onerror = e => finish(e.message);
     worker.postMessage({url:'/__fixture/us.pack', sha256:expected});
   };
+  registerOffline(metadata);
+}
+async function registerOffline(metadata) {
+  const notice = document.querySelector('#update-status');
+  try {
+    if (!navigator.serviceWorker) throw Error('Service Worker no disponible');
+    const registration = await navigator.serviceWorker.register('/sw.js');
+    // Playwright's blocked-worker mode may return no registration.
+    if (!registration) throw Error('Service Worker no disponible');
+    const apply = async worker => {
+      if (!worker) return;
+      // Let startup fetches finish before replacing their active worker. Play never awaits this.
+      await metadata;
+      if (!gameStarted && !interacted) worker.postMessage('activate');
+      else notice.textContent = 'Actualización disponible; se aplicará en la próxima carga.';
+    };
+    const watch = worker => {
+      if (!worker) return;
+      const installed = () => {
+        if (worker.state === 'installed' && registration.active) apply(worker);
+      };
+      worker.addEventListener('statechange', installed);
+      installed();
+    };
+    registration.addEventListener('updatefound', () => watch(registration.installing));
+    // The browser may have started its navigation update before register() resolved.
+    watch(registration.installing);
+    await registration.update().catch(() => {});
+    apply(registration.waiting);
+  } catch (_) {
+    notice.textContent = 'Modo sin conexión no disponible.';
+  }
 }
 </script>

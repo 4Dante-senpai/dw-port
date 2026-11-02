@@ -764,6 +764,56 @@ out:
 	return r;
 }
 
+int pack_migrate(const char *in, const char *tsv, const char *out, char *err, size_t errlen)
+{
+	Ctx c = { err, errlen, NULL, 0, 0 };
+	uint8_t header[12], buf[32768];
+	char tmp[1100];
+	FILE *src = NULL, *dst = NULL;
+	size_t n;
+	int r = -1, created = 0;
+
+	if (snprintf(tmp, sizeof(tmp), "%s.tmp", out) >= (int)sizeof(tmp))
+		return fail(&c, "the Pack path is too long");
+	src = fopen(in, "rb");
+	if (src == NULL || fread(header, 1, sizeof(header), src) != sizeof(header) ||
+	    memcmp(header, PACK_MAGIC, sizeof(PACK_MAGIC)) != 0) {
+		fail(&c, "invalid Pack magic or truncated header");
+		goto done;
+	}
+	if (rd32(header + 8) != 0) {
+		fail(&c, "only Pack format 0 can be migrated (current or newer version)");
+		goto done;
+	}
+	dst = fopen(tmp, "wb");
+	if (dst == NULL) {
+		fail(&c, "cannot create migration temporary file");
+		goto done;
+	}
+	created = 1;
+	wr32(header + 8, PACK_FORMAT_VERSION);
+	if (fwrite(header, 1, sizeof(header), dst) != sizeof(header)) goto io_error;
+	while ((n = fread(buf, 1, sizeof(buf), src)) != 0)
+		if (fwrite(buf, 1, n, dst) != n) goto io_error;
+	if (ferror(src)) goto io_error;
+	if (fclose(dst) != 0) { dst = NULL; goto io_error; }
+	dst = NULL;
+	if (pack_verify(tmp, tsv, err, errlen) != 0) goto done;
+	if (rename(tmp, out) != 0) {
+		fail(&c, "cannot rename migrated Pack");
+		goto done;
+	}
+	r = 0;
+	goto done;
+io_error:
+	fail(&c, "cannot read or write Pack migration (disk full?)");
+done:
+	if (src) fclose(src);
+	if (dst) fclose(dst);
+	if (r != 0 && created) remove(tmp);
+	return r;
+}
+
 int pack_verify(const char *pack, const char *tsv, char *err, size_t errlen)
 {
 	Ctx c = { err, errlen, NULL, 0, 0 };

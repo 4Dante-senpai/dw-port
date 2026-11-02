@@ -165,3 +165,44 @@
 ## Pipeline 141: `Target crashed` de Firefox en `web_scene_title_audio` (2026-11-01)
 
 En el reintento del job `testing`, el test pasó en la primera ronda y Firefox se cayó con `Target crashed` en la segunda, dentro de la espera de `Module.finished`. La causa no está identificada. No se reprodujo en 4 de 4 repeticiones con 2,5 CPU en el PC remoto; el muestreo cada 20 s mostró 0 KB en `/dev/shm` y un pico de 1,8 GB de RSS, así que no hay evidencia de que falte `/dev/shm`. El job no conserva volcados ni el estado de memoria del runner: si reaparece, hay que capturarlos antes de descartar un fallo del port.
+
+
+## Historia 4.9: medición offline y activación (2026-11-02)
+
+El bucle de 20 recargas por navegador registra aislamiento, espera del Web Lock,
+estado del Pack, error y tiempo hasta «Jugar», con límite total de 5 s, sin reintentos.
+La pasada final midió máximos de 352 ms en Chromium y 340 ms en Firefox.
+Los JSON y la validación final están en `evidence/story-4-9/`. La metadata opcional
+(`version.txt` y fixture) ya no forma parte del camino que habilita «Jugar»; una
+prueba mantiene esa respuesta pendiente mientras construye el Pack y habilita el botón.
+Esto elimina esa dependencia de red, pero no demuestra la causa del incidente de
+Firefox del pipeline 141; ese incidente conserva su estado de causa no identificada.
+
+Durante la implementación se reprodujo en Chromium un worker instalado que recibía
+`activate` pero cuya promesa `skipWaiting()` no terminaba. Cambiar solamente el orden
+de `registration.update()` no lo resolvió: fallaron 8 de 12 casos dirigidos al omitir
+esa comprobación con un worker esperando. La instrumentación JavaScript no mostró
+fetches pendientes; activar el tracing del navegador cambió el comportamiento, por
+lo que esas pasadas no se usan como evidencia de corrección.
+
+El Launcher ahora consume también los cuerpos de metadata con respuesta no exitosa
+y espera a que terminen sus lecturas iniciales antes de solicitar activación; «Jugar»
+no espera ni esa metadata ni el service worker. Después pasaron los 12 casos dirigidos
+sin instrumentación, incluyendo la siguiente carga offline. La relación con el estado
+interno de reposo de Chromium es una hipótesis, no una causa demostrada. La validación
+final está en `evidence/story-4-9/`. No hay reintentos automáticos de Playwright ni
+ampliación del límite de «Jugar».
+
+La regresión general de esta historia se superpuso por error con pruebas de título
+y audio reales dentro del contenedor limitado a 2,5 CPU. Fallaron una aserción de
+resincronización de audio de Firefox y el audio del arranque normal de Chromium.
+Los resultados originales se conservan en `evidence/story-4-9/`. Audio pasó sus
+32 casos al ejecutarse solo (246,42 s), sin cambios de código, límites ni aserciones.
+La contención sigue siendo una hipótesis; esta observación no explica los fallos
+históricos del pipeline 141.
+La comprobación aislada del arranque normal del título pasó después en Chromium
+y Firefox (2/2, 4,7 min). Se conserva el fallo concurrente como riesgo pendiente;
+no se declara verde aquella pasada general. Con esta cuota, ejecutar las suites
+sensibles al reloj en serie.
+
+El segundo arranque de `web_offline_real` mostró que, en Chromium, `Worker.terminate()` no libera a tiempo el handle de OPFS de un worker bloqueado en `Atomics.wait`, y abrir el Pack fallaba tras dos recargas seguidas. La Shell ahora pide un cierre explícito y el worker cierra el handle antes de terminar. No hay evidencia de que explique el `#play` deshabilitado del pipeline 141, que fue en Firefox y antes de arrancar el Juego; si reaparece, el JSON y los asertos de `#status` deben distinguirlo.

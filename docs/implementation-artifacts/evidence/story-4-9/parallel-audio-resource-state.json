@@ -1,0 +1,12 @@
+{
+  "observed_at_utc": "2026-11-02T04:09:20Z",
+  "cpu_max": "250000 100000",
+  "cpu_stat": "usage_usec 4036197309\nuser_usec 3296806427\nsystem_usec 739390881\ncore_sched.force_idle_usec 0\nnr_periods 23534\nnr_throttled 6244\nthrottled_usec 172101365\nnr_bursts 0\nburst_usec 0\n",
+  "memory_max": "9663676416",
+  "failure": {
+    "test": "web_audio / Firefox / ramp",
+    "expected_resynchronizations": 0,
+    "observed_resynchronizations": 3
+  },
+  "hypothesis": "CPU contention in concurrent browser suites; not a demonstrated cause."
+}

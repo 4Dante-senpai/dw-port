@@ -4,10 +4,25 @@ import argparse
 import functools
 import http.server
 import os
+import time
 from pathlib import Path
 from urllib.parse import urlsplit
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        # Deterministic install faults for offline tests; disabled for normal dev hosts.
+        if os.environ.get('DW1_OFFLINE_TEST_SERVER') == '1':
+            directory = Path(self.directory)
+            failure = directory / 'fail'
+            if failure.exists() and self.path == failure.read_text():
+                (directory / 'fail-hit').touch()
+                self.send_error(503)
+                return
+            gate = 'metadata-gate' if self.path == '/version.txt' else 'gate' if self.path == '/dw1.wasm' else None
+            while gate and (directory / gate).exists():
+                time.sleep(0.02)
+        super().do_GET()
+
     def end_headers(self):
         if not self.path.startswith('/isolated-off/'):
             self.send_header('Cross-Origin-Opener-Policy', 'same-origin')
@@ -39,6 +54,8 @@ if __name__ == '__main__':
     parser.add_argument('--build', required=True)
     parser.add_argument('--port', type=int, default=8765)
     args = parser.parse_args()
+    # addAll fetches the program in parallel; avoid TCP retries at the default backlog of five.
+    http.server.ThreadingHTTPServer.request_queue_size = 64
     server = http.server.ThreadingHTTPServer(('127.0.0.1', args.port),
         functools.partial(Handler, directory=args.build))
     server.serve_forever()

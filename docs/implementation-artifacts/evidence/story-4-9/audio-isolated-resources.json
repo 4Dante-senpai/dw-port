@@ -1,0 +1,17 @@
+{
+  "exit_code": 0,
+  "cpu_max": "250000 100000",
+  "duration_seconds": 246.07621955871582,
+  "samples": 247,
+  "cpu_delta": {
+    "usage_usec": 85183383,
+    "user_usec": 69964344,
+    "system_usec": 15219038,
+    "core_sched.force_idle_usec": 0,
+    "nr_periods": 2398,
+    "nr_throttled": 9,
+    "throttled_usec": 114541,
+    "nr_bursts": 0,
+    "burst_usec": 0
+  }
+}

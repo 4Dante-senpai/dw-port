@@ -56,6 +56,10 @@ int pack_manifest(const char *image, const char *tsv, char *err, size_t errlen);
  * and renamed only after everything checked: a failed build creates nothing and leaves an
  * existing file at pack untouched. */
 int pack_build(const char *image, const char *tsv, const char *pack, char *err, size_t errlen);
+/* Format 0 is the first predecessor, never published: identical layout to v1.
+ * Migrates through out.tmp, verifies against the Manifest, then atomically replaces out.
+ * Current/newer versions are rejected; a failure leaves an existing output untouched. */
+int pack_migrate(const char *in, const char *tsv, const char *out, char *err, size_t errlen);
 /* Checks a Pack against the Manifest: header, index and the SHA-256 of every file. */
 int pack_verify(const char *pack, const char *tsv, char *err, size_t errlen);
 

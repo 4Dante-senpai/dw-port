@@ -43,11 +43,14 @@ int main(int argc, char **argv)
 		r = pack_manifest(argv[2], argv[3], err, sizeof(err));
 	} else if (strcmp(cmd, "build") == 0 && argc == 5) {
 		r = pack_build(argv[2], argv[3], argv[4], err, sizeof(err));
+	} else if (strcmp(cmd, "migrate") == 0 && argc == 5) {
+		r = pack_migrate(argv[2], argv[3], argv[4], err, sizeof(err));
 	} else if (strcmp(cmd, "verify") == 0 && argc == 4) {
 		r = pack_verify(argv[2], argv[3], err, sizeof(err));
 	} else {
 		fprintf(stderr, "usage: dw1-pack manifest <image.cue|.bin> <manifest.tsv>\n"
 		                "       dw1-pack build <image.cue|.bin> <manifest.tsv> <out.pack>\n"
+		                "       dw1-pack migrate <old.pack> <manifest.tsv> <out.pack>\n"
 		                "       dw1-pack verify <file.pack> <manifest.tsv>\n"
 		                "       dw1-pack sha256 <file>\n");
 		return 2;

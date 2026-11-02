@@ -2,8 +2,8 @@
 title: 'Historia 4.9: Offline y actualizaciones'
 type: 'feature'
 created: '2026-11-02'
-status: 'in-progress'
-baseline_commit: 'cfd2197'
+status: 'done'
+baseline_commit: '96ea87de50566db27b56f9fedb5f5f6513875530'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -75,16 +75,16 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `port/host/pack/pack.h`, `port/host/pack/pack.c`, `tools/port/pack/dw1_pack.c`, `port/host/pack/tests/test_pack.c` -- agregar `pack_migrate(in, tsv, out, err, errlen)` y `dw1-pack migrate <old.pack> <manifest.tsv> <out.pack>`. Documentar en `pack.h` el formato 0: mismo layout, nunca publicado, definido como primer formato anterior. Copiar con cabecera actualizada a `out.tmp`, correr `pack_verify` y hacer `rename`. Rechazar magic inválida, versión actual o mayor; ante un fallo no deja salida. Probar v0 igual byte a byte a v1, versión mayor, datos corruptos y salida existente intacta.
-- [ ] `port/web/sw.js`, `CMakeLists.txt` -- crear con `VERSION`, cache `dw1-<VERSION>` y `FILES`: `/`, `/dw1.js`, `/dw1.wasm`, `/io_worker.js`, `/audio_worklet.js`, `/dw1_pack.js`, `/dw1_pack.wasm`, `/us.tsv`. `install`: `addAll` con `cache: 'reload'`, más `/version.txt` solo si responde `ok`. `activate`: borrar otras cachés `dw1-*` y `clients.claim()`. `message` `'activate'`: `skipWaiting()`. `fetch`: decidir de forma síncrona según la matriz y Always. Salida en `build/port/web/sw.js` por `add_custom_command` que dependa de `dw1`, `dw1_pack` y los archivos copiados, en un objetivo `ALL`.
-- [ ] `tools/port/web/stamp_sw.py` -- crear: reescribe `VERSION` en `<dir>/sw.js` con SHA-256 de cada archivo de `FILES` (`/` es `dw1.html`), `version.txt` si existe y la fuente de `sw.js` sin el valor de `VERSION`. Idempotente.
-- [ ] `tools/port/testing/deploy.sh`, `port/web/testing/Dockerfile`, `tools/port/testing/test_deploy.py` -- copiar `sw.js`, estamparlo después de escribir `version.txt` y antes de `check_context.py`, y agregarlo al `COPY`; el test verifica el estampado.
-- [ ] `port/web/io_worker.js` -- `status` devuelve además `stale` y `newer` desde los 12 primeros bytes, con `PACK_FORMAT_VERSION` igual al de `pack.h`, y aplica la recuperación de la matriz antes de leer. Nueva petición `migrate` con el Manifest y progreso, reutilizando lo extraído de `build`, `released` y `commitPack`.
-- [ ] `port/web/dev/index.html` -- agregar `<p id="update-status" role="status">`. Migración en `launch` según la matriz, con `busy`. Registro al final de `launch`: tolerar `register` sin resultado; aplicar con `postMessage('activate')` un `registration.waiting` existente o una instalación nueva con `registration.active`, salvo interacción (`pointerdown`, `keydown`, `dragenter`); llamar `registration.update()` sin propagar el rechazo. `controllerchange` recarga solo si la página ya tenía controlador al abrir y no arrancó el Juego.
-- [ ] `port/web/tests/playwright.config.cjs`, `port/web/tests/run.py`, `port/web/tests/storage.cjs` (si hace falta), `CMakeLists.txt` -- `serviceWorkers: 'allow'` solo para suites `offline*`, `'block'` para el resto; `offline` en la regex de Chromium; para esas suites, `run.py` elige un puerto libre y lo pasa como `DW1_WEB_URL` sin levantar servidor propio. Tests `web_offline` (TIMEOUT 600) y `web_offline_real` (`SKIP_RETURN_CODE 77`, `FIXTURES_REQUIRED disc_pack`, TIMEOUT 900).
-- [ ] `port/web/tests/offline_helpers.cjs`, `port/web/tests/offline.spec.cjs` -- clase A, Chromium y Firefox. El helper arma una copia del sitio bajo `DW1_WEB_BUILD`, una por proyecto, con `us.tsv` del disco sintético y `sw.js` estampado; levanta `serve.py --build <copia> --port <fijo>`, lo detiene de verdad y publica versiones con `stamp_sw.py`. Cubrir toda la matriz. Offline significa `context.setOffline(true)` y servidor detenido; afirmar `crossOriginIsolated`, `#instance`, `#pack-status`, `#status`, `#play`, en ese orden, y arranque por «Jugar» sin `#audio-warning`. Pack anterior: construir un Pack por la Shell, poner `format_version` en 0 en OPFS y comparar bytes tras migrar. Probar instalación con 503, pestaña en espera y paridad de `PACK_FORMAT_VERSION` entre `pack.h` e `io_worker.js`. Bucle de 20 recargas offline con el tiempo hasta `#play` y los estados en JSON de evidencia.
-- [ ] `port/web/tests/offline_real.spec.cjs`, `port/web/tests/run.py` -- clase B: copia del sitio con `us.pack` y `us.pack.sha256` por enlace duro, sembrar el Pack real, instalar, apagar el servidor, recargar y «Jugar»; afirmar más de 600 VBlanks, frames pintados, audio sin aviso y sin error. Publicar una versión nueva y afirmar el SHA-256 del Pack sin cambios.
-- [ ] `docs/port/setup.md`, `docs/planning-artifacts/architecture/architecture-dw-port-2026-10-11/ARCHITECTURE-SPINE.md`, `docs/implementation-artifacts/deferred-work.md`, `docs/implementation-artifacts/evidence/story-4-9/` -- cómo correr las suites y que `sw.js` no debe servirse con caché HTTP larga; AD-11 y AD-13 con service worker, activación y migración; medición nueva de `#play`; evidencia.
+- [x] `port/host/pack/pack.h`, `port/host/pack/pack.c`, `tools/port/pack/dw1_pack.c`, `port/host/pack/tests/test_pack.c` -- agregar `pack_migrate(in, tsv, out, err, errlen)` y `dw1-pack migrate <old.pack> <manifest.tsv> <out.pack>`. Documentar en `pack.h` el formato 0: mismo layout, nunca publicado, definido como primer formato anterior. Copiar con cabecera actualizada a `out.tmp`, correr `pack_verify` y hacer `rename`. Rechazar magic inválida, versión actual o mayor; ante un fallo no deja salida. Probar v0 igual byte a byte a v1, versión mayor, datos corruptos y salida existente intacta.
+- [x] `port/web/sw.js`, `CMakeLists.txt` -- crear con `VERSION`, cache `dw1-<VERSION>` y `FILES`: `/`, `/dw1.js`, `/dw1.wasm`, `/io_worker.js`, `/audio_worklet.js`, `/dw1_pack.js`, `/dw1_pack.wasm`, `/us.tsv`. `install`: `addAll` con `cache: 'reload'`, más `/version.txt` solo si responde `ok`. `activate`: borrar otras cachés `dw1-*` y `clients.claim()`. `message` `'activate'`: `skipWaiting()`. `fetch`: decidir de forma síncrona según la matriz y Always. Salida en `build/port/web/sw.js` por `add_custom_command` que dependa de `dw1`, `dw1_pack` y los archivos copiados, en un objetivo `ALL`.
+- [x] `tools/port/web/stamp_sw.py` -- crear: reescribe `VERSION` en `<dir>/sw.js` con SHA-256 de cada archivo de `FILES` (`/` es `dw1.html`), `version.txt` si existe y la fuente de `sw.js` sin el valor de `VERSION`. Idempotente.
+- [x] `tools/port/testing/deploy.sh`, `port/web/testing/Dockerfile`, `tools/port/testing/test_deploy.py` -- copiar `sw.js`, estamparlo después de escribir `version.txt` y antes de `check_context.py`, y agregarlo al `COPY`; el test verifica el estampado.
+- [x] `port/web/io_worker.js` -- `status` devuelve además `stale` y `newer` desde los 12 primeros bytes, con `PACK_FORMAT_VERSION` igual al de `pack.h`, y aplica la recuperación de la matriz antes de leer. Nueva petición `migrate` con el Manifest y progreso, reutilizando lo extraído de `build`, `released` y `commitPack`.
+- [x] `port/web/dev/index.html` -- agregar `<p id="update-status" role="status">`. Migración en `launch` según la matriz, con `busy`. Registro al final de `launch`: tolerar `register` sin resultado; aplicar con `postMessage('activate')` un `registration.waiting` existente o una instalación nueva con `registration.active`, salvo interacción (`pointerdown`, `keydown`, `dragenter`); llamar `registration.update()` sin propagar el rechazo. `controllerchange` recarga solo si la página ya tenía controlador al abrir y no arrancó el Juego.
+- [x] `port/web/tests/playwright.config.cjs`, `port/web/tests/run.py`, `port/web/tests/storage.cjs` (si hace falta), `CMakeLists.txt` -- `serviceWorkers: 'allow'` solo para suites `offline*`, `'block'` para el resto; `offline` en la regex de Chromium; para esas suites, `run.py` elige un puerto libre y lo pasa como `DW1_WEB_URL` sin levantar servidor propio. Tests `web_offline` (TIMEOUT 600) y `web_offline_real` (`SKIP_RETURN_CODE 77`, `FIXTURES_REQUIRED disc_pack`, TIMEOUT 900).
+- [x] `port/web/tests/offline_helpers.cjs`, `port/web/tests/offline.spec.cjs` -- clase A, Chromium y Firefox. El helper arma una copia del sitio bajo `DW1_WEB_BUILD`, una por proyecto, con `us.tsv` del disco sintético y `sw.js` estampado; levanta `serve.py --build <copia> --port <fijo>`, lo detiene de verdad y publica versiones con `stamp_sw.py`. Cubrir toda la matriz. Offline significa `context.setOffline(true)` y servidor detenido; afirmar `crossOriginIsolated`, `#instance`, `#pack-status`, `#status`, `#play`, en ese orden, y arranque por «Jugar» sin `#audio-warning`. Pack anterior: construir un Pack por la Shell, poner `format_version` en 0 en OPFS y comparar bytes tras migrar. Probar instalación con 503, pestaña en espera y paridad de `PACK_FORMAT_VERSION` entre `pack.h` e `io_worker.js`. Bucle de 20 recargas offline con el tiempo hasta `#play` y los estados en JSON de evidencia.
+- [x] `port/web/tests/offline_real.spec.cjs`, `port/web/tests/run.py` -- clase B: copia del sitio con `us.pack` y `us.pack.sha256` por enlace duro, sembrar el Pack real, instalar, apagar el servidor, recargar y «Jugar»; afirmar más de 600 VBlanks, frames pintados, audio sin aviso y sin error. Publicar una versión nueva y afirmar el SHA-256 del Pack sin cambios.
+- [x] `docs/port/setup.md`, `docs/planning-artifacts/architecture/architecture-dw-port-2026-10-11/ARCHITECTURE-SPINE.md`, `docs/implementation-artifacts/deferred-work.md`, `docs/implementation-artifacts/evidence/story-4-9/` -- cómo correr las suites y que `sw.js` no debe servirse con caché HTTP larga; AD-11 y AD-13 con service worker, activación y migración; medición nueva de `#play`; evidencia.
 
 **Acceptance Criteria:**
 - Given `ctest --preset web` sin disco, when corren las suites, then `web_offline`, `testing_deploy` y las existentes pasan en Chromium y Firefox, y las de disco se saltean.
@@ -95,9 +95,38 @@ context:
 
 ## Implementation Notes
 
+- Codex implementó en dos corridas (90 min en total) y aplicó los parches de la revisión. El contenedor local montó el disco en `/dw/game_rom/extracted`, así que esta vez corrió la clase B.
+- Fuera del Code Map: `port/web/dev/serve.py` recibe fallos y puertas de prueba detrás de `DW1_OFFLINE_TEST_SERVER`, y `tools/port/web/test_stamp_sw.py` (test `web_sw_stamp`) cubre el estampado.
+- Desvío del Approach: `version.txt` y la fixture pasan a una promesa aparte. `#play` ya no los espera, y `apply` sí, porque con esas lecturas pendientes `skipWaiting()` no terminaba en Chromium (8 de 12 casos). Causa interna sin demostrar.
+- Desvío del Approach: `terminate()` ya no libera el handle de OPFS a tiempo en Chromium. El segundo arranque de `web_offline_real` falló al abrir el Pack después de dos recargas seguidas, y despertar la espera no alcanzó. La Shell ahora señala la salida en memoria compartida desde `beforeunload` y `pagehide`, y el worker cierra el handle antes de terminar. Sus esperas pasan a un tope de 100 ms para no perder esa señal; las peticiones siguen despertándolo por `Atomics.notify`.
+- Verificación final en remoto, en serie y con disco: web 57/57 y `-R pack` nativo 3/3. Recargas offline: máximos de 86 ms en Chromium y 107 ms en Firefox.
+- `mainStarted` separa «ya no se recarga» de `gameStarted`, que sigue impidiendo pedir la activación.
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+Revisión Codex (`codex-merged`) del diff contra `96ea87d`.
+
+| Hallazgo | Veredicto | Ruta | Evidencia |
+|---|---|---|---|
+| «Jugar» entre `activate` y `controllerchange` (blind, gap, edge) | medium | patch | `gameStarted` se pone en `boot` e impide el reload: HTML viejo cargaría `dw1.js` nuevo. Contradice «nunca mezcla». Deshabilitar `#play` no sirve: `skipWaiting` se colgó en Chromium y `#play` no puede depender del service worker. |
+| Actualización de prueba solo cambia `version.txt` (blind, gap) | medium | patch | `offline_helpers.cjs:20`: los ejecutables son iguales entre versiones; servir código viejo desde la caché nueva pasaría. |
+| `/index.html` no abre offline (blind, edge) | low | patch | nginx y `serve.py` la sirven y el service worker no; corrección directa de una condición. `/dw1.html` no se agrega: no es una dirección de la Shell. |
+| Pack nuevo con sidecar viejo tras un corte (blind, gap, edge) | low | rechazado | El Pack ya está completo y `commitPack` lo movió entero. El SHA solo se compara en el host de testing; `#play` usa su presencia, y el Juego valida cabecera e índice. Recalcular en `status` agregaría minutos al camino de `#play`. |
+| Primera instalación reclama una Shell anterior (blind, edge) | low | rechazado | Exige publicar durante los segundos de la primera visita, y la guarda pediría comparar versiones. Se corrige solo en la próxima carga. |
+| `/version.txt` sin plazo (blind, edge) | low | rechazado | Los archivos obligatorios de `addAll` tampoco tienen plazo y el navegador corta `waitUntil`; un servidor colgado no es un caso cotidiano. |
+| Instalación sin verificar contenido contra el hash (blind, edge) | low | rechazado | `deploy.sh` reemplaza un solo contenedor: durante el cambio las peticiones fallan y `addAll` aborta. Verificar por archivo agrega una tabla de hashes. |
+| `pack_migrate` con entrada igual a `out.tmp` (blind, edge) | low | rechazado | La web usa `/in/us.pack` y `/out/us.pack`; solo se alcanza a mano en la herramienta nativa. |
+
+Auditoría propia (paso 3):
+
+| Hallazgo | Veredicto | Ruta | Evidencia |
+|---|---|---|---|
+| «Jugar» clase A no prueba el arranque | medium | patch | `offline.spec.cjs` espera `Module.audioContext`, asignado antes de bajar `dw1.js`. |
+| Fila «Primera carga» sin prueba de no redescarga | medium | patch | Ninguna prueba arranca sin servidor tras la primera carga. |
+| Fila «Pack anterior» sin aserto de progreso | low | patch | Falta observar `#progress` durante la migración. |
+| `ownsLock` nunca es falso en `apply` | low | patch | `registerOffline` solo corre desde `launch`, que ya tiene el Lock. |
 
 ## Design Notes
 

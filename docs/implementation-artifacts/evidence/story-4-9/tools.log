@@ -1,0 +1,11 @@
+Test project /dw/build/port/web
+    Start 34: web_sw_stamp
+1/3 Test #34: web_sw_stamp .....................   Passed    0.10 sec
+    Start 46: testing_deploy
+2/3 Test #46: testing_deploy ...................   Passed    6.53 sec
+    Start 47: testing_context
+3/3 Test #47: testing_context ..................   Passed    0.10 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =   6.73 sec

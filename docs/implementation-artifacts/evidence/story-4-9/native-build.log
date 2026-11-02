@@ -1,0 +1,60 @@
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /dw/build/port/native-headless
+[0/2] Re-checking globbed directories...
+[1/54] Building C object CMakeFiles/dw1_backend.dir/port/backend/cdrom.c.o
+[2/54] Building C object CMakeFiles/dw1_pack_lib.dir/port/host/pack/pack.c.o
+[3/54] Building C object CMakeFiles/dw1-pack.dir/tools/port/pack/dw1_pack.c.o
+[4/54] Linking C static library libdw1_pack_lib.a
+[5/54] Building C object CMakeFiles/test_pack.dir/port/host/pack/tests/test_pack.c.o
+[6/54] Linking C static library libdw1_backend.a
+[7/54] Linking C executable dw1-pack
+[8/54] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libcd.c.o
+[9/54] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgte.c.o
+[10/54] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/card_image.c.o
+[11/54] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libpress.c.o
+[12/54] Building C object CMakeFiles/test_libpress.dir/port/psyq/tests/test_libpress.c.o
+[13/54] Linking C static library libdw1_psyq.a
+[14/54] Building C object CMakeFiles/test_cd_stream.dir/port/psyq/tests/test_cd_stream.c.o
+[15/54] Linking C executable test_spu
+[16/54] Linking C executable test_xa
+[17/54] Linking C executable test_mdec
+[18/54] Linking C executable test_libpress
+[19/54] Linking C executable test_libspu
+[20/54] Linking C executable test_libsnd
+[21/54] Linking C executable test_cd_stream
+[22/54] Linking C executable test_card_host
+[23/54] Building C object CMakeFiles/test_card.dir/port/psyq/tests/test_card.c.o
+[24/54] Linking C executable test_card
+[25/54] Building C object CMakeFiles/test_card_cli.dir/port/psyq/tests/test_card_cli.c.o
+[26/54] Linking C executable test_gpu
+[27/54] Linking C executable test_card_cli
+[28/54] Linking C executable test_libgs
+[29/54] Linking C executable test_libgpu
+[30/54] Linking C executable test_ps1mem
+[31/54] Linking C executable test_clock
+[32/54] Building C object CMakeFiles/test_libgte.dir/port/psyq/tests/test_libgte.c.o
+[33/54] Linking C executable test_libc_heap_pad
+[34/54] Linking C executable test_libgte
+[35/54] Linking C executable test_gte
+[36/54] Linking C executable test_overlay_O0
+[37/54] Linking C executable test_overlay_O2
+[38/54] Building C object CMakeFiles/dw1_runtime.dir/port/psyq/scene.c.o
+[39/54] Linking C executable overlay_probe
+[40/54] Linking C static library libdw1_runtime.a
+[41/54] Linking C executable test_pack
+[42/54] Linking C executable test_watchdog
+[43/54] Building C object CMakeFiles/test_av_stubs.dir/port/psyq/tests/test_av_stubs.c.o
+[44/54] Building C object CMakeFiles/test_libcd.dir/port/psyq/tests/test_libcd.c.o
+[45/54] Linking C executable test_av_stubs
+[46/54] Linking C executable test_libcd
+[47/54] Building C object CMakeFiles/test_scene_capture.dir/port/psyq/tests/test_scene_capture.c.o
+[48/54] Linking C executable test_scene_state
+[49/54] Linking C executable test_scene_capture
+[50/54] Linking C executable test_scene_audio
+[51/54] Generating generated/psyq_stubs.c
+psyq: used=196 implemented=187 host_libc=9 stubs=0 gte_stubs=0 libspu=6
+[52/53] Building C object CMakeFiles/dw1.dir/port/host/native_cli.c.o
+[53/53] Linking C executable dw1

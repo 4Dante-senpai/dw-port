@@ -1,0 +1,113 @@
+W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+
+Running 12 tests using 1 worker
+
+(node:70441) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/12] [chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after pointerdown
+[chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after pointerdown
+
+
+
+
+
+
+[2/12] [chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after keydown
+[chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after keydown
+
+
+
+
+
+
+[3/12] [chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after dragenter
+[chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after dragenter
+
+
+
+
+
+
+[4/12] [chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after game
+[chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after game
+
+
+
+
+
+
+(node:70957) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[5/12] [chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after pointerdown
+[chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after pointerdown
+
+
+
+
+
+
+[6/12] [chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after keydown
+[chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after keydown
+
+
+
+
+
+
+[7/12] [chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after dragenter
+[chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after dragenter
+
+
+
+
+
+
+[8/12] [chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after game
+[chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after game
+
+
+
+
+
+
+(node:71477) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[9/12] [chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after pointerdown
+[chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after pointerdown
+
+
+
+
+
+
+[10/12] [chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after keydown
+[chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after keydown
+
+
+
+
+
+
+[11/12] [chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after dragenter
+[chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after dragenter
+
+
+
+
+
+
+[12/12] [chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after game
+[chromium] › ../../../port/web/tests/offline.spec.cjs:91:76 › defers update after game
+
+
+
+
+
+
+  12 passed (41.0s)

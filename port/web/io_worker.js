@@ -1,9 +1,10 @@
 /* Only this dedicated worker owns the synchronous OPFS handle. */
+const PACK_FORMAT_VERSION = 1;
 let handle;
 onmessage = async ({data}) => {
   if (data.type) {
     try {
-      if (data.type === 'build' || data.type === 'manifest') await build(data);
+      if (data.type === 'build' || data.type === 'manifest' || data.type === 'migrate') await build(data);
       else {
         const root = await navigator.storage.getDirectory();
         if (data.type === 'clear') {
@@ -12,14 +13,20 @@ onmessage = async ({data}) => {
           catch (e) { if (e.name !== 'NotFoundError') throw e; }
           postMessage({ready: true});
         } else if (data.type === 'status') {
-          let sha256 = '';
+          let sha256 = '', stale = false, newer = false;
           try {
             const dir = await root.getDirectoryHandle('dw1');
+            await recoverPack(dir);
             const pack = await (await dir.getFileHandle('us.pack')).getFile();
+            const header = new Uint8Array(await pack.slice(0, 12).arrayBuffer());
+            if (header.length !== 12 || new TextDecoder().decode(header.subarray(0, 8)) !== 'DW1PACK\0')
+              throw Error('Invalid Pack header');
+            const version = new DataView(header.buffer).getUint32(8, true);
+            stale = version < PACK_FORMAT_VERSION; newer = version > PACK_FORMAT_VERSION;
             sha256 = (await (await (await dir.getFileHandle('us.pack.sha256')).getFile()).text()).trim();
             if (!pack.size || !/^[a-f0-9]{64}$/.test(sha256)) sha256 = '';
           } catch (e) { if (e.name !== 'NotFoundError') throw e; }
-          postMessage({ready: true, sha256});
+          postMessage({ready: true, sha256, stale, newer});
         } else throw Error('unknown worker request');
       }
     } catch (e) { postMessage({error: e.message}); }
@@ -32,12 +39,16 @@ onmessage = async ({data}) => {
     handle = await file.createSyncAccessHandle();
     const memory = new Uint8Array(data.memory);
     const words = new Int32Array(data.memory, data.address, 10);
+    const shutdown = data.shutdown && new Int32Array(data.shutdown);
+    const closed = () => shutdown && Atomics.load(shutdown, 0);
     const size = handle.getSize();
     Atomics.store(words, 6, size >>> 0);
     Atomics.store(words, 7, Math.floor(size / 4294967296));
     postMessage({ready: true});
+    // A bounded wait also observes shutdown if its notification races with entering the wait.
     for (;;) {
-      while (Atomics.load(words, 0) !== 1) Atomics.wait(words, 0, 0);
+      while (Atomics.load(words, 0) !== 1 && !closed()) Atomics.wait(words, 0, 0, 100);
+      if (closed()) break;
       if (data.delay) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, data.delay);
       try {
         const offset = (words[1] >>> 0) + (words[2] >>> 0) * 4294967296;
@@ -51,8 +62,11 @@ onmessage = async ({data}) => {
       Atomics.store(words, 0, 2);
       Atomics.notify(words, 0);
       // Sleep through the response state; the next request also notifies this address.
-      while (Atomics.load(words, 0) === 2) Atomics.wait(words, 0, 2);
+      while (Atomics.load(words, 0) === 2 && !closed()) Atomics.wait(words, 0, 2, 100);
     }
+    handle.close();
+    handle = null;
+    postMessage({closed: true});
   } catch (error) {
     if (handle) handle.close();
     postMessage({error: 'cannot open dw1/us.pack: ' + error.message});
@@ -63,13 +77,19 @@ onmessage = async ({data}) => {
 async function build(data) {
   let output, dir;
   try {
-    const files = data.files || [];
+    let files = data.files || [];
+    if (data.type === 'migrate') {
+      const root = await navigator.storage.getDirectory();
+      await released(root);
+      const old = await (await root.getDirectoryHandle('dw1')).getFileHandle('us.pack');
+      files = [await old.getFile()];
+    }
     const bins = files.filter(f => /\.bin$/i.test(f.name));
     const cues = files.filter(f => /\.cue$/i.test(f.name));
     // Only select an input here. The C parser owns cue, sector and Manifest validation.
-    const image = cues.length === 1 ? cues[0] : bins.length === 1 ? bins[0] :
+    const image = data.type === 'migrate' ? files[0] : cues.length === 1 ? cues[0] : bins.length === 1 ? bins[0] :
       files.length === 1 && /\.iso$/i.test(files[0].name) ? files[0] : null;
-    if (!image || cues.length > 1 || bins.length !== 1 && !/\.iso$/i.test(image.name))
+    if (!image || data.type !== 'migrate' && (cues.length > 1 || bins.length !== 1 && !/\.iso$/i.test(image.name)))
       throw Error('Seleccione un único .bin y, opcionalmente, su .cue');
     if (new Set(files.map(f => f.name)).size !== files.length) throw Error('Nombres de archivo duplicados');
     importScripts('/dw1_pack.js');
@@ -152,7 +172,10 @@ async function build(data) {
         return count;
       }
     };
-    call(['build', '/in/' + image.name, '/manifest/us.tsv', '/out/us.pack']);
+    if (data.type === 'migrate')
+      call(['migrate', '/in/' + image.name, '/manifest/us.tsv', '/out/us.pack']);
+    else
+      call(['build', '/in/' + image.name, '/manifest/us.tsv', '/out/us.pack']);
     hashing = true; packSize = output.getSize(); last = -Infinity;
     postMessage({progress: 500, total, phase:'sha256'});
     call(['sha256', '/out/us.pack']);
@@ -212,5 +235,20 @@ async function released(root) {
       if (e.name !== 'NoModificationAllowedError' || i === 50) throw e;
       await new Promise(r => setTimeout(r, 100));
     }
+  }
+}
+
+// Recover an interrupted rename before inspecting the header. Locked leftovers are harmless.
+async function recoverPack(dir) {
+  let pack, previous;
+  const get = async name => {
+    try { return await dir.getFileHandle(name); }
+    catch (e) { if (e.name !== 'NotFoundError') throw e; }
+  };
+  pack = await get('us.pack'); previous = await get('us.pack.previous');
+  if (!pack && previous) await previous.move('us.pack');
+  for (const name of ['us.pack.previous', 'us.pack.tmp', 'us.pack.sha256.tmp']) {
+    try { await dir.removeEntry(name); }
+    catch (e) { if (!['NotFoundError', 'NoModificationAllowedError'].includes(e.name)) throw e; }
   }
 }

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Start an ephemeral dev server and run the pinned browser suite inside dw-port."""
+import socket
 import json
 import hashlib
 import struct
@@ -15,7 +16,7 @@ import importlib.util
 root = Path(__file__).resolve().parents[3]
 build = Path(sys.argv[1]).resolve()
 suite = sys.argv[2] if len(sys.argv) > 2 else 'boot'
-if suite in ('title', 'title_audio', 'disc_real', 'cards_real', 'cards_redux', 'long') and not (os.environ.get('DW1_DISC_DIR') or (suite == 'title' and os.environ.get('DW1_WEB_URL'))):
+if suite in ('title', 'title_audio', 'disc_real', 'cards_real', 'cards_redux', 'offline_real', 'long') and not (os.environ.get('DW1_DISC_DIR') or (suite == 'title' and os.environ.get('DW1_WEB_URL'))):
     print(f'web_{"scene_title" if suite == "title" else suite}: DW1_DISC_DIR not set; skipped')
     sys.exit(77)
 if suite in ('io', 'launcher', 'shell', 'cards'):
@@ -38,9 +39,13 @@ if suite == 'cards_redux':
     if prepared.returncode: sys.exit(prepared.returncode)
 env = dict(os.environ, DW1_WEB_SUITE=suite, DW1_WEB_BUILD=str(build))
 server = None
-if suite in ('title', 'title_audio', 'disc_real', 'cards_real', 'cards_redux', 'long') and not env.get('DW1_WEB_URL'):
+if suite in ('title', 'title_audio', 'disc_real', 'cards_real', 'cards_redux', 'offline_real', 'long') and not env.get('DW1_WEB_URL'):
     with (build / 'us.pack').open('rb') as pack_file:
         (build / 'us.pack.sha256').write_text(hashlib.file_digest(pack_file, 'sha256').hexdigest() + '\n')
+if suite.startswith('offline'):
+    with socket.socket() as available:
+        available.bind(('127.0.0.1', 0))
+        env['DW1_WEB_URL'] = f'http://127.0.0.1:{available.getsockname()[1]}'
 if not env.get('DW1_WEB_URL'):
     spec = importlib.util.spec_from_file_location('serve', root / 'port/web/dev/serve.py')
     serve = importlib.util.module_from_spec(spec)

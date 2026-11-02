@@ -271,6 +271,36 @@ int main(void)
 	check_layout(p1, n1);
 	CHECK(pack_verify("pack_t1.pack", "pack_t.tsv", err, sizeof(err)) == 0);
 
+	/* Migration preserves canonical bytes and existing outputs on every failure. */
+	wr32(p1 + 8, 0);
+	write_file("pack_t_old.pack", p1, n1);
+	CHECK(pack_migrate("pack_t_old.pack", "pack_t.tsv", "pack_t_migrated.pack", err, sizeof(err)) == 0);
+	{
+		size_t size;
+		uint8_t *migrated = read_file("pack_t_migrated.pack", &size);
+		CHECK(size == n2 && memcmp(migrated, p2, n2) == 0);
+		free(migrated);
+	}
+	for (int kind = 0; kind < 4; kind++) {
+		wr32(p1 + 8, kind == 0 ? PACK_FORMAT_VERSION + 1 : kind == 1 ? PACK_FORMAT_VERSION : 0);
+		if (kind == 2) p1[n1 - 1] ^= 1;
+		if (kind == 3) p1[0] ^= 1;
+		write_file("pack_t_old.pack", p1, n1);
+		CHECK(pack_migrate("pack_t_old.pack", "pack_t.tsv", "pack_t_migrated.pack", err, sizeof(err)) != 0);
+		CHECK(pack_migrate("pack_t_old.pack", "pack_t.tsv", "pack_t_absent.pack", err, sizeof(err)) != 0);
+		CHECK(access("pack_t_absent.pack", F_OK) != 0);
+		CHECK(access("pack_t_migrated.pack.tmp", F_OK) != 0);
+		{
+			size_t size;
+			uint8_t *saved = read_file("pack_t_migrated.pack", &size);
+			CHECK(size == n2 && memcmp(saved, p2, n2) == 0);
+			free(saved);
+		}
+		if (kind == 2) p1[n1 - 1] ^= 1;
+		if (kind == 3) p1[0] ^= 1;
+	}
+	wr32(p1 + 8, PACK_FORMAT_VERSION);
+
 	/* Corrupt Pack: verify names the file. */
 	p1[10240 + 3000] ^= 1;
 	write_file("pack_t_bad.pack", p1, n1);

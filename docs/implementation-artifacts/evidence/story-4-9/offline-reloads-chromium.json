@@ -1,0 +1,185 @@
+{
+  "browser": "chromium",
+  "timings": [
+    {
+      "iteration": 0,
+      "ms": 76,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 1,
+      "ms": 73,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 2,
+      "ms": 73,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 3,
+      "ms": 72,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 4,
+      "ms": 74,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 5,
+      "ms": 78,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 6,
+      "ms": 74,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 7,
+      "ms": 79,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 8,
+      "ms": 79,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 9,
+      "ms": 59,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 10,
+      "ms": 79,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 11,
+      "ms": 86,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 12,
+      "ms": 72,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 13,
+      "ms": 78,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 14,
+      "ms": 74,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 15,
+      "ms": 76,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 16,
+      "ms": 78,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 17,
+      "ms": 61,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 18,
+      "ms": 64,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    },
+    {
+      "iteration": 19,
+      "ms": 77,
+      "isolated": true,
+      "instance": true,
+      "pack": "Listo para jugar",
+      "status": "",
+      "play": true
+    }
+  ]
+}

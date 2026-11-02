@@ -1,0 +1,7 @@
+Test project /dw/build/port/web
+    Start 36: web_offline_real
+1/1 Test #36: web_offline_real .................   Passed  159.39 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) = 159.39 sec
