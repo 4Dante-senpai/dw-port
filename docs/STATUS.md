@@ -478,6 +478,12 @@
   `STATUS.md`). Evidencia: `docs/implementation-artifacts/evidence/story-8-1/README.md`. Spec:
   `docs/implementation-artifacts/spec-8-1-metricas-automaticas-en-status-md.md`.
 
+- Corrección E4 (scratchpad): `BTL_drawTMD` caía en la Web con `memory access out of bounds` al
+  escribir en `0x1F800078`. `getScratchAddr` seguía siendo la macro PsyQ con la dirección de
+  hardware; `port/psyq/include/libetc.h` la lleva a `Ps1_Scratchpad`. Afectaba a todos los efectos
+  EFE de BTL, STD y VS y a la pesca. Evidencia: test `scratchpad`, cero literales
+  `0x1F800000-0x1F802FFF` en `dw1.wasm`. Falta confirmarlo en partida real.
+
 ## En curso
 
 - Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 a 4.9 ya están cerradas, y también la 8.1 y la 8.5. El dueño aprobó el 2026-10-31 extender a web la excepción de contrapresión de AD-8. El pipeline 146 de `main` (`68070e3`, historia 4.9) quedó verde, sin reintentos, con despliegue al entorno de testing. Siguen sin causa identificada dos fallos intermitentes de Firefox en CI, anotados en `deferred-work.md` y no repetidos en los pipelines 144 ni 146: `#play` deshabilitado tras recargar y `Target crashed` en `web_scene_title_audio`.

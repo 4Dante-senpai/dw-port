@@ -339,6 +339,17 @@ else()
   add_test(NAME setjmp COMMAND test_setjmp)
 endif()
 
+# getScratchAddr in game TUs lands in Ps1_Scratchpad.
+add_executable(test_scratchpad port/psyq/tests/test_scratchpad.c)
+target_include_directories(test_scratchpad PRIVATE port/psyq/include external/psyq_headers/mw_lib41/include)
+target_compile_definitions(test_scratchpad PRIVATE LANGUAGE_C)
+target_compile_options(test_scratchpad PRIVATE -w -include ${CMAKE_SOURCE_DIR}/port/psyq/include/port_game.h)
+if(EMSCRIPTEN)
+  add_test(NAME scratchpad COMMAND ${DW1_NODE_EXECUTABLE} $<TARGET_FILE:test_scratchpad>)
+else()
+  add_test(NAME scratchpad COMMAND test_scratchpad)
+endif()
+
 if(NOT EMSCRIPTEN)
 # L1 tests of the PS1 memory model and the overlay reset.
 add_executable(test_ps1mem port/psyq/tests/test_ps1mem.c)

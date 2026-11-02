@@ -5,8 +5,8 @@
  * PS1 memory model of the port (AD-3, AD-4, AD-5).
  *
  * - RAM: the 2 MB arena Ps1_Ram. PS1_RAM(addr) maps a PS1 address (KUSEG, KSEG0 or KSEG1) to it.
- * - Scratchpad: the 1 KB Ps1_Scratchpad, reached only through ps1_scratchpad (the port's PsyQ
- *   headers route getScratchAddr to it).
+ * - Scratchpad: the 1 KB Ps1_Scratchpad, reached through ps1_scratchpad and, in game TUs, through
+ *   getScratchAddr (port/psyq/include/libetc.h).
  * - Ordering-table links: 24-bit offsets (below the 0xFFFFFF end marker) into a 16 MB window that holds every object an OT can
  *   point to (globals, arena, primitive buffers, the game thread stack). PS1_LINK builds a link
  *   and PS1_LINK_PTR turns one back into a pointer; nothing else may.
