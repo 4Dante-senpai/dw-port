@@ -6,11 +6,11 @@ module.exports = defineConfig({
   reporter: 'line',
   timeout: 60000,
   workers: 1,
-  use: {baseURL: process.env.DW1_WEB_URL, screenshot: 'off', trace: 'off', video: 'off'},
+  use: {serviceWorkers: (process.env.DW1_WEB_SUITE || '').startsWith('offline') ? 'allow' : 'block', baseURL: process.env.DW1_WEB_URL, screenshot: 'off', trace: 'off', video: 'off'},
   projects: [
     {name: 'chromium', use: {browserName: 'chromium',
       // The pinned headless shell does not expose OPFS on allowlisted HTTP origins.
-      channel: process.env.DW1_WEB_INSECURE_ORIGIN || /disc|cards/.test(process.env.DW1_WEB_SUITE || '') ? 'chromium' : undefined, launchOptions: {args: ['--no-sandbox', '--autoplay-policy=document-user-activation-required', '--enable-unsafe-swiftshader', '--enable-blink-features=ForceEagerMeasureMemory', ...(process.env.DW1_WEB_INSECURE_ORIGIN ?
+      channel: process.env.DW1_WEB_INSECURE_ORIGIN || /disc|cards|offline/.test(process.env.DW1_WEB_SUITE || '') ? 'chromium' : undefined, launchOptions: {args: ['--no-sandbox', '--autoplay-policy=document-user-activation-required', '--enable-unsafe-swiftshader', '--enable-blink-features=ForceEagerMeasureMemory', ...(process.env.DW1_WEB_INSECURE_ORIGIN ?
       ['--unsafely-treat-insecure-origin-as-secure=' + new URL(process.env.DW1_WEB_INSECURE_ORIGIN).origin] : [])]}}},
     {name: 'firefox', use: {browserName: 'firefox', headless: false, launchOptions: {firefoxUserPrefs: {
       'webgl.force-enabled': true, 'gfx.webrender.software': true,

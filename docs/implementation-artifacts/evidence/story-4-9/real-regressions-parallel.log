@@ -1,0 +1,76 @@
+Test project /dw/build/port/web
+    Start 51: pack_disc
+1/9 Test #51: pack_disc ........................   Passed   37.42 sec
+    Start 36: web_offline_real
+2/9 Test #36: web_offline_real .................   Passed  104.10 sec
+    Start 43: native_cards
+3/9 Test #43: native_cards .....................   Passed   34.69 sec
+    Start 44: web_cards_real
+4/9 Test #44: web_cards_real ...................   Passed   74.67 sec
+    Start 49: web_disc_real
+5/9 Test #49: web_disc_real ....................   Passed  202.63 sec
+    Start 52: native_title_capture
+6/9 Test #52: native_title_capture .............   Passed  141.89 sec
+    Start 53: native_title_audio
+7/9 Test #53: native_title_audio ...............   Passed  146.33 sec
+    Start 54: web_scene_title_audio
+8/9 Test #54: web_scene_title_audio ............   Passed  612.25 sec
+    Start 55: web_scene_title
+9/9 Test #55: web_scene_title ..................***Failed  773.74 sec
+W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+
+Running 8 tests using 1 worker
+
+(node:80368) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/8] [chromium] › ../../../port/web/tests/title.spec.cjs:6:3 › title capture matches native
+[2/8] [chromium] › ../../../port/web/tests/title.spec.cjs:6:3 › title capture matches native with storage poisoned
+[3/8] [chromium] › ../../../port/web/tests/title.spec.cjs:55:1 › a reassigned Start leaves the title after a reload
+[4/8] [chromium] › ../../../port/web/tests/title.spec.cjs:78:1 › one click on Jugar reaches the title and Start leaves it
+  1) [chromium] › ../../../port/web/tests/title.spec.cjs:78:1 › one click on Jugar reaches the title and Start leaves it 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Call Log:
+    - Timeout 10000ms exceeded while waiting on the predicate
+
+      124 |     return signal.in_title && signal.output_nonzero && signal.context_state === 'running' &&
+      125 |       signal.level >= 6144 - 1536 && signal.level <= 6144 + 1536;
+    > 126 |   }, {timeout:10000, intervals:[16]}).toBe(true);
+          |                                       ^
+      127 |   expect(signal.underruns).toBe(0); expect(signal.overflows).toBe(0);
+      128 |   await expect.poll(marks, {timeout:10000}).toContain('runMainMenu');
+      129 |   await page.keyboard.up('Enter');
+        at /dw/port/web/tests/title.spec.cjs:126:39
+
+    Error Context: playwright-results-title/title-one-click-on-Jugar-r-5999b-e-title-and-Start-leaves-it-chromium/error-context.md
+
+
+(node:90181) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[5/8] [firefox] › ../../../port/web/tests/title.spec.cjs:6:3 › title capture matches native
+[6/8] [firefox] › ../../../port/web/tests/title.spec.cjs:6:3 › title capture matches native with storage poisoned
+[7/8] [firefox] › ../../../port/web/tests/title.spec.cjs:55:1 › a reassigned Start leaves the title after a reload
+[8/8] [firefox] › ../../../port/web/tests/title.spec.cjs:78:1 › one click on Jugar reaches the title and Start leaves it
+  Slow test file: [firefox] › ../../../port/web/tests/title.spec.cjs (6.6m)
+  Slow test file: [chromium] › ../../../port/web/tests/title.spec.cjs (6.2m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  1 failed
+    [chromium] › ../../../port/web/tests/title.spec.cjs:78:1 › one click on Jugar reaches the title and Start leaves it 
+  7 passed (12.9m)
+
+
+89% tests passed, 1 tests failed out of 9
+
+Total Test time (real) = 2127.72 sec
+
+The following tests FAILED:
+	 55 - web_scene_title (Failed)
+Errors while running CTest

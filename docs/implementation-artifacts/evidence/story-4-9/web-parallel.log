@@ -1,0 +1,205 @@
+Test project /dw/build/port/web
+      Start 35: web_offline
+      Start 51: pack_disc
+ 1/57 Test #51: pack_disc ........................***Skipped   0.00 sec
+      Start 43: native_cards
+ 2/57 Test #43: native_cards .....................***Skipped   0.06 sec
+      Start 52: native_title_capture
+ 3/57 Test #52: native_title_capture .............***Skipped   0.00 sec
+      Start 53: native_title_audio
+ 4/57 Test #53: native_title_audio ...............***Skipped   0.06 sec
+      Start 42: web_cards
+ 5/57 Test #35: web_offline ......................   Passed  175.90 sec
+      Start 41: web_audio
+ 6/57 Test #42: web_cards ........................   Passed  198.40 sec
+      Start 45: web_settings
+ 7/57 Test #45: web_settings .....................   Passed  164.43 sec
+      Start 39: web_shell
+ 8/57 Test #41: web_audio ........................***Failed  258.65 sec
+W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+
+Running 32 tests using 1 worker
+
+(node:80451) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:19:1 › ramp is ordered, live gain halves output, mute keeps consuming, pause and hidden preserve counters
+[2/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:99:1 › v2 migration preserves extras; volume persists; restore only restores controls
+[3/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume -0.1 protects the record
+[4/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume 1.1 protects the record
+[5/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume "0.3" protects the record
+[6/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume null protects the record
+[7/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:133:53 › audio constructor failure runs silently with a warning
+[8/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:133:53 › audio addModule failure runs silently with a warning
+[9/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:145:1 › without an AudioContext the existing query boot never writes PCM
+[10/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:150:1 › a suspended device has bounded backpressure and no underruns
+[11/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:168:1 › a device that never resumes warns and finishes without producing PCM
+[12/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:180:48 › pending resume at startup warns and advances VBlanks
+[13/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:180:48 › pending addModule at startup warns and advances VBlanks
+[14/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:197:1 › pending resume on unpause warns and advances VBlanks
+[15/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:208:1 › volume keeps keyboard focus for consecutive arrow keys and blurs on pointer release
+[16/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:220:1 › finishing suspends the context before any underrun
+(node:83203) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[17/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:19:1 › ramp is ordered, live gain halves output, mute keeps consuming, pause and hidden preserve counters
+  1) [firefox] › ../../../port/web/tests/audio.spec.cjs:19:1 › ramp is ordered, live gain halves output, mute keeps consuming, pause and hidden preserve counters 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: 3
+
+      80 |   await page.waitForTimeout(1000);
+      81 |   // Freeze the stream before transporting a large recording through the test protocol.
+    > 82 |   expect(await page.evaluate(() => Module.control().resynchronizations)).toBe(0);
+         |                                                                          ^
+      83 |   await page.locator('#pause').click();
+      84 |   await expect.poll(() => page.evaluate(() => Module.audioContext.state)).toBe('suspended');
+      85 |   await page.waitForTimeout(100);
+        at /dw/port/web/tests/audio.spec.cjs:82:74
+
+    Error Context: playwright-results-audio/audio-ramp-is-ordered-live-15387-nd-hidden-preserve-counters-firefox/error-context.md
+
+
+(node:84342) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[18/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:99:1 › v2 migration preserves extras; volume persists; restore only restores controls
+[19/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume -0.1 protects the record
+[20/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume 1.1 protects the record
+[21/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume "0.3" protects the record
+[22/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume null protects the record
+[23/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:133:53 › audio constructor failure runs silently with a warning
+[24/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:133:53 › audio addModule failure runs silently with a warning
+[25/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:145:1 › without an AudioContext the existing query boot never writes PCM
+[26/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:150:1 › a suspended device has bounded backpressure and no underruns
+[27/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:168:1 › a device that never resumes warns and finishes without producing PCM
+[28/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:180:48 › pending resume at startup warns and advances VBlanks
+[29/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:180:48 › pending addModule at startup warns and advances VBlanks
+[30/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:197:1 › pending resume on unpause warns and advances VBlanks
+[31/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:208:1 › volume keeps keyboard focus for consecutive arrow keys and blurs on pointer release
+[32/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:220:1 › finishing suspends the context before any underrun
+  1 failed
+    [firefox] › ../../../port/web/tests/audio.spec.cjs:19:1 › ramp is ordered, live gain halves output, mute keeps consuming, pause and hidden preserve counters 
+  31 passed (4.3m)
+
+      Start 40: web_input
+ 9/57 Test #39: web_shell ........................   Passed  169.67 sec
+      Start 48: web_disc
+10/57 Test #40: web_input ........................   Passed   98.88 sec
+      Start 28: test_preproc_check
+11/57 Test #48: web_disc .........................   Passed   65.69 sec
+      Start 33: fnptr_inventory
+12/57 Test #33: fnptr_inventory ..................   Passed   32.97 sec
+      Start 27: preproc_check
+13/57 Test #27: preproc_check ....................   Passed   33.84 sec
+      Start 37: web_boot
+14/57 Test #37: web_boot .........................   Passed   26.81 sec
+      Start 26: status_table_repo
+15/57 Test #26: status_table_repo ................   Passed    2.98 sec
+      Start 50: web_io
+16/57 Test #50: web_io ...........................   Passed   16.74 sec
+      Start 57: reference_capture_unit
+17/57 Test #57: reference_capture_unit ...........   Passed   13.84 sec
+      Start 38: web_launcher
+18/57 Test #28: test_preproc_check ...............   Passed  195.87 sec
+      Start 24: inventory
+19/57 Test #38: web_launcher .....................   Passed    9.04 sec
+      Start  2: audio_rate
+20/57 Test  #2: audio_rate .......................   Passed    4.79 sec
+      Start 46: testing_deploy
+21/57 Test #24: inventory ........................   Passed   11.98 sec
+      Start 34: web_sw_stamp
+22/57 Test #34: web_sw_stamp .....................   Passed    0.08 sec
+      Start  8: scene_audio_unit
+23/57 Test  #8: scene_audio_unit .................   Passed    1.96 sec
+      Start  7: xa_vectors
+24/57 Test #46: testing_deploy ...................   Passed    4.28 sec
+      Start  3: web_audio_rate_parity
+25/57 Test  #3: web_audio_rate_parity ............   Passed    0.33 sec
+      Start 25: status_table_unit
+26/57 Test #25: status_table_unit ................   Passed    0.17 sec
+      Start  6: spu_vectors
+27/57 Test  #7: xa_vectors .......................   Passed    0.92 sec
+      Start  1: sjis_literals
+28/57 Test  #1: sjis_literals ....................   Passed    0.14 sec
+      Start 23: gen_stubs
+29/57 Test #23: gen_stubs ........................   Passed    0.40 sec
+      Start 56: shop_overlay_unit
+30/57 Test  #6: spu_vectors ......................   Passed    0.75 sec
+      Start 32: fnptr_scanner
+31/57 Test #56: shop_overlay_unit ................   Passed    0.07 sec
+      Start  9: scene_timing_unit
+32/57 Test  #9: scene_timing_unit ................   Passed    0.08 sec
+      Start 30: psyq_prototypes
+33/57 Test #32: fnptr_scanner ....................   Passed    0.18 sec
+      Start 10: spu
+34/57 Test #30: psyq_prototypes ..................   Passed    0.13 sec
+      Start 29: ps1_ram_addr_range
+35/57 Test #29: ps1_ram_addr_range ...............   Passed    0.11 sec
+      Start 22: tu_list
+36/57 Test #10: spu ..............................   Passed    0.21 sec
+      Start 16: cd_stream
+37/57 Test #16: cd_stream ........................   Passed    0.12 sec
+      Start 15: libsnd
+38/57 Test #22: tu_list ..........................   Passed    0.20 sec
+      Start  4: press_tables
+39/57 Test  #4: press_tables .....................   Passed    0.09 sec
+      Start 17: card
+40/57 Test #15: libsnd ...........................   Passed    0.15 sec
+      Start 11: xa
+41/57 Test #17: card .............................   Passed    0.06 sec
+      Start 13: libpress
+42/57 Test #11: xa ...............................   Passed    0.06 sec
+      Start  5: mdec_vectors
+43/57 Test #13: libpress .........................   Passed    0.05 sec
+      Start 47: testing_context
+44/57 Test  #5: mdec_vectors .....................   Passed    0.05 sec
+      Start 20: rts_info
+45/57 Test #47: testing_context ..................   Passed    0.06 sec
+      Start 18: gte_tables
+46/57 Test #20: rts_info .........................   Passed    0.08 sec
+      Start 12: mdec
+47/57 Test #18: gte_tables .......................   Passed    0.08 sec
+      Start 19: pre_commit
+48/57 Test #12: mdec .............................   Passed    0.04 sec
+      Start 31: setjmp
+49/57 Test #31: setjmp ...........................   Passed    0.04 sec
+      Start 14: libspu
+50/57 Test #19: pre_commit .......................   Passed    0.07 sec
+      Start 21: ovl_starts
+51/57 Test #14: libspu ...........................   Passed    0.06 sec
+      Start 36: web_offline_real
+52/57 Test #21: ovl_starts .......................   Passed    0.06 sec
+      Start 44: web_cards_real
+53/57 Test #36: web_offline_real .................***Skipped   0.04 sec
+      Start 49: web_disc_real
+54/57 Test #44: web_cards_real ...................***Skipped   0.05 sec
+      Start 54: web_scene_title_audio
+55/57 Test #49: web_disc_real ....................***Skipped   0.05 sec
+      Start 55: web_scene_title
+56/57 Test #54: web_scene_title_audio ............***Skipped   0.05 sec
+57/57 Test #55: web_scene_title ..................***Skipped   0.05 sec
+
+98% tests passed, 1 tests failed out of 57
+
+Total Test time (real) = 746.00 sec
+
+The following tests did not run:
+	 36 - web_offline_real (Skipped)
+	 43 - native_cards (Skipped)
+	 44 - web_cards_real (Skipped)
+	 49 - web_disc_real (Skipped)
+	 51 - pack_disc (Skipped)
+	 52 - native_title_capture (Skipped)
+	 53 - native_title_audio (Skipped)
+	 54 - web_scene_title_audio (Skipped)
+	 55 - web_scene_title (Skipped)
+
+The following tests FAILED:
+	 41 - web_audio (Failed)
+Errors while running CTest

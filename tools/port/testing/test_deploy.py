@@ -21,6 +21,15 @@ if a[:2] == ['image', 'inspect']:
     if code == 0 and '--format' in a: print(s['images'][a[-1]])
 elif a[0] == 'build':
     tag = a[a.index('--tag') + 1]
+    context = Path(a[-1])
+    source = (context / 'sw.js').read_text()
+    assert "'unstamped'" not in source
+    import runpy
+    stamp = runpy.run_path(os.environ['STAMP_SW'])['stamp']
+    before = source
+    stamp(context)
+    assert before == (context / 'sw.js').read_text()
+    assert 'sw.js' in (context / 'Dockerfile').read_text()
     s['images'][tag] = 'sha256:' + tag.split(':')[1]
 elif a[0] == 'create': print('helper')
 elif a[:2] == ['container', 'inspect']: code = 0 if s.get('running') else 1
@@ -59,9 +68,10 @@ class DeployTest(unittest.TestCase):
             build.mkdir()
             for name in ('dw1.html', 'dw1.js', 'dw1.wasm', 'io_worker.js', 'audio_worklet.js', 'dw1_pack.js', 'dw1_pack.wasm', 'us.tsv', 'seed.html', 'seed_worker.js'):
                 (build / name).write_text('synthetic web asset')
+            (build / 'sw.js').write_text((ROOT / 'port/web/sw.js').read_text())
             (build / 'us.pack').write_bytes(b'DW1PACK\0synthetic test only')
             env = dict(os.environ, PATH=str(directory) + ':' + os.environ['PATH'],
-                       DOCKER_TEST_STATE=str(state), HUB_DOCKER_HOST='tcp://hidden.invalid:2375',
+                       DOCKER_TEST_STATE=str(state), STAMP_SW=str(ROOT / 'tools/port/web/stamp_sw.py'), HUB_DOCKER_HOST='tcp://hidden.invalid:2375',
                        CI_COMMIT_SHA='b'*40)
 
             def run(*args, success=True):

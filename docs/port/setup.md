@@ -634,3 +634,31 @@ Los arranques por query conservan tarjetas ausentes salvo `cards=1`. Para prueba
 `?cards=1&card-test=N` publica N patrones sin Pack; `card-hold=1` ignora avisos para
 verificar el flush de cierre; `replay=<nombre>` carga `<nombre>.replay.txt` del fixture
 (`replay=1` conserva `replay.txt`).
+
+### Offline y actualizaciones (4.9)
+
+`cmake --build --preset web` genera `sw.js` y lo estampa con SHA-256 del programa,
+del propio worker y de `version.txt` si existe. Al desplegar, ejecutar
+`python3 tools/port/web/stamp_sw.py <directorio>` después de escribir `version.txt`.
+`deploy.sh` lo hace antes de validar el contexto. No servir `sw.js` con caché HTTP
+larga: el servidor de desarrollo y nginx de testing usan `Cache-Control: no-store`.
+
+```sh
+ctest --preset native-headless -R pack --output-on-failure
+ctest --preset web --output-on-failure
+DW1_DISC_DIR=/ruta/al/disco ctest --preset web -R 'web_offline_real|web_disc_real' --output-on-failure
+```
+
+`web_offline` usa disco sintético en Chromium y Firefox. Cada prueba copia el sitio
+a un directorio propio dentro del build, publica versiones por contenido y apaga
+su servidor además de usar `setOffline`. `web_offline_real` requiere `disc_pack`,
+enlaza el Pack sin copiarlo y comprueba arranque, audio, frames, más de 600 VBlanks
+y SHA-256 después de actualizar. Las demás suites bloquean service workers para
+conservar sus intercepciones `page.route`. Los estados y tiempos de las 20 recargas
+quedan en `build/port/web/offline-reloads-<browser>.json`; el límite es 5 segundos.
+
+El Launcher migra automáticamente el formato 0 (predecesor nunca publicado, mismo
+layout que v1) con el C compartido, validación completa y reemplazo temporal bajo
+el Web Lock. No modifica formatos posteriores ni solicita el disco para migrar.
+La actualización del programa solo se activa desde un Launcher intacto que posee
+el Lock; una interacción o partida la deja pendiente hasta la próxima carga.

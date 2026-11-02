@@ -1,0 +1,16 @@
+[HANDLER_OUTPUT] 
+Test project /dw/build/port/native-headless
+
+    Start 48: pack
+1/3 Test #48: pack .............................   Passed    0.02 sec
+    Start 52: dw1_foreign_pack
+2/3 Test #52: dw1_foreign_pack .................   Passed    0.01 sec
+    Start 57: pack_disc
+3/3 Test #57: pack_disc ........................***Skipped   0.00 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =   0.04 sec
+
+The following tests did not run:
+	 57 - pack_disc (Skipped)

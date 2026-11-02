@@ -48,10 +48,11 @@ build=${1:-$root/build/port/web}
 sha=${CI_COMMIT_SHA:-$(git -C "$root" rev-parse HEAD)}
 [[ $sha =~ ^[a-f0-9]{40}$ ]] || { echo 'invalid commit SHA' >&2; exit 1; }
 mkdir "$work/context"
-for file in dw1.html dw1.js dw1.wasm io_worker.js audio_worklet.js dw1_pack.js dw1_pack.wasm us.tsv seed.html seed_worker.js; do
+for file in dw1.html dw1.js dw1.wasm io_worker.js audio_worklet.js sw.js dw1_pack.js dw1_pack.wasm us.tsv seed.html seed_worker.js; do
     cp "$build/$file" "$work/context/$file"
 done
 printf '%s\n' "$sha" > "$work/context/version.txt"
+python3 "$root/tools/port/web/stamp_sw.py" "$work/context"
 cp "$root/port/web/testing/"{Dockerfile,nginx.conf} "$work/context/"
 python3 "$root/tools/port/testing/check_context.py" "$work/context" "$root/tools/port/manifest/us.tsv"
 d build --quiet --tag "dw1-testing:$sha" "$work/context" >/dev/null

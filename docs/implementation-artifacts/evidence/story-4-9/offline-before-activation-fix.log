@@ -1,0 +1,327 @@
+Test project /dw/build/port/web
+    Start 35: web_offline
+1/1 Test #35: web_offline ......................***Failed  181.61 sec
+W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+
+Running 40 tests using 1 worker
+
+(node:48630) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:14:1 › program cache is complete, isolated and strictly scoped offline
+[chromium] › ../../../port/web/tests/offline.spec.cjs:14:1 › program cache is complete, isolated and strictly scoped offline
+
+
+
+
+[2/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:42:1 › twenty offline reloads keep Play independent of network
+[chromium] › ../../../port/web/tests/offline.spec.cjs:42:1 › twenty offline reloads keep Play independent of network
+
+
+
+
+[3/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:63:1 › untouched update reloads once, preserves data and reloads lock waiters
+[chromium] › ../../../port/web/tests/offline.spec.cjs:63:1 › untouched update reloads once, preserves data and reloads lock waiters
+
+
+
+
+
+
+
+
+[4/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after pointerdown
+[chromium] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after pointerdown
+
+
+
+
+
+
+[5/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after keydown
+[chromium] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after keydown
+
+
+
+
+
+
+[6/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after dragenter
+[chromium] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after dragenter
+
+
+
+
+
+
+  1) [chromium] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after dragenter ───
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator:  locator('#version')
+    Expected: "two"
+    Received: "one"
+    Timeout:  30000ms
+
+    Call log:
+      - Expect "toHaveText" locator('#version') with timeout 30000ms
+      - waiting for locator('#version')
+        63 × locator resolved to <span id="version">one</span>
+           - unexpected value "one"
+
+
+      106 |   if (interaction === 'keydown') { await context.setOffline(true); await site.stop(); }
+      107 |   await page.reload(); await o.ready(page);
+    > 108 |   await expect(page.locator('#version')).toHaveText('two', {timeout:30000});
+          |                                          ^
+      109 | });
+      110 | test('incomplete install preserves old cache and retries next load', async ({page}) => {
+      111 |   await o.build(page); const old = await o.cachesAt(page);
+        at /dw/port/web/tests/offline.spec.cjs:108:42
+
+    Error Context: playwright-results-offline/offline-defers-update-after-dragenter-chromium/error-context.md
+
+
+(node:50719) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[7/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after game
+[chromium] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after game
+
+
+
+
+
+
+[8/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:110:1 › incomplete install preserves old cache and retries next load
+[chromium] › ../../../port/web/tests/offline.spec.cjs:110:1 › incomplete install preserves old cache and retries next load
+
+
+
+
+
+
+[9/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:120:1 › migrates v0 offline to byte-identical v1 without disc
+[chromium] › ../../../port/web/tests/offline.spec.cjs:120:1 › migrates v0 offline to byte-identical v1 without disc
+
+
+
+
+[10/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:128:51 › preserves Pack on corrupt
+[chromium] › ../../../port/web/tests/offline.spec.cjs:128:51 › preserves Pack on corrupt
+
+
+
+
+[11/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:128:51 › preserves Pack on quota
+[chromium] › ../../../port/web/tests/offline.spec.cjs:128:51 › preserves Pack on quota
+
+
+
+
+[12/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:128:51 › preserves Pack on newer
+[chromium] › ../../../port/web/tests/offline.spec.cjs:128:51 › preserves Pack on newer
+
+
+
+
+[13/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:169:48 › recovers interrupted replacement: previous
+[chromium] › ../../../port/web/tests/offline.spec.cjs:169:48 › recovers interrupted replacement: previous
+
+
+
+
+[14/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:169:48 › recovers interrupted replacement: leftovers
+[chromium] › ../../../port/web/tests/offline.spec.cjs:169:48 › recovers interrupted replacement: leftovers
+
+
+
+
+[15/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:175:55 › works without service worker: absent
+[chromium] › ../../../port/web/tests/offline.spec.cjs:175:55 › works without service worker: absent
+
+
+
+
+[16/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:175:55 › works without service worker: reject
+[chromium] › ../../../port/web/tests/offline.spec.cjs:175:55 › works without service worker: reject
+
+
+
+
+[17/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:175:55 › works without service worker: undefined
+[chromium] › ../../../port/web/tests/offline.spec.cjs:175:55 › works without service worker: undefined
+
+
+
+
+[18/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:184:1 › Pack version constant agrees with native header
+[chromium] › ../../../port/web/tests/offline.spec.cjs:184:1 › Pack version constant agrees with native header
+
+
+
+
+[19/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:191:1 › first failed installation leaves online Launcher usable and retries next load
+[chromium] › ../../../port/web/tests/offline.spec.cjs:191:1 › first failed installation leaves online Launcher usable and retries next load
+
+
+
+
+[20/40] [chromium] › ../../../port/web/tests/offline.spec.cjs:201:1 › slow optional metadata cannot keep Play disabled
+[chromium] › ../../../port/web/tests/offline.spec.cjs:201:1 › slow optional metadata cannot keep Play disabled
+
+
+
+
+(node:52359) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[21/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:14:1 › program cache is complete, isolated and strictly scoped offline
+[firefox] › ../../../port/web/tests/offline.spec.cjs:14:1 › program cache is complete, isolated and strictly scoped offline
+
+
+
+
+[22/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:42:1 › twenty offline reloads keep Play independent of network
+[firefox] › ../../../port/web/tests/offline.spec.cjs:42:1 › twenty offline reloads keep Play independent of network
+
+
+
+
+[23/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:63:1 › untouched update reloads once, preserves data and reloads lock waiters
+[firefox] › ../../../port/web/tests/offline.spec.cjs:63:1 › untouched update reloads once, preserves data and reloads lock waiters
+
+
+
+
+
+
+
+
+[24/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after pointerdown
+[firefox] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after pointerdown
+
+
+
+
+
+
+[25/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after keydown
+[firefox] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after keydown
+
+
+
+
+
+
+[26/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after dragenter
+[firefox] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after dragenter
+
+
+
+
+
+
+[27/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after game
+[firefox] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after game
+
+
+
+
+
+
+[28/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:110:1 › incomplete install preserves old cache and retries next load
+[firefox] › ../../../port/web/tests/offline.spec.cjs:110:1 › incomplete install preserves old cache and retries next load
+
+
+
+
+
+
+[29/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:120:1 › migrates v0 offline to byte-identical v1 without disc
+[firefox] › ../../../port/web/tests/offline.spec.cjs:120:1 › migrates v0 offline to byte-identical v1 without disc
+
+
+
+
+[30/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:128:51 › preserves Pack on corrupt
+[firefox] › ../../../port/web/tests/offline.spec.cjs:128:51 › preserves Pack on corrupt
+
+
+
+
+[31/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:128:51 › preserves Pack on quota
+[firefox] › ../../../port/web/tests/offline.spec.cjs:128:51 › preserves Pack on quota
+
+
+
+
+[32/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:128:51 › preserves Pack on newer
+[firefox] › ../../../port/web/tests/offline.spec.cjs:128:51 › preserves Pack on newer
+
+
+
+
+[33/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:169:48 › recovers interrupted replacement: previous
+[firefox] › ../../../port/web/tests/offline.spec.cjs:169:48 › recovers interrupted replacement: previous
+
+
+
+
+[34/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:169:48 › recovers interrupted replacement: leftovers
+[firefox] › ../../../port/web/tests/offline.spec.cjs:169:48 › recovers interrupted replacement: leftovers
+
+
+
+
+[35/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:175:55 › works without service worker: absent
+[firefox] › ../../../port/web/tests/offline.spec.cjs:175:55 › works without service worker: absent
+
+
+
+
+[36/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:175:55 › works without service worker: reject
+[firefox] › ../../../port/web/tests/offline.spec.cjs:175:55 › works without service worker: reject
+
+
+
+
+[37/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:175:55 › works without service worker: undefined
+[firefox] › ../../../port/web/tests/offline.spec.cjs:175:55 › works without service worker: undefined
+
+
+
+
+[38/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:184:1 › Pack version constant agrees with native header
+[firefox] › ../../../port/web/tests/offline.spec.cjs:184:1 › Pack version constant agrees with native header
+
+
+
+
+[39/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:191:1 › first failed installation leaves online Launcher usable and retries next load
+[firefox] › ../../../port/web/tests/offline.spec.cjs:191:1 › first failed installation leaves online Launcher usable and retries next load
+
+
+
+
+[40/40] [firefox] › ../../../port/web/tests/offline.spec.cjs:201:1 › slow optional metadata cannot keep Play disabled
+[firefox] › ../../../port/web/tests/offline.spec.cjs:201:1 › slow optional metadata cannot keep Play disabled
+
+
+
+
+  1 failed
+    [chromium] › ../../../port/web/tests/offline.spec.cjs:94:76 › defers update after dragenter ────
+  39 passed (3.0m)
+
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) = 181.62 sec
+
+The following tests FAILED:
+	 35 - web_offline (Failed)
+Errors while running CTest

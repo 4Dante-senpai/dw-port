@@ -1,0 +1,121 @@
+[HANDLER_OUTPUT] 
+Test project /dw/build/port/web
+
+      Start  1: sjis_literals
+ 1/57 Test  #1: sjis_literals ....................   Passed    0.18 sec
+      Start  2: audio_rate
+ 2/57 Test  #2: audio_rate .......................   Passed    4.02 sec
+      Start  3: web_audio_rate_parity
+ 3/57 Test  #3: web_audio_rate_parity ............   Passed    0.27 sec
+      Start  4: press_tables
+ 4/57 Test  #4: press_tables .....................   Passed    0.06 sec
+      Start  5: mdec_vectors
+ 5/57 Test  #5: mdec_vectors .....................   Passed    0.04 sec
+      Start  6: spu_vectors
+ 6/57 Test  #6: spu_vectors ......................   Passed    0.64 sec
+      Start  7: xa_vectors
+ 7/57 Test  #7: xa_vectors .......................   Passed    0.74 sec
+      Start  8: scene_audio_unit
+ 8/57 Test  #8: scene_audio_unit .................   Passed    1.40 sec
+      Start  9: scene_timing_unit
+ 9/57 Test  #9: scene_timing_unit ................   Passed    0.07 sec
+      Start 10: spu
+10/57 Test #10: spu ..............................   Passed    0.16 sec
+      Start 11: xa
+11/57 Test #11: xa ...............................   Passed    0.05 sec
+      Start 12: mdec
+12/57 Test #12: mdec .............................   Passed    0.04 sec
+      Start 13: libpress
+13/57 Test #13: libpress .........................   Passed    0.05 sec
+      Start 14: libspu
+14/57 Test #14: libspu ...........................   Passed    0.04 sec
+      Start 15: libsnd
+15/57 Test #15: libsnd ...........................   Passed    0.08 sec
+      Start 16: cd_stream
+16/57 Test #16: cd_stream ........................   Passed    0.08 sec
+      Start 17: card
+17/57 Test #17: card .............................   Passed    0.04 sec
+      Start 18: gte_tables
+18/57 Test #18: gte_tables .......................   Passed    0.07 sec
+      Start 19: pre_commit
+19/57 Test #19: pre_commit .......................   Passed    0.07 sec
+      Start 20: rts_info
+20/57 Test #20: rts_info .........................   Passed    0.07 sec
+      Start 21: ovl_starts
+21/57 Test #21: ovl_starts .......................   Passed    0.05 sec
+      Start 22: tu_list
+22/57 Test #22: tu_list ..........................   Passed    0.14 sec
+      Start 23: gen_stubs
+23/57 Test #23: gen_stubs ........................   Passed    0.61 sec
+      Start 24: inventory
+24/57 Test #24: inventory ........................   Passed    8.30 sec
+      Start 25: status_table_unit
+25/57 Test #25: status_table_unit ................   Passed    0.15 sec
+      Start 26: status_table_repo
+26/57 Test #26: status_table_repo ................   Passed    2.76 sec
+      Start 27: preproc_check
+27/57 Test #27: preproc_check ....................   Passed   17.14 sec
+      Start 28: test_preproc_check
+28/57 Test #28: test_preproc_check ...............   Passed   78.79 sec
+      Start 29: ps1_ram_addr_range
+29/57 Test #29: ps1_ram_addr_range ...............   Passed    0.10 sec
+      Start 30: psyq_prototypes
+30/57 Test #30: psyq_prototypes ..................   Passed    0.10 sec
+      Start 31: setjmp
+31/57 Test #31: setjmp ...........................   Passed    0.03 sec
+      Start 32: fnptr_scanner
+32/57 Test #32: fnptr_scanner ....................   Passed    0.14 sec
+      Start 33: fnptr_inventory
+33/57 Test #33: fnptr_inventory ..................   Passed    9.27 sec
+      Start 34: web_sw_stamp
+34/57 Test #34: web_sw_stamp .....................   Passed    0.05 sec
+      Start 35: web_offline
+35/57 Test #35: web_offline ......................   Passed  102.91 sec
+      Start 51: pack_disc
+36/57 Test #51: pack_disc ........................   Passed   25.46 sec
+      Start 36: web_offline_real
+37/57 Test #36: web_offline_real .................   Passed  129.55 sec
+      Start 37: web_boot
+38/57 Test #37: web_boot .........................   Passed   18.98 sec
+      Start 38: web_launcher
+39/57 Test #38: web_launcher .....................   Passed    6.54 sec
+      Start 39: web_shell
+40/57 Test #39: web_shell ........................   Passed  157.40 sec
+      Start 40: web_input
+41/57 Test #40: web_input ........................   Passed   87.83 sec
+      Start 41: web_audio
+42/57 Test #41: web_audio ........................   Passed  244.20 sec
+      Start 42: web_cards
+43/57 Test #42: web_cards ........................   Passed  102.86 sec
+      Start 43: native_cards
+44/57 Test #43: native_cards .....................   Passed   26.10 sec
+      Start 44: web_cards_real
+45/57 Test #44: web_cards_real ...................   Passed   56.21 sec
+      Start 45: web_settings
+46/57 Test #45: web_settings .....................   Passed  147.93 sec
+      Start 46: testing_deploy
+47/57 Test #46: testing_deploy ...................   Passed    3.47 sec
+      Start 47: testing_context
+48/57 Test #47: testing_context ..................   Passed    0.06 sec
+      Start 48: web_disc
+49/57 Test #48: web_disc .........................   Passed   33.43 sec
+      Start 49: web_disc_real
+50/57 Test #49: web_disc_real ....................   Passed  196.14 sec
+      Start 50: web_io
+51/57 Test #50: web_io ...........................   Passed   12.52 sec
+      Start 52: native_title_capture
+52/57 Test #52: native_title_capture .............   Passed   89.20 sec
+      Start 53: native_title_audio
+53/57 Test #53: native_title_audio ...............   Passed   94.45 sec
+      Start 54: web_scene_title_audio
+54/57 Test #54: web_scene_title_audio ............   Passed  600.51 sec
+      Start 55: web_scene_title
+55/57 Test #55: web_scene_title ..................   Passed  678.55 sec
+      Start 56: shop_overlay_unit
+56/57 Test #56: shop_overlay_unit ................   Passed    0.05 sec
+      Start 57: reference_capture_unit
+57/57 Test #57: reference_capture_unit ...........   Passed   10.07 sec
+
+100% tests passed, 0 tests failed out of 57
+
+Total Test time (real) = 2950.24 sec

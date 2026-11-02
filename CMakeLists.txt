@@ -725,6 +725,21 @@ if(EMSCRIPTEN)
     --pre-js ${CMAKE_SOURCE_DIR}/port/web/thread_storage_guard.js
     -sEXPORTED_FUNCTIONS=_main,_io_mailbox_address,_web_control_address,_web_input_address,_web_frame_address,_web_audio_address,_web_audio_delivery_address,_web_audio_enable,_web_card_address,_web_card_attach,_card_image_data -sEXPORTED_RUNTIME_METHODS=callMain
     -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sGL_ASSERTIONS=1)
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/sw.js
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/port/web/sw.js ${CMAKE_BINARY_DIR}/sw.js
+    COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/web/stamp_sw.py ${CMAKE_BINARY_DIR}
+    DEPENDS dw1 dw1_pack port/web/sw.js tools/port/web/stamp_sw.py
+      ${CMAKE_BINARY_DIR}/dw1.html ${CMAKE_BINARY_DIR}/io_worker.js
+      ${CMAKE_BINARY_DIR}/audio_worklet.js ${CMAKE_BINARY_DIR}/us.tsv)
+  add_custom_target(web_sw ALL DEPENDS ${CMAKE_BINARY_DIR}/sw.js)
+  add_test(NAME web_sw_stamp COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/web/test_stamp_sw.py)
+  foreach(suite offline offline_real)
+    add_test(NAME web_${suite} COMMAND python3 -I -B
+      ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} ${suite})
+  endforeach()
+  set_tests_properties(web_offline PROPERTIES TIMEOUT 600)
+  set_tests_properties(web_offline_real PROPERTIES SKIP_RETURN_CODE 77 FIXTURES_REQUIRED disc_pack TIMEOUT 900)
   add_test(NAME web_boot COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR})
   set_tests_properties(web_boot PROPERTIES TIMEOUT 180)
