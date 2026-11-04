@@ -1,0 +1,69 @@
+Start testing: Nov 04 17:30 UTC
+----------------------------------------------------------
+51/63 Testing: web_settings
+51/63 Test: web_settings
+Command: "/dw/.venv/bin/python3" "-I" "-B" "/dw/port/web/tests/run.py" "/dw/build/port/web" "settings"
+Directory: /dw/build/port/web
+"web_settings" start time: Nov 04 17:30 UTC
+Output:
+----------------------------------------------------------
+W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+
+Running 38 tests using 1 worker
+
+(node:209) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:33:1 › a reassigned key survives a reload and reaches PadRead
+[2/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:54:1 › a reassigned gamepad button survives a reload and reaches PadRead
+[3/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:79:1 › a gamepad button taken by another button leaves its old button
+[4/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:96:1 › Tab and shortcuts pass through a capture
+[5/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:108:3 › a failed write of a change warns and keeps the mapping in memory
+[6/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:108:3 › a failed write of a migration warns and keeps the mapping in memory
+[7/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:131:1 › a v1 record with an unknown button is never overwritten
+[8/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:140:1 › a gamepad button held when the capture starts does not count
+[9/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:154:1 › modifiers, Tab and autorepeat are not captured; a pending capture ends with the game
+[10/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:177:1 › without IndexedDB the game boots with the defaults and a warning
+[11/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:189:1 › a key taken by another button leaves its old button; Escape cancels
+[12/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:208:1 › Restaurar valores por defecto returns to docs/port/controls.md
+[13/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:226:1 › the stick option persists and drives the D-pad
+[14/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:240:1 › a schema_version 1 record migrates without losing data
+[15/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:267:3 › a newer record runs the defaults and is never overwritten
+[16/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:267:3 › a unreadable record runs the defaults and is never overwritten
+[17/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:267:3 › a duplicated record runs the defaults and is never overwritten
+[18/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:267:3 › a mistyped record runs the defaults and is never overwritten
+[19/38] [chromium] › ../../../port/web/tests/settings.spec.cjs:267:3 › a malformed record runs the defaults and is never overwritten
+(node:1160) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[20/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:33:1 › a reassigned key survives a reload and reaches PadRead
+[21/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:54:1 › a reassigned gamepad button survives a reload and reaches PadRead
+[22/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:79:1 › a gamepad button taken by another button leaves its old button
+[23/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:96:1 › Tab and shortcuts pass through a capture
+[24/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:108:3 › a failed write of a change warns and keeps the mapping in memory
+[25/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:108:3 › a failed write of a migration warns and keeps the mapping in memory
+[26/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:131:1 › a v1 record with an unknown button is never overwritten
+[27/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:140:1 › a gamepad button held when the capture starts does not count
+[28/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:154:1 › modifiers, Tab and autorepeat are not captured; a pending capture ends with the game
+[29/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:177:1 › without IndexedDB the game boots with the defaults and a warning
+[30/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:189:1 › a key taken by another button leaves its old button; Escape cancels
+[31/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:208:1 › Restaurar valores por defecto returns to docs/port/controls.md
+[32/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:226:1 › the stick option persists and drives the D-pad
+[33/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:240:1 › a schema_version 1 record migrates without losing data
+[34/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:267:3 › a newer record runs the defaults and is never overwritten
+[35/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:267:3 › a unreadable record runs the defaults and is never overwritten
+[36/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:267:3 › a duplicated record runs the defaults and is never overwritten
+[37/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:267:3 › a mistyped record runs the defaults and is never overwritten
+[38/38] [firefox] › ../../../port/web/tests/settings.spec.cjs:267:3 › a malformed record runs the defaults and is never overwritten
+  38 passed (2.6m)
+<end of output>
+Test time = 157.08 sec
+----------------------------------------------------------
+Test Passed.
+"web_settings" end time: Nov 04 17:32 UTC
+"web_settings" time elapsed: 00:02:37
+----------------------------------------------------------
+
+End testing: Nov 04 17:32 UTC

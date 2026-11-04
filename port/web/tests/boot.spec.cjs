@@ -71,3 +71,61 @@ test('normal run keeps validation readback disabled', async ({page}) => {
   }, coordinates)).toEqual(expected);
   expect(errors).toEqual([]);
 });
+
+// Both failed requests must be visible: observing only page requests misses worker traffic.
+test('foreign requests include the page and a worker', async ({page}) => {
+  const {foreignRequests} = require('./storage.cjs');
+  const requests = await foreignRequests(page);
+  await page.goto('/seed.html');
+  await page.evaluate(async () => {
+    await fetch('http://127.0.0.2:9/').catch(() => {});
+    await new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(new Blob([
+        "fetch('http://127.0.0.2:9/').catch(() => {}).then(() => postMessage('done'))"
+      ], {type:'text/javascript'}));
+      const worker = new Worker(url);
+      worker.onmessage = () => {worker.terminate(); URL.revokeObjectURL(url); resolve();};
+      worker.onerror = reject;
+    });
+  });
+  await expect.poll(() => [...requests].sort()).toEqual([
+    'http://127.0.0.2:9/', 'http://127.0.0.2:9/'
+  ]);
+});
+
+test('foreign requests include AudioWorklet modules', async ({page}) => {
+  const {foreignRequests} = require('./storage.cjs');
+  const requests = await foreignRequests(page);
+  await page.goto('/seed.html');
+  await page.evaluate(async () => {
+    const audio = new AudioContext();
+    await audio.audioWorklet.addModule('http://127.0.0.2:9/?worklet').catch(() => {});
+    await audio.close();
+  });
+  await expect.poll(() => requests).toEqual(['http://127.0.0.2:9/?worklet']);
+});
+
+test('foreign requests include imported AudioWorklet modules', async ({page}) => {
+  const {foreignRequests} = require('./storage.cjs');
+  const requests = await foreignRequests(page);
+  const server = require('http').createServer((request, response) => {
+    response.writeHead(200, {'Content-Type':'text/javascript',
+      'Access-Control-Allow-Origin':'*', 'Cross-Origin-Resource-Policy':'cross-origin'});
+    response.end(request.url === '/worklet.js'
+      ? "import './dependency.js'; registerProcessor('network-test', class extends AudioWorkletProcessor {process() {return true;}});"
+      : 'export const fixture = true;');
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  try {
+    await page.goto('/seed.html');
+    await page.evaluate(async origin => {
+      const audio = new AudioContext();
+      try { await audio.audioWorklet.addModule(origin + '/worklet.js'); }
+      finally { await audio.close(); }
+    }, origin);
+    await expect.poll(() => [...requests].sort()).toEqual([
+      origin + '/dependency.js', origin + '/worklet.js'
+    ]);
+  } finally { await new Promise(resolve => server.close(resolve)); }
+});

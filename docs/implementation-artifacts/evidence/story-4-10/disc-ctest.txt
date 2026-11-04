@@ -1,0 +1,67 @@
+Test project /dw/build/port/web
+    Start 58: pack_disc
+1/4 Test #58: pack_disc ........................   Passed   35.13 sec
+    Start 38: web_long
+2/4 Test #38: web_long .........................   Passed  1246.05 sec
+    Start 39: web_data_leak
+3/4 Test #39: web_data_leak ....................***Failed   85.05 sec
+scope=wasm exceptions=180 artifacts=1
+leak: /dw/build/port/web/dw1.wasm offset=1738266 disc_offset=321473393 hash=e82c3a008ec8694c
+leak: /dw/build/port/web/dw1.wasm offset=1738267 disc_offset=321473394 hash=14663a8f5731b54c
+leak: /dw/build/port/web/dw1.wasm offset=1738268 disc_offset=321473395 hash=7aa0c9e688e701cc
+leak: /dw/build/port/web/dw1.wasm offset=1728167 disc_offset=321556159 hash=3c5ec0060a18eba6
+leak: /dw/build/port/web/dw1.wasm offset=1728168 disc_offset=321556160 hash=9b1ec610230491a7
+leak: /dw/build/port/web/dw1.wasm offset=1728169 disc_offset=321556161 hash=b9e4d633279638c5
+leak: /dw/build/port/web/dw1.wasm offset=1876821 disc_offset=321751482 hash=7a5c4da24fec8394
+leak: /dw/build/port/web/dw1.wasm offset=1876822 disc_offset=321751483 hash=d6a9eff23c701794
+leak: /dw/build/port/web/dw1.wasm offset=1876823 disc_offset=321751484 hash=8099e22eac87ab94
+leak: /dw/build/port/web/dw1.wasm offset=1876824 disc_offset=321751485 hash=e17b1e486c52ff93
+leak: /dw/build/port/web/dw1.wasm offset=1876825 disc_offset=321751486 hash=5c9966b4bf529293
+leak: /dw/build/port/web/dw1.wasm offset=1876826 disc_offset=321751487 hash=f6001b7411e52593
+leak: /dw/build/port/web/dw1.wasm offset=1876827 disc_offset=321751488 hash=f61b8f85f70ab893
+leak: /dw/build/port/web/dw1.wasm offset=2390673 disc_offset=322430006 hash=ab9a61620fa0918f
+leak: /dw/build/port/web/dw1.wasm offset=2372880 disc_offset=322430006 hash=ab9a61620fa0918f
+leak: /dw/build/port/web/dw1.wasm offset=2390609 disc_offset=322630546 hash=0b24f54d904f3cb7
+leak: /dw/build/port/web/dw1.wasm offset=2372816 disc_offset=322630546 hash=0b24f54d904f3cb7
+leak: /dw/build/port/web/dw1.wasm offset=2390610 disc_offset=322630547 hash=95b5d2171cb1734d
+leak: /dw/build/port/web/dw1.wasm offset=2372817 disc_offset=322630547 hash=95b5d2171cb1734d
+leak: /dw/build/port/web/dw1.wasm offset=2390611 disc_offset=322630548 hash=839648feb5c4ff4e
+artifacts=1 bytes=5877234 nontrivial_windows=5845577 covered_windows=951861 checked_windows=4893716 leak_windows=2016
+artifact=/dw/build/port/web/dw1.wasm offset=1738266 hash=e82c3a008ec8694c leak_windows=2016
+scope=port exceptions=0 artifacts=53
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14747 disc_offset=323261802 hash=00007f7642f703c5
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14748 disc_offset=323261803 hash=007ff5b939fac97d
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14749 disc_offset=323261804 hash=8075aef334c446d1
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14750 disc_offset=323261805 hash=f624a227f90b18a1
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14751 disc_offset=323261806 hash=1ac6ca210423ba5f
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14752 disc_offset=323261807 hash=e190eb2527de195f
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14753 disc_offset=323261808 hash=727c104d05f7785f
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14754 disc_offset=323261809 hash=ee8c5d52fd6fd75f
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14755 disc_offset=323261810 hash=7ae9b0506d47365f
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14756 disc_offset=323261811 hash=649a00bdb47d95df
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14757 disc_offset=323261812 hash=fe9abe7232137599
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14758 disc_offset=323261813 hash=995930a445890e99
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14759 disc_offset=323261814 hash=f289d4e9ce97a7f1
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14760 disc_offset=323261815 hash=7c5ebeb8663f98f1
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14761 disc_offset=323261816 hash=db1d771ea5d88a44
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14762 disc_offset=323261817 hash=f89495c47e62cf1a
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14763 disc_offset=323261818 hash=8d2a5a42e131e91e
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14764 disc_offset=323261819 hash=b7849d24131b0751
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14765 disc_offset=323261820 hash=3c21c1372e225854
+leak: /dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14766 disc_offset=323261821 hash=5de2f865507aad44
+artifacts=53 bytes=16462902 nontrivial_windows=1073963 covered_windows=0 checked_windows=1073963 leak_windows=406
+artifact=/dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libsnd.c.o offset=35551 hash=d86d97c3195de2c3 leak_windows=338
+artifact=/dw/build/port/web/CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o offset=14747 hash=00007f7642f703c5 leak_windows=68
+scope=tree exceptions=265 artifacts=1150
+artifacts=1150 bytes=8350611 nontrivial_windows=8274620 covered_windows=1023 checked_windows=8273597 leak_windows=0
+
+    Start 40: web_data_leak_contaminated
+4/4 Test #40: web_data_leak_contaminated .......   Passed    6.05 sec
+
+75% tests passed, 1 tests failed out of 4
+
+Total Test time (real) = 1372.28 sec
+
+The following tests FAILED:
+	 39 - web_data_leak (Failed)
+Errors while running CTest

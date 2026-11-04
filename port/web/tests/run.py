@@ -39,6 +39,9 @@ if suite == 'cards_redux':
     if prepared.returncode: sys.exit(prepared.returncode)
 env = dict(os.environ, DW1_WEB_SUITE=suite, DW1_WEB_BUILD=str(build))
 server = None
+if suite == 'long' and not (build / 'us.pack').is_file():
+    print('web_long: us.pack missing; skipped')
+    sys.exit(77)
 if suite in ('title', 'title_audio', 'disc_real', 'cards_real', 'cards_redux', 'offline_real', 'long') and not env.get('DW1_WEB_URL'):
     with (build / 'us.pack').open('rb') as pack_file:
         (build / 'us.pack.sha256').write_text(hashlib.file_digest(pack_file, 'sha256').hexdigest() + '\n')

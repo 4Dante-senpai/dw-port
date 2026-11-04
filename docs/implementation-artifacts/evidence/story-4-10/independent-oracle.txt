@@ -1,0 +1,5 @@
+artifact=build/port/web/dw1.wasm offset=1738266 disc_offset=321473393 uncovered_bytes=3 sha256=f5a71b93e8514fb71e17248452aa9252407872748d308df09d6f9b6d65f68243
+artifact=build/port/web/dw1.wasm offset=1728167 disc_offset=321556159 uncovered_bytes=3 sha256=2a4060a476fe4c7431f7e9731e86ddc68457c3df1bfbce64a58cc468819fa0c6
+artifact=build/port/web/dw1.wasm offset=1876821 disc_offset=321751482 uncovered_bytes=1 sha256=c12943bffbf5d55826231e7bf06a57752660877f70bab85a49a539d17a78f522
+artifact=build/port/web/dw1.wasm offset=2390673 disc_offset=322430006 uncovered_bytes=1 sha256=98e21b1a72e8092336886230bd42f964d2e1ff2cf7db9d13da8a018f81376225
+independent byte-coverage oracle: 4/4 confirmed

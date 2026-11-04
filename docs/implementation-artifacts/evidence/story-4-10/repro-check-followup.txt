@@ -1,0 +1,343 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_EXPORT_COMPILE_COMMANDS="ON"
+  CMAKE_TOOLCHAIN_FILE:FILEPATH="/opt/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Configuring done (1.8s)
+-- Generating done (0.0s)
+-- Build files have been written to: /dw/build/port/web-repro
+[0/2] Re-checking globbed directories...
+[1/317] Building C object CMakeFiles/dw1_backend.dir/port/backend/cdrom.c.o
+[2/317] Building C object CMakeFiles/dw1_backend.dir/port/backend/gte.c.o
+[3/317] Building C object CMakeFiles/dw1_backend.dir/port/backend/xa.c.o
+[4/317] Building C object CMakeFiles/dw1_backend.dir/port/backend/spu.c.o
+[5/317] Building C object CMakeFiles/dw1_backend.dir/port/backend/mdec.c.o
+[6/317] Building C object CMakeFiles/dw1_web_audio_rate.dir/port/host/audio_rate.c.o
+[7/317] Linking C static library libdw1_web_audio_rate.a
+[8/317] Building C object CMakeFiles/dw1_backend.dir/port/backend/gpu_soft/gpu_soft.c.o
+[9/317] Building C object CMakeFiles/dw1_pack_lib.dir/port/host/pack/pack.c.o
+[10/317] Building C object CMakeFiles/dw1_pack_lib.dir/port/host/pack/sha256.c.o
+[11/317] Building C object CMakeFiles/dw1_pack_lib.dir/port/host/web/io_mailbox.c.o
+[12/317] Building C object CMakeFiles/dw1_pack.dir/tools/port/pack/dw1_pack.c.o
+[13/317] Generating sjis/src/btl/battle_effect.c
+[14/317] Linking C static library libdw1_pack_lib.a
+[15/317] Generating sjis/src/btl/battle_hud.c
+[16/317] Linking C static library libdw1_backend.a
+[17/317] Generating sjis/src/btl/battle_main.c
+[18/317] Generating sjis/src/btl/battle_setup.c
+[19/317] Generating sjis/src/btl/btl_bss_us.c
+[20/317] Generating sjis/src/btl/command_menu.c
+[21/317] Generating sjis/src/btl/command_shout.c
+[22/317] Generating sjis/src/dget/dget.c
+[23/317] Generating sjis/src/doo2/doo2.c
+[24/317] Generating sjis/src/doo2/doo2_bss_us.c
+[25/317] Generating sjis/src/dooa/dooa.c
+[26/317] Generating sjis/src/dooa/dooa_bss_us.c
+[27/317] Generating sjis/src/eab/eab.c
+[28/317] Generating sjis/src/eab/eab_bss_us.c
+[29/317] Generating sjis/src/endi/endi.c
+[30/317] Linking C executable dw1_pack.js
+[31/317] Generating sjis/src/endi/endi_bss_us.c
+[32/317] Generating sjis/src/evl/evl.c
+[33/317] Generating sjis/src/evl/evl_bss_us.c
+[34/317] Generating sjis/src/fish/fish.c
+[35/317] Generating sjis/src/fish/fish_bss_us.c
+[36/317] Generating sjis/src/fish/fish_model.c
+[37/317] Generating sjis/src/kar/kar.c
+[38/317] Generating sjis/src/main/aabb.c
+[39/317] Generating sjis/src/kar/kar_bss_us.c
+[40/317] Generating sjis/src/main/anim.c
+[41/317] Generating sjis/src/main/battle_tick.c
+[42/317] Generating sjis/src/main/btl.c
+[43/317] Generating sjis/src/main/battle_ui.c
+[44/317] Generating sjis/src/main/buff_model.c
+[45/317] Generating sjis/src/main/bubble.c
+[46/317] Generating sjis/src/main/butterfly.c
+[47/317] Generating sjis/src/main/clock.c
+[48/317] Generating sjis/src/main/drop_shadow.c
+[49/317] Generating sjis/src/main/door_mapdata.c
+[50/317] Generating sjis/src/main/efe_table.c
+[51/317] Generating sjis/src/main/efe.c
+[52/317] Generating sjis/src/main/effect_common.c
+[53/317] Generating sjis/src/main/entity_text.c
+[54/317] Generating sjis/src/main/evl.c
+[55/317] Generating sjis/src/main/evolution.c
+[56/317] Generating sjis/src/main/fade.c
+[57/317] Generating sjis/src/main/file.c
+[58/317] Generating sjis/src/main/file_queue.c
+[59/317] Generating sjis/src/main/fish.c
+[60/317] Generating sjis/src/main/file_table_us.c
+[61/317] Generating sjis/src/main/font.c
+[62/317] Generating sjis/src/main/game_menu.c
+[63/317] Generating sjis/src/main/graphics.c
+[64/317] Generating sjis/src/main/inventory.c
+[65/317] Generating sjis/src/main/item.c
+[66/317] Generating sjis/src/main/kar.c
+[67/317] Generating sjis/src/main/line.c
+[68/317] Generating sjis/src/main/main.c
+[69/317] Generating sjis/src/main/main_menu.c
+[70/317] Generating sjis/src/main/map_collision.c
+[71/317] Generating sjis/src/main/map.c
+[72/317] Generating sjis/src/main/map_object.c
+[73/317] Generating sjis/src/main/math.c
+[74/317] Generating sjis/src/main/new_game.c
+[75/317] Generating sjis/src/main/model.c
+[76/317] Generating sjis/src/main/overworld.c
+[77/317] Generating sjis/src/main/particle.c
+[78/317] Generating sjis/src/main/partner.c
+[79/317] Generating sjis/src/main/partner_impl.c
+[80/317] Generating sjis/src/main/rng.c
+[81/317] Generating sjis/src/main/script_common.c
+[82/317] Generating sjis/src/main/script_interp.c
+[83/317] Generating sjis/src/main/script_textbox.c
+[84/317] Generating sjis/src/main/script_value.c
+[85/317] Generating sjis/src/main/sjis.c
+[86/317] Generating sjis/src/main/sound.c
+[87/317] Generating sjis/src/main/sound_async.c
+[88/317] Generating sjis/src/main/tamer.c
+[89/317] Generating sjis/src/main/toilet_data.c
+[90/317] Generating sjis/src/main/tournament.c
+[91/317] Generating sjis/src/main/ui.c
+[92/317] Generating sjis/src/main/utils.c
+[93/317] Generating sjis/src/main/utils2.c
+[94/317] Generating sjis/src/main/vecmath.c
+[95/317] Generating sjis/src/main/world_object.c
+[96/317] Generating sjis/src/mov/mov.c
+[97/317] Generating sjis/src/murd/murd.c
+[98/317] Generating sjis/src/murd/murd_bss_us.c
+[99/317] Generating sjis/src/shop/script_menu.c
+[100/317] Generating sjis/src/std/std_bss_us.c
+[101/317] Generating sjis/src/std/std_effect.c
+[102/317] Generating sjis/src/std/std_hud.c
+[103/317] Generating sjis/src/std/std_main.c
+[104/317] Generating sjis/src/mov/mov_bss_us.c
+[105/317] Generating sjis/src/std/std_setup.c
+[106/317] Generating sjis/src/trn/trn_brain.c
+[107/317] Generating sjis/src/trn/trn_bss_us.c
+[108/317] Generating sjis/src/trn/trn_def.c
+[109/317] Generating sjis/src/trn/trn_hp.c
+[110/317] Generating sjis/src/trn/trn_hud.c
+[111/317] Generating sjis/src/trn/trn_mp.c
+[112/317] Generating sjis/src/trn/trn_off.c
+[113/317] Generating sjis/src/trn/trn_reward.c
+[114/317] Generating sjis/src/trn/trn_slots.c
+[115/317] Generating sjis/src/trn/trn_speed.c
+[116/317] Generating sjis/src/trn2/trn2_bss_us.c
+[117/317] Generating sjis/src/trn2/trn2_def_map108.c
+[118/317] Generating sjis/src/trn2/trn2_def_map99.c
+[119/317] Generating sjis/src/trn2/trn2_hp_map107.c
+[120/317] Generating sjis/src/trn2/trn2_hp_map99.c
+[121/317] Generating sjis/src/trn2/trn2_hud.c
+[122/317] Generating sjis/src/trn2/trn2_mp.c
+[123/317] Generating sjis/src/trn2/trn2_off.c
+[124/317] Generating sjis/src/trn2/trn2_reward.c
+[125/317] Generating sjis/src/trn2/trn2_slots.c
+[126/317] Generating sjis/src/vs/vs_bss_us.c
+[127/317] Generating sjis/src/vs/vs_camera.c
+[128/317] Generating sjis/src/vs/vs_combat.c
+[129/317] Generating sjis/src/vs/vs_effect.c
+[130/317] Generating sjis/src/vs/vs_hud.c
+[131/317] Generating sjis/src/vs/vs_intro.c
+[132/317] Generating sjis/src/vs/vs_main.c
+[133/317] Generating sjis/src/vs/vs_scene.c
+[134/317] Generating sjis/src/vs/vs_select.c
+[135/317] Generating generated/text/btl/battle_effect.h
+[136/317] Generating generated/text/btl/battle_hud.h
+[137/317] Generating generated/text/btl/command_shout.h
+[138/317] Generating generated/text/fish/fish.h
+[139/317] Generating generated/text/kar/kar.h
+[140/317] Generating generated/text/main/battle_ui.h
+[141/317] Generating generated/text/main/inventory.h
+[142/317] Generating generated/text/main/game_menu.h
+[143/317] Generating generated/text/main/main.h
+[144/317] Generating generated/text/main/item.h
+[145/317] Generating generated/text/main/main_menu.h
+[146/317] Generating generated/text/main/map.h
+[147/317] Generating generated/text/main/partner_impl.h
+[148/317] Generating generated/text/main/script_common.h
+[149/317] Generating generated/text/main/script_value.h
+[150/317] Generating generated/text/main/tamer.h
+[151/317] Generating generated/text/main/ui.h
+[152/317] Generating generated/text/main/utils2.h
+[153/317] Generating generated/text/shop/script_menu.h
+[154/317] Generating generated/text/std/std_main.h
+[155/317] Generating generated/text/trn/trn_reward.h
+[156/317] Generating generated/text/vs/vs_main.h
+[157/317] Generating generated/text/vs/vs_scene.h
+[158/317] Generating generated/dw1_overlay_starts.h
+[159/317] Generating generated/text/vs/vs_select.h
+[160/317] Generating generated/dw1_gte_tables.h
+[161/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/btl/battle_hud.c.o
+[162/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/btl/battle_effect.c.o
+[163/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/btl/battle_main.c.o
+[164/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/btl/battle_setup.c.o
+[165/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/btl/btl_bss_us.c.o
+[166/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/btl/command_menu.c.o
+[167/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/btl/command_shout.c.o
+[168/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/dget/dget.c.o
+[169/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/doo2/doo2.c.o
+[170/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/doo2/doo2_bss_us.c.o
+[171/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/dooa/dooa_bss_us.c.o
+[172/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/dooa/dooa.c.o
+[173/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/eab/eab.c.o
+[174/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/eab/eab_bss_us.c.o
+[175/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/endi/endi.c.o
+[176/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/endi/endi_bss_us.c.o
+[177/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/evl/evl_bss_us.c.o
+[178/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/evl/evl.c.o
+[179/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/fish/fish_bss_us.c.o
+[180/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/fish/fish.c.o
+[181/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/fish/fish_model.c.o
+[182/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/kar/kar_bss_us.c.o
+[183/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/kar/kar.c.o
+[184/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/aabb.c.o
+[185/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/anim.c.o
+[186/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/battle_tick.c.o
+[187/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/battle_ui.c.o
+[188/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/btl.c.o
+[189/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/bubble.c.o
+[190/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/buff_model.c.o
+[191/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/butterfly.c.o
+[192/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/clock.c.o
+[193/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/door_mapdata.c.o
+[194/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/drop_shadow.c.o
+[195/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/efe.c.o
+[196/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/efe_table.c.o
+[197/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/effect_common.c.o
+[198/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/entity_text.c.o
+[199/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/evl.c.o
+[200/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/evolution.c.o
+[201/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/fade.c.o
+[202/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/file.c.o
+[203/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/file_queue.c.o
+[204/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/file_table_us.c.o
+[205/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/fish.c.o
+[206/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/font.c.o
+[207/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/graphics.c.o
+[208/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/game_menu.c.o
+warning: prototype-less function used with conflicting signatures: renderString
+warning: prototype-less function used with conflicting signatures: renderString
+warning: prototype-less function used with conflicting signatures: renderString
+warning: prototype-less function used with conflicting signatures: renderString
+warning: prototype-less function used with conflicting signatures: renderString
+warning: prototype-less function used with conflicting signatures: renderString
+warning: prototype-less function used with conflicting signatures: renderString
+warning: prototype-less function used with conflicting signatures: renderString
+[209/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/inventory.c.o
+[210/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/item.c.o
+[211/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/line.c.o
+[212/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/kar.c.o
+[213/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/main.c.o
+[214/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/main_menu.c.o
+[215/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/map_collision.c.o
+[216/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/map.c.o
+[217/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/map_object.c.o
+[218/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/math.c.o
+[219/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/new_game.c.o
+[220/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/model.c.o
+[221/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/particle.c.o
+[222/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/overworld.c.o
+[223/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/partner.c.o
+[224/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/partner_impl.c.o
+[225/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/rng.c.o
+[226/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/script_common.c.o
+[227/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/script_interp.c.o
+[228/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/script_textbox.c.o
+[229/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/script_value.c.o
+[230/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/sjis.c.o
+[231/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/sound.c.o
+[232/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/sound_async.c.o
+[233/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/tamer.c.o
+[234/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/toilet_data.c.o
+[235/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/tournament.c.o
+[236/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/ui.c.o
+[237/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/utils.c.o
+[238/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/utils2.c.o
+[239/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/vecmath.c.o
+[240/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/main/world_object.c.o
+[241/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/mov/mov.c.o
+[242/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/mov/mov_bss_us.c.o
+[243/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/murd/murd.c.o
+[244/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/murd/murd_bss_us.c.o
+[245/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/shop/script_menu.c.o
+warning: prototype-less function used with conflicting signatures: strlen
+[246/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/std/std_bss_us.c.o
+[247/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/std/std_hud.c.o
+[248/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/std/std_effect.c.o
+[249/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/std/std_setup.c.o
+[250/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/std/std_main.c.o
+[251/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn/trn_brain.c.o
+[252/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn/trn_bss_us.c.o
+[253/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn/trn_def.c.o
+[254/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn/trn_hp.c.o
+[255/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn/trn_hud.c.o
+[256/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn/trn_mp.c.o
+[257/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn/trn_off.c.o
+[258/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn/trn_reward.c.o
+[259/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn/trn_slots.c.o
+[260/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn/trn_speed.c.o
+[261/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn2/trn2_bss_us.c.o
+[262/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn2/trn2_def_map108.c.o
+[263/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn2/trn2_def_map99.c.o
+[264/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn2/trn2_hp_map107.c.o
+[265/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn2/trn2_hp_map99.c.o
+[266/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn2/trn2_hud.c.o
+[267/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn2/trn2_mp.c.o
+[268/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn2/trn2_off.c.o
+[269/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn2/trn2_reward.c.o
+[270/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/trn2/trn2_slots.c.o
+[271/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/vs/vs_bss_us.c.o
+[272/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/vs/vs_camera.c.o
+[273/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/vs/vs_combat.c.o
+[274/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/vs/vs_hud.c.o
+[275/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/vs/vs_effect.c.o
+[276/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/vs/vs_intro.c.o
+[277/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/vs/vs_main.c.o
+[278/317] Building C object CMakeFiles/dw1_game_objs.dir/ovl/src/vs/vs_scene.c.o
+[279/317] Generating generated/dw1_press_tables.h
+[280/317] Generating generated/dw1_sound_tables.h
+[281/317] Building C object CMakeFiles/dw1_game_objs.dir/sjis/src/vs/vs_select.c.o
+[282/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/ps1mem.c.o
+[283/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/overlay.c.o
+[284/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/clock.c.o
+[285/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/game_clock.c.o
+[286/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libetc.c.o
+[287/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libapi.c.o
+[288/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libc.c.o
+[289/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgs.c.o
+[290/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libcd.c.o
+[291/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/sound_tables.c.o
+[292/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgte.c.o
+[293/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libgpu.c.o
+[294/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libsnd.c.o
+[295/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libspu.c.o
+[296/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/card_image.c.o
+[297/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/bios_card.c.o
+[298/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libpress.c.o
+[299/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libmcrd.c.o
+[300/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libcd_stream.c.o
+[301/317] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/stub.c.o
+[302/317] Linking C static library libdw1_psyq.a
+[303/317] Generating generated/dw1_rts_info.h
+[304/317] Building C object CMakeFiles/dw1_runtime.dir/port/psyq/scene.c.o
+[305/317] Building C object CMakeFiles/dw1_runtime.dir/port/psyq/crt.c.o
+[306/317] Building C object CMakeFiles/dw1_runtime.dir/port/psyq/libgs_data.c.o
+[307/317] Linking C static library libdw1_runtime.a
+[308/317] Generating generated/psyq_stubs.c
+psyq: used=195 implemented=187 host_libc=8 stubs=0 gte_stubs=0 libspu=6
+[309/317] Building C object CMakeFiles/dw1.dir/port/host/web/main.c.o
+[310/317] Building C object CMakeFiles/dw1.dir/port/host/web/present_gl.c.o
+[311/317] Building C object CMakeFiles/dw1.dir/port/host/web/pace.c.o
+[312/317] Building C object CMakeFiles/dw1.dir/port/host/web/input.c.o
+[313/317] Building C object CMakeFiles/dw1.dir/port/host/web/audio.c.o
+[314/317] Building C object CMakeFiles/dw1.dir/port/host/web/card.c.o
+[315/317] Building C object CMakeFiles/dw1.dir/generated/psyq_stubs.c.o
+[316/317] Linking C executable dw1.js
+[317/317] Generating sw.js
+5a87ddfc410fa9af1a5c7edfa04869944ff005e62c6a4b480f61f4c165cf0c73
+dw1.wasm: 146c992b6391b2f6957fe7692ca4c063ed096c7e0d1ba4ec74e8590dcb01aa88 146c992b6391b2f6957fe7692ca4c063ed096c7e0d1ba4ec74e8590dcb01aa88
+dw1_pack.wasm: 917c26504394f186557a3e003c32affc53f10974a2c86ae013736ce63d721c3c 917c26504394f186557a3e003c32affc53f10974a2c86ae013736ce63d721c3c

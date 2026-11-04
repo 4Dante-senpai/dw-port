@@ -1,0 +1,71 @@
+UpdateCTestConfiguration  from :/dw/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/dw/build/port/web/DartConfiguration.tcl
+Test project /dw/build/port/web
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 35
+    Start 35: web_size_check
+
+35: Test command: /dw/tools/port/ci/size_check "/dw/build/port/web"
+35: Working Directory: /dw/build/port/web
+35: Test timeout computed to be: 10000000
+35: dw1.html: brotli_bytes=11385
+35: dw1.js: brotli_bytes=59205
+35: dw1.wasm: brotli_bytes=1556918
+35: io_worker.js: brotli_bytes=3202
+35: audio_worklet.js: brotli_bytes=1335
+35: dw1_pack.js: brotli_bytes=45285
+35: dw1_pack.wasm: brotli_bytes=129926
+35: us.tsv: brotli_bytes=34222
+35: version.txt: brotli_bytes=39
+35: first_load: brotli_bytes=1841517
+1/3 Test #35: web_size_check ....................   Passed   19.21 sec
+test 36
+    Start 36: web_size_check_fails_wasm
+
+36: Test command: /dw/tools/port/ci/size_check "/dw/build/port/web" "--wasm-limit" "1000"
+36: Working Directory: /dw/build/port/web
+36: Test timeout computed to be: 10000000
+36: dw1.html: brotli_bytes=11385
+36: dw1.js: brotli_bytes=59205
+36: dw1.wasm: brotli_bytes=1556918
+36: io_worker.js: brotli_bytes=3202
+36: audio_worklet.js: brotli_bytes=1335
+36: dw1_pack.js: brotli_bytes=45285
+36: dw1_pack.wasm: brotli_bytes=129926
+36: us.tsv: brotli_bytes=34222
+36: version.txt: brotli_bytes=39
+36: first_load: brotli_bytes=1841517
+36: dw1.wasm exceeds --wasm-limit 1000
+2/3 Test #36: web_size_check_fails_wasm .........   Passed   19.05 sec
+test 37
+    Start 37: web_size_check_fails_first_load
+
+37: Test command: /dw/tools/port/ci/size_check "/dw/build/port/web" "--first-load-limit" "1000"
+37: Working Directory: /dw/build/port/web
+37: Test timeout computed to be: 10000000
+37: dw1.html: brotli_bytes=11385
+37: dw1.js: brotli_bytes=59205
+37: dw1.wasm: brotli_bytes=1556918
+37: io_worker.js: brotli_bytes=3202
+37: audio_worklet.js: brotli_bytes=1335
+37: dw1_pack.js: brotli_bytes=45285
+37: dw1_pack.wasm: brotli_bytes=129926
+37: us.tsv: brotli_bytes=34222
+37: version.txt: brotli_bytes=39
+37: first_load: brotli_bytes=1841517
+37: first load exceeds --first-load-limit 1000
+3/3 Test #37: web_size_check_fails_first_load ...   Passed   19.21 sec
+
+The following tests passed:
+	web_size_check
+	web_size_check_fails_wasm
+	web_size_check_fails_first_load
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =  57.48 sec

@@ -1,0 +1,2 @@
+dw1.wasm SHA-256 before and after the final synthetic-fixture rebuild (identical):
+146c992b6391b2f6957fe7692ca4c063ed096c7e0d1ba4ec74e8590dcb01aa88  build/port/web/dw1.wasm

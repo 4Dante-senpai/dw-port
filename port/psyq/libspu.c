@@ -6,11 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "spu_reverb.inc"
-/* asm: asm/us/main/data/psyq/libspu.data.s, _spu_rev_startaddr. */
-static const uint16_t reverb_start[10] = {
-    0 /* removed from history: table copied from the exe; loaded from the Pack since story 4.10 */
-};
+#include "sound_tables.h"
 static SpuReverbAttr reverb;
 static int reverb_on;
 static uint16_t reverb_offset;
@@ -50,10 +46,10 @@ void psyq_libspu_reset(void)
  * Preserve the mode-0 special 128-byte clear. */
 static long clear_work_area(long mode)
 {
-    if (getenv("DW1_DEVICE_PROBE")) fprintf(stderr, "spu-clear cycle=%llu mode=%ld allocated=%d\n", (unsigned long long)clock_now(), mode, mode >= 0 && mode < 10 ? allocated_at_or_after((uint32_t)reverb_start[mode] * 8) : -1);
+    if (getenv("DW1_DEVICE_PROBE")) fprintf(stderr, "spu-clear cycle=%llu mode=%ld allocated=%d\n", (unsigned long long)clock_now(), mode, mode >= 0 && mode < 10 ? allocated_at_or_after((uint32_t)sound_reverb_start(mode) * 8) : -1);
     if ((unsigned long)mode >= 10) return -1;
-    uint32_t start = mode ? (uint32_t)reverb_start[mode] * 8 : 0x7ff80;
-    if (allocated_at_or_after((uint32_t)reverb_start[mode] * 8)) return -1;
+    uint32_t start = mode ? (uint32_t)sound_reverb_start(mode) * 8 : 0x7ff80;
+    if (allocated_at_or_after((uint32_t)sound_reverb_start(mode) * 8)) return -1;
     uint32_t remaining = SPU_RAM_SIZE - start;
     clock_advance_cost(CLOCK_SPU_CLEAR_FIXED_CPU_CYCLES, CLOCK_COST_CPU);
     const uint32_t zeros[256] = {0};
@@ -135,13 +131,13 @@ long SpuSetReverbModeParam(SpuReverbAttr *attr)
     int change = !attr->mask || (attr->mask & 1);
     long mode = change ? (attr->mode & ~0x100L) : reverb.mode;
     if ((unsigned long)mode >= 10) return -1;
-    if (change && allocated_at_or_after((uint32_t)reverb_start[mode] * 8)) return -1;
+    if (change && allocated_at_or_after((uint32_t)sound_reverb_start(mode) * 8)) return -1;
     uint16_t params[32];
-    memcpy(params, reverb_presets[mode], sizeof(params));
+    for (unsigned i = 0; i < 32; i++) params[i] = sound_reverb_param(mode, i);
     uint32_t mask = 0;
     if (change) {
         reverb.mode = mode;
-        reverb_offset = reverb_start[mode];
+        reverb_offset = sound_reverb_start(mode);
         reverb.delay = (mode == 7 || mode == 8) ? 127 : 0;
         reverb.feedback = mode == 7 ? 127 : 0;
     }
@@ -153,10 +149,10 @@ long SpuSetReverbModeParam(SpuReverbAttr *attr)
         int32_t d = (int32_t)((uint32_t)attr->delay << 12) / 127;
         params[10] = (int32_t)((uint32_t)attr->delay << 13) / 127 - params[0];
         params[11] = d - params[1];
-        params[16] = reverb_presets[mode][17] + d;
-        params[12] = reverb_presets[mode][13] + d;
-        params[26] = reverb_presets[mode][28] + d;
-        params[27] = reverb_presets[mode][29] + d;
+        params[16] = sound_reverb_param(mode, 17) + d;
+        params[12] = sound_reverb_param(mode, 13) + d;
+        params[26] = sound_reverb_param(mode, 28) + d;
+        params[27] = sound_reverb_param(mode, 29) + d;
         mask |= 0x0c011c00;
     }
     if (feedback) {
@@ -174,7 +170,7 @@ long SpuSetReverbModeParam(SpuReverbAttr *attr)
     if (change || delay || feedback) set_reverb_attr(params, change ? 0 : mask);
     if (change && (attr->mode & 0x100)) clear_work_area(mode);
     if (change) {
-        spu_write16(0x1a2, reverb_start[mode]);
+        spu_write16(0x1a2, sound_reverb_start(mode));
         if (control & 0x80) spu_write16(0x1aa, spu_read16(0x1aa) | 0x80);
     }
     return 0;
@@ -636,7 +632,7 @@ void SpuInit(void)
     spu_write16(0x1aa, 0xc000);
     SpuStart();
     memset(&reverb, 0, sizeof(reverb));
-    reverb_on = 0; reverb_offset = reverb_start[0];
+    reverb_on = 0; reverb_offset = sound_reverb_start(0);
     spu_write16(0x1a2, reverb_offset);
     mem_list = NULL; block_count = last_block = 0;
     clock_advance_cost(CLOCK_SPU_INIT_CPU_CYCLES, CLOCK_COST_CPU);

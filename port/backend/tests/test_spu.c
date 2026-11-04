@@ -2,6 +2,7 @@
 #include "../spu.h"
 #include "../../psyq/clock.h"
 #include "../../psyq/psyq.h"
+#include "../../psyq/sound_tables.h"
 #include "../../host/pack/sha256.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -183,6 +184,25 @@ static void impulse(int16_t *l,int16_t *r,void *arg)
     unsigned *index=arg;
     *l=*r=(*index)++==0 ? 12000 : 0;
 }
+/* Invented reverb preset; hashes come from the independent Python equations.
+ * Retail tables belong exclusively to disc-backed tests. */
+static void synthetic_reverb(void)
+{
+    uint8_t starts[40] = {0}, presets[688] = {0};
+    starts[0] = 0xfe; starts[1] = 0xff;
+    starts[4] = 0x28; starts[5] = 0xfb; /* guarded work area at 0x7d940 */
+    uint16_t params[32] = {3, 5, 0x6000};
+    for (unsigned i = 0; i < 4; ++i) params[3+i] = 0x1000 + i * 0x700;
+    params[7] = 0xa000; params[8] = 0x4000; params[9] = 0x3000;
+    for (unsigned i = 0; i < 20; ++i) params[10+i] = 7 + i * 13;
+    params[30] = 0x6000; params[31] = 0x5000;
+    for (unsigned i = 0; i < 32; ++i) {
+        presets[68+4+i*2] = params[i];
+        presets[68+5+i*2] = params[i] >> 8;
+    }
+    CHECK(sound_set_table("_spu_rev_startaddr", starts, sizeof(starts)) == 0);
+    CHECK(sound_set_table("_spu_rev_param", presets, sizeof(presets)) == 0);
+}
 static void room(void)
 {
     reset();psyq_libspu_reset();
@@ -199,7 +219,7 @@ static void room(void)
     spu_write16(0x1aa,0xc085);
     unsigned index=0;spu_set_cd_input(impulse,&index);spu_set_output(collect,NULL);
     samples(1024);
-    hash("ROOM","82d3ec374f9c2a4e1fbe554193c51686a219109a975982b8a0de5ebcc89bbbff");
+    hash("synthetic_reverb","d10bb845f8027667c919be6213debfddac6acfaa2b9b5f5d8c5903a174721c00");
     CHECK(index==1024);
     for(unsigned i=0;i<0x7d940;i++) CHECK(spu_ram[i]==0x55);
 }
@@ -218,7 +238,7 @@ static void voice_reverb(void)
         spu_set_output(collect,NULL);samples(12000);
         CHECK(on ? tail_nonzero>0 : tail_nonzero==0);
         hash(on?"eon_on":"eon_off",on
-             ? "c892752005942249ec779f586362680d561a6b739b5eac484aa724ed39110145"
+             ? "e27e9475e824fbe09c5124325e534fb192c732a075c34922157528c3e163d1d0"
              : "e9352602e122549bceed8d5fe36927115afa988106e088cae16b0c84a0be7661");
     }
 }
@@ -376,6 +396,7 @@ static void noise_and_voice24(void)
 }
 int main(void)
 {
+    synthetic_reverb();
     transfers();envelopes();adpcm();pitched_vectors();cd_and_reverb();room();voice_reverb();reset_fast_forward();noise_and_voice24();timing();capture();capture_note_pcm();
     puts("SPU L1: OK");return 0;
 }

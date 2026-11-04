@@ -1,0 +1,89 @@
+Start testing: Nov 04 16:34 UTC
+----------------------------------------------------------
+57/63 Testing: pack_disc
+57/63 Test: pack_disc
+Command: "/usr/bin/sh" "/dw/tools/port/pack/test_pack_disc.sh" "/dw/build/port/native-headless/dw1-pack" "/dw" "/dw/build/port/web/us.pack"
+Directory: /dw/build/port/web
+"pack_disc" start time: Nov 04 16:34 UTC
+Output:
+----------------------------------------------------------
+dw1-pack manifest: OK
+dw1-pack build: OK
+dw1-pack build: OK
+dw1-pack verify: OK
+pack_disc: OK, Pack sha256 c01e5c3680ffdf50d0342f16ec978c6d107a33529688dae6a817bd63947f0cf6
+<end of output>
+Test time =  33.79 sec
+----------------------------------------------------------
+Test Passed.
+"pack_disc" end time: Nov 04 16:34 UTC
+"pack_disc" time elapsed: 00:00:33
+----------------------------------------------------------
+
+38/63 Testing: web_data_leak
+38/63 Test: web_data_leak
+Command: "/dw/tools/port/ci/data_leak_check" "/dw/build/port/web" "/dw"
+Directory: /dw/build/port/web
+"web_data_leak" start time: Nov 04 16:34 UTC
+Output:
+----------------------------------------------------------
+scope=wasm exceptions=180 artifacts=1
+map=/dw/build/port/web/dw1.map segments=19 attributed_bytes=757487 game_bytes=733423
+artifacts=1 bytes=5879460 nontrivial_windows=5847855 covered_windows=1071455 checked_windows=4776400 leak_windows=0
+scope=deploy exceptions=0 artifacts=8
+artifacts=8 bytes=1018446 nontrivial_windows=1017454 covered_windows=0 checked_windows=1017454 leak_windows=0
+scope=port exceptions=0 artifacts=54
+artifacts=54 bytes=16477016 nontrivial_windows=1087047 covered_windows=0 checked_windows=1087047 leak_windows=0
+scope=tree exceptions=265 artifacts=1193
+artifacts=1193 bytes=8592716 nontrivial_windows=8514016 covered_windows=2322 checked_windows=8511694 leak_windows=0
+<end of output>
+Test time = 101.64 sec
+----------------------------------------------------------
+Test Passed.
+"web_data_leak" end time: Nov 04 16:36 UTC
+"web_data_leak" time elapsed: 00:01:41
+----------------------------------------------------------
+
+39/63 Testing: web_data_leak_contaminated
+39/63 Test: web_data_leak_contaminated
+Command: "/usr/bin/sh" "/dw/tools/port/ci/test_data_leak_check.sh" "contaminated" "/dw/build/port/native-headless/dw1-leak-check" "/dw/build/port/web"
+Directory: /dw/build/port/web
+"web_data_leak_contaminated" start time: Nov 04 16:36 UTC
+Output:
+----------------------------------------------------------
+leak: /tmp/dw1-leak-_fc24jlo/port.o offset=4596 disc_offset=0 hash=56aa7d1e2450a3db
+artifacts=1 bytes=4660 nontrivial_windows=4597 covered_windows=0 checked_windows=4597 leak_windows=1
+artifact=/tmp/dw1-leak-_fc24jlo/port.o offset=4596 hash=56aa7d1e2450a3db leak_windows=1
+map=/tmp/dw1-leak-_fc24jlo/dw1.map segments=19 attributed_bytes=757487 game_bytes=732127
+leak: /dw/build/port/web/dw1.wasm offset=1657171 disc_offset=323239520 hash=5d43094d9c8d05ae
+leak: /dw/build/port/web/dw1.wasm offset=1657172 disc_offset=323239521 hash=d85ab6b51132f325
+leak: /dw/build/port/web/dw1.wasm offset=1657173 disc_offset=323239522 hash=3208e49d3d43d914
+leak: /dw/build/port/web/dw1.wasm offset=1657174 disc_offset=323239523 hash=39e4fab17a3aad63
+leak: /dw/build/port/web/dw1.wasm offset=1657175 disc_offset=323239524 hash=1dd72502ae05d061
+leak: /dw/build/port/web/dw1.wasm offset=1657176 disc_offset=323239525 hash=baf2adf4e513b239
+leak: /dw/build/port/web/dw1.wasm offset=1657177 disc_offset=323239526 hash=7397291e2a036b33
+leak: /dw/build/port/web/dw1.wasm offset=1657178 disc_offset=323239527 hash=0ac047482d6e9ef9
+leak: /dw/build/port/web/dw1.wasm offset=1657179 disc_offset=323239528 hash=cb078f759c0d98f1
+leak: /dw/build/port/web/dw1.wasm offset=1657180 disc_offset=323239529 hash=3518fecfd22549bc
+leak: /dw/build/port/web/dw1.wasm offset=1657181 disc_offset=323239530 hash=bf112c9e804d46b0
+leak: /dw/build/port/web/dw1.wasm offset=1657182 disc_offset=323239531 hash=32bfc4dcf612b67b
+leak: /dw/build/port/web/dw1.wasm offset=1657183 disc_offset=323239532 hash=637dffcf91a7726f
+leak: /dw/build/port/web/dw1.wasm offset=1657184 disc_offset=323239533 hash=8ea7a9ccc52160dd
+leak: /dw/build/port/web/dw1.wasm offset=1657185 disc_offset=323239534 hash=524dac46c7013ed4
+leak: /dw/build/port/web/dw1.wasm offset=1657186 disc_offset=323239535 hash=ab6db6323a9b1240
+leak: /dw/build/port/web/dw1.wasm offset=1657187 disc_offset=323239536 hash=e038ea3b346f5148
+leak: /dw/build/port/web/dw1.wasm offset=1657188 disc_offset=323239537 hash=46c6493f1fe818e6
+leak: /dw/build/port/web/dw1.wasm offset=1657189 disc_offset=323239538 hash=d4248a2d66c2fdee
+leak: /dw/build/port/web/dw1.wasm offset=1657190 disc_offset=323239539 hash=f8aeb79429c0ebee
+artifacts=1 bytes=5879460 nontrivial_windows=5847855 covered_windows=1070096 checked_windows=4777759 leak_windows=1296
+artifact=/dw/build/port/web/dw1.wasm offset=1657171 hash=5d43094d9c8d05ae leak_windows=1296
+web_data_leak_contaminated: OK
+<end of output>
+Test time =  33.71 sec
+----------------------------------------------------------
+Test Passed.
+"web_data_leak_contaminated" end time: Nov 04 16:37 UTC
+"web_data_leak_contaminated" time elapsed: 00:00:33
+----------------------------------------------------------
+
+End testing: Nov 04 16:37 UTC

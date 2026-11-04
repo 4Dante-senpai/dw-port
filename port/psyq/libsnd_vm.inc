@@ -32,7 +32,7 @@ static short vm_damper;
 static uint32_t vm_alloc[66];
 static SndBank *current_bank;
 static void vm_auto_volume(int voice);
-#include "libsnd_pitch.inc"
+
 
 /* asm: asm/us/main/psyq/libsnd.s: _SsVmVSetUp. */
 static int vm_setup(short vab, short program)
@@ -75,8 +75,8 @@ static uint16_t vm_note_pitch(short note, short fine)
     int octave = n / 12;
     int index = (n - octave * 12) * 16 + (short)fraction;
     /* Invalid caller notes/fine values index outside the retail table. */
-    if ((unsigned)index >= sizeof(snd_pitch_table) / sizeof(*snd_pitch_table)) return 0;
-    uint32_t pitch = snd_pitch_table[index];
+    if ((unsigned)index >= SOUND_PITCH_COUNT) return 0;
+    uint32_t pitch = sound_pitch(index);
     octave -= 5;
     if (octave > 0) pitch <<= octave & 31;
     else if (octave < 0) pitch >>= (-octave) & 31;

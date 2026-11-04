@@ -1,0 +1,10 @@
+dw1.html: brotli_bytes=11385
+dw1.js: brotli_bytes=59157
+dw1.wasm: brotli_bytes=1556415
+io_worker.js: brotli_bytes=3202
+audio_worklet.js: brotli_bytes=1335
+dw1_pack.js: brotli_bytes=45285
+dw1_pack.wasm: brotli_bytes=129926
+us.tsv: brotli_bytes=34222
+version.txt: brotli_bytes=39
+first_load: brotli_bytes=1840966

@@ -76,6 +76,8 @@ def link_findings(build, commands):
     args = args[args.index('&&') + 1:]
     args = args[:args.index('&&')]
     args = [replacements.get(a, a) for a in args if a != '-Wl,--fatal-warnings']
+    # The audit must never overwrite the production linker's attribution map.
+    args = [f'-Wl,--Map={audit_dir}/dw1.map' if a.startswith('-Wl,--Map=') else a for a in args]
     args.append('-Wl,--error-limit=0')
     args[args.index('-o') + 1] = str(audit_dir / 'dw1.js')
     result = subprocess.run(args, cwd=build, capture_output=True, text=True)

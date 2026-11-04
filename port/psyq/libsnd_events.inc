@@ -51,8 +51,8 @@ static uint16_t vm_seq_pitch(void)
     int fraction = (signed char)current.shift / 8;
     fraction = (uint32_t)fraction >= 16 ? 15 : fraction;
     int octave = note / 12, index = (note - octave * 12) * 16 + fraction;
-    if ((unsigned)index >= sizeof(snd_pitch_table) / sizeof(*snd_pitch_table)) return 0;
-    uint32_t pitch = snd_pitch_table[index];
+    if ((unsigned)index >= SOUND_PITCH_COUNT) return 0;
+    uint32_t pitch = sound_pitch(index);
     octave = (short)(octave - 5);
     if (octave > 0) pitch <<= octave & 31;
     else if (octave < 0) pitch >>= (-octave) & 31;

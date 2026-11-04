@@ -1,0 +1,97 @@
+UpdateCTestConfiguration  from :/dw/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/dw/build/port/native-headless/DartConfiguration.tcl
+Test project /dw/build/port/native-headless
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+    Start 1: data_leak_check_synthetic
+
+1: Test command: /usr/bin/sh "/dw/tools/port/ci/test_data_leak_check.sh" "synthetic" "/dw/build/port/native-headless/dw1-leak-check"
+1: Working Directory: /dw/build/port/native-headless
+1: Test timeout computed to be: 10000000
+1: /tmp/dw1-leak-__abkrru/missing: input/resource error (errno=2)
+1: /tmp/dw1-leak-__abkrru/dw1.map: unusable wasm linker map/data attribution
+1: /tmp/dw1-leak-__abkrru/dw1.map: unusable wasm linker map/data attribution
+1: /tmp/dw1-leak-__abkrru/dw1.map: unusable wasm linker map/data attribution
+1: /tmp/dw1-leak-__abkrru/dw1.map: unusable wasm linker map/data attribution
+1: /tmp/dw1-leak-__abkrru/dw1.map: unusable wasm linker map/data attribution
+1: /tmp/dw1-leak-__abkrru/missing.map: input/resource error (errno=2)
+1: /tmp/dw1-leak-__abkrru/dw1.map: unusable wasm linker map/data attribution
+1: /tmp/dw1-leak-__abkrru/dw1.map: unusable wasm linker map/data attribution
+1: artifacts=1 bytes=64 nontrivial_windows=0 covered_windows=0 checked_windows=0 leak_windows=0
+1: artifacts=1 bytes=64 nontrivial_windows=0 covered_windows=0 checked_windows=0 leak_windows=0
+1: artifacts=1 bytes=128 nontrivial_windows=65 covered_windows=65 checked_windows=0 leak_windows=0
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=1 disc_offset=1 hash=2a2b39f3855aa820
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=2 disc_offset=2 hash=1c643ae618228860
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=3 disc_offset=3 hash=0e9d3bd8aaea68a0
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=4 disc_offset=4 hash=00d63ccb3db248e0
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=5 disc_offset=5 hash=f30f3dbdd07a2920
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=6 disc_offset=6 hash=e5483eb063420960
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=7 disc_offset=7 hash=d7813fa2f609e9a0
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=8 disc_offset=8 hash=c9ba409588d1c9e0
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=9 disc_offset=9 hash=bbf341881b99aa20
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=10 disc_offset=10 hash=ae2c427aae618a60
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=11 disc_offset=11 hash=a065436d41296aa0
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=12 disc_offset=12 hash=929e445fd3f14ae0
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=13 disc_offset=13 hash=84d7455266b92b20
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=14 disc_offset=14 hash=77104644f9810b60
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=15 disc_offset=15 hash=694947378c48eba0
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=16 disc_offset=16 hash=5b82482a1f10cbe0
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=17 disc_offset=17 hash=4dbb491cb1d8ac20
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=18 disc_offset=18 hash=3ff44a0f44a08c60
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=19 disc_offset=19 hash=322d4b01d7686ca0
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=20 disc_offset=20 hash=24664bf46a304ce0
+1: artifacts=1 bytes=128 nontrivial_windows=65 covered_windows=1 checked_windows=64 leak_windows=64
+1: artifact=/tmp/dw1-leak-__abkrru/port.o offset=1 hash=2a2b39f3855aa820 leak_windows=64
+1: artifacts=1 bytes=64 nontrivial_windows=1 covered_windows=1 checked_windows=0 leak_windows=0
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=0 disc_offset=0 hash=37f23900f292c7e0
+1: artifacts=1 bytes=64 nontrivial_windows=1 covered_windows=0 checked_windows=1 leak_windows=1
+1: artifact=/tmp/dw1-leak-__abkrru/port.o offset=0 hash=37f23900f292c7e0 leak_windows=1
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=0 disc_offset=0 hash=37f23900f292c7e0
+1: artifacts=1 bytes=64 nontrivial_windows=1 covered_windows=0 checked_windows=1 leak_windows=1
+1: artifact=/tmp/dw1-leak-__abkrru/port.o offset=0 hash=37f23900f292c7e0 leak_windows=1
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=0 disc_offset=0 hash=37f23900f292c7e0
+1: artifacts=1 bytes=64 nontrivial_windows=1 covered_windows=0 checked_windows=1 leak_windows=1
+1: artifact=/tmp/dw1-leak-__abkrru/port.o offset=0 hash=37f23900f292c7e0 leak_windows=1
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=0 disc_offset=0 hash=8a6617e78210407e
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=1 disc_offset=1 hash=f07dff699250be82
+1: artifacts=1 bytes=65 nontrivial_windows=2 covered_windows=0 checked_windows=2 leak_windows=2
+1: artifact=/tmp/dw1-leak-__abkrru/port.o offset=0 hash=8a6617e78210407e leak_windows=2
+1: artifacts=1 bytes=128 nontrivial_windows=64 covered_windows=64 checked_windows=0 leak_windows=0
+1: leak: /tmp/dw1-leak-__abkrru/port.o offset=0 disc_offset=0 hash=4853cfb2d382b64d
+1: artifacts=1 bytes=64 nontrivial_windows=1 covered_windows=0 checked_windows=1 leak_windows=1
+1: artifact=/tmp/dw1-leak-__abkrru/port.o offset=0 hash=4853cfb2d382b64d leak_windows=1
+1: artifacts=1 bytes=64 nontrivial_windows=1 covered_windows=0 checked_windows=1 leak_windows=0
+1: map=/tmp/dw1-leak-__abkrru/dw1.map segments=2 attributed_bytes=96 game_bytes=96
+1: artifacts=1 bytes=144 nontrivial_windows=81 covered_windows=70 checked_windows=11 leak_windows=0
+1: map=/tmp/dw1-leak-__abkrru/dw1.map segments=2 attributed_bytes=96 game_bytes=96
+1: artifacts=1 bytes=144 nontrivial_windows=81 covered_windows=70 checked_windows=11 leak_windows=0
+1: map=/tmp/dw1-leak-__abkrru/dw1.map segments=2 attributed_bytes=96 game_bytes=32
+1: leak: /tmp/dw1-leak-__abkrru/dw1.wasm offset=80 disc_offset=64 hash=c63275a5a48ad7e0
+1: artifacts=1 bytes=144 nontrivial_windows=81 covered_windows=6 checked_windows=75 leak_windows=1
+1: artifact=/tmp/dw1-leak-__abkrru/dw1.wasm offset=80 hash=c63275a5a48ad7e0 leak_windows=1
+1: map=/tmp/dw1-leak-__abkrru/dw1.map segments=2 attributed_bytes=97 game_bytes=96
+1: leak: /tmp/dw1-leak-__abkrru/dw1.wasm offset=14 disc_offset=0 hash=37f23900f292c7e0
+1: artifacts=1 bytes=144 nontrivial_windows=81 covered_windows=34 checked_windows=47 leak_windows=1
+1: artifact=/tmp/dw1-leak-__abkrru/dw1.wasm offset=14 hash=37f23900f292c7e0 leak_windows=1
+1: map=/tmp/dw1-leak-__abkrru/dw1.map segments=2 attributed_bytes=96 game_bytes=0
+1: leak: /tmp/dw1-leak-__abkrru/dw1.wasm offset=147 disc_offset=0 hash=37f23900f292c7e0
+1: leak: /tmp/dw1-leak-__abkrru/dw1.wasm offset=14 disc_offset=0 hash=37f23900f292c7e0
+1: leak: /tmp/dw1-leak-__abkrru/dw1.wasm offset=80 disc_offset=64 hash=c63275a5a48ad7e0
+1: artifacts=1 bytes=211 nontrivial_windows=148 covered_windows=0 checked_windows=148 leak_windows=3
+1: artifact=/tmp/dw1-leak-__abkrru/dw1.wasm offset=147 hash=37f23900f292c7e0 leak_windows=3
+1: map=/tmp/dw1-leak-__abkrru/dw1.map segments=2 attributed_bytes=96 game_bytes=96
+1: artifacts=1 bytes=211 nontrivial_windows=148 covered_windows=71 checked_windows=77 leak_windows=0
+1: data_leak_check_synthetic: OK
+1/1 Test #1: data_leak_check_synthetic ........   Passed    0.09 sec
+
+The following tests passed:
+	data_leak_check_synthetic
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.10 sec

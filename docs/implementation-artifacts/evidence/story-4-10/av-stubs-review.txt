@@ -1,0 +1,15 @@
+Test project /dw/build/port/native-headless
+    Start 13: spu
+1/5 Test #13: spu ..............................   Passed    0.37 sec
+    Start 17: libspu
+2/5 Test #17: libspu ...........................   Passed    0.01 sec
+    Start 18: libsnd
+3/5 Test #18: libsnd ...........................   Passed    0.13 sec
+    Start 54: pack
+4/5 Test #54: pack .............................   Passed    0.01 sec
+    Start 55: av_stubs
+5/5 Test #55: av_stubs .........................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Total Test time (real) =   0.58 sec

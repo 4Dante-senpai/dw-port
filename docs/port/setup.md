@@ -662,3 +662,89 @@ layout que v1) con el C compartido, validación completa y reemplazo temporal ba
 el Web Lock. No modifica formatos posteriores ni solicita el disco para migrar.
 La actualización del programa solo se activa desde un Launcher intacto que posee
 el Lock; una interacción o partida la deja pendiente hasta la próxima carga.
+
+### Checks del build web (4.10)
+
+Ejecutar dentro de la imagen `dw-port`, desde la raíz del repositorio:
+
+```sh
+cmake --preset native-headless
+cmake --build --preset native-headless
+ctest --preset native-headless -R data_leak --output-on-failure
+cmake --preset web
+cmake --build --preset web
+ctest --preset web --output-on-failure
+tools/port/ci/size_check build/port/web
+tools/port/ci/repro_check.sh build/port/web
+DW1_DISC_DIR=/ruta/al/disco tools/port/ci/ctest_no_skip.sh --preset web --output-on-failure -R '^(pack_disc|web_data_leak|web_data_leak_contaminated|web_long)$'
+```
+
+`size_check` usa Brotli de Node, calidad 11: exige como máximo 4.000.000 bytes para
+`dw1.wasm` y 6.000.000 para la suma de cada entrada de `FILES` del `sw.js` generado
+(`/` corresponde a `dw1.html`), más `version.txt` si existe. Imprime cada tamaño y
+el total. Acepta `--wasm-limit N` y `--first-load-limit N`; CTest comprueba también
+que ambos límites fallen con 1000 bytes. Un archivo ausente es un error.
+
+`repro_check.sh <build>` borra y configura `build/port/web-repro` con el mismo
+preset e imagen, compila el programa, el constructor del Pack y `sw.js`, y compara
+los SHA-256 de `dw1.wasm` y `dw1_pack.wasm`. Requiere conservar el mismo checkout
+sin cambios durante ambos builds. CMake normaliza las rutas de fuentes y luego
+las del build: Clang aplica el último prefijo coincidente. Esto evita diferencias
+en las rutas de las unidades generadas y en el directorio de compilación de DWARF.
+
+`web_long` ejecuta diez minutos por navegador, en serie y sin reintentos. Conserva
+los límites de ritmo, audio, memoria y presentación, y exige cero pedidos externos.
+`foreignRequests` observa el contexto completo: página, workers y módulos de
+AudioWorklet; `web_boot` prueba los pedidos fallidos a otro origen y un módulo
+con una dependencia externa. Chromium no publica las cargas de AudioWorklet en los
+eventos de contexto: el helper complementa esos eventos con `Fetch` de CDP a nivel
+del navegador, continúa cada petición sin modificarla y evita contarla dos veces.
+Los navegadores de test permiten el puerto 9 para que el caso negativo alcance
+la capa de red. Los esquemas
+`data:` y `blob:` quedan excluidos. El origen permitido es el de `DW1_WEB_URL`.
+Los resultados quedan en `build/port/web/long-{chromium,firefox}.json`.
+
+`data_leak_check <web-build> <repo>` invoca el ejecutable nativo optimizado
+`build/port/native-headless/dw1-leak-check` con tres ámbitos: `dw1.wasm` exceptúa
+los objetos de `dw1_game_objs`; los objetos de `port/` no tienen excepciones; los
+archivos de `git ls-files` fuera de `src/` e `include/` (sin gitlinks) exceptúan
+los archivos versionados de esos dos directorios. Cada corrida recorre el Pack
+una sola vez. Usa ventanas deslizantes de 64 bytes y confirma los hashes por
+comparación de bytes. Una ventana con menos de cinco valores distintos es trivial;
+las demás solo se aceptan si todos sus bytes están cubiertos por sub-ventanas de
+16 bytes presentes en las excepciones. Las sub-ventanas también se confirman por
+comparación de bytes; la detección contra el Pack conserva los 64 bytes. La herramienta sale con 1 si detecta fuga y 2 si hay error de
+entrada; muestra solo rutas, offsets, cantidades y hashes, nunca contenido.
+
+Para `dw1.wasm`, `-Wl,--Map=<build>/dw1.map` registra la atribución del linker.
+El wrapper pasa `--wasm-map <build>/dw1.map`: dentro de la sección DATA, los bytes
+aportados por los objetos de `dw1_game_objs` y los huecos sin objeto están cubiertos;
+los aportados por otros objetos no lo están, aunque coincidan con una excepción.
+Fuera de DATA se conserva la cobertura por sub-ventanas de 16 bytes. Emscripten
+puede desplazar los offsets después del enlace: el detector relaciona los segmentos
+pasivos por orden y tamaño exacto, y traduce los rangos relativos de cada entrada.
+Un mapa ausente, incompatible o con rangos inválidos devuelve 2; no hay heurística
+de respaldo. El mapa es un producto del build y no forma parte del sitio publicado.
+
+`web_data_leak_contaminated` copia un objeto a un temporal fuera del repositorio,
+agrega una ventana elegida del Pack en runtime (al menos 16 valores distintos) y
+comprueba la detección y el offset. Además, copia el mapa a un temporal y atribuye
+a un objeto de `port/` un rango real del WASM que coincide con el Pack, sin modificar
+el WASM. Comprueba que esa atribución provoca una fuga. Los temporales se borran
+al terminar.
+`data_leak_check_synthetic` no necesita disco y prueba rellenos, cobertura por byte,
+fugas y errores de entrada. Sin `DW1_DISC_DIR` o sin `us.pack`, los nuevos tests de
+clase B salen con 77. El job `web-disc` usa `ctest_no_skip.sh` para rechazar saltos;
+`web-objects` ejecuta tamaño y reproducibilidad en clase A.
+
+Las tablas de audio `_spu_rev_startaddr`, `_spu_rev_param` y `_svm_ptable` se
+leen del EXE del Pack al arrancar, en nativo y web. `sound_tables.py` genera solo
+offsets y tamaños desde `config/us`; el programa no contiene los datos de esas
+tablas. `sound_tables_disc` compara sus SHA-256 en memoria con una extracción
+independiente del BIN, y `sound_tables` prueba EXE ausente/corto y limpieza
+completa ante error. Para verificarlas dentro del contenedor:
+
+```sh
+DW1_DISC_DIR=/dw/game_rom/extracted ctest --preset native-headless --output-on-failure -R '^sound_tables(_disc)?$'
+DW1_DISC_DIR=/dw/game_rom/extracted ctest --preset web --output-on-failure -R '^(libspu|libsnd|web_data_leak|web_data_leak_contaminated|native_title_audio|web_scene_title_audio|web_audio)$'
+```

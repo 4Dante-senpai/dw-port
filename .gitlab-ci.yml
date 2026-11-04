@@ -65,6 +65,22 @@ web-objects:
     - cmake --preset web
     - cmake --build --preset web
     - ctest --preset web --output-on-failure
+    - tools/port/ci/repro_check.sh build/port/web
+
+web-disc:
+  extends: .class_b
+  artifacts:
+    when: always
+    paths: [build/port/web/long-*.json]
+  timeout: 1h 30m
+  variables:
+    DW1_DISC_DIR: /private/disc
+  script:
+    - cmake --preset native-headless
+    - cmake --build --preset native-headless
+    - cmake --preset web
+    - cmake --build --preset web
+    - tools/port/ci/ctest_no_skip.sh --preset web --output-on-failure -R "^(pack_disc|web_data_leak|web_data_leak_contaminated|web_long)$"
 
 native-disc:
   extends: .class_b
@@ -85,7 +101,7 @@ native-disc:
     - tools/port/ci/ctest_no_skip.sh --preset native --output-on-failure
     # native_wall_10min is included by the native preset (serial, 900 s timeout).
     - xvfb-run -a pcsx-redux -version > /dev/null   # reference_title must run, not skip (77)
-    - tools/port/ci/ctest_no_skip.sh --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|press_tables_disc|scene_|reference_title|reference_naming|reference_newgame_state|reference_xa_op1|reference_movie0|reference_card_"
+    - tools/port/ci/ctest_no_skip.sh --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|press_tables_disc|sound_tables_disc|scene_|reference_title|reference_naming|reference_newgame_state|reference_xa_op1|reference_movie0|reference_card_"
 
 # Class B: the whole suite under ASan/UBSan, including the title scene (story 2.15).
 native-asan-disc:

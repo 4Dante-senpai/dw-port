@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define CHECK(c) do { if (!(c)) { fprintf(stderr, "%d: %s\n", __LINE__, #c); exit(1); } } while (0)
+#include "sound_fixture.h"
 
 static unsigned char vh[0x20 + 128 * 16 + 512 + 512];
 static unsigned char vb[192];
@@ -724,6 +725,7 @@ static void sequence_restart_volume(void)
 
 int main(void)
 {
+    sound_fixture();
     clock_reset(); psyq_libspu_reset(); SpuStart();
     for (unsigned i = 0; i < sizeof(vb); i++) vb[i] = i ^ 0x5a;
     allocator(); transfer(); init_pending_dma(); banks(); master_volume();

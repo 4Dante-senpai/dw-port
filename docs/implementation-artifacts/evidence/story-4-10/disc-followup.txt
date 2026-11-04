@@ -1,0 +1,213 @@
+UpdateCTestConfiguration  from :/dw/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/dw/build/port/web/DartConfiguration.tcl
+Test project /dw/build/port/web
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added setup test pack_disc required by fixture disc_pack
+Added 1 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 14
+    Start 14: libspu
+
+14: Test command: /usr/local/bin/node "/dw/build/port/web/test_libspu.js"
+14: Working Directory: /dw/build/port/web
+14: Test timeout computed to be: 180
+14: libspu L1: OK
+1/8 Test #14: libspu ...........................   Passed    0.05 sec
+test 15
+    Start 15: libsnd
+
+15: Test command: /usr/local/bin/node "/dw/build/port/web/test_libsnd.js"
+15: Working Directory: /dw/build/port/web
+15: Test timeout computed to be: 180
+15: This is not SEQ Data.
+15: libsnd L1 VAB/SEQ events/voices/timer: OK
+2/8 Test #15: libsnd ...........................   Passed    0.12 sec
+test 58
+    Start 58: pack_disc
+
+58: Test command: /usr/bin/sh "/dw/tools/port/pack/test_pack_disc.sh" "/dw/build/port/native-headless/dw1-pack" "/dw" "/dw/build/port/web/us.pack"
+58: Working Directory: /dw/build/port/web
+58: Test timeout computed to be: 600
+58: dw1-pack manifest: OK
+58: dw1-pack build: OK
+58: dw1-pack build: OK
+58: dw1-pack verify: OK
+58: pack_disc: OK, Pack sha256 c01e5c3680ffdf50d0342f16ec978c6d107a33529688dae6a817bd63947f0cf6
+3/8 Test #58: pack_disc ........................   Passed   34.59 sec
+test 39
+    Start 39: web_data_leak
+
+39: Test command: /dw/tools/port/ci/data_leak_check "/dw/build/port/web" "/dw"
+39: Working Directory: /dw/build/port/web
+39: Test timeout computed to be: 10000000
+39: scope=wasm exceptions=180 artifacts=1
+39: leak: /dw/build/port/web/dw1.wasm offset=1717795 disc_offset=323212056 hash=8a581e4d189f4167
+39: leak: /dw/build/port/web/dw1.wasm offset=1717796 disc_offset=323212057 hash=1a84cb309f80e76d
+39: leak: /dw/build/port/web/dw1.wasm offset=1717797 disc_offset=323212058 hash=d75e5b9b08089375
+39: leak: /dw/build/port/web/dw1.wasm offset=1717798 disc_offset=323212059 hash=6dc8566df83c4875
+39: leak: /dw/build/port/web/dw1.wasm offset=1717799 disc_offset=323212060 hash=361ec4663484bd77
+39: leak: /dw/build/port/web/dw1.wasm offset=1717800 disc_offset=323212061 hash=54e32a9ab942347d
+39: leak: /dw/build/port/web/dw1.wasm offset=1717801 disc_offset=323212062 hash=ff0cd2c133967185
+39: leak: /dw/build/port/web/dw1.wasm offset=1717802 disc_offset=323212063 hash=d2dea1620227b68b
+39: leak: /dw/build/port/web/dw1.wasm offset=1717803 disc_offset=323212064 hash=3f7e1e3e9a1dc193
+39: leak: /dw/build/port/web/dw1.wasm offset=1717804 disc_offset=323212065 hash=4b9a77b3281ed499
+39: leak: /dw/build/port/web/dw1.wasm offset=1717805 disc_offset=323212066 hash=3b0f5322ef52ada1
+39: leak: /dw/build/port/web/dw1.wasm offset=1717806 disc_offset=323212067 hash=9f5f9e59ea5f8f9d
+39: leak: /dw/build/port/web/dw1.wasm offset=1717807 disc_offset=323212068 hash=1afa2df92a6e2c9a
+39: leak: /dw/build/port/web/dw1.wasm offset=1717808 disc_offset=323212069 hash=4d3686ee803b069a
+39: leak: /dw/build/port/web/dw1.wasm offset=1717809 disc_offset=323212070 hash=11bb90492b8120a5
+39: leak: /dw/build/port/web/dw1.wasm offset=1717810 disc_offset=323212071 hash=e9480f298d20c5ad
+39: leak: /dw/build/port/web/dw1.wasm offset=1717811 disc_offset=323212072 hash=db518945fea4f2b5
+39: leak: /dw/build/port/web/dw1.wasm offset=1717812 disc_offset=323212073 hash=0fd61266bc3668af
+39: leak: /dw/build/port/web/dw1.wasm offset=1717813 disc_offset=323212074 hash=56e1d71f7b7d57b6
+39: leak: /dw/build/port/web/dw1.wasm offset=1717814 disc_offset=323212075 hash=e2b3472a49938eaf
+39: artifacts=1 bytes=5879460 nontrivial_windows=5847855 covered_windows=1028718 checked_windows=4819137 leak_windows=622
+39: artifact=/dw/build/port/web/dw1.wasm offset=1717795 hash=8a581e4d189f4167 leak_windows=622
+39: scope=port exceptions=0 artifacts=54
+39: artifacts=54 bytes=16475135 nontrivial_windows=1085166 covered_windows=0 checked_windows=1085166 leak_windows=0
+39: scope=tree exceptions=265 artifacts=1148
+39: artifacts=1148 bytes=8349673 nontrivial_windows=8273840 covered_windows=2287 checked_windows=8271553 leak_windows=0
+4/8 Test #39: web_data_leak ....................***Failed   83.05 sec
+scope=wasm exceptions=180 artifacts=1
+leak: /dw/build/port/web/dw1.wasm offset=1717795 disc_offset=323212056 hash=8a581e4d189f4167
+leak: /dw/build/port/web/dw1.wasm offset=1717796 disc_offset=323212057 hash=1a84cb309f80e76d
+leak: /dw/build/port/web/dw1.wasm offset=1717797 disc_offset=323212058 hash=d75e5b9b08089375
+leak: /dw/build/port/web/dw1.wasm offset=1717798 disc_offset=323212059 hash=6dc8566df83c4875
+leak: /dw/build/port/web/dw1.wasm offset=1717799 disc_offset=323212060 hash=361ec4663484bd77
+leak: /dw/build/port/web/dw1.wasm offset=1717800 disc_offset=323212061 hash=54e32a9ab942347d
+leak: /dw/build/port/web/dw1.wasm offset=1717801 disc_offset=323212062 hash=ff0cd2c133967185
+leak: /dw/build/port/web/dw1.wasm offset=1717802 disc_offset=323212063 hash=d2dea1620227b68b
+leak: /dw/build/port/web/dw1.wasm offset=1717803 disc_offset=323212064 hash=3f7e1e3e9a1dc193
+leak: /dw/build/port/web/dw1.wasm offset=1717804 disc_offset=323212065 hash=4b9a77b3281ed499
+leak: /dw/build/port/web/dw1.wasm offset=1717805 disc_offset=323212066 hash=3b0f5322ef52ada1
+leak: /dw/build/port/web/dw1.wasm offset=1717806 disc_offset=323212067 hash=9f5f9e59ea5f8f9d
+leak: /dw/build/port/web/dw1.wasm offset=1717807 disc_offset=323212068 hash=1afa2df92a6e2c9a
+leak: /dw/build/port/web/dw1.wasm offset=1717808 disc_offset=323212069 hash=4d3686ee803b069a
+leak: /dw/build/port/web/dw1.wasm offset=1717809 disc_offset=323212070 hash=11bb90492b8120a5
+leak: /dw/build/port/web/dw1.wasm offset=1717810 disc_offset=323212071 hash=e9480f298d20c5ad
+leak: /dw/build/port/web/dw1.wasm offset=1717811 disc_offset=323212072 hash=db518945fea4f2b5
+leak: /dw/build/port/web/dw1.wasm offset=1717812 disc_offset=323212073 hash=0fd61266bc3668af
+leak: /dw/build/port/web/dw1.wasm offset=1717813 disc_offset=323212074 hash=56e1d71f7b7d57b6
+leak: /dw/build/port/web/dw1.wasm offset=1717814 disc_offset=323212075 hash=e2b3472a49938eaf
+artifacts=1 bytes=5879460 nontrivial_windows=5847855 covered_windows=1028718 checked_windows=4819137 leak_windows=622
+artifact=/dw/build/port/web/dw1.wasm offset=1717795 hash=8a581e4d189f4167 leak_windows=622
+scope=port exceptions=0 artifacts=54
+artifacts=54 bytes=16475135 nontrivial_windows=1085166 covered_windows=0 checked_windows=1085166 leak_windows=0
+scope=tree exceptions=265 artifacts=1148
+artifacts=1148 bytes=8349673 nontrivial_windows=8273840 covered_windows=2287 checked_windows=8271553 leak_windows=0
+
+test 40
+    Start 40: web_data_leak_contaminated
+
+40: Test command: /usr/bin/sh "/dw/tools/port/ci/test_data_leak_check.sh" "contaminated" "/dw/build/port/native-headless/dw1-leak-check" "/dw/build/port/web"
+40: Working Directory: /dw/build/port/web
+40: Test timeout computed to be: 10000000
+40: leak: /tmp/dw1-leak-ny937yh7/port.o offset=4596 disc_offset=0 hash=56aa7d1e2450a3db
+40: artifacts=1 bytes=4660 nontrivial_windows=4597 covered_windows=0 checked_windows=4597 leak_windows=1
+40: artifact=/tmp/dw1-leak-ny937yh7/port.o offset=4596 hash=56aa7d1e2450a3db leak_windows=1
+40: web_data_leak_contaminated: OK
+5/8 Test #40: web_data_leak_contaminated .......   Passed    5.89 sec
+test 48
+    Start 48: web_audio
+
+48: Test command: /dw/.venv/bin/python3 "-I" "-B" "/dw/port/web/tests/run.py" "/dw/build/port/web" "audio"
+48: Working Directory: /dw/build/port/web
+48: Test timeout computed to be: 900
+48: W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+48: 
+48: Running 32 tests using 1 worker
+48: 
+48: (node:865) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+48: (Use `node --trace-warnings ...` to show where the warning was created)
+48: 
+48: 
+48: [1/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:19:1 › ramp is ordered, live gain halves output, mute keeps consuming, pause and hidden preserve counters
+48: [2/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:99:1 › v2 migration preserves extras; volume persists; restore only restores controls
+48: [3/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume -0.1 protects the record
+48: [4/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume 1.1 protects the record
+48: [5/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume "0.3" protects the record
+48: [6/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume null protects the record
+48: [7/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:133:53 › audio constructor failure runs silently with a warning
+48: [8/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:133:53 › audio addModule failure runs silently with a warning
+48: [9/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:145:1 › without an AudioContext the existing query boot never writes PCM
+48: [10/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:150:1 › a suspended device has bounded backpressure and no underruns
+48: [11/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:168:1 › a device that never resumes warns and finishes without producing PCM
+48: [12/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:180:48 › pending resume at startup warns and advances VBlanks
+48: [13/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:180:48 › pending addModule at startup warns and advances VBlanks
+48: [14/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:197:1 › pending resume on unpause warns and advances VBlanks
+48: [15/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:208:1 › volume keeps keyboard focus for consecutive arrow keys and blurs on pointer release
+48: [16/32] [chromium] › ../../../port/web/tests/audio.spec.cjs:220:1 › finishing suspends the context before any underrun
+48: (node:1610) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+48: (Use `node --trace-warnings ...` to show where the warning was created)
+48: 
+48: 
+48: [17/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:19:1 › ramp is ordered, live gain halves output, mute keeps consuming, pause and hidden preserve counters
+48: [18/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:99:1 › v2 migration preserves extras; volume persists; restore only restores controls
+48: [19/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume -0.1 protects the record
+48: [20/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume 1.1 protects the record
+48: [21/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume "0.3" protects the record
+48: [22/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:123:47 › invalid volume null protects the record
+48: [23/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:133:53 › audio constructor failure runs silently with a warning
+48: [24/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:133:53 › audio addModule failure runs silently with a warning
+48: [25/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:145:1 › without an AudioContext the existing query boot never writes PCM
+48: [26/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:150:1 › a suspended device has bounded backpressure and no underruns
+48: [27/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:168:1 › a device that never resumes warns and finishes without producing PCM
+48: [28/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:180:48 › pending resume at startup warns and advances VBlanks
+48: [29/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:180:48 › pending addModule at startup warns and advances VBlanks
+48: [30/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:197:1 › pending resume on unpause warns and advances VBlanks
+48: [31/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:208:1 › volume keeps keyboard focus for consecutive arrow keys and blurs on pointer release
+48: [32/32] [firefox] › ../../../port/web/tests/audio.spec.cjs:220:1 › finishing suspends the context before any underrun
+48:   32 passed (4.2m)
+6/8 Test #48: web_audio ........................   Passed  251.44 sec
+test 60
+    Start 60: native_title_audio
+
+60: Test command: /dw/.venv/bin/python3 "-I" "-B" "/dw/tools/port/scenes/pcm.py" "--pack" "/dw/build/port/web/us.pack"
+60: Working Directory: /dw/build/port/web
+60: Test timeout computed to be: 1800
+60: {"final_vblank": 17476, "frames": 12842405, "sha256": "70ae581c607a99df57a281f8d67447efe498101c3d7956178946b4aa18849ef5", "inputs_sha256": "1f342d596cb23430d03f3599128b804020ba9c36acf205de9ba6901268324281"}
+7/8 Test #60: native_title_audio ...............   Passed  117.25 sec
+test 61
+    Start 61: web_scene_title_audio
+
+61: Test command: /dw/.venv/bin/python3 "-I" "-B" "/dw/port/web/tests/run.py" "/dw/build/port/web" "title_audio"
+61: Working Directory: /dw/build/port/web
+61: Test timeout computed to be: 2400
+61: W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+61: 
+61: Running 2 tests using 1 worker
+61: 
+61: (node:3059) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+61: (Use `node --trace-warnings ...` to show where the warning was created)
+61: 
+61: 
+61: [1/2] [chromium] › ../../../port/web/tests/title_audio.spec.cjs:6:1 › the complete raw worklet PCM equals native title_audio byte for byte
+61: (node:3276) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+61: (Use `node --trace-warnings ...` to show where the warning was created)
+61: 
+61: 
+61: [2/2] [firefox] › ../../../port/web/tests/title_audio.spec.cjs:6:1 › the complete raw worklet PCM equals native title_audio byte for byte
+61:   Slow test file: [firefox] › ../../../port/web/tests/title_audio.spec.cjs (5.0m)
+61:   Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+61:   2 passed (10.0m)
+8/8 Test #61: web_scene_title_audio ............   Passed  604.31 sec
+
+The following tests passed:
+	libspu
+	libsnd
+	pack_disc
+	web_data_leak_contaminated
+	web_audio
+	native_title_audio
+	web_scene_title_audio
+
+88% tests passed, 1 tests failed out of 8
+
+Total Test time (real) = 1096.70 sec
+
+The following tests FAILED:
+	 39 - web_data_leak (Failed)
+Errors while running CTest

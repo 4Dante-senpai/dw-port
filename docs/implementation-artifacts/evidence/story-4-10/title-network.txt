@@ -1,0 +1,17 @@
+W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+
+Running 4 tests using 1 worker
+
+(node:51538) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[1/4] [chromium] › ../../../port/web/tests/title.spec.cjs:6:3 › title capture matches native
+[2/4] [chromium] › ../../../port/web/tests/title.spec.cjs:6:3 › title capture matches native with storage poisoned
+(node:51751) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+
+[3/4] [firefox] › ../../../port/web/tests/title.spec.cjs:6:3 › title capture matches native
+[4/4] [firefox] › ../../../port/web/tests/title.spec.cjs:6:3 › title capture matches native with storage poisoned
+  4 passed (2.3m)
