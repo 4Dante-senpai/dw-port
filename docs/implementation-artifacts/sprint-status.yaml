@@ -77,7 +77,7 @@ development_status:
   4-7-audio-en-el-navegador: done
   4-8-memory-cards-en-el-navegador: done
   4-9-offline-y-actualizaciones: done
-  4-10-checks-del-build-web-ritmo-tamaño-reproducibilidad-red-y-dat: in-progress
+  4-10-checks-del-build-web-ritmo-tamaño-reproducibilidad-red-y-dat: done
   epic-4-retrospective: optional
 
   epic-5: backlog

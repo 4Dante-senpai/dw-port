@@ -1,0 +1,7 @@
+Test project /dw/build/port/web
+    Start 51: web_settings
+1/1 Test #51: web_settings .....................   Passed  157.08 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) = 157.09 sec

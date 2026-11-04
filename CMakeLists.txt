@@ -128,11 +128,33 @@ add_custom_command(OUTPUT ${DW1_PRESS_TABLES_H}
     ${CMAKE_SOURCE_DIR}/tools/port/psyq/press_tables.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
-add_compile_options(-std=gnu99 -ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
+# Read-only sound table regions in the user's EXE (metadata only).
+set(DW1_SOUND_TABLES_H ${CMAKE_BINARY_DIR}/generated/dw1_sound_tables.h)
+add_custom_command(OUTPUT ${DW1_SOUND_TABLES_H}
+  COMMAND python3 -I -B tools/port/psyq/sound_tables.py config/${DW1_VERSION} ${DW1_SOUND_TABLES_H}
+  DEPENDS ${CMAKE_SOURCE_DIR}/config/${DW1_VERSION}/main.yaml
+    ${CMAKE_SOURCE_DIR}/config/${DW1_VERSION}/symbols.txt
+    ${CMAKE_SOURCE_DIR}/tools/port/psyq/sound_tables.py
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+# Clang uses the last matching prefix: generated TUs and debug compilation directories
+# must use the stable build prefix rather than a source-relative web/web-repro path.
+add_compile_options(-std=gnu99 -ffile-prefix-map=${CMAKE_SOURCE_DIR}=. -ffile-prefix-map=${CMAKE_BINARY_DIR}=build)
 
 # Native: no PIE, so addresses (and traces) are the same in every run. The OT window starts at
 # the data segment (port/psyq/ps1mem.h, AD-5).
 if(NOT EMSCRIPTEN)
+  add_executable(dw1-leak-check tools/port/ci/data_leak_check.c)
+  target_compile_options(dw1-leak-check PRIVATE -O2 -Wall -Wextra -Werror)
+  # Matrix rows of story 4.10 that need no web build: differing builds and a missing file.
+  add_test(NAME repro_check_mismatch COMMAND sh -c
+    "d=$(mktemp -d) && mkdir $d/a $d/b && for f in dw1.wasm dw1_pack.wasm; do echo 1 > $d/a/$f; echo 1 > $d/b/$f; done && echo 2 > $d/b/dw1_pack.wasm && out=$(sh ${CMAKE_SOURCE_DIR}/tools/port/ci/repro_check.sh $d/a $d/b 2>&1); s=$?; rm -rf $d; test $s -eq 1 && echo \"$out\" | grep -q 'dw1_pack.wasm: reproducibility mismatch'")
+  add_test(NAME size_check_missing_file COMMAND sh -c
+    "d=$(mktemp -d) && cp ${CMAKE_SOURCE_DIR}/port/web/sw.js $d/ && out=$(${CMAKE_SOURCE_DIR}/tools/port/ci/size_check $d 2>&1); s=$?; rm -rf $d; test $s -eq 1 && echo \"$out\" | grep -q 'dw1.html'")
+  add_test(NAME data_leak_check_synthetic COMMAND sh
+    ${CMAKE_SOURCE_DIR}/tools/port/ci/test_data_leak_check.sh synthetic $<TARGET_FILE:dw1-leak-check>)
+  add_test(NAME data_leak_check_scopes COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/tools/port/ci/test_data_leak_scopes.py)
   set(DW1_ABI_CHECK_FLAGS -m32)
   add_compile_options(-fno-pie)
   add_link_options(-no-pie)
@@ -182,8 +204,8 @@ endif()
 
 add_library(dw1_psyq STATIC port/psyq/ps1mem.c port/psyq/overlay.c port/psyq/clock.c
   port/psyq/game_clock.c port/psyq/libetc.c port/psyq/libapi.c port/psyq/libc.c port/psyq/libgs.c port/psyq/libcd.c
-  port/psyq/libgte.c port/psyq/libgpu.c port/psyq/libsnd.c port/psyq/libspu.c
-  port/psyq/card_image.c port/psyq/bios_card.c port/psyq/libpress.c port/psyq/libmcrd.c port/psyq/libcd_stream.c port/psyq/stub.c ${DW1_GTE_TABLES_H} ${DW1_PRESS_TABLES_H})
+  port/psyq/sound_tables.c port/psyq/libgte.c port/psyq/libgpu.c port/psyq/libsnd.c port/psyq/libspu.c
+  port/psyq/card_image.c port/psyq/bios_card.c port/psyq/libpress.c port/psyq/libmcrd.c port/psyq/libcd_stream.c port/psyq/stub.c ${DW1_GTE_TABLES_H} ${DW1_PRESS_TABLES_H} ${DW1_SOUND_TABLES_H})
 target_include_directories(dw1_psyq PRIVATE ${CMAKE_BINARY_DIR}/generated)
 target_link_libraries(dw1_psyq PUBLIC Threads::Threads dw1_backend)
 # The heap and the CD model store typed data in the uint8_t arena Ps1_Ram, like the game does.
@@ -239,7 +261,7 @@ foreach(suite spu xa mdec libpress libspu libsnd cd_stream card)
   endif()
   add_executable(test_${suite} ${test_source})
   target_compile_options(test_${suite} PRIVATE -Wall -Wextra -Werror)
-  target_link_libraries(test_${suite} dw1_psyq)
+  target_link_libraries(test_${suite} dw1_psyq m)
   if(EMSCRIPTEN)
     find_program(DW1_NODE_EXECUTABLE node REQUIRED)
     add_test(NAME ${suite} COMMAND ${DW1_NODE_EXECUTABLE} $<TARGET_FILE:test_${suite}>)
@@ -284,6 +306,11 @@ endif()
 add_test(NAME gte_tables COMMAND python3 -I -B tools/port/psyq/test_gte_tables.py
   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 if(NOT EMSCRIPTEN)
+  add_executable(test_sound_tables port/psyq/tests/test_sound_tables.c)
+  target_compile_options(test_sound_tables PRIVATE -Wall -Wextra -Werror)
+  target_link_libraries(test_sound_tables dw1_psyq)
+  add_test(NAME sound_tables COMMAND test_sound_tables WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  set_tests_properties(sound_tables PROPERTIES FIXTURES_REQUIRED synthetic_pack)
   add_executable(test_libgte port/psyq/tests/test_libgte.c)
   target_compile_options(test_libgte PRIVATE -Wall -Wextra -Werror)
   target_link_libraries(test_libgte dw1_psyq)
@@ -630,6 +657,10 @@ if(NOT EMSCRIPTEN)
     $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   set_tests_properties(press_tables_disc PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600
     FIXTURES_REQUIRED disc_pack)
+  add_test(NAME sound_tables_disc COMMAND sh ${CMAKE_SOURCE_DIR}/tools/port/psyq/test_sound_tables_disc.sh
+    $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+  set_tests_properties(sound_tables_disc PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600
+    FIXTURES_REQUIRED disc_pack)
   get_filename_component(DW1_SCENE_PRESET ${CMAKE_BINARY_DIR} NAME)
   add_test(NAME scene_title COMMAND sh -c
     "test -n \"$DW1_DISC_DIR\" || exit 77; exec python3 -I -B tools/port/scenes/run.py title --build ${DW1_SCENE_PRESET}")
@@ -731,11 +762,14 @@ if(EMSCRIPTEN)
   set_property(TARGET dw1 APPEND PROPERTY LINK_DEPENDS
     ${CMAKE_SOURCE_DIR}/port/web/thread_storage_guard.js)
   target_compile_options(dw1 PRIVATE -Wall -Wextra -Werror)
-  target_link_options(dw1 PRIVATE -Wl,--fatal-warnings -sINITIAL_MEMORY=67108864 -sALLOW_MEMORY_GROWTH=0
+  target_link_options(dw1 PRIVATE -Wl,--Map=${CMAKE_BINARY_DIR}/dw1.map -Wl,--fatal-warnings -sINITIAL_MEMORY=67108864 -sALLOW_MEMORY_GROWTH=0
     -sEMULATE_FUNCTION_POINTER_CASTS=1 -sOFFSCREENCANVAS_SUPPORT=1 -sPTHREAD_POOL_SIZE=5 -sEXIT_RUNTIME=0
     --pre-js ${CMAKE_SOURCE_DIR}/port/web/thread_storage_guard.js
     -sEXPORTED_FUNCTIONS=_main,_io_mailbox_address,_web_control_address,_web_input_address,_web_frame_address,_web_audio_address,_web_audio_delivery_address,_web_audio_enable,_web_card_address,_web_card_attach,_card_image_data -sEXPORTED_RUNTIME_METHODS=callMain
     -sMIN_WEBGL_VERSION=2 -sMAX_WEBGL_VERSION=2 -sGL_ASSERTIONS=1)
+  add_custom_command(TARGET dw1 POST_BUILD
+    BYPRODUCTS ${CMAKE_BINARY_DIR}/dw1.map
+    COMMAND ${CMAKE_COMMAND} -E true)
   add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/sw.js
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/port/web/sw.js ${CMAKE_BINARY_DIR}/sw.js
     COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/web/stamp_sw.py ${CMAKE_BINARY_DIR}
@@ -743,6 +777,20 @@ if(EMSCRIPTEN)
       ${CMAKE_BINARY_DIR}/dw1.html ${CMAKE_BINARY_DIR}/io_worker.js
       ${CMAKE_BINARY_DIR}/audio_worklet.js ${CMAKE_BINARY_DIR}/us.tsv)
   add_custom_target(web_sw ALL DEPENDS ${CMAKE_BINARY_DIR}/sw.js)
+  add_test(NAME web_size_check COMMAND ${CMAKE_SOURCE_DIR}/tools/port/ci/size_check ${CMAKE_BINARY_DIR})
+  add_test(NAME web_size_check_synthetic COMMAND node
+    ${CMAKE_SOURCE_DIR}/tools/port/ci/test_size_check.cjs)
+  add_test(NAME web_long COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} long)
+  set_tests_properties(web_long PROPERTIES SKIP_RETURN_CODE 77 FIXTURES_REQUIRED disc_pack
+    RUN_SERIAL TRUE TIMEOUT 2400)
+  add_test(NAME web_data_leak COMMAND ${CMAKE_SOURCE_DIR}/tools/port/ci/data_leak_check
+    ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR})
+  add_test(NAME web_data_leak_contaminated COMMAND sh
+    ${CMAKE_SOURCE_DIR}/tools/port/ci/test_data_leak_check.sh contaminated
+    ${CMAKE_SOURCE_DIR}/build/port/native-headless/dw1-leak-check ${CMAKE_BINARY_DIR})
+  set_tests_properties(web_data_leak web_data_leak_contaminated PROPERTIES
+    SKIP_RETURN_CODE 77 FIXTURES_REQUIRED disc_pack)
   add_test(NAME web_sw_stamp COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/tools/port/web/test_stamp_sw.py)
   foreach(suite offline offline_real)

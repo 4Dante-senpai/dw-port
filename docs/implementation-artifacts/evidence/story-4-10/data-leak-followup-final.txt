@@ -1,0 +1,27 @@
+scope=wasm exceptions=180 artifacts=1
+leak: /dw/build/port/web/dw1.wasm offset=1717795 disc_offset=323212056 hash=8a581e4d189f4167
+leak: /dw/build/port/web/dw1.wasm offset=1717796 disc_offset=323212057 hash=1a84cb309f80e76d
+leak: /dw/build/port/web/dw1.wasm offset=1717797 disc_offset=323212058 hash=d75e5b9b08089375
+leak: /dw/build/port/web/dw1.wasm offset=1717798 disc_offset=323212059 hash=6dc8566df83c4875
+leak: /dw/build/port/web/dw1.wasm offset=1717799 disc_offset=323212060 hash=361ec4663484bd77
+leak: /dw/build/port/web/dw1.wasm offset=1717800 disc_offset=323212061 hash=54e32a9ab942347d
+leak: /dw/build/port/web/dw1.wasm offset=1717801 disc_offset=323212062 hash=ff0cd2c133967185
+leak: /dw/build/port/web/dw1.wasm offset=1717802 disc_offset=323212063 hash=d2dea1620227b68b
+leak: /dw/build/port/web/dw1.wasm offset=1717803 disc_offset=323212064 hash=3f7e1e3e9a1dc193
+leak: /dw/build/port/web/dw1.wasm offset=1717804 disc_offset=323212065 hash=4b9a77b3281ed499
+leak: /dw/build/port/web/dw1.wasm offset=1717805 disc_offset=323212066 hash=3b0f5322ef52ada1
+leak: /dw/build/port/web/dw1.wasm offset=1717806 disc_offset=323212067 hash=9f5f9e59ea5f8f9d
+leak: /dw/build/port/web/dw1.wasm offset=1717807 disc_offset=323212068 hash=1afa2df92a6e2c9a
+leak: /dw/build/port/web/dw1.wasm offset=1717808 disc_offset=323212069 hash=4d3686ee803b069a
+leak: /dw/build/port/web/dw1.wasm offset=1717809 disc_offset=323212070 hash=11bb90492b8120a5
+leak: /dw/build/port/web/dw1.wasm offset=1717810 disc_offset=323212071 hash=e9480f298d20c5ad
+leak: /dw/build/port/web/dw1.wasm offset=1717811 disc_offset=323212072 hash=db518945fea4f2b5
+leak: /dw/build/port/web/dw1.wasm offset=1717812 disc_offset=323212073 hash=0fd61266bc3668af
+leak: /dw/build/port/web/dw1.wasm offset=1717813 disc_offset=323212074 hash=56e1d71f7b7d57b6
+leak: /dw/build/port/web/dw1.wasm offset=1717814 disc_offset=323212075 hash=e2b3472a49938eaf
+artifacts=1 bytes=5879460 nontrivial_windows=5847855 covered_windows=1028718 checked_windows=4819137 leak_windows=622
+artifact=/dw/build/port/web/dw1.wasm offset=1717795 hash=8a581e4d189f4167 leak_windows=622
+scope=port exceptions=0 artifacts=54
+artifacts=54 bytes=16475014 nontrivial_windows=1085045 covered_windows=0 checked_windows=1085045 leak_windows=0
+scope=tree exceptions=265 artifacts=1148
+artifacts=1148 bytes=8349674 nontrivial_windows=8273841 covered_windows=2287 checked_windows=8271554 leak_windows=0

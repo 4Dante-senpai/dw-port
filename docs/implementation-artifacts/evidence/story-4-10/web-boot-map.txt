@@ -1,0 +1,50 @@
+UpdateCTestConfiguration  from :/dw/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/dw/build/port/web/DartConfiguration.tcl
+Test project /dw/build/port/web
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 44
+    Start 44: web_boot
+
+44: Test command: /dw/.venv/bin/python3 "-I" "-B" "/dw/port/web/tests/run.py" "/dw/build/port/web"
+44: Working Directory: /dw/build/port/web
+44: Test timeout computed to be: 180
+44: W: [pulseaudio] main.c: This program is not intended to be run as root (unless --system is specified).
+44: 
+44: Running 14 tests using 1 worker
+44: 
+44: (node:1407) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+44: (Use `node --trace-warnings ...` to show where the warning was created)
+44: 
+44: 
+44: [1/14] [chromium] › ../../../port/web/tests/boot.spec.cjs:5:3 › game frame zero
+44: [2/14] [chromium] › ../../../port/web/tests/boot.spec.cjs:5:3 › synthetic RGB15 display
+44: [3/14] [chromium] › ../../../port/web/tests/boot.spec.cjs:45:1 › requires isolation before loading the runtime
+44: [4/14] [chromium] › ../../../port/web/tests/boot.spec.cjs:55:1 › normal run keeps validation readback disabled
+44: [5/14] [chromium] › ../../../port/web/tests/boot.spec.cjs:76:1 › foreign requests include the page and a worker
+44: [6/14] [chromium] › ../../../port/web/tests/boot.spec.cjs:96:1 › foreign requests include AudioWorklet modules
+44: [7/14] [chromium] › ../../../port/web/tests/boot.spec.cjs:108:1 › foreign requests include imported AudioWorklet modules
+44: (node:1819) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+44: (Use `node --trace-warnings ...` to show where the warning was created)
+44: 
+44: 
+44: [8/14] [firefox] › ../../../port/web/tests/boot.spec.cjs:5:3 › game frame zero
+44: [9/14] [firefox] › ../../../port/web/tests/boot.spec.cjs:5:3 › synthetic RGB15 display
+44: [10/14] [firefox] › ../../../port/web/tests/boot.spec.cjs:45:1 › requires isolation before loading the runtime
+44: [11/14] [firefox] › ../../../port/web/tests/boot.spec.cjs:55:1 › normal run keeps validation readback disabled
+44: [12/14] [firefox] › ../../../port/web/tests/boot.spec.cjs:76:1 › foreign requests include the page and a worker
+44: [13/14] [firefox] › ../../../port/web/tests/boot.spec.cjs:96:1 › foreign requests include AudioWorklet modules
+44: [14/14] [firefox] › ../../../port/web/tests/boot.spec.cjs:108:1 › foreign requests include imported AudioWorklet modules
+44:   14 passed (30.2s)
+1/1 Test #44: web_boot .........................   Passed   33.15 sec
+
+The following tests passed:
+	web_boot
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =  33.15 sec

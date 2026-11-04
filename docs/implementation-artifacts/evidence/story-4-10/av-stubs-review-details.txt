@@ -1,0 +1,85 @@
+Start testing: Nov 04 17:30 UTC
+----------------------------------------------------------
+13/92 Testing: spu
+13/92 Test: spu
+Command: "/dw/build/port/native-headless/test_spu"
+Directory: /dw/build/port/native-headless
+"spu" start time: Nov 04 17:30 UTC
+Output:
+----------------------------------------------------------
+SPU L1: OK
+<end of output>
+Test time =   0.37 sec
+----------------------------------------------------------
+Test Passed.
+"spu" end time: Nov 04 17:30 UTC
+"spu" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/92 Testing: libspu
+17/92 Test: libspu
+Command: "/dw/build/port/native-headless/test_libspu"
+Directory: /dw/build/port/native-headless
+"libspu" start time: Nov 04 17:30 UTC
+Output:
+----------------------------------------------------------
+libspu L1: OK
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"libspu" end time: Nov 04 17:30 UTC
+"libspu" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/92 Testing: libsnd
+18/92 Test: libsnd
+Command: "/dw/build/port/native-headless/test_libsnd"
+Directory: /dw/build/port/native-headless
+"libsnd" start time: Nov 04 17:30 UTC
+Output:
+----------------------------------------------------------
+This is not SEQ Data.
+libsnd L1 VAB/SEQ events/voices/timer: OK
+<end of output>
+Test time =   0.13 sec
+----------------------------------------------------------
+Test Passed.
+"libsnd" end time: Nov 04 17:30 UTC
+"libsnd" time elapsed: 00:00:00
+----------------------------------------------------------
+
+54/92 Testing: pack
+54/92 Test: pack
+Command: "/dw/build/port/native-headless/test_pack"
+Directory: /dw/build/port/native-headless
+"pack" start time: Nov 04 17:30 UTC
+Output:
+----------------------------------------------------------
+test_pack: OK
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"pack" end time: Nov 04 17:30 UTC
+"pack" time elapsed: 00:00:00
+----------------------------------------------------------
+
+55/92 Testing: av_stubs
+55/92 Test: av_stubs
+Command: "/dw/build/port/native-headless/test_av_stubs"
+Directory: /dw/build/port/native-headless
+"av_stubs" start time: Nov 04 17:30 UTC
+Output:
+----------------------------------------------------------
+movie: slices=20 vblanks=52
+av_stubs: OK
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"av_stubs" end time: Nov 04 17:30 UTC
+"av_stubs" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Nov 04 17:30 UTC

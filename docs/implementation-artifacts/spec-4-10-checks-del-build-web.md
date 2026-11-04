@@ -2,7 +2,8 @@
 title: 'Historia 4.10: Checks del build web: ritmo, tamaño, reproducibilidad, red y datos'
 type: 'feature'
 created: '2026-11-04'
-status: 'ready-for-dev'
+status: 'done'
+baseline_commit: '4ca8493417a3ea93e66d7f8a2c53af41aa9daed9'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -32,7 +33,10 @@ context:
 - **Red.** Se registra todo pedido de página, workers y worklet que no sea `data:` ni `blob:`. Cualquier origen distinto del de `DW1_WEB_URL` hace fallar el test.
 - **Bytes del disco.**
   - `V(disco)` es el conjunto de ventanas de 64 bytes de `us.pack`, que tiene el contenido de todos los archivos del disco.
-  - Una ventana del artefacto que está en `V(disco)` es una fuga si no es trivial (menos de 5 valores de byte distintos) y tiene algún byte que ninguna ventana del artefacto presente en `V(excepción)` cubre.
+  - Una ventana del artefacto que está en `V(disco)` es una fuga si no es trivial (menos de 5 valores de byte distintos) y tiene algún byte sin cubrir.
+  - **Cobertura por sub-ventanas de 16 bytes** [decisión del dueño, 2026-11-04]: un byte del artefacto está cubierto si pertenece a algún tramo de 16 bytes del artefacto presente en los archivos de excepción. Reemplaza a la cobertura por ventanas de 64 bytes, que dejaba ~1.600 ventanas de `dw1.wasm` derivadas de `src/` (REL.BIN) con 1 a 3 bytes sin cubrir porque el linker junta datos chicos. La detección de fugas sigue con ventanas de 64 bytes.
+  - **Excepción de `dw1.wasm` por mapa del linker** [decisión del dueño, 2026-11-04]: para `dw1.wasm`, la cobertura por sub-ventanas no alcanza (quedan 622 ventanas, 110 contando ceros: bss intercalado con datos chicos que no existe en ningún `.o`). `dw1` linkea con `-Wl,--Map=<build>/dw1.map` y cada byte de la sección de datos del wasm se atribuye al objeto de entrada que lo aportó. Una ventana de `dw1.wasm` presente en `V(disco)` y no trivial es fuga si alguno de sus bytes viene de un objeto fuera de `dw1_game_objs` (huecos de relleno sin objeto no cuentan como fuga). Las ventanas fuera de la sección de datos siguen con la cobertura por sub-ventanas de 16 bytes. La detección sigue con ventanas de 64 bytes. Si `wasm-ld` no produce un mapa utilizable, se informa y no se reemplaza por otra heurística. El test de contaminación suma un caso sobre `dw1.wasm`: atribuir a un objeto de `port/` un rango que coincide con el Pack hace fallar el check.
+  - **Tablas del exe en `port/`** [decisión del dueño, 2026-11-04]: las tablas de PsyQ copiadas del exe que el check encuentre en objetos de `port/` (`_spu_rev_param` en `port/psyq/spu_reverb.inc`, `_svm_ptable` en `port/psyq/libsnd_pitch.inc` y cualquier otra que aparezca) se arreglan en esta historia: se cargan desde `SLUS_010.32` en el Pack según AD-12, como las de `libgte`.
   - Toda coincidencia por hash se confirma comparando los bytes.
   - Excepciones:
     - para `dw1.wasm`: los objetos de `dw1_game_objs`;
@@ -87,14 +91,15 @@ context:
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `tools/port/ci/size_check`, `CMakeLists.txt` -- script de Node ejecutable con `size_check <build> [--wasm-limit N] [--first-load-limit N]`, que lee `FILES` de `sw.js` según Always. Tests `web_size_check` (normal) y `web_size_check_fails_wasm` / `web_size_check_fails_first_load` (`WILL_FAIL`, límite 1000).
-- [ ] `tools/port/ci/repro_check.sh` -- recibe `<build>`, configura `cmake --preset web -B build/port/web-repro` desde cero, compila `dw1 dw1_pack sw.js` y compara según Always. Si difieren, corregirlo en `CMakeLists.txt` (por ejemplo `-ffile-prefix-map=${CMAKE_BINARY_DIR}=build` o `SOURCE_DATE_EPOCH`) y documentar la causa.
-- [ ] `tools/port/ci/data_leak_check.c`, `tools/port/ci/data_leak_check`, `CMakeLists.txt` -- herramienta C nativa `dw1-leak-check` (solo presets no Emscripten, `-O2`) con `--disc <us.pack> --exception <archivos...> -- <artefactos...>`. Usa un hash rodante de 64 bytes, una tabla con los hashes de las ventanas no triviales del artefacto que no están cubiertas y un solo recorrido del Pack. Sale con 1 si hay fuga y con 2 si hay error de entrada. El envoltorio `data_leak_check <web-build> <repo>` arma las tres corridas de Always y llama a `build/port/native-headless/dw1-leak-check`.
-- [ ] `tools/port/ci/test_data_leak_check.sh`, `CMakeLists.txt` -- tests `web_data_leak` y `web_data_leak_contaminated` (`SKIP_RETURN_CODE 77`, `FIXTURES_REQUIRED disc_pack`). El segundo copia a un temporal un objeto de `port/`, le agrega una ventana del Pack con 16 o más valores de byte distintos y afirma la salida 1, sin imprimir la ventana. Suma un caso sintético sin disco (archivos generados) que prueba trivial, cubierto y fuga: test `data_leak_check_synthetic` en `native-headless`.
-- [ ] `port/web/tests/storage.cjs`, `boot.spec.cjs`, `long.spec.cjs`, `title.spec.cjs` -- `foreignRequests(page)` con `page.context().on('request')`. Hipótesis por verificar: incluye workers y worklet; si no, sumar `page.on('worker')`. Test negativo en `boot.spec`: la página y un worker hacen `fetch` a `http://127.0.0.2:9/` y el helper registra dos pedidos. `long` y `title` afirman `[]`.
-- [ ] `CMakeLists.txt` -- `web_long`: `run.py <build> long`, `SKIP_RETURN_CODE 77`, `FIXTURES_REQUIRED disc_pack`, `RUN_SERIAL TRUE`, `TIMEOUT 2400`.
-- [ ] `.gitlab-ci.yml` -- `web-objects`: después de `ctest`, `tools/port/ci/repro_check.sh build/port/web`. Job nuevo `web-disc` (`extends: .class_b`, `DW1_DISC_DIR: /private/disc`, timeout de 1 h 30 min): compila `native-headless` y `web` y corre `tools/port/ci/ctest_no_skip.sh --preset web --output-on-failure -R "^(pack_disc|web_data_leak|web_data_leak_contaminated|web_long)$"`.
-- [ ] `docs/port/setup.md`, `docs/implementation-artifacts/deferred-work.md`, `docs/implementation-artifacts/evidence/story-4-10/` -- cómo correr cada check y qué mide.
+- [x] `tools/port/ci/size_check`, `CMakeLists.txt` -- script de Node ejecutable con `size_check <build> [--wasm-limit N] [--first-load-limit N]`, que lee `FILES` de `sw.js` según Always. Tests `web_size_check` (normal) y `web_size_check_fails_wasm` / `web_size_check_fails_first_load` (`WILL_FAIL`, límite 1000).
+- [x] `tools/port/ci/repro_check.sh` -- recibe `<build>`, configura `cmake --preset web -B build/port/web-repro` desde cero, compila `dw1 dw1_pack sw.js` y compara según Always. Si difieren, corregirlo en `CMakeLists.txt` (por ejemplo `-ffile-prefix-map=${CMAKE_BINARY_DIR}=build` o `SOURCE_DATE_EPOCH`) y documentar la causa.
+- [x] `tools/port/ci/data_leak_check.c`, `tools/port/ci/data_leak_check`, `CMakeLists.txt` -- herramienta C nativa `dw1-leak-check` (solo presets no Emscripten, `-O2`) con `--disc <us.pack> --exception <archivos...> -- <artefactos...>`. Usa un hash rodante de 64 bytes, una tabla con los hashes de las ventanas no triviales del artefacto que no están cubiertas y un solo recorrido del Pack. Sale con 1 si hay fuga y con 2 si hay error de entrada. El envoltorio `data_leak_check <web-build> <repo>` arma las tres corridas de Always y llama a `build/port/native-headless/dw1-leak-check`.
+- [x] `tools/port/ci/test_data_leak_check.sh`, `CMakeLists.txt` -- tests `web_data_leak` y `web_data_leak_contaminated` (`SKIP_RETURN_CODE 77`, `FIXTURES_REQUIRED disc_pack`). El segundo copia a un temporal un objeto de `port/`, le agrega una ventana del Pack con 16 o más valores de byte distintos y afirma la salida 1, sin imprimir la ventana. Suma un caso sintético sin disco (archivos generados) que prueba trivial, cubierto y fuga: test `data_leak_check_synthetic` en `native-headless`.
+- [x] `port/web/tests/storage.cjs`, `boot.spec.cjs`, `long.spec.cjs`, `title.spec.cjs` -- `foreignRequests(page)` con `page.context().on('request')`. Hipótesis por verificar: incluye workers y worklet; si no, sumar `page.on('worker')`. Test negativo en `boot.spec`: la página y un worker hacen `fetch` a `http://127.0.0.2:9/` y el helper registra dos pedidos. `long` y `title` afirman `[]`.
+- [x] `port/psyq/libspu.c`, `port/psyq/libsnd.c`, `port/psyq/spu_reverb.inc`, `port/psyq/libsnd_pitch.inc`, `tools/port/psyq/`, `CMakeLists.txt` -- cargar desde el Pack las tablas del exe que hoy están copiadas, siguiendo el patrón de `port/psyq/libgte.c:19-45` y `tools/port/psyq/gte_tables.py` (offsets de `config/us/main.yaml` a un header generado) y su test de disco `gte_tables_disc`. Borrar los `.inc` con datos. Los tests de `libspu`, `libsnd` y las suites de audio (`native_title_audio`, `web_scene_title_audio`, `web_audio`) siguen dando los mismos resultados.
+- [x] `CMakeLists.txt` -- `web_long`: `run.py <build> long`, `SKIP_RETURN_CODE 77`, `FIXTURES_REQUIRED disc_pack`, `RUN_SERIAL TRUE`, `TIMEOUT 2400`.
+- [x] `.gitlab-ci.yml` -- `web-objects`: después de `ctest`, `tools/port/ci/repro_check.sh build/port/web`. Job nuevo `web-disc` (`extends: .class_b`, `DW1_DISC_DIR: /private/disc`, timeout de 1 h 30 min): compila `native-headless` y `web` y corre `tools/port/ci/ctest_no_skip.sh --preset web --output-on-failure -R "^(pack_disc|web_data_leak|web_data_leak_contaminated|web_long)$"`.
+- [x] `docs/port/setup.md`, `docs/implementation-artifacts/deferred-work.md`, `docs/implementation-artifacts/evidence/story-4-10/` -- cómo correr cada check y qué mide.
   - En `deferred-work`, dos pendientes para la Épica 7:
     - nginx no comprime;
     - la instalación de `sw.js` vuelve a descargar el programa en la primera visita.
@@ -108,9 +113,44 @@ context:
 
 ## Implementation Notes
 
+- Continuación del 2026-11-04: `dw1` genera `dw1.map` con `-Wl,--Map` y lo declara
+  como producto del enlace para que Ninja lo regenere si falta. No cambia el
+  SHA-256 de `dw1.wasm` (`146c992b6391b2f6957fe7692ca4c063ed096c7e0d1ba4ec74e8590dcb01aa88`).
+- `dw1-leak-check --wasm-map <map>` relaciona los segmentos pasivos de DATA con
+  las salidas del mapa por orden y tamaño exacto. Traduce offsets relativos por
+  segmento porque Emscripten desplaza los offsets del archivo tras el enlace.
+  La lista de excepciones resuelta a rutas canónicas identifica los objetos del
+  juego; otros objetos quedan sin cubrir, incluso si coinciden con sub-ventanas
+  de excepción. Los huecos sin objeto están cubiertos. Fuera de DATA sigue la
+  cobertura de 16 bytes. Mapa ausente/incompatible o rangos inválidos: salida 2,
+  sin heurística alternativa.
+- Los casos sintéticos cubren dos segmentos, offsets finales desplazados, huecos,
+  atribución no exenta de un solo byte, cobertura fuera de DATA y errores de mapa
+  y WASM. El caso contaminado conserva el WASM real y cambia solo el dueño de un
+  rango coincidente con el Pack en una copia temporal del mapa.
+- Evidencia de esta continuación en `evidence/story-4-10/*-map.txt`. Las suites
+  largas y de audio no se repiten: el programa conserva el hash anterior.
+
 ## Spec Change Log
 
 ## Review Triage Log
+
+Revisión Codex (`codex-merged`) del diff contra `4ca8493`. 
+
+| Hallazgo | Veredicto | Ruta | Evidencia |
+|---|---|---|---|
+| `data_leak_check` solo audita `dw1.wasm` de los artefactos publicados (blind, edge) | medium | patch | `tools/port/ci/data_leak_check:34`: `dw1.js`, `dw1_pack.js`, `dw1_pack.wasm` y los demás archivos del deploy no están en ningún ámbito. Agregar un ámbito `deploy` sin excepciones. |
+| Huecos de DATA sin fila del mapa se dan por cubiertos (blind, edge) | medium | patch | `data_leak_check.c:191` marca toda DATA antes de leer filas. Marcar como cubiertos solo los bytes en cero. |
+| Pack menor a 64 bytes da éxito (blind, edge) | low | patch | `data_leak_check.c:321`: corrección directa con `if (pack.size < WINDOW) fail(disc)`. |
+| `size_check` no suma `sw.js` (blind) | low | patch | La primera visita lo descarga al registrar el service worker. |
+| `WILL_FAIL` acepta cualquier fallo y falta un test de suma independiente (blind, gap) | medium | patch | Caso sintético con archivos conocidos y límite justo, afirmando el mensaje de cada límite. |
+| JSON de `web_long` sin artefactos en `web-disc` (blind) | low | patch | Agregar `artifacts: when: always` con `long-*.json` (solo métricas). |
+| Limpieza tras carga parcial de tablas sin test (gap) | low | rechazado | Un fallo de `sound_load_tables` aborta el arranque; nunca se juega con tablas mezcladas. |
+| Hashes de tablas no prueban la interpretación (blind) | false | rechazado | El PCM nativo y web sigue idéntico byte a byte al de antes del cambio. |
+| `DW1_WEB_LONG_MINUTES` acorta la prueba (blind, edge) | low | rechazado | El CI no lo define; es el ajuste documentado para corridas de 60 minutos. |
+| `repro_check` con el build dentro de `web-repro` (edge) | low | rechazado | No es un uso real; la guarda agregaría complejidad. |
+| `sound_table`/`sound_set_table` con nombre nulo (edge) | low | rechazado | API interna con nombres constantes. |
+| Accesores sin límite de `mode`/`index` (edge) | false | rechazado | Todos los llamadores validan antes: `libspu.c:50` y `:133` (`mode >= 10`), `libsnd_vm.inc:78` y `libsnd_events.inc:54` (`index >= SOUND_PITCH_COUNT`). |
 
 ## Design Notes
 
@@ -123,6 +163,14 @@ context:
 **Primera carga estática.** Sumar el Brotli de `FILES` es determinista y corre en la clase A. La transferencia real depende de que el servidor comprima (nginx de testing hoy no lo hace) y de la doble descarga del service worker. Las dos cosas quedan para el deploy de la Épica 7.
 
 ## Verification
+
+Resultado de la continuación con mapa (2026-11-04, contenedor local, sin commits):
+`data_leak_check_synthetic` 1/1; auditoría `pack_disc|web_data_leak` 3/3 sin saltos,
+cero fugas reales y contaminación detectada; `web_size_check*` 3/3; `web_boot`
+14/14 casos Playwright; `repro_check.sh` coincide en ambos WASM. El SHA-256 del
+juego permanece idéntico antes/después de agregar el mapa. No se repiten
+`web_long` ni audio por instrucción del dueño. Resultados y limitaciones históricas
+en `evidence/story-4-10/README.md`, apartado «Cierre».
 
 **Commands:**
 - `cmake --build --preset web && ctest --preset web --output-on-failure` -- expected: verde, clase B saltada.

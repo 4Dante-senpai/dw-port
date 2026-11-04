@@ -1,0 +1,18 @@
+[0/2] Re-checking globbed directories...
+[1/16] Building C object CMakeFiles/test_libspu.dir/port/psyq/tests/test_libspu.c.o
+[2/16] Building C object CMakeFiles/dw1_psyq.dir/port/psyq/libsnd.c.o
+[3/16] Linking C static library libdw1_psyq.a
+[4/16] Building C object CMakeFiles/test_libsnd.dir/port/psyq/tests/test_libsnd.c.o
+[5/16] Linking C executable test_spu.js
+[6/16] Linking C executable test_xa.js
+[7/16] Linking C executable test_mdec.js
+[8/16] Linking C executable test_libpress.js
+[9/16] Linking C executable test_libsnd.js
+[10/16] Linking C executable test_libspu.js
+[11/16] Linking C executable test_cd_stream.js
+[12/16] Linking C executable test_card.js
+[13/16] Generating generated/psyq_stubs.c
+psyq: used=195 implemented=187 host_libc=8 stubs=0 gte_stubs=0 libspu=6
+[14/15] Linking C executable dw1.js
+[15/15] Generating sw.js
+7eccd9c4d3ee969ed620e629afe6c3e9c8a68e0931844032a6f158ccc1473315

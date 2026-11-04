@@ -1,5 +1,6 @@
 #include "psyq.h"
 #include "clock.h"
+#include "sound_tables.h"
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>

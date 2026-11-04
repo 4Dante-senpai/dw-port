@@ -12,6 +12,7 @@
 #include "../psyq.h"
 #include "../clock.h"
 #include "../libpress.h"
+#include "../sound_tables.h"
 #include "../../backend/cdrom.h"
 #include "../../backend/gpu.h"
 #include "../../backend/spu.h"
@@ -31,6 +32,10 @@ static int failures;
 
 static void audio(void)
 {
+    /* Synthetic mode 3: 18 full 1024-byte DMA chunks and one 64-byte tail.
+     * 38 + 19 * 6043 + (18 * 1024 + 64) / 8 = 117167 Redux cycles. */
+    const uint8_t starts[40] = {[3 * 4] = 0xf8, [3 * 4 + 1] = 0xf6};
+    CHECK(sound_set_table("_spu_rev_startaddr", starts, sizeof(starts)) == 0);
     clock_reset();
     psyq_libspu_reset();
     SsInit(); SsStart();

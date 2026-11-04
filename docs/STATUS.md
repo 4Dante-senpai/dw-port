@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-11-02
+Última actualización: 2026-11-04
 
 ## Modo de operación
 
@@ -14,7 +14,7 @@
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
 - M3 Paridad nativa: **completo** (Épica 3 cerrada: retrospectiva `accepted-with-open-items`, 2026-10-27).
-- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo; 4.5 teclado y gamepad; 4.6 remapeo y opciones persistentes; 4.7 audio en el navegador; 4.8 Memory cards en el navegador; 4.9 offline y actualizaciones).
+- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo; 4.5 teclado y gamepad; 4.6 remapeo y opciones persistentes; 4.7 audio en el navegador; 4.8 Memory cards en el navegador; 4.9 offline y actualizaciones; 4.10 checks de ritmo, tamaño, reproducibilidad, red y datos). Todas las historias de la Épica 4 están cerradas; falta la retrospectiva.
 
 ## Hecho
 
@@ -252,6 +252,7 @@
   Evidencia: `docs/implementation-artifacts/evidence/story-4-7/`.
 - Historia 4.8 (Memory cards en el navegador): dos ranuras en IndexedDB `dw1` v2, cada una un `.mcd` crudo de 131.072 bytes escrito con un solo `put` `durability: 'strict'`. El hilo del juego publica una instantánea con seqlock al terminar cada comando de `libmcrd` y el hilo principal la persiste. La Shell muestra las ranuras e importa y exporta; un tamaño distinto se rechaza, y si se deniega `persist()` sugiere exportar. Bytes guardados en web idénticos a nativo, y Continue da el frame nativo 600 VBlanks después de `loadSavegame`, tras cerrar la página y tras importar, en Chromium y Firefox. `cards_redux` (manual, fuera de CI): web carga el `.mcd` de Redux y Redux carga uno exportado por web. Desvío: el envío se fuerza también en `beforeunload`, porque en Chromium `pagehide` solo no persiste 128 KB; causa sin verificar (`deferred-work.md`). Web 54/54 y nativa 85/85 con disco, sin omisiones. Sin cambios en `src/`. Evidencia: `docs/implementation-artifacts/evidence/story-4-8/`.
 - Historia 4.9 (offline y actualizaciones): `port/web/sw.js` guarda el programa en una caché versionada por contenido (`tools/port/web/stamp_sw.py`) y conserva COOP/COEP. Con el servidor caído, la Shell abre y el Juego arranca con el Pack guardado en Chromium y Firefox, también tras actualizar. Una versión nueva se aplica con un solo reload si el Launcher sigue intacto; con interacción o partida queda para la próxima carga. `dw1-pack migrate` migra el formato 0, definido como primer formato anterior y nunca publicado, sin pedir el disco y con bytes iguales a v1; `status` recupera un reemplazo interrumpido. `version.txt` y la fixture ya no condicionan `#play`. La Shell cierra el handle de OPFS de forma explícita, porque en Chromium `terminate()` no lo libera a tiempo. Las suites fuera de `offline*` corren con `serviceWorkers: 'block'`. Web 57/57 con disco en remoto, en serie y sin saltos; 20 recargas offline con máximos de 86 ms y 107 ms. Evidencia: `docs/implementation-artifacts/evidence/story-4-9/`.
+- Historia 4.10 (checks del build web): `tools/port/ci/size_check` (Brotli calidad 11: `dw1.wasm` 1,56 MB de 4 MB; primera carga 1,84 MB de 6 MB), `tools/port/ci/repro_check.sh` (segundo build en otro directorio, mismo SHA-256 de `dw1.wasm` y `dw1_pack.wasm`; hizo falta `-ffile-prefix-map` del directorio de build), `web_long` en ctest (10 minutos por navegador: desvío 0,005 % en Chromium y 0,001 % en Firefox, 0 resincronizaciones) y registro de red de Playwright en `long` y `title` (sin pedidos fuera del origen; en Chromium suma eventos CDP porque AudioWorklet no aparece en los de contexto). `tools/port/ci/data_leak_check` (C, ventanas de 64 bytes del Pack) audita `dw1.wasm` con atribución por mapa del linker (`dw1.map`), los demás archivos del deploy, los objetos de `port/` y el árbol del repo: 0 fugas, y un objeto contaminado hace fallar el check. El check encontró dos tablas de PsyQ copiadas del exe en `port/psyq` (`_spu_rev_param`, `_svm_ptable`, más `_spu_rev_startaddr`): ahora se cargan del Pack según AD-12 (`port/psyq/sound_tables.c`, test `sound_tables_disc`), con PCM idéntico al de la 4.7. CI: `repro_check` en `web-objects` y job nuevo `web-disc` (clase B). Pendiente: el job `testing` también corre ahora `web_long` y el check de datos (unos 25 minutos más). Evidencia: `docs/implementation-artifacts/evidence/story-4-10/`.
 
 - Historia 8.5 (entorno de testing en el homelab): job `testing` de clase B en `main` compila nativo y
   web, arma el Pack, valida el título y despliega en el host de deploy (`HUB_DOCKER_HOST`) una imagen
@@ -486,7 +487,7 @@
 
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 a 4.9 ya están cerradas, y también la 8.1 y la 8.5. El dueño aprobó el 2026-10-31 extender a web la excepción de contrapresión de AD-8. El pipeline 146 de `main` (`68070e3`, historia 4.9) quedó verde, sin reintentos, con despliegue al entorno de testing. Siguen sin causa identificada dos fallos intermitentes de Firefox en CI, anotados en `deferred-work.md` y no repetidos en los pipelines 144 ni 146: `#play` deshabilitado tras recargar y `Target crashed` en `web_scene_title_audio`.
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 a 4.10 ya están cerradas, y también la 8.1 y la 8.5. El dueño aprobó el 2026-10-31 extender a web la excepción de contrapresión de AD-8. El pipeline 146 de `main` (`68070e3`, historia 4.9) quedó verde, sin reintentos, con despliegue al entorno de testing. Siguen sin causa identificada dos fallos intermitentes de Firefox en CI, anotados en `deferred-work.md` y no repetidos en los pipelines 144 ni 146: `#play` deshabilitado tras recargar y `Target crashed` en `web_scene_title_audio`.
 
 ## Bloqueos
 

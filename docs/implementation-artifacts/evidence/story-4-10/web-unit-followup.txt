@@ -1,0 +1,34 @@
+UpdateCTestConfiguration  from :/dw/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/dw/build/port/web/DartConfiguration.tcl
+Test project /dw/build/port/web
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 14
+    Start 14: libspu
+
+14: Test command: /usr/local/bin/node "/dw/build/port/web/test_libspu.js"
+14: Working Directory: /dw/build/port/web
+14: Test timeout computed to be: 180
+14: libspu L1: OK
+1/2 Test #14: libspu ...........................   Passed    0.05 sec
+test 15
+    Start 15: libsnd
+
+15: Test command: /usr/local/bin/node "/dw/build/port/web/test_libsnd.js"
+15: Working Directory: /dw/build/port/web
+15: Test timeout computed to be: 180
+15: This is not SEQ Data.
+15: libsnd L1 VAB/SEQ events/voices/timer: OK
+2/2 Test #15: libsnd ...........................   Passed    0.11 sec
+
+The following tests passed:
+	libspu
+	libsnd
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   0.17 sec

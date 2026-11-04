@@ -1,14 +1,14 @@
-// L4 for frame presentation (not in ctest, run by hand): run.py <build> long. The main thread paints
+// L4 for frame presentation (web_long in ctest): run.py <build> long. The main thread paints
 // the newest frame at each animation frame, so a slow main thread shows up as frames not painted
 // and frames that are never freed as growing browser memory.
 const {test, expect} = require('/opt/node_modules/@playwright/test');
 const fs = require('fs');
-const {seed, errors, browserMemory} = require('./storage.cjs');
+const {seed, errors, browserMemory, foreignRequests} = require('./storage.cjs');
 const RATE = 60.0087172527;
 const MINUTES = Number(process.env.DW1_WEB_LONG_MINUTES || 10);
 test('a long run paints every frame without growing', async ({page}, info) => {
   test.setTimeout((MINUTES + 3) * 60000);
-  const failures = errors(page);
+  const failures = errors(page), requests = await foreignRequests(page);
   page.on('console', message => {
     if (message.text().includes('pacing resynchronization')) console.log(message.text());
   });
@@ -36,7 +36,7 @@ test('a long run paints every frame without growing', async ({page}, info) => {
   const last = samples.at(-1), minute = Math.ceil(samples.length / MINUTES);
   const mean = list => list.reduce((sum, s) => sum + s.rss, 0) / list.length;
   const result = {
-    project: info.project.name, seconds: (last.t - first.t) / 1000,
+    project: info.project.name, foreign_requests: requests, seconds: (last.t - first.t) / 1000,
     vblanks: last.vblanks - first.vblanks,
     expected_vblanks: (last.t - first.t) / 1000 * RATE,
     written: last.written - first.written,
@@ -51,6 +51,7 @@ test('a long run paints every frame without growing', async ({page}, info) => {
   };
   fs.writeFileSync(`${process.env.DW1_WEB_BUILD}/long-${info.project.name}.json`, JSON.stringify(result, null, 2));
   expect(failures).toEqual([]);
+  expect(requests).toEqual([]);
   expect(result.underruns).toBe(0); expect(result.overflows).toBe(0);
   expect(result.written / (44100 * result.seconds)).toBeGreaterThanOrEqual(0.99);
   expect(Math.abs(result.vblanks - result.expected_vblanks) / result.expected_vblanks).toBeLessThan(0.001);

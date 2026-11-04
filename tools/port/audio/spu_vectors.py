@@ -4,7 +4,7 @@
 Print frozen SHA-256 of signed little-endian samples. Gaussian coefficients here
 are fixed hardware table entries at phases 0 and 128, not read from C.
 Reverb uses an analytic read-only impulse through APF2=0 and the documented FIR;
-ROOM parameters are tested separately with live writes and guarded RAM.
+Synthetic reverb parameters are tested with live writes and guarded RAM.
 """
 import hashlib
 import struct
@@ -92,10 +92,10 @@ for i in range(64):
     reverb.extend([x * 32767 // 32768] * 2)
 
 def room(voice_input=None, enabled=True):
-    # ROOM: documented register constants, fixed synthetic work area and CD impulse.
-    regs = [0x7d,0x5b,0x6d80,0x54b8,0xbed0,0,0,0xba80,0x5800,0x5300,
-            0x4d6,0x333,0x3f0,0x227,0x374,0x1ef,0x334,0x1b5,0,0,0,0,0,0,
-            0,0,0x1b4,0x136,0xb8,0x5c,0x8000,0x8000]
+    # Invented coefficients and delays, independent of the retail presets.
+    regs = [3, 5, 0x6000] + [0x1000 + i * 0x700 for i in range(4)]
+    regs += [0xa000, 0x4000, 0x3000]
+    regs += [7 + i * 13 for i in range(20)] + [0x6000, 0x5000]
     area = [((i * 97 + 123) % 65536) - 32768 if voice_input is None else 0 for i in range(0x26c0 // 2)]
     inputs = [[], []]
     outputs = [[], []]

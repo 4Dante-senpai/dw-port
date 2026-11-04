@@ -54,4 +54,34 @@ function errors(page) {
   page.on('dialog', async d => {result.push(d.message()); await d.dismiss();});
   return result;
 }
-module.exports = {seed, errors, browserMemory, store};
+// Context requests include dedicated workers. Chromium omits AudioWorklet loads
+// (including imports), so supplement them with browser-wide CDP Fetch events.
+async function foreignRequests(page) {
+  const result = [], origin = new URL(process.env.DW1_WEB_URL).origin;
+  const counts = new Map();
+  const record = (address, source) => {
+    const url = new URL(address);
+    if (['data:', 'blob:'].includes(url.protocol) || url.origin === origin) return;
+    const count = counts.get(address) || {context:0, browser:0};
+    const before = Math.max(count.context, count.browser);
+    ++count[source];
+    if (Math.max(count.context, count.browser) > before) result.push(address);
+    counts.set(address, count);
+  };
+  page.context().on('request', request => record(request.url(), 'context'));
+  if (page.context().browser().browserType().name() === 'chromium') {
+    const session = await page.context().browser().newBrowserCDPSession();
+    session.on('Fetch.requestPaused', async event => {
+      record(event.request.url, 'browser');
+      try {
+        await session.send('Fetch.continueRequest', {requestId:event.requestId});
+      } catch (error) {
+        if (!page.isClosed()) result.push('network observer error: ' + error.message);
+      }
+    });
+    await session.send('Fetch.enable', {patterns:[{urlPattern:'*'}]});
+    page.on('close', () => session.detach().catch(() => {}));
+  }
+  return result;
+}
+module.exports = {seed, errors, browserMemory, store, foreignRequests};

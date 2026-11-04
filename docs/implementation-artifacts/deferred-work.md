@@ -206,3 +206,32 @@ no se declara verde aquella pasada general. Con esta cuota, ejecutar las suites
 sensibles al reloj en serie.
 
 El segundo arranque de `web_offline_real` mostró que, en Chromium, `Worker.terminate()` no libera a tiempo el handle de OPFS de un worker bloqueado en `Atomics.wait`, y abrir el Pack fallaba tras dos recargas seguidas. La Shell ahora pide un cierre explícito y el worker cierra el handle antes de terminar. No hay evidencia de que explique el `#play` deshabilitado del pipeline 141, que fue en Firefox y antes de arrancar el Juego; si reaparece, el JSON y los asertos de `#status` deben distinguirlo.
+
+## Historia 4.10: transferencia inicial real (Épica 7)
+
+- source_spec: `docs/implementation-artifacts/spec-4-10-checks-del-build-web.md`
+  summary: nginx de testing no comprime el programa. Configurar y verificar compresión en el deploy de la Épica 7; el check estático mide Brotli calidad 11, no los bytes transferidos por HTTP actualmente.
+  evidence: `port/web/testing/nginx.conf`; `tools/port/ci/size_check`.
+
+- source_spec: `docs/implementation-artifacts/spec-4-10-checks-del-build-web.md`
+  summary: La instalación de `sw.js` vuelve a descargar el programa en la primera visita (`cache: reload`). Evitar esa descarga duplicada y medir la transferencia real en la Épica 7.
+  evidence: `port/web/sw.js`, instalación con `cache.addAll`; el check de primera carga suma una sola copia comprimida de cada entrada de `FILES` y `version.txt` opcional.
+
+## Verificación final 4.10: fallo no reproducido de `web_settings` (2026-11-04)
+
+El dueño informó un fallo de `web_settings` a los 159 s en la suite completa
+serial, con builds frescos y `DW_IMAGE=dw-port:remote`. El caso, navegador y
+diagnóstico de esa ejecución no están identificados en el informe disponible.
+La única ejecución solicitada dentro de este contenedor,
+`ctest --preset web -R '^web_settings$' --output-on-failure`, pasó en 157,08 s:
+38/38 casos, 19 de Chromium y 19 de Firefox, sin reintentos ni cambios de
+aserciones o timeouts. Evidencia: `evidence/story-4-10/web-settings-review.txt`
+y `evidence/story-4-10/web-settings-review-details.txt` (salida completa por caso).
+
+La causa sigue sin identificar. Esta pasada aislada no demuestra que el fallo
+sea ajeno al diff ni permite atribuirlo a contención o al navegador. Los tests
+`settings.spec.cjs`, su helper `input_helpers.cjs` y la Shell `port/web/dev/`
+no tienen cambios en esta historia; los cambios compartidos de configuración
+añaden la autorización del puerto 9 para el test negativo de red. Si reaparece,
+conservar la salida del caso fallido y el diagnóstico del navegador para
+determinar su relación con la historia. El incidente queda pendiente.

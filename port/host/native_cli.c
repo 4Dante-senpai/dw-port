@@ -1,5 +1,6 @@
 /* Shared native command line and game startup. */
 #include "../psyq/libpress.h"
+#include "../psyq/sound_tables.h"
 #include "native_cli.h"
 #include <errno.h>
 #include <execinfo.h>
@@ -164,7 +165,7 @@ int native_cli_run(const NativeCli *options)
 			fprintf(stderr, "dw1: %s\n", err);
 			return 1;
 		}
-		if (libgte_load_tables(err, sizeof(err)) != 0 || libpress_load_tables(err, sizeof(err)) != 0) {
+		if (libgte_load_tables(err, sizeof(err)) != 0 || libpress_load_tables(err, sizeof(err)) != 0 || sound_load_tables(err, sizeof(err)) != 0) {
 			fprintf(stderr, "dw1: %s\n", err);
 			cdrom_close();
 			return 1;
@@ -188,6 +189,17 @@ int native_cli_run(const NativeCli *options)
 			uint8_t digest[32];
 			Sha256_Init(&hash); Sha256_Update(&hash, data, size); Sha256_Final(&hash, digest);
 			printf("port: libpress table %s sha256 ", press_names[i]);
+			for (unsigned j = 0; j < sizeof(digest); j++) printf("%02x", digest[j]);
+			printf("\n");
+		}
+		const char *sound_names[] = {"_spu_rev_startaddr", "_spu_rev_param", "_svm_ptable"};
+		for (unsigned i = 0; i < sizeof(sound_names) / sizeof(sound_names[0]); i++) {
+			size_t size;
+			const void *data = sound_table(sound_names[i], &size);
+			Sha256 hash;
+			uint8_t digest[32];
+			Sha256_Init(&hash); Sha256_Update(&hash, data, size); Sha256_Final(&hash, digest);
+			printf("port: sound table %s sha256 ", sound_names[i]);
 			for (unsigned j = 0; j < sizeof(digest); j++) printf("%02x", digest[j]);
 			printf("\n");
 		}

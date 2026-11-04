@@ -1,11 +1,11 @@
 const {test, expect} = require('/opt/node_modules/@playwright/test');
-const {seed, errors, store} = require('./storage.cjs');
+const {seed, errors, store, foreignRequests} = require('./storage.cjs');
 const crypto = require('crypto');
 const fs = require('fs');
 for (const poison of [false, true]) {
   test('title capture matches native' + (poison ? ' with storage poisoned' : ''), async ({page}, info) => {
     test.setTimeout(180000);
-    const failures = errors(page);
+    const failures = errors(page), requests = await foreignRequests(page);
     if (poison) {
       await seed(page, 'us.pack');
     } else {
@@ -42,6 +42,7 @@ for (const poison of [false, true]) {
     const storageAccesses = await page.evaluate(() => Module.storageAccesses);
     expect(storageAccesses).toBe(0);
     expect(failures).toEqual([]);
+    expect(requests).toEqual([]);
     fs.writeFileSync(`${process.env.DW1_WEB_BUILD}/title-${info.project.name}-${poison}.json`,
       JSON.stringify({sha256:hash, native_sha256:process.env.DW1_NATIVE_TITLE_SHA, poison, storageAccesses}));
   });
@@ -54,7 +55,7 @@ const seedPack = async page => {
 };
 test('a reassigned Start leaves the title after a reload', async ({page}) => {
   test.setTimeout(420000);
-  const failures = errors(page);
+  const failures = errors(page), requests = await foreignRequests(page);
   await seedPack(page);
   await page.locator('#options summary').click();
   await page.locator('#controls tr[data-button=start] .remap').click();
@@ -74,10 +75,11 @@ test('a reassigned Start leaves the title after a reload', async ({page}) => {
   await expect.poll(marks, {timeout:10000}).toContain('runMainMenu');
   await page.keyboard.up('z');
   expect(failures).toEqual([]);
+  expect(requests).toEqual([]);
 });
 test('one click on Jugar reaches the title and Start leaves it', async ({page}, info) => {
   test.setTimeout(420000);
-  const failures = errors(page);
+  const failures = errors(page), requests = await foreignRequests(page);
   await seedPack(page);
   // A fresh document: the fixture click above must not count as the gesture.
   await page.addInitScript(() => {
@@ -130,6 +132,7 @@ test('one click on Jugar reaches the title and Start leaves it', async ({page}, 
   const control = await page.evaluate(() => Module.control());
   expect(control.resynchronizations).toBe(0);
   expect(failures).toEqual([]);
+  expect(requests).toEqual([]);
   fs.writeFileSync(`${process.env.DW1_WEB_BUILD}/title-play-${info.project.name}.json`,
     JSON.stringify({ms_to_title:Date.now() - start, control, audio: signal}));
 });

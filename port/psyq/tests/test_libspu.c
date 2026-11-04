@@ -6,8 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 #define CHECK(c) do { if (!(c)) { fprintf(stderr,"%d: %s\n",__LINE__,#c);exit(1); } } while(0)
+#include "sound_fixture.h"
 int main(void)
 {
+    sound_fixture();
     clock_reset();psyq_libspu_reset();
     CHECK(SpuGetKeyStatus(0)==-1);CHECK(SpuGetKeyStatus(1)==SPU_OFF);
     spu_write16(0x188,1);CHECK(SpuGetKeyStatus(1)==SPU_ON_ENV_OFF);
