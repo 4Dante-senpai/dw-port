@@ -14,7 +14,7 @@
 - M1 Inventario: **completo** (`docs/research/`).
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
 - M3 Paridad nativa: **completo** (Épica 3 cerrada: retrospectiva `accepted-with-open-items`, 2026-10-27).
-- M4 Web: **en curso** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo; 4.5 teclado y gamepad; 4.6 remapeo y opciones persistentes; 4.7 audio en el navegador; 4.8 Memory cards en el navegador; 4.9 offline y actualizaciones; 4.10 checks de ritmo, tamaño, reproducibilidad, red y datos). Todas las historias de la Épica 4 están cerradas; falta la retrospectiva.
+- M4 Web: **completo** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo; 4.5 teclado y gamepad; 4.6 remapeo y opciones persistentes; 4.7 audio en el navegador; 4.8 Memory cards en el navegador; 4.9 offline y actualizaciones; 4.10 checks de ritmo, tamaño, reproducibilidad, red y datos). Épica 4 cerrada: retrospectiva `accepted-with-open-items`, 2026-11-05.
 
 ## Hecho
 
@@ -459,6 +459,14 @@
   El análisis estático (`tools/port/metrics/shop_overlay.py`) solo encuentra referencias de `main` a DOOA, DGET y `REL_BIN_OFFSETS`, y no confirma que el archivo sea una copia reubicada de la tienda de `main`.
   Límite: `map_load` no entra a una tienda, y `loadShopLibrary` (script 0x23) se verificó solo estáticamente. Se agregó la sonda `capture.py map_load --shop-probe` y `map_load` suma los checkpoints `checkShopMap` y `checkShopMap#2`, con diferencia 0. Pasaron 12/12 tests de CTest con disco. Sin cambios en `src/`.
 
+- Retrospectiva de la Épica 4 (`docs/implementation-artifacts/epic-4-retro-2026-11-05.md`): veredicto `accepted-with-open-items`, 9 acciones en `sprint-status.yaml`.
+  - El pipeline 149 (`3964750`) falló en `native-asan-disc`: `dw1-leak-check` no tenía el rpath de ASan. Lo corrige `8e4bfed`; el pipeline 150 está en curso.
+  - Abiertos:
+    - un corte entre los dos `move` de `commitPack` deja Pack y hash desparejados (A2);
+    - decidir si se acepta que pulsar «Jugar» durante la activación del service worker recargue la página (A3);
+    - `testing` fuera del `resource_group` del runner (A4);
+    - reconciliar `epics.md` y la arquitectura, junto con las acciones de E3 que siguen abiertas (A5, A6).
+  - Pendiente del dueño: decidir si se reescribe la historia publicada para quitar las tablas copiadas del EXE (`48c89df`, `224e9ea`).
 - Retrospectiva de la Épica 3 (`docs/implementation-artifacts/epic-3-retro-2026-10-26.md`): veredicto `accepted-with-open-items`. Durante la retro se corrigieron dos gates:
   - `--state` ahora falla por diferencia de imagen, salvo que la Escena declare `image_informative` con motivo, píxeles y caja. Las diferencias tienen que quedar dentro de la caja. Lo declaran `newgame` y las dos tarjetas.
   - `native_wall_10min` estaba en rojo desde la 3.10. `next_due` recorría los 32 slots de la cola en cada consulta de VSync; ahora cachea el mínimo. En este servidor dio 0 resincronizaciones en dos corridas.

@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-11-2026 12:35
-last_updated: 2026-11-04
+last_updated: 11-05-2026 07:39
 project: dw-port
 project_key: NOKEY
 tracking_system: file-system
@@ -78,7 +78,7 @@ development_status:
   4-8-memory-cards-en-el-navegador: done
   4-9-offline-y-actualizaciones: done
   4-10-checks-del-build-web-ritmo-tamaño-reproducibilidad-red-y-dat: done
-  epic-4-retrospective: optional
+  epic-4-retrospective: done
 
   epic-5: backlog
   5-1-renderer-webgl2-idéntico-a-1: backlog
@@ -200,3 +200,66 @@ action_items:
     owner: "dev"
     status: open
     ref: "docs/implementation-artifacts/epic-3-retro-2026-10-26.md"
+  - id: "epic-4-retro-item-13-confirm-pipeline-150-green-after-moving"
+    epic: 4
+    action: "Confirm pipeline 150 green after moving dw1-leak-check below the ASan
+      rpath link options (8e4bfed) (F3)"
+    owner: "dev"
+    status: open
+    ref: "docs/implementation-artifacts/epic-4-retro-2026-11-05.md"
+  - id: "epic-4-retro-item-14-recoverpack-validates-the-candidate-pack"
+    epic: 4
+    action: "recoverPack validates the candidate Pack against its hash before removing
+      us.pack.previous; test a cut after each move (F2)"
+    owner: "dev"
+    status: open
+    ref: "docs/implementation-artifacts/epic-4-retro-2026-11-05.md"
+  - id: "epic-4-retro-item-15-decide-f1-accept-the-reload-when-play-is"
+    epic: 4
+    action: "Decide F1: accept the reload when Play is pressed during service worker
+      activation (record it in 4.4/4.9) or make Play defer the update"
+    owner: "Demian"
+    status: open
+    ref: "docs/implementation-artifacts/epic-4-retro-2026-11-05.md"
+  - id: "epic-4-retro-item-16-testing-shares-resource_group-dw1-disc-o"
+    epic: 4
+    action: "testing shares resource_group dw1-disc, or document runner concurrent
+      = 1 (F4)"
+    owner: "dev"
+    status: open
+    ref: "docs/implementation-artifacts/epic-4-retro-2026-11-05.md"
+  - id: "epic-4-retro-item-17-reconcile-epics-md-and-architecture-60-0"
+    epic: 4
+    action: "Reconcile epics.md and architecture: 60.0087 Hz, SPU ratio, AD-15, SHOP,
+      AD-8 input, NFR-4/AD-18 data predicate, epic-4-context presentation (F6, F7;
+      includes E3 A2, A5)"
+    owner: "Demian"
+    status: open
+    ref: "docs/implementation-artifacts/epic-4-retro-2026-11-05.md"
+  - id: "epic-4-retro-item-18-one-pass-over-deferred-work-md-reassign"
+    epic: 4
+    action: "One pass over deferred-work.md: reassign or close entries of closed stories
+      and record E3 F7-F12 and E4 F5 (includes E3 A4, A8)"
+    owner: "dev"
+    status: open
+    ref: "docs/implementation-artifacts/epic-4-retro-2026-11-05.md"
+  - id: "epic-4-retro-item-19-process-run-the-three-native-presets-bef"
+    epic: 4
+    action: "Process: run the three native presets before merging a story that touches
+      the native block of CMakeLists.txt (P2)"
+    owner: "dev"
+    status: open
+    ref: "docs/implementation-artifacts/epic-4-retro-2026-11-05.md"
+  - id: "epic-4-retro-item-20-codex-watch-sh-also-watches-read-only-co"
+    epic: 4
+    action: "codex-watch.sh also watches read-only Codex runs on the host (P6)"
+    owner: "dev"
+    status: open
+    ref: "docs/implementation-artifacts/epic-4-retro-2026-11-05.md"
+  - id: "epic-4-retro-item-21-before-epic-6-split-port-web-dev-index-h"
+    epic: 4
+    action: "Before epic 6, split port/web/dev/index.html into modules and extract
+      the shared EXE table locator (A9)"
+    owner: "dev"
+    status: open
+    ref: "docs/implementation-artifacts/epic-4-retro-2026-11-05.md"
