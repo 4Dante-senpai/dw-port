@@ -3,7 +3,7 @@ title: 'Historia 4.4: Pantallas de la Shell web y capacidades'
 type: 'feature'
 created: '2026-10-30'
 status: 'done'
-baseline_commit: '3115031f0cf037991ddb04e6a05ce0705a9c22dd'
+baseline_commit: 'a0ee0e64eaf96d00f3de079216fce6a5fd22e22f'
 route: 'dispatch'
 review_loop_iteration: 1
 context:
@@ -96,7 +96,7 @@ Presentación continua. `emscripten_webgl_commit_frame()` se descartó con un pr
 
 ## Review Triage Log
 
-Revisión Codex (`codex-merged`) sobre `12268fe`, con verificación local en el contenedor del proyecto.
+Revisión Codex (`codex-merged`) sobre `29a87b7`, con verificación local en el contenedor del proyecto.
 
 | Hallazgo | Veredicto | Ruta | Evidencia |
 |---|---|---|---|
@@ -114,7 +114,7 @@ Revisión Codex (`codex-merged`) sobre `12268fe`, con verificación local en el 
 | `AudioContext` lanza o `resume()` rechaza | low | rechazado | Improbable; el audio real llega en la 4.7. |
 | Ráfaga breve tras resincronizar | low | rechazado | `pace.c` rebasa `deadline` a `now`; una cota fina chocaría con los saltos periódicos de 187 VBlanks. |
 
-Segunda revisión Codex, sobre `68de4ca` (presentación continua):
+Segunda revisión Codex, sobre `a294263` (presentación continua):
 
 | Hallazgo | Veredicto | Ruta | Evidencia |
 |---|---|---|---|

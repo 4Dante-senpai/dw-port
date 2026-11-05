@@ -3,10 +3,10 @@
 No quedan entradas del juego con marcadores `stub-m2:`. Las once entradas
 de tarjeta se reemplazaron en 3.8 por la traducción del asm USA y el dispositivo
 BIOS `bu`. Este inventario no implica paridad audiovisual completa.
-El diagnóstico de `title_audio` sobre `e303346` y la corrección de fase
+El diagnóstico de `title_audio` sobre `7b8f1cc` y la corrección de fase
 de RCnt2 se registran en [audio-parity.md](audio-parity.md); no cambian este
 inventario ni cierran la comparación clase B. La investigación sobre
-`b97a378` añade cobertura L1 del recálculo de voces conservadas entre SEQ;
+`07e82f3` añade cobertura L1 del recálculo de voces conservadas entre SEQ;
 no introduce stubs ni cambia el criterio de aceptación.
 
 El build nativo registra 198 símbolos PsyQ usados: 187 implementados, 11 de
@@ -27,7 +27,7 @@ libsnd. Las pruebas L1 sin disco verifican los ticks y registros SPU de
 SEQ/VAB sintéticos y las utilidades `SsUt*`; las entradas necesarias de
 libspu ya tienen implementación. Atribución, límites y la sustitución
 no verificada para los ADSR de NRPN 11..14 se detallan en
-[libsnd.md](libsnd.md#secuenciador-completado-desde-224e9ea).
+[libsnd.md](libsnd.md#secuenciador-completado-desde-6ce0f46).
 La paridad de trazas/PCM con disco depende de la referencia externa del
 orquestador y no se afirma con estas pruebas sintéticas.
 

@@ -3,7 +3,7 @@ title: 'Historia 3.9: Preset native con ventana SDL3'
 type: 'feature'
 created: '2026-10-22'
 status: 'done'
-baseline_commit: '2fe8fab0a0100a6b19fde9688f07563b69dc56d8'
+baseline_commit: 'd8fd4889411d7a9e657a448bf34f1bad697dd25c'
 route: 'dispatch'
 review_loop_iteration: 0
 context:

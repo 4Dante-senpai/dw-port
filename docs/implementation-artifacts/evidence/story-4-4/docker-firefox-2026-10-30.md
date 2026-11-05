@@ -39,4 +39,4 @@ cambia el estado de la historia 4.4 (`review`).
 - `reference_capture_unit`: `/usr/bin/xvfb-run: 184: pcsx-redux: not found` (fuera de la imagen).
 - `setjmp`: falló con un artefacto obsoleto del primer build de la sesión (el que corrió
   antes de inicializar `external/psyq_headers`). Tras recompilar `test_setjmp` desde cero
-  pasa 5/5, igual que en el commit base `3115031` compilado aparte.
+  pasa 5/5, igual que en el commit base `a0ee0e6` compilado aparte.

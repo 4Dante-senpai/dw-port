@@ -134,7 +134,7 @@ guiones de entrada sostenida; no se aplica un offset al latch del pad.
 
 ## Antes/después por punto de control
 
-El baseline es `d79a22a49dda0c77b10478298c4b6c26555b3d0c`, instrumentado
+El baseline es `abaaaf3b9bc5608550ed607a27581016e0779d29`, instrumentado
 para observar costos exclusivos y usar el mismo origen: primer retorno de
 `VSync`, incluidas las consultas `VSync(-1)` de `PutDrawEnv`. Conserva el
 modelo anterior y su tasa 59,94 Hz. La instrumentación y los resultados están
@@ -272,7 +272,7 @@ corrida es la evidencia del árbol entregado por el orquestador (arriba).
   El presupuesto de CPU sigue las ramas de `_SsVmFlush`: añade 12 ciclos
   por voz con historial silencioso y resta 21 si ENVX es distinto de cero. Los 31 bits reservados estaban añadiendo 8928
   ciclos a cada tick, suficientes para cambiar la fase de lectura del pad.
-- El preset SDL fallaba también en el baseline `d79a22a` sin dispositivo de
+- El preset SDL fallaba también en el baseline `abaaaf3` sin dispositivo de
   video. Los cuatro tests reciben drivers `offscreen`/`dummy`; pasan todos
   en `resume7-sdl-env.log`, sin cambiar su comportamiento ni sus aserciones.
 - La aserción de muestras por campo usa la tasa medida del reloj: 734 o
@@ -307,7 +307,7 @@ ocurre en 478954157, frente a 478954577 proyectados desde Redux: faltan
 validación del árbol actual. Se está descomponiendo `finalizeMusic` antes de
 la lectura SCN para identificar el trabajo de CPU ausente.
 
-El baseline limpio `d79a22a`, extraído con `git archive`, reproduce los cuatro
+El baseline limpio `abaaaf3`, extraído con `git archive`, reproduce los cuatro
 fallos SDL (`resume32-baseline-sdl-tests.log`): dispositivo de video ausente
 y las aserciones de marca que fallan al abortar antes de arrancar el juego.
 La repetición con drivers offscreen/dummy queda registrada en
@@ -454,7 +454,7 @@ loadSavegame=1555 frente a 1561 es informativo, según la spec. Coinciden
 las 11 variables en cuatro ventanas y los 131072 bytes de la tarjeta final
 (SHA-256 18509839ea2e902ff1edc0c00db558d9cd2a98ec63ee13c7bf69f858263886dc).
 `owner-native-environment.log` vuelve a pasar 5/5 en SDL con el árbol
-reconstruido. La comparación con d79a22a ya documentada confirma que los
+reconstruido. La comparación con abaaaf3 ya documentada confirma que los
 fallos sin offscreen/dummy eran previos a esta historia.
 
 `owner-card-continue.log` pasa: tarjeta idéntica, estado en cuatro ventanas

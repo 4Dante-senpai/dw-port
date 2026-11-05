@@ -4,7 +4,7 @@ type: 'bugfix'
 created: '2026-10-26'
 status: 'done'
 route: 'dispatch'
-baseline_commit: '73ffac194c5fdc795ea175681fc6aaf9cd388e97'
+baseline_commit: '0f823f8b2366086a2db8979c18e2b9570cac4b28'
 review_loop_iteration: 0
 context:
   - '{project-root}/docs/implementation-artifacts/epic-3-context.md'
@@ -101,7 +101,7 @@ Evidencia, comandos y verificaciones pendientes: [device-wait-followup.md](evide
 2026-10-27, cierre. Con la opción 2 del dueño, la espera de `produce` se conserva como
 excepción de AD-8, así que quedan superadas las tareas de quitarla y de pacear en las esperas
 de dispositivo, junto con los criterios `rg SDL_Delay` y `--frames 1200` con `underruns=0`.
-Sigue `overflows=0`. `--frames 1200` da `underruns=2`, igual que en `main` (`73ffac1`); se
+Sigue `overflows=0`. `--frames 1200` da `underruns=2`, igual que en `main` (`0f823f8`); se
 difirió como F15 de la retro. El patch de la review (hallazgo 1) confina las diferencias de
 una Escena informativa a su caja declarada. Suites con disco en el PC del dueño:
 `native-headless` 83/83, `native-asan` 81/81 y `native` 94/94; después del patch, las escenas
@@ -111,7 +111,7 @@ una Escena informativa a su caja declarada. Suites con disco en el PC del dueño
 
 ## Review Triage Log
 
-Review `codex-merged` (blind-hunter, verification-gap, edge-case-hunter) sobre `build/review/e3-gate.diff` (`73ffac1..0352b30`).
+Review `codex-merged` (blind-hunter, verification-gap, edge-case-hunter) sobre `build/review/e3-gate.diff` (`0f823f8..a82dd78`).
 
 | # | Hallazgo | Veredicto | Evidencia | Ruta |
 |---|---|---|---|---|

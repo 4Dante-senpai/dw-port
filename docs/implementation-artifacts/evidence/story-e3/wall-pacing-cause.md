@@ -1,6 +1,6 @@
 # E3: causa del atraso de pared
 
-Fecha: 2026-10-26. Base: `0352b300bc1aadc9e7cce616a3c7b7c6cdc4d2a2`.
+Fecha: 2026-10-26. Base: `a82dd783794c120bd5b3c6e090ce5e936daa5ae0`.
 Builds y pruebas dentro del contenedor actual, sin cambiar su cuota de 2,5 CPUs
 ni hacer commits. No se ejecutan otros builds o tests durante las corridas de pared.
 

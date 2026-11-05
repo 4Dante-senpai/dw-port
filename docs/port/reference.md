@@ -449,7 +449,7 @@ la autorización indicada en la especificación.
 
 **Nota de vigencia:** los ensayos y matrices que siguen hasta la sección de
 decisiones 5/6 describen ejecuciones históricas, incluido el modelo por pasada
-de d57a330. El dueño ya corrigió OP1 a 3636 en el bloque congelado. Los
+de 2b8f573. El dueño ya corrigió OP1 a 3636 en el bloque congelado. Los
 resultados actuales y sus fallos residuales se registran al final.
 
 
@@ -781,7 +781,7 @@ Cada variante compara OP1 completo, 3636 cuadros, incluidos bordes negros, contr
 
 Ninguna variante cumple ambos límites. decimal-floor y decimal-trunc-biased respetan el máximo, pero exceden la media de 0,5. Saturar el intervalo firmado y luego sumar +128 equivale algebraicamente a desplazarlo primero y saturar a 0..255 cuando se conserva el mismo piso. Se conserva el modelo restaurado. El replay completo reproduce las métricas del juego y los hashes históricos de los cuatro cuadros.
 
-Antes (d57a330, redondeo por pasada): máximo RGB 5/4/6; medias globales 0,2546425716790429 / 0,2006998375618812 / 0,2903838388396131. Después (restaurado): máximo RGB 4/3/5; medias globales 0,21875760622937293 / 0,1690876929489824 / 0,2518152853696828; mayores medias de cuadro 0,33696614583333334 / 0,284609375 / 0,4080078125. Todas las medias pasan, cuatro componentes azules aún exceden 4/255:
+Antes (2b8f573, redondeo por pasada): máximo RGB 5/4/6; medias globales 0,2546425716790429 / 0,2006998375618812 / 0,2903838388396131. Después (restaurado): máximo RGB 4/3/5; medias globales 0,21875760622937293 / 0,1690876929489824 / 0,2518152853696828; mayores medias de cuadro 0,33696614583333334 / 0,284609375 / 0,4080078125. Todas las medias pasan, cuatro componentes azules aún exceden 4/255:
 
 | Cuadro | Canal | Píxel desde cero | Port | Referencia | Error |
 |---|---|---|---:|---:|---:|

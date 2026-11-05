@@ -3,7 +3,7 @@ title: 'Historia 3.5: libsnd de DW1 y traza de audio'
 type: 'feature'
 created: '2026-10-18'
 status: 'done'
-baseline_commit: 'd7eeb9172f78896e54f7e71ac7f642e4d8f451f7'
+baseline_commit: 'c405a87a101d55bc281e1f644d5cc014f1d26900'
 route: 'dispatch'
 review_loop_iteration: 1
 context:

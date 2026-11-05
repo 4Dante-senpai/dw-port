@@ -3,7 +3,7 @@ title: 'Semilla de rand del BIOS real en el port y en OpenBIOS de referencia'
 type: 'feature'
 created: '2026-10-18'
 status: 'done'
-baseline_commit: '0d12c3dba037b247c1d6cffe2163de8a6b81fefc'
+baseline_commit: '583f3887c4f15e2f56ebdd8fbd40bd1fd4c8be9d'
 route: 'dispatch'
 review_loop_iteration: 0
 context:

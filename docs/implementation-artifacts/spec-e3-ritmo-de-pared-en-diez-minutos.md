@@ -4,7 +4,7 @@ type: 'bugfix'
 created: '2026-10-26'
 status: 'done'
 route: 'dispatch'
-baseline_commit: '0352b300bc1aadc9e7cce616a3c7b7c6cdc4d2a2'
+baseline_commit: 'a82dd783794c120bd5b3c6e090ce5e936daa5ae0'
 review_loop_iteration: 0
 context:
   - '{project-root}/docs/implementation-artifacts/epic-3-context.md'
@@ -16,7 +16,7 @@ context:
 
 ## Intent
 
-**Problem:** `native_wall_10min` falla con el código de `81fb7e2` (historia 3.10). Desde ese commit no cambió nada en `port/` ni en `src/`.
+**Problem:** `native_wall_10min` falla con el código de `07cda8a` (historia 3.10). Desde ese commit no cambió nada en `port/` ni en `src/`.
 - **En este servidor:** `docker_run.sh` con `DOCKER_CONTEXT=default`, corrida aislada: 9 resincronizaciones con 67–72 ms de atraso (el tope es 4 VBlanks, 66,7 ms) y `underruns=20`. Las resincronizaciones caen en pares, cerca de los VBlanks 7694/7712, 8294, 15827, 16426, 23954, 24551, 32075 y 32672: cada ~8130 VBlanks.
 - **En el PC del dueño:** 1 a 2 resincronizaciones.
 - **Antes:** la 3.10 registró 0 resincronizaciones en una corrida aislada (`docs/port/clock-calibration.md:206-208`).

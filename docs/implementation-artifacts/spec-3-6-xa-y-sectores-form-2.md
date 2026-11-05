@@ -3,7 +3,7 @@ title: 'Historia 3.6: XA y sectores Form 2'
 type: 'feature'
 created: '2026-10-20'
 status: 'done'
-baseline_commit: '92a222b61562dab2f5b7b887c0d529ada8b7bc78'
+baseline_commit: 'e6bb573f96b47d073b8e13f712f393dabf8d91f5'
 route: 'dispatch'
 review_loop_iteration: 0
 context:

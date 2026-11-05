@@ -1,7 +1,7 @@
 # Evidencia de la historia 4.6
 
 Verificación del 2026-10-30 en el contenedor del proyecto, con Chromium, Firefox y el disco real,
-sobre `3fcf411`. Reemplaza a la de la sesión en la nube, que no tuvo disco ni Firefox.
+sobre `3b09882`. Reemplaza a la de la sesión en la nube, que no tuvo disco ni Firefox.
 
 - `settings-keyboard-<navegador>.json`: registro `PortSettings` v2 tras reasignar Cross a `KeyZ`;
   tras recargar, Z llega a `PadRead` como Cross y K ya no.

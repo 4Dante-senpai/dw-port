@@ -4,7 +4,7 @@ type: 'feature'
 created: '2026-10-24'
 status: 'done'
 route: 'dispatch'
-baseline_commit: 'd79a22a49dda0c77b10478298c4b6c26555b3d0c'
+baseline_commit: 'abaaaf3b9bc5608550ed607a27581016e0779d29'
 review_loop_iteration: 0
 context:
   - '{project-root}/docs/implementation-artifacts/epic-3-context.md'

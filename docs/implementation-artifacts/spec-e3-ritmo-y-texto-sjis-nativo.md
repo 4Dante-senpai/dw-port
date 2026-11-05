@@ -3,7 +3,7 @@ title: 'Corrección E3: ritmo de la ventana nativa y texto Shift-JIS'
 type: 'bugfix'
 created: '2026-10-23'
 status: 'done'
-baseline_commit: '9bbbd5e40a100c8106566acf4acceb3ccf409658'
+baseline_commit: '91bcca608c32d25660c479e7ba7f9d8870464465'
 route: 'dispatch'
 review_loop_iteration: 0
 context:

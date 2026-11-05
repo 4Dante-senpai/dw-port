@@ -3,7 +3,7 @@ title: 'Historia 4.8: Memory cards en el navegador'
 type: 'feature'
 created: '2026-11-01'
 status: 'done'
-baseline_commit: 'd78d16a531511ceaf854ca6eb6dd228ed93486a8'
+baseline_commit: '723af089d587f1a7933d95cb241f624c89f54a21'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -100,7 +100,7 @@ context:
 
 ## Review Triage Log
 
-Revisión Codex (`codex-merged`) del diff contra `d78d16a`.
+Revisión Codex (`codex-merged`) del diff contra `723af08`.
 
 | Hallazgo | Veredicto | Ruta | Evidencia |
 |---|---|---|---|

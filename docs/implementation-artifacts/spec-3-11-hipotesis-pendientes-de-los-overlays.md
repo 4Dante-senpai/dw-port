@@ -4,7 +4,7 @@ type: 'chore'
 created: '2026-10-26'
 status: 'done'
 route: 'dispatch'
-baseline_commit: '661bcc433987665fd304747595c97555980115fb'
+baseline_commit: 'd23eb7a5d9993c38c2645334da7a5bd1ddfd4e67'
 review_loop_iteration: 0
 context:
   - '{project-root}/docs/implementation-artifacts/epic-3-context.md'

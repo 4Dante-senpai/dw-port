@@ -1,14 +1,14 @@
 # Historia 3.5: estado de implementación
 
 **2026-10-19: traducción del paso (1) completada con pruebas L1 sin disco.**
-Sobre el checkpoint `224e9ea` se completa `SsStart` y su callback
+Sobre el checkpoint `6ce0f46` se completa `SsStart` y su callback
 `SsSeqCalledTbyT`: reproducción SEQ, voces automáticas, controles, tempo,
 bucles y fin. Las 21 entradas públicas de libsnd y las dependencias de libspu
 alcanzadas tienen implementación; no quedan marcadores M2 en libsnd.
 El gate por contenido de las decisiones 3/4 se valida con capturas de
 referencia fuera del checkout; la paridad temporal y PCM corresponde a 3.10.
 
-El diagnóstico posterior sobre `e303346`, sus límites y la corrección de
+El diagnóstico posterior sobre `7b8f1cc`, sus límites y la corrección de
 RCnt2 están en [audio-parity.md](audio-parity.md), incluida la evidencia
 posterior del gate vigente. Completar las traducciones no demuestra paridad temporal.
 
@@ -124,12 +124,12 @@ los archivos de la sonda, sin lanzar una tercera pareja de emuladores.
 
 ## Traducción del paso (1)
 
-El checkpoint `04fbf9d` ya traducía `SsVabOpenHeadSticky`, `SsVabTransBody`,
+El checkpoint `83435d7` ya traducía `SsVabOpenHeadSticky`, `SsVabTransBody`,
 `SsVabTransCompleted`, `SsVabClose`, `SsUtGetVBaddrInSB` y `SsSetMVol`.
 Este pase traduce los cuerpos de `SsEnd`, `SsInit`, `SsQuit`, `SsSeqClose`,
 `SsSeqStop`, `SsUtAllKeyOff`, `SsSeqPlay`, `SsSeqSetVol`, `SsSetTableSize`,
 `SsSetTickMode`, `SsSeqOpen`, `SsUtKeyOffV`, `SsUtAutoVol` y `SsUtKeyOnV`.
-La continuación desde `224e9ea` completa `SsStart` y el secuenciador llamado
+La continuación desde `6ce0f46` completa `SsStart` y el secuenciador llamado
 por su tick, descritos debajo.
 
 `libsnd.c` contiene las entradas públicas y el estado VAB. `libsnd_vm.inc`
@@ -226,7 +226,7 @@ Hipótesis y límites sin verificar contra el original:
   efectos ni la paridad de trazas/PCM. Las pruebas sintéticas no demuestran
   que la escena real alcance sus checkpoints con estas inicializaciones.
 
-## Secuenciador completado desde `224e9ea`
+## Secuenciador completado desde `6ce0f46`
 
 `SsSeqCalledTbyT` recorre los slots abiertos y sus registros SEP. Conserva el
 orden del asm: flush, reproducción, crescendo/decrescendo y cambio gradual
@@ -321,7 +321,7 @@ dependen del disco, capturas o referencia externos. No se omite ninguna
 prueba L1 de libsnd. `git diff --check` pasa. No se crean commits.
 
 
-## Investigación del reinicio de música sobre b97a378 (2026-10-19)
+## Investigación del reinicio de música sobre 07e82f3 (2026-10-19)
 
 `sequence_restart_volume` añade una prueba L1 del recálculo de voces detenidas
 al abrir/reproducir otra SEQ. Usa VH/VB/SEQ sintéticos y valores literales:

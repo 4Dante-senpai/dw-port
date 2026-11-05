@@ -3,7 +3,7 @@ title: 'Historia 4.5: Teclado y gamepad'
 type: 'feature'
 created: '2026-10-30'
 status: 'done'
-baseline_commit: 'cfcda1b27d62dbdbbb812d98350f02320b3a55b4'
+baseline_commit: '14c1f1b972e70541c6945f931127da8c1c93878b'
 route: 'dispatch'
 review_loop_iteration: 0
 context:

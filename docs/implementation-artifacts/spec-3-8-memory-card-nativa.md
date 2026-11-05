@@ -3,7 +3,7 @@ title: 'Historia 3.8: Memory card nativa'
 type: 'feature'
 created: '2026-10-22'
 status: 'done'
-baseline_commit: '3cd2cf5d69d9eb4cbc0b73b9dd21bc856cbfecae'
+baseline_commit: '964d9ca5acbc5050fccb9975900afe119580cfa1'
 route: 'dispatch'
 review_loop_iteration: 0
 context:

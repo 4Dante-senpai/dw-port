@@ -3,7 +3,7 @@ title: 'Historia 3.3: Inputs por VBlank y comparación de estado'
 type: 'feature'
 created: '2026-10-18'
 status: 'done'
-baseline_commit: 'd3752e88b767d1be831ffb635a747e3ec581d649'
+baseline_commit: '44718f7eeac302c57977dc04a9010b0e5f8894ec'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -99,11 +99,11 @@ context:
 
 ## Spec Change Log
 
-- 2026-10-18, iteración de implementación 0 (sin revisión): la Escena `newgame` divergió en `CURRENT_MENU` en el VBlank 165 por el ritmo de las cargas, el port falló más adelante (ASan: `BOYS.MMD` desborda `TAMER_MODEL_BUFFER`, que en PS1 es contiguo a `MAIN_D_801A8B98`; SIGSEGV en `clearMapDigimon` por una entrada puesta en NULL) y la referencia hizo 0 llamadas a `rand` en 3000 VBlanks. Enmienda: decisión 5 (puntos de control), tareas de los dos fallos y extensión de la Escena hasta ≥ 16 llamadas a `rand`. KEEP: inputs por VBlank en ambos lados, `state_vars.txt` y su validación, normalización de punteros, traza de `rand`, `run.py --state` y sus tests, `NULL` guard de `script_menu.c` y `NAMING_CTRL_BOXES` (documentados en `src-changes.md`), `port/psyq/include/libgpu.h`. La rama se rebasó sobre `main` con la 3.4 (`d3752e8`): el diff de revisión se toma contra ese commit.
+- 2026-10-18, iteración de implementación 0 (sin revisión): la Escena `newgame` divergió en `CURRENT_MENU` en el VBlank 165 por el ritmo de las cargas, el port falló más adelante (ASan: `BOYS.MMD` desborda `TAMER_MODEL_BUFFER`, que en PS1 es contiguo a `MAIN_D_801A8B98`; SIGSEGV en `clearMapDigimon` por una entrada puesta en NULL) y la referencia hizo 0 llamadas a `rand` en 3000 VBlanks. Enmienda: decisión 5 (puntos de control), tareas de los dos fallos y extensión de la Escena hasta ≥ 16 llamadas a `rand`. KEEP: inputs por VBlank en ambos lados, `state_vars.txt` y su validación, normalización de punteros, traza de `rand`, `run.py --state` y sus tests, `NULL` guard de `script_menu.c` y `NAMING_CTRL_BOXES` (documentados en `src-changes.md`), `port/psyq/include/libgpu.h`. La rama se rebasó sobre `main` con la 3.4 (`44718f7`): el diff de revisión se toma contra ese commit.
 
 ## Review Triage Log
 
-Iteración 0 (`codex-merged`: blind-hunter, verification-gap, edge-case-hunter; diff contra `d3752e8`):
+Iteración 0 (`codex-merged`: blind-hunter, verification-gap, edge-case-hunter; diff contra `44718f7`):
 
 | # | Hallazgo | Veredicto | Evidencia / ruta |
 |---|---|---|---|
@@ -120,4 +120,4 @@ Iteración 0 (`codex-merged`: blind-hunter, verification-gap, edge-case-hunter; 
 | 11 | `main() --state` no se prueba con referencias válidas, ausentes u obsoletas (verification-gap) | medium | Real. **patch** |
 | 12 | Un checkpoint en una función no instrumentada (`rand`, `VSync`) pasa el preflight y nunca dispara (edge) | low | Real. **patch** (rechazar en preflight) |
 
-Nota: el pipeline 100 de `main` (`d3752e8`, 3.4) falló en `av_stubs` bajo ASan (9 VBlanks en lugar de 8). El `DRAWENV` sin inicializar de `MOV_playMovie` depende de la basura de pila. Esta historia lo inicializa bajo `DW1_PORT` (`src-changes.md`), lo que elimina esa dependencia.
+Nota: el pipeline 100 de `main` (`44718f7`, 3.4) falló en `av_stubs` bajo ASan (9 VBlanks en lugar de 8). El `DRAWENV` sin inicializar de `MOV_playMovie` depende de la basura de pila. Esta historia lo inicializa bajo `DW1_PORT` (`src-changes.md`), lo que elimina esa dependencia.

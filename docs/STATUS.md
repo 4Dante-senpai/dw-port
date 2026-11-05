@@ -460,13 +460,13 @@
   Límite: `map_load` no entra a una tienda, y `loadShopLibrary` (script 0x23) se verificó solo estáticamente. Se agregó la sonda `capture.py map_load --shop-probe` y `map_load` suma los checkpoints `checkShopMap` y `checkShopMap#2`, con diferencia 0. Pasaron 12/12 tests de CTest con disco. Sin cambios en `src/`.
 
 - Retrospectiva de la Épica 4 (`docs/implementation-artifacts/epic-4-retro-2026-11-05.md`): veredicto `accepted-with-open-items`, 9 acciones en `sprint-status.yaml`.
-  - El pipeline 149 (`3964750`) falló en `native-asan-disc`: `dw1-leak-check` no tenía el rpath de ASan. Lo corrige `8e4bfed`; el pipeline 150 está en curso.
+  - El pipeline 149 (`7b0eb4e`) falló en `native-asan-disc`: `dw1-leak-check` no tenía el rpath de ASan. Lo corrige `72cf557`; se verifica con el primer pipeline sobre la historia reescrita.
   - Abiertos:
     - un corte entre los dos `move` de `commitPack` deja Pack y hash desparejados (A2);
-    - decidir si se acepta que pulsar «Jugar» durante la activación del service worker recargue la página (A3);
     - `testing` fuera del `resource_group` del runner (A4);
     - reconciliar `epics.md` y la arquitectura, junto con las acciones de E3 que siguen abiertas (A5, A6).
-  - Pendiente del dueño: decidir si se reescribe la historia publicada para quitar las tablas copiadas del EXE (`48c89df`, `224e9ea`).
+  - F1 (pulsar «Jugar» durante la activación recarga la página) queda aceptado por el dueño.
+  - Historia reescrita el 2026-11-05, con aprobación del dueño: ningún commit contiene ya las tablas copiadas del EXE (`spu_reverb.inc`, `libsnd_pitch.inc`, `reverb_start`). Los SHA de los docs se actualizaron.
 - Retrospectiva de la Épica 3 (`docs/implementation-artifacts/epic-3-retro-2026-10-26.md`): veredicto `accepted-with-open-items`. Durante la retro se corrigieron dos gates:
   - `--state` ahora falla por diferencia de imagen, salvo que la Escena declare `image_informative` con motivo, píxeles y caja. Las diferencias tienen que quedar dentro de la caja. Lo declaran `newgame` y las dos tarjetas.
   - `native_wall_10min` estaba en rojo desde la 3.10. `next_due` recorría los 32 slots de la cola en cada consulta de VSync; ahora cachea el mínimo. En este servidor dio 0 resincronizaciones en dos corridas.
@@ -495,7 +495,7 @@
 
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 a 4.10 ya están cerradas, y también la 8.1 y la 8.5. El dueño aprobó el 2026-10-31 extender a web la excepción de contrapresión de AD-8. El pipeline 146 de `main` (`68070e3`, historia 4.9) quedó verde, sin reintentos, con despliegue al entorno de testing. Siguen sin causa identificada dos fallos intermitentes de Firefox en CI, anotados en `deferred-work.md` y no repetidos en los pipelines 144 ni 146: `#play` deshabilitado tras recargar y `Target crashed` en `web_scene_title_audio`.
+- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 a 4.10 ya están cerradas, y también la 8.1 y la 8.5. El dueño aprobó el 2026-10-31 extender a web la excepción de contrapresión de AD-8. El pipeline 146 de `main` (`4b3b251`, historia 4.9) quedó verde, sin reintentos, con despliegue al entorno de testing. Siguen sin causa identificada dos fallos intermitentes de Firefox en CI, anotados en `deferred-work.md` y no repetidos en los pipelines 144 ni 146: `#play` deshabilitado tras recargar y `Target crashed` en `web_scene_title_audio`.
 
 ## Bloqueos
 

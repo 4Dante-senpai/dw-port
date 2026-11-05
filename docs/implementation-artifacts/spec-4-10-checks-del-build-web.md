@@ -3,7 +3,7 @@ title: 'Historia 4.10: Checks del build web: ritmo, tamaño, reproducibilidad, r
 type: 'feature'
 created: '2026-11-04'
 status: 'done'
-baseline_commit: '4ca8493417a3ea93e66d7f8a2c53af41aa9daed9'
+baseline_commit: 'a9318844e22e61fc7b1946c73e4ab6dc523e874e'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -135,7 +135,7 @@ context:
 
 ## Review Triage Log
 
-Revisión Codex (`codex-merged`) del diff contra `4ca8493`. 
+Revisión Codex (`codex-merged`) del diff contra `a931884`. 
 
 | Hallazgo | Veredicto | Ruta | Evidencia |
 |---|---|---|---|

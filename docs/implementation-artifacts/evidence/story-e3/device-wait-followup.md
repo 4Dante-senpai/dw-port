@@ -1,6 +1,6 @@
 # A3: parada tras habilitar las esperas bloqueantes de dispositivo
 
-Fecha: 2026-10-26. Base: `73ffac194c5fdc795ea175681fc6aaf9cd388e97`.
+Fecha: 2026-10-26. Base: `0f823f8b2366086a2db8979c18e2b9570cac4b28`.
 Todo se ejecutó dentro de este contenedor. No se hicieron commits.
 
 Se releyó la spec actualizada y se ensayó su opción 1: productor sin espera,

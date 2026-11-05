@@ -1,4 +1,4 @@
-# Diagnóstico de paridad de audio sobre e303346
+# Diagnóstico de paridad de audio sobre 7b8f1cc
 
 2026-10-19. La comparación AD-15 sigue fallando. No se modifican su regla,
 `run.py`, `audio.py`, los inputs, los checkpoints ni el origen de captura.
@@ -17,7 +17,7 @@ ciclos, exactamente 183,75 muestras.
 `test_clock` bloquea desde el ciclo 7990 hasta el 25003, relativos al origen,
 con período 8000: entrega una interrupción pendiente, lee el residuo correcto
 y entrega la siguiente exactamente en 32000. Enlazar esta misma prueba con
-`libapi.c` de `e303346` falla en la lectura y en la segunda interrupción.
+`libapi.c` de `7b8f1cc` falla en la lectura y en la segunda interrupción.
 `test_libsnd` retrasa el primer tick 1992 ciclos y comprueba tanto los 240
 ticks en un segundo como la recuperación de fase en el segundo tick. Esta
 prueba también se ejecuta en ASan y WASM/Node.
@@ -82,7 +82,7 @@ Se verificaron tres diferencias temporales separadas:
 
 ## Duración de escena anterior a libsnd
 
-Se compiló en un worktree separado el commit `d7eeb91`, cuyo libsnd todavía
+Se compiló en un worktree separado el commit `c405a87`, cuyo libsnd todavía
 contiene los stubs, y se ejecutó con el mismo Pack, inputs por checkpoint y
 ventanas cero. Solo se observó `FIRST_SCREEN_FRAME_COUNTER`; la salida de
 imagen exigida por el antiguo host se dirigió a `/dev/null`.
@@ -235,7 +235,7 @@ originadas en `gameLoop`, no demuestran el nuevo límite y necesitan recaptura.
 
 ### Verificación de la decisión 3 en el contenedor
 
-Desde el checkpoint `0860f80`, se ejecutaron los builds y las suites completas
+Desde el checkpoint `d6c14c8`, se ejecutaron los builds y las suites completas
 de los tres presets, sin `DW1_DISC_DIR` en esas suites:
 
 | Preset | Aprobadas | Omitidas por fixture/disco | Fallidas |
@@ -324,7 +324,7 @@ válida de diez segundos antes del primer evento. No se modificaron `libsnd`,
 el reloj ni los inputs para eludir estos fallos, ni se hicieron commits.
 
 
-## Investigación de los bloqueos sobre b97a378 (2026-10-19)
+## Investigación de los bloqueos sobre 07e82f3 (2026-10-19)
 
 No se modifica la decisión 3, el comparador, la definición de evento ni los
 registros incluidos. La instrumentación temporal de libsnd se retira del
@@ -495,7 +495,7 @@ siguen fuera del checkout. Se retira la instrumentación temporal y
 
 ## Decisión 4 del dueño: ancla de nota nueva y ventana común
 
-2026-10-19, sobre checkpoint `440f7c6`. Esta sección sustituye el gate de
+2026-10-19, sobre checkpoint `f2eaac8`. Esta sección sustituye el gate de
 la decisión 3 descrito en las investigaciones anteriores; no cambia sus
 hallazgos sobre el cálculo de volumen ni modifica `libsnd`, `libspu`, los
 inputs o el primer evento del juego que cierra el tramo.

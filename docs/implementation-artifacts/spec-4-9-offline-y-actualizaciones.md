@@ -3,7 +3,7 @@ title: 'Historia 4.9: Offline y actualizaciones'
 type: 'feature'
 created: '2026-11-02'
 status: 'done'
-baseline_commit: '96ea87de50566db27b56f9fedb5f5f6513875530'
+baseline_commit: '321dd041216126bec648ab11c2d86b0d53efa537'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -106,7 +106,7 @@ context:
 
 ## Review Triage Log
 
-Revisión Codex (`codex-merged`) del diff contra `96ea87d`.
+Revisión Codex (`codex-merged`) del diff contra `321dd04`.
 
 | Hallazgo | Veredicto | Ruta | Evidencia |
 |---|---|---|---|
@@ -148,4 +148,4 @@ Auditoría propia (paso 3):
 - `cmake --build --preset web && ctest --preset web --output-on-failure` -- expected: verde; clase B saltada sin disco.
 - `ctest --preset native-headless --output-on-failure -R pack` -- expected: verde, con `pack_migrate`.
 - `DW1_DISC_DIR=/dw/game_rom/extracted tools/port/remote_run.sh ctest --preset web -R 'web_offline_real|web_disc_real|web_cards_real|web_scene_title' --output-on-failure` -- expected: verde, sin reintentos.
-- `git diff --stat cfd2197 -- src include .gitlab-ci.yml` -- expected: vacío.
+- `git diff --stat a14e174 -- src include .gitlab-ci.yml` -- expected: vacío.

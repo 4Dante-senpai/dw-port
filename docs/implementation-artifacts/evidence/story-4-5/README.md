@@ -25,7 +25,7 @@ solo valores de `PadRead`, VBlanks, tasas y memoria.
 
 ## Verificación final
 
-Sobre `aa21acd` y `25e77db`, en `tools/port/remote_run.sh` con `DW1_DISC_DIR=/dw/game_rom/extracted`:
+Sobre `d75cb34` y `485517d`, en `tools/port/remote_run.sh` con `DW1_DISC_DIR=/dw/game_rom/extracted`:
 `make compare` idéntico; `ctest --preset native-headless` 85/85; `ctest --preset native-asan` 83/83;
 `ctest --preset web` 45/46, incluidos `web_input`, `web_shell` y `web_scene_title` en Chromium y Firefox.
 La falla fue `web_launcher`: Playwright pasó 4/4 y `run.py` cayó al borrar el directorio de

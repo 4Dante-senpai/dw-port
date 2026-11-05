@@ -3,7 +3,7 @@ title: 'Historia 4.6: Remapeo y opciones persistentes'
 type: 'feature'
 created: '2026-10-30'
 status: 'done'
-baseline_commit: 'b2d949af3f5590ebf2c0c6e0e64a1f8e4f4e2189'
+baseline_commit: 'edccbe3c9951174faa7ddf126852e9bd061717e2'
 route: 'dispatch'
 review_loop_iteration: 0
 context:

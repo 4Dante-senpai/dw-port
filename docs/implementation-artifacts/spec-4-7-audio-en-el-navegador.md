@@ -3,7 +3,7 @@ title: 'Historia 4.7: Audio en el navegador'
 type: 'feature'
 created: '2026-10-31'
 status: 'done'
-baseline_commit: 'bd572cd9bda80f1fb6ef2a0208292f11834f7dae'
+baseline_commit: '77002a8e86c5a2acbc4bd82a8b383c7b7a27b1c9'
 route: 'dispatch'
 review_loop_iteration: 0
 context:
@@ -93,7 +93,7 @@ context:
 
 ## Review Triage Log
 
-Revisión Codex (`codex-merged`) del diff contra `bd572cd`.
+Revisión Codex (`codex-merged`) del diff contra `77002a8`.
 
 | Hallazgo | Veredicto | Ruta | Evidencia |
 |---|---|---|---|

@@ -3,7 +3,7 @@ title: 'Historia 4.3: Selección del disco, validación y Pack en el navegador'
 type: 'feature'
 created: '2026-10-27'
 status: 'done'
-baseline_commit: '6be3021210e5f811c38e8e86f946d7f0f5b73519'
+baseline_commit: 'b95b4d51fa9bc18419c5c983ca46f1b27381be8c'
 route: 'dispatch'
 review_loop_iteration: 0
 context:

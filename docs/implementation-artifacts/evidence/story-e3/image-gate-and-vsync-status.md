@@ -3,7 +3,7 @@
 Seguimiento tras la decisión del dueño: [nueva parada por trabajo CPU](device-wait-followup.md).
 Este documento conserva la evidencia de la primera ejecución.
 
-Fecha: 2026-10-26. Base: `73ffac194c5fdc795ea175681fc6aaf9cd388e97`.
+Fecha: 2026-10-26. Base: `0f823f8b2366086a2db8979c18e2b9570cac4b28`.
 Builds y pruebas ejecutados dentro del contenedor, sin daemon remoto y sin commits.
 
 ## A1: implementación y medición

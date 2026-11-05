@@ -1,7 +1,7 @@
 # Evidencia de la Historia 8.1
 
 Verificación del 2026-10-30, en el contenedor del proyecto y con el disco, sobre el commit
-`a993286` de la rama de la historia. Lo implementó una sesión cloud sin disco, sin `asm/` y sin
+`1126696` de la rama de la historia. Lo implementó una sesión cloud sin disco, sin `asm/` y sin
 `cc_mips.dll`; esta corrida cubre lo que esa sesión no pudo verificar.
 
 | Comando | Resultado |
