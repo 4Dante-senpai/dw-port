@@ -144,6 +144,16 @@ add_compile_options(-std=gnu99 -ffile-prefix-map=${CMAKE_SOURCE_DIR}=. -ffile-pr
 # Native: no PIE, so addresses (and traces) are the same in every run. The OT window starts at
 # the data segment (port/psyq/ps1mem.h, AD-5).
 if(NOT EMSCRIPTEN)
+  set(DW1_ABI_CHECK_FLAGS -m32)
+  add_compile_options(-fno-pie)
+  add_link_options(-no-pie)
+  # native-asan links the shared ASan runtime: point the executables at the compiler's copy.
+  if(CMAKE_C_FLAGS MATCHES "sanitize")
+    execute_process(COMMAND ${CMAKE_C_COMPILER} -m32 -print-runtime-dir
+      OUTPUT_VARIABLE DW1_CLANG_RT_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+    add_link_options(-Wl,-rpath,${DW1_CLANG_RT_DIR})
+  endif()
+  # After the link options above, so the native-asan build gets the ASan runtime rpath too.
   add_executable(dw1-leak-check tools/port/ci/data_leak_check.c)
   target_compile_options(dw1-leak-check PRIVATE -O2 -Wall -Wextra -Werror)
   # Matrix rows of story 4.10 that need no web build: differing builds and a missing file.
@@ -155,15 +165,6 @@ if(NOT EMSCRIPTEN)
     ${CMAKE_SOURCE_DIR}/tools/port/ci/test_data_leak_check.sh synthetic $<TARGET_FILE:dw1-leak-check>)
   add_test(NAME data_leak_check_scopes COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/tools/port/ci/test_data_leak_scopes.py)
-  set(DW1_ABI_CHECK_FLAGS -m32)
-  add_compile_options(-fno-pie)
-  add_link_options(-no-pie)
-  # native-asan links the shared ASan runtime: point the executables at the compiler's copy.
-  if(CMAKE_C_FLAGS MATCHES "sanitize")
-    execute_process(COMMAND ${CMAKE_C_COMPILER} -m32 -print-runtime-dir
-      OUTPUT_VARIABLE DW1_CLANG_RT_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-    add_link_options(-Wl,-rpath,${DW1_CLANG_RT_DIR})
-  endif()
 endif()
 if(EMSCRIPTEN)
   add_compile_options(-pthread -fwasm-exceptions)
