@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-11-04
+Última actualización: 2026-11-11
 
 ## Modo de operación
 
@@ -15,6 +15,14 @@
 - M2 Nativo headless: **completo** (título determinista, sin referencia).
 - M3 Paridad nativa: **completo** (Épica 3 cerrada: retrospectiva `accepted-with-open-items`, 2026-10-27).
 - M4 Web: **completo** (4.1 frame 0 con WebGL2; 4.2 título web idéntico a nativo; 4.3 disco propio y Pack en el navegador; 4.4 Shell, capacidades, pausa y juego en vivo; 4.5 teclado y gamepad; 4.6 remapeo y opciones persistentes; 4.7 audio en el navegador; 4.8 Memory cards en el navegador; 4.9 offline y actualizaciones; 4.10 checks de ritmo, tamaño, reproducibilidad, red y datos). Épica 4 cerrada: retrospectiva `accepted-with-open-items`, 2026-11-05.
+- **Cambio de rumbo (2026-11-11, aprobado por el dueño):** orden de lo que falta
+  **M6 (Épica 6) → Épica 9 (comodidades del navegador) → M5 (Épica 5) → M7**. Las Escenas nuevas
+  cierran por jugabilidad (sin caídas, deterministas, mismo estado en nativo y web, captura
+  revisada); la paridad contra PCSX-Redux queda para diagnosticar bugs visibles. Suben a la v1
+  el speed-up (FR-18), los save states con autosave (FR-19) y la escala entera de pantalla
+  (FR-20). Detalle: `docs/planning-artifacts/sprint-change-proposal-2026-11-11.md`.
+- Siguiente: **Historia 6.9** (playtest automático: grabador de inputs, bot y soak) y luego la
+  6.10 (partida real en testing y triage de caídas).
 
 ## Hecho
 
@@ -495,7 +503,8 @@
 
 ## En curso
 
-- Fase 5: la Épica 3 (M3) está cerrada, con su retrospectiva hecha. Sigue la Épica 4 (M4); las historias 4.1 a 4.10 ya están cerradas, y también la 8.1 y la 8.5. El dueño aprobó el 2026-10-31 extender a web la excepción de contrapresión de AD-8. El pipeline 146 de `main` (`4b3b251`, historia 4.9) quedó verde, sin reintentos, con despliegue al entorno de testing. Siguen sin causa identificada dos fallos intermitentes de Firefox en CI, anotados en `deferred-work.md` y no repetidos en los pipelines 144 ni 146: `#play` deshabilitado tras recargar y `Target crashed` en `web_scene_title_audio`.
+- Fase 5: Épicas 2, 3 y 4 cerradas con sus retrospectivas. El 2026-11-11 se aplicó el cambio de rumbo (PRD, arquitectura AD-8/AD-14/AD-15, `epics.md`, `sprint-status.yaml`, `CLAUDE.md`); todavía no hay código de la Épica 6. Sigue la Historia 6.9. Hipótesis abierta: el mecanismo de save states (spike 9.3; una copia de la memoria WASM no incluye la pila del hilo del Juego).
+- Heredado de la Épica 4: El dueño aprobó el 2026-10-31 extender a web la excepción de contrapresión de AD-8. El pipeline 146 de `main` (`4b3b251`, historia 4.9) quedó verde, sin reintentos, con despliegue al entorno de testing. Siguen sin causa identificada dos fallos intermitentes de Firefox en CI, anotados en `deferred-work.md` y no repetidos en los pipelines 144 ni 146: `#play` deshabilitado tras recargar y `Target crashed` en `web_scene_title_audio`.
 
 ## Bloqueos
 

@@ -67,7 +67,7 @@ development_status:
   3-11-hipótesis-pendientes-de-los-overlays: done
   epic-3-retrospective: done
 
-  epic-4: in-progress
+  epic-4: done
   4-1-el-juego-en-wasm-con-su-propio-hilo-y-presentación: done
   4-2-worker-de-e-s-y-pantalla-de-título-en-el-navegador: done
   4-3-selección-del-disco-validación-y-pack-en-el-navegador: done
@@ -80,6 +80,27 @@ development_status:
   4-10-checks-del-build-web-ritmo-tamaño-reproducibilidad-red-y-dat: done
   epic-4-retrospective: done
 
+  # Sprint change 2026-11-11: execution order is epic 6 -> 9 -> 5 -> 7; 6-9 and 6-10 go first.
+  epic-6: backlog
+  6-9-playtest-automático-grabador-bot-y-soak: backlog
+  6-10-partida-real-en-testing-y-triage-de-caídas: backlog
+  6-1-definición-de-la-suite-de-escenas: backlog
+  6-2-mundo-combate-y-evolución: backlog
+  6-3-entrenamiento-tiendas-y-objetos: backlog
+  6-4-minijuegos-y-modo-vs: backlog
+  6-5-videos-eventos-y-mapas-especiales: backlog
+  6-6-final-y-créditos: backlog
+  6-7-partida-grabada-completa: backlog
+  6-8-regresión-completa-en-ci: backlog
+  epic-6-retrospective: optional
+
+  epic-9: backlog
+  9-1-escala-entera-de-pantalla-y-pantalla-completa: backlog
+  9-2-speed-up: backlog
+  9-3-spike-de-save-states: backlog
+  9-4-save-states-y-autosave: backlog
+  epic-9-retrospective: optional
+
   epic-5: backlog
   5-1-renderer-webgl2-idéntico-a-1: backlog
   5-2-escala-de-resolución-de-1-a-4: backlog
@@ -88,17 +109,6 @@ development_status:
   5-5-opciones-de-video-en-la-shell: backlog
   5-6-rendimiento-en-el-hardware-de-referencia: backlog
   epic-5-retrospective: optional
-
-  epic-6: backlog
-  6-1-definición-de-la-suite-de-escenas: backlog
-  6-2-mundo-combate-y-evolución: backlog
-  6-3-entrenamiento-tiendas-y-objetos: backlog
-  6-4-minijuegos-y-modo-vs: backlog
-  6-5-videos-eventos-y-mapas-especiales: backlog
-  6-6-final-y-créditos: backlog
-  6-7-partida-grabada-sin-divergencias: backlog
-  6-8-regresión-completa-en-ci: backlog
-  epic-6-retrospective: optional
 
   epic-7: backlog
   7-1-contenedor-nginx-con-coop-coep: backlog

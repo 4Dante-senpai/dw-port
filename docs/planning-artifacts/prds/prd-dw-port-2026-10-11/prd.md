@@ -3,7 +3,7 @@ title: "PRD: DW1 Web Port"
 status: final
 approved: 2026-10-11 (dueño; supuestos aceptados tal como están)
 created: 2026-10-11
-updated: 2026-10-11
+updated: 2026-11-11 (cambio de rumbo aprobado por el dueño: FR-5, NFR-8, FR-18 a FR-20, §8, §9, §10)
 ---
 
 # PRD: DW1 Web Port
@@ -186,10 +186,14 @@ El usuario puede jugar una partida nueva hasta los créditos finales.
 - Existe una suite de Escenas que cubre todos los overlays del Juego (`BTL`, `STD`, `FISH`,
   `EVL`, `KAR`, `VS`, `MOV`, `DOO2`, `DOOA`, `TRN`, `SHOP`, `DGET`, `TRN2`, `MURD`, `ENDI`, `EAB`) y
   cada una pasa su test de regresión.
-- Una partida completa grabada (secuencia de inputs) se reproduce en el Build nativo de principio
-  a fin sin divergencia de estado respecto del Emulador de referencia en los puntos de control
-  definidos [ASSUMPTION: la reproducción determinista con inputs grabados es viable; depende de
-  que `rand` y el timing se repliquen exactamente].
+- Una partida completa grabada en el port (secuencia de inputs por VBlank) se reproduce en el
+  Build nativo de principio a fin: llega a los créditos, dos corridas dan el mismo estado en los
+  puntos de control y el Build web da ese mismo estado [ASSUMPTION: la reproducción determinista
+  con inputs grabados es viable].
+- El playtest automático (inputs grabados y bot con semilla) recorre todos los overlays sin
+  caídas, asserts, reportes de sanitizers ni cuelgues.
+- La comparación de estado contra el Emulador de referencia deja de ser criterio de aceptación:
+  se usa para diagnosticar un bug visible (cambio de rumbo del 2026-11-11, `docs/planning-artifacts/sprint-change-proposal-2026-11-11.md`).
 
 #### FR-6: Videos
 
@@ -270,7 +274,7 @@ mejoras son opt-in].
 
 #### FR-12: Escala de resolución
 
-El usuario puede elegir la resolución interna del 3D (1× a N×) [ASSUMPTION: N = 4 en v1; más si
+El usuario puede elegir la resolución interna del 3D (1× a N×; la escala de la pantalla es FR-20) [ASSUMPTION: N = 4 en v1; más si
 el Renderer WebGL2 lo sostiene a 60,0087172527 Hz].
 
 **Consecuencias:**
@@ -294,6 +298,46 @@ estirar la interfaz.
 - En 16:9 la interfaz 2D (menús, HUD, textos) mantiene su layout 4:3.
 - Si 16:9 no es viable en alguna Escena (por ejemplo, fondos pre-renderizados), esa Escena se
   muestra en 4:3 con barras [NOTE FOR PM: viabilidad a confirmar en arquitectura].
+
+### 4.5b Comodidades del navegador
+
+**Descripción:** funciones que la consola no tenía y que el dueño pidió para la v1
+(cambio de rumbo del 2026-11-11, `docs/planning-artifacts/sprint-change-proposal-2026-11-11.md`). Todas están apagadas o en su valor original por defecto.
+
+#### FR-18: Speed-up
+
+El usuario puede jugar a velocidad ×2 y usar avance rápido mientras mantiene una tecla.
+
+**Consecuencias:**
+- El factor cambia solo el ritmo del reloj de pared: el tiempo virtual y el orden de eventos no
+  cambian, así que una partida grabada da el mismo estado a cualquier velocidad.
+- Con factor distinto de ×1 el audio no se acumula ni se corta de forma audible
+  [ASSUMPTION: se acelera o se silencia; lo decide la historia].
+- El factor elegido persiste con las demás opciones.
+
+#### FR-19: Save states y autosave
+
+El usuario puede guardar y cargar el estado del Juego en cualquier momento, y al volver a abrir la
+página retoma donde estaba.
+
+**Consecuencias:**
+- Un save state cargado continúa igual que si la sesión no se hubiera interrumpido (mismo estado
+  en los puntos de control siguientes).
+- El autosave se toma solo, sin acción del usuario, y no produce saltos de imagen ni de audio.
+- Los save states son independientes de las Memory cards: cargar uno no altera el `.mcd`
+  exportable salvo que el Juego guarde después.
+- [ASSUMPTION: el mecanismo es viable en WASM con el hilo del Juego bloqueado en `VSync`; se
+  valida con un spike antes de comprometer el alcance. Si no lo es, el alcance se reduce a
+  retomar desde el último guardado en la Memory card y se documenta el límite.]
+
+#### FR-20: Escala entera de pantalla y pantalla completa
+
+El usuario puede ver el Juego a ×1, ×2, ×3 o ×4 del tamaño original, o a pantalla completa con el
+mayor múltiplo entero que entre.
+
+**Consecuencias:**
+- La imagen se escala por vecino más cercano: los píxeles del Renderer software no se filtran.
+- No depende del Renderer WebGL2 ni cambia la resolución interna (FR-12).
 
 ### 4.6 Shell web y modo offline
 
@@ -357,8 +401,11 @@ web, con y sin ventana.
   preprocesado de cada archivo de `src/` sin `DW1_PORT` es idéntico al de `upstream/main`.
 - **NFR-7 Build reproducible:** dos builds del mismo commit en la imagen Docker del proyecto
   producen el mismo `.wasm` byte a byte.
-- **NFR-8 Fidelidad:** con Renderer software a 1× y sin mejoras, cada Escena de la suite coincide
-  píxel a píxel con su Frame de referencia, salvo excepciones documentadas por Escena.
+- **NFR-8 Fidelidad:** con Renderer software a 1× y sin mejoras, cada Escena que tiene Frame de
+  referencia capturado coincide con él píxel a píxel, salvo excepciones documentadas por Escena.
+  Las Escenas definidas desde el 2026-11-11 no necesitan Frame de referencia: su captura se
+  revisa a ojo, se fija por hash y debe ser idéntica entre corridas y entre el Build nativo y el
+  web (cambio de rumbo del 2026-11-11, `docs/planning-artifacts/sprint-change-proposal-2026-11-11.md`).
 - **NFR-9 Navegadores:** Chrome y Firefox de escritorio, dos últimas versiones estables. Safari y
   móviles no se prueban en v1.
 - **NFR-10 Divergencia con upstream:** cada cambio en `src/` está listado en
@@ -388,7 +435,7 @@ web, con y sin ventana.
 
 ### 8.1 Dentro
 
-- FR-1 a FR-17 y NFR-1 a NFR-10.
+- FR-1 a FR-20 y NFR-1 a NFR-10.
 - Versión USA (SLUS-01032).
 - Chrome y Firefox de escritorio.
 
@@ -396,7 +443,6 @@ web, con y sin ventana.
 
 - Renderer WebGL2 con escala > 4× (v2, si el rendimiento lo permite).
 - Filtros de imagen (sharpening, CRT) — v2.
-- Speed-up / avance rápido — v2 (decidido en la aprobación del 2026-10-11).
 - Soporte móvil (controles táctiles) — v2.
 
 ## 9. Métricas de éxito
@@ -415,6 +461,10 @@ web, con y sin ventana.
 - **SM-5:** Memory cards exportadas que cargan en DuckStation: 100 % de los casos de prueba.
   Valida FR-11.
 
+- **SM-6:** horas de juego virtual del playtest automático nocturno sin caídas, asserts, reportes
+  de sanitizers ni cuelgues. Meta v1: ≥ 20 horas por corrida, con los 16 overlays visitados
+  [ASSUMPTION: la meta se ajusta al medir la velocidad del Build headless]. Valida FR-5.
+
 **Contra-métricas (no optimizar)**
 - **SM-C1:** cantidad de cambios en `src/`. No se reduce a costa de meter hacks en la Capa PsyQ
   que reproduzcan bugs del original de forma frágil; tampoco se infla. Contrapesa NFR-10.
@@ -423,13 +473,16 @@ web, con y sin ventana.
 
 ## 10. Preguntas abiertas
 
-1. ~~¿Entra el speed-up en v1?~~ Resuelta: no, queda para v2 (§8.2).
+1. ~~¿Entra el speed-up en v1?~~ Resuelta el 2026-10-11: no. Reabierta y resuelta el 2026-11-11: sí
+   (FR-18).
 2. ¿Es viable 16:9 en todas las Escenas? Lo responde la arquitectura (FR-14).
 3. ¿Qué Emulador de referencia se usa para los Frames de referencia, y con qué BIOS (OpenBIOS de
    PCSX-Redux o BIOS del usuario fuera del repo)?
 4. ¿JSPI está estable en Firefox? Si sí, puede evitar COOP/COEP (ver
    `docs/research/web-constraints.md`).
 5. ¿El contenido de `SHOP_REL.BIN` se usa en USA? (hipótesis en `docs/research/overlays.md`).
+6. ¿Qué mecanismo de save states es viable (reproducción determinista de inputs o Asyncify en el
+   hilo del Juego)? Lo responde el spike de la Historia 9.3 (FR-19).
 
 ## 11. Índice de supuestos
 
@@ -442,6 +495,9 @@ mediciones (no son hechos verificados).
 - §4.4 FR-11 — DW1 usa la ranura 1; se ofrecen dos ranuras.
 - §4.5 — El default de video es "original"; mejoras opt-in.
 - §4.5 FR-12 — Escala máxima 4× en v1.
+- §4.5b FR-18 — Audio acelerado o silenciado con speed-up (2026-11-11).
+- §4.5b FR-19 — Los save states son viables en WASM (2026-11-11).
+- §9 SM-6 — Meta de 20 horas de juego virtual por corrida nocturna (2026-11-11).
 - §4.7 FR-17 — Presets de CMake para el Build nativo.
 - §5 NFR-2 — Hardware de referencia: CPU 4 núcleos ~2018 (i5-8250U), GPU integrada, 8 GB.
 - §5 NFR-3 — Presupuesto de descarga: `.wasm` ≤ 4 MB Brotli, primera carga ≤ 6 MB.

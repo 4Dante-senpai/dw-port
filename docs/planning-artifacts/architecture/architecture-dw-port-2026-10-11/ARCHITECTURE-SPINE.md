@@ -160,6 +160,7 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
     - En headless no se pausa nunca.
     - Si el juego llega tarde, se recupera sin pausar. Con más de 4 VBlanks de atraso, se rebasa el deadline y se cuenta una resincronización (métrica de NFR-2); la aceptación de diez minutos exige cero.
     - Al pausar o al ocultar la pestaña (FR-15) se detiene el reloj de pared y, al volver, se rebasa el deadline.
+    - **Enmienda del dueño, 2026-11-11 (FR-18, speed-up).** El reloj de pared admite un factor de velocidad: el intervalo real entre VBlanks se divide por ese factor. El tiempo virtual, los costos y el orden de eventos no cambian. Con factor distinto de 1 la contrapresión de audio no espera; el Host acelera o descarta muestras.
   - **Input.** Se muestrea una vez por VBlank y se aplica en el latch de ese VBlank.
 
 ### AD-9 — Renderer: una interfaz de comandos GPU; el software es el oráculo
@@ -246,6 +247,9 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
 | L3b | Pack desde el disco, título y saves en el navegador | Sí | Playwright |
 | L4 | NFR-2: 10 minutos de juego en el hardware de referencia, frames perdidos según AD-8. Se dispara a mano antes de cerrar M4 y M5 | Sí | Playwright + métricas del port |
 
+| L5 | Playtest automático: inputs grabados y bot con semilla sobre `native-headless` y `native-asan`, más una corrida corta en web. Falla ante caída, `PORT_ASSERT`, sanitizer o cuelgue; compara el hash de estado entre builds | Sí | `tools/port/playtest/` |
+
+  - **Enmienda del dueño, 2026-11-11 (cambio de rumbo).** Una Escena definida desde esta fecha no necesita referencia del Emulador: pasa L2 si no falla, dos corridas dan la misma captura y el mismo estado, `native-headless` y `web` coinciden, y el hash de su captura se fijó después de revisarla a ojo. La referencia se captura solo para diagnosticar un bug visible.
   - Una Escena se define en `tools/port/scenes/<id>.toml` con: id estable, overlay, punto de entrada (secuencia de inputs por VBlank desde el frame 0 de AD-15, o Memory card guardada fuera del repo), frames a capturar, SHA-256 esperado de cada captura y las excepciones justificadas.
   - Las imágenes, el audio y las Memory cards de referencia viven fuera del repo, en el almacenamiento del runner privado. En el repo solo hay hashes y secuencias de inputs.
 
@@ -254,6 +258,7 @@ le pasa los datos y saca sus resultados (frames, muestras) hacia el Host.
 - **Binds:** FR-4, FR-5, FR-6, FR-7, FR-12, FR-13, NFR-8
 - **Prevents:** que cada historia elija su tolerancia, o que el port y la referencia midan instantes distintos.
 - **Rule:**
+  - **Alcance (enmienda del dueño, 2026-11-11).** Las comparaciones contra el Emulador de referencia de este AD bloquean solo en las Escenas que ya tienen referencia capturada (las de las Épicas 3 y 4). Para las demás valen las reglas de L2 enmendadas en AD-14.
   - **Origen.** El frame 0 es el retorno del primer `VSync` llamado desde `main` del juego. Los dos lados lo detectan por símbolo; en el Emulador de referencia, con breakpoint. Los inputs se aplican en el latch del VBlank k.
   - **Captura.** Se toma el área de display según el estado GP1, después de despachar los eventos del VBlank k y antes de volver al juego.
   - **Video.** Se compara el área de display de la VRAM convertida a RGB555, sin mejoras y a 1×, **exacta**. Las excepciones se listan por Escena con su motivo.

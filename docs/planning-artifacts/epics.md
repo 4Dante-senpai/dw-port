@@ -27,6 +27,11 @@ Toda historia cierra con evidencia automática, según los niveles de AD-14 (L0a
 se numeran con el número de hito (Épica 2 = M2, …, Épica 7 = M7); la Épica 8 es la continua de
 decomp. M0 y M1 ya están completos (`docs/STATUS.md`).
 
+**Cambio de rumbo del 2026-11-11** (`sprint-change-proposal-2026-11-11.md`, aprobado por el
+dueño): el orden de ejecución de lo que falta es **Épica 6 → Épica 9 → Épica 5 → Épica 7**. La
+Épica 9 es nueva y no corresponde a un hito numerado. Las Escenas nuevas cierran con el criterio
+de jugabilidad de la Épica 6, no con paridad contra el Emulador de referencia.
+
 ## Inventario de requisitos
 
 ### Requisitos funcionales
@@ -98,7 +103,7 @@ No hay documento de UX. Las pantallas y estados de la Shell web se especifican e
 | FR-2 | 2, 4 | Validación con la herramienta nativa (2) y en el navegador (4) |
 | FR-3 | 2, 4 | Pack nativo (2); Pack en OPFS, persistencia y borrado (4) |
 | FR-4 | 2, 3, 4 | Título en nativo headless (2), píxel a píxel contra la referencia (3), en el navegador (4) |
-| FR-5 | 3, 6 | Herramientas de Escenas y estado (3); suite de los 16 overlays y partida grabada (6) |
+| FR-5 | 3, 6 | Herramientas de Escenas y estado (3); suite de los 16 overlays, playtest automático y partida grabada (6) |
 | FR-6 | 3 | MDEC, STR y sincronía A/V |
 | FR-7 | 3, 4 | SPU, `libsnd`, XA (3); AudioWorklet y volumen (4) |
 | FR-8 | 3, 4 | Input SDL3 (3); teclado y Gamepad API (4) |
@@ -111,6 +116,9 @@ No hay documento de UX. Las pantallas y estados de la Shell web se especifican e
 | FR-15 | 4, 5 | Pantallas de la Shell web (4); opciones de video (5) |
 | FR-16 | 4 | Offline y actualizaciones |
 | FR-17 | 2, 3 | Preset headless (2); preset con ventana SDL3 (3) |
+| FR-18 | 9 | Speed-up |
+| FR-19 | 9 | Save states y autosave |
+| FR-20 | 9 | Escala entera de pantalla y pantalla completa |
 | NFR-1 | 2, 3, 4 | Reloj virtual (2); medición nativa (3); medición web (4) |
 | NFR-2 | 5 | L4 en hardware de referencia |
 | NFR-3 | 4 | Check de tamaño |
@@ -118,7 +126,7 @@ No hay documento de UX. Las pantallas y estados de la Shell web se especifican e
 | NFR-5 | 4 | Sin pedidos de red fuera de los propios |
 | NFR-6 | 2, 8 | L0a (2); L0b y `make compare` (8) |
 | NFR-7 | 4 | `.wasm` reproducible |
-| NFR-8 | 3, 6 | Diff de frames (3); suite completa (6) |
+| NFR-8 | 3, 6 | Diff de frames contra la referencia (3); capturas propias de la suite completa (6) |
 | NFR-9 | 4 | Playwright en Chromium y Firefox |
 | NFR-10 | 2, 8 | `src-changes.md` (2); merge de upstream (8) |
 
@@ -145,10 +153,15 @@ El jugador elige escala de resolución, sin wobble y 16:9, y el Juego mantiene e
 hardware de referencia.
 **FRs cubiertos:** FR-12, FR-13, FR-14, FR-15 (opciones de video); NFR-2.
 
-### Épica 6: Partida completa sin divergencias (M6)
-El jugador puede jugar de principio a fin: la suite de Escenas cubre los 16 overlays y una
-partida grabada se reproduce sin divergencia de estado.
-**FRs cubiertos:** FR-5; NFR-8 (suite completa); SM-2.
+### Épica 6: Partida completa jugable (M6) — siguiente
+El jugador puede jugar de principio a fin sin caídas: un playtest automático recorre los 16
+overlays, la suite de Escenas los cubre con capturas propias y una partida grabada en el port
+llega a los créditos.
+**FRs cubiertos:** FR-5; NFR-8 (suite completa); SM-2, SM-6.
+
+### Épica 9: Comodidades del navegador — después de la Épica 6
+El jugador elige el tamaño de la pantalla, juega a ×2 y retoma la partida donde la dejó.
+**FRs cubiertos:** FR-18, FR-19, FR-20; FR-15 (opciones).
 
 ### Épica 7: Deploy en el servidor propio (M7)
 El dueño publica el port en su servidor con COOP/COEP, sin datos del juego, y lo abre al público
@@ -779,6 +792,9 @@ para ver el Juego más nítido (FR-12).
 
 **Criterios de aceptación:**
 
+La escala entera de la pantalla ya existe desde la Historia 9.1 (FR-20); esta historia cambia la
+resolución interna.
+
 **Given** el canal lateral del GTE con x/y subpíxel, z y 1/w por vértice
 **When** una Escena con 3D se captura a 2×, 3× y 4×
 **Then** la imagen tiene N veces la resolución del área de display y, en un caso sintético, los bordes de un triángulo 3D caen en las posiciones subpíxel esperadas
@@ -836,10 +852,17 @@ para jugar a 59,94 Hz (NFR-2, SM-3).
 **Then** el informe muestra ≥ 99 % de frames a tiempo según el contador de frames perdidos de AD-8, y 0 underruns de audio
 **And** el informe queda en `docs/port/perf/` con navegador, versión, equipo y commit; si no se llega al umbral, la historia sigue abierta con el perfil de los puntos calientes adjunto
 
-## Epic 6: Partida completa sin divergencias (M6)
+## Epic 6: Partida completa jugable (M6)
 
-La suite de Escenas cubre los 16 overlays y corre en `native-headless` y en `web` contra la
-referencia (L2, L3b). Las Memory cards de entrada y las referencias viven fuera del repo.
+Se ejecuta antes que la Épica 5 (cambio de rumbo del 2026-11-11). Orden de las historias: 6.9,
+6.10, 6.1 a 6.8. La suite de Escenas cubre los 16 overlays y corre en `native-headless` y en
+`web` (L2, L3b); el playtest automático es L5. Las Memory cards de entrada viven fuera del repo.
+
+**Criterio de jugabilidad** (reemplaza a la comparación contra la referencia en las Escenas
+nuevas; AD-14 enmendado): la Escena termina sin caída, `PORT_ASSERT`, reporte de ASan/UBSan ni
+cuelgue; dos corridas dan la misma captura y el mismo estado; `native-headless` y `web` dan el
+mismo estado; y el hash de la captura se fijó después de revisarla a ojo. La referencia de
+PCSX-Redux se captura solo para diagnosticar un bug visible.
 
 ### Story 6.1: Definición de la suite de Escenas
 
@@ -852,7 +875,7 @@ para que FR-5 tenga una definición verificable de "terminado".
 **Given** los 16 overlays (`BTL`, `STD`, `FISH`, `EVL`, `KAR`, `VS`, `MOV`, `DOO2`, `DOOA`, `TRN`, `SHOP`, `DGET`, `TRN2`, `MURD`, `ENDI`, `EAB`)
 **When** se escribe `tools/port/scenes/suite.toml`
 **Then** cada overlay tiene al menos una Escena con id estable, punto de entrada (inputs desde el frame 0 o Memory card externa), frames a capturar y puntos de control de estado
-**And** un check verifica que todo overlay de la lista de TUs de AD-1 aparece en la suite, las referencias de todas las Escenas se capturan con `capture.py` (clase B), y la viabilidad de 16:9 de cada Escena nueva se agrega a `docs/port/widescreen.md`
+**And** un check verifica que todo overlay de la lista de TUs de AD-1 aparece en la suite; las Escenas nuevas no capturan referencia (criterio de jugabilidad)
 
 ### Story 6.2: Mundo, combate y evolución
 
@@ -863,8 +886,8 @@ para jugar el núcleo de la partida.
 **Criterios de aceptación:**
 
 **Given** las Escenas de `STD`, `BTL` y `EVL` de la suite
-**When** corren en `native-headless` y en `web` con `--compare`
-**Then** pasan frames, estado y audio contra la referencia (AD-15)
+**When** corren en `native-headless`, `native-asan` y `web`
+**Then** cumplen el criterio de jugabilidad de esta épica
 **And** el detector de aliasing de AD-6 registra cero eventos en esas Escenas o una lista justificada en sus `.toml`
 
 ### Story 6.3: Entrenamiento, tiendas y objetos
@@ -876,8 +899,8 @@ para progresar en la partida.
 **Criterios de aceptación:**
 
 **Given** las Escenas de `TRN`, `TRN2`, `SHOP` y `DGET`
-**When** corren en `native-headless` y en `web` con `--compare`
-**Then** pasan frames, estado y audio contra la referencia
+**When** corren en `native-headless`, `native-asan` y `web`
+**Then** cumplen el criterio de jugabilidad de esta épica
 **And** cero eventos de aliasing o lista justificada
 
 ### Story 6.4: Minijuegos y modo VS
@@ -889,8 +912,8 @@ para tener todas las actividades del Juego.
 **Criterios de aceptación:**
 
 **Given** las Escenas de `FISH`, `KAR` y `VS`
-**When** corren en `native-headless` y en `web` con `--compare`
-**Then** pasan frames, estado y audio contra la referencia
+**When** corren en `native-headless`, `native-asan` y `web`
+**Then** cumplen el criterio de jugabilidad de esta épica
 **And** cero eventos de aliasing o lista justificada
 
 ### Story 6.5: Videos, eventos y mapas especiales
@@ -902,8 +925,8 @@ para seguir la trama completa.
 **Criterios de aceptación:**
 
 **Given** las Escenas de `MOV`, `DOO2`, `DOOA` y `MURD`
-**When** corren en `native-headless` y en `web` con `--compare`
-**Then** pasan frames (videos con la tolerancia MDEC), estado y audio contra la referencia
+**When** corren en `native-headless`, `native-asan` y `web`
+**Then** cumplen el criterio de jugabilidad de esta épica
 **And** cero eventos de aliasing o lista justificada
 
 ### Story 6.6: Final y créditos
@@ -915,22 +938,22 @@ para terminar la partida.
 **Criterios de aceptación:**
 
 **Given** las Escenas de `ENDI` y `EAB`, con una Memory card externa cerca del final
-**When** corren en `native-headless` y en `web` con `--compare`
-**Then** pasan frames, estado y audio contra la referencia hasta los créditos
+**When** corren en `native-headless`, `native-asan` y `web`
+**Then** cumplen el criterio de jugabilidad de esta épica hasta los créditos
 **And** cero eventos de aliasing o lista justificada
 
-### Story 6.7: Partida grabada sin divergencias
+### Story 6.7: Partida grabada completa
 
 Como dueño del proyecto,
-quiero reproducir una partida completa grabada en el port y en la referencia,
-para probar que la lógica no diverge de principio a fin (FR-5).
+quiero reproducir una partida completa grabada en el port,
+para probar que el Juego se puede terminar y que la lógica es determinista de principio a fin (FR-5).
 
 **Criterios de aceptación:**
 
-**Given** una secuencia de inputs por VBlank de una partida completa, grabada en PCSX-Redux por `capture.py` y guardada fuera del repo (en el repo solo su hash)
-**When** se reproduce en `native-headless`
-**Then** en cada punto de control las variables de `state_vars.txt` son idénticas a las de la referencia y la corrida llega a los créditos
-**And** si el supuesto de determinismo de FR-5 falla, la historia documenta la primera divergencia (VBlank, variable, causa) en `docs/port/determinism.md` y sigue abierta
+**Given** una secuencia de inputs por VBlank de una partida completa, grabada con el grabador de la Historia 6.9 y guardada fuera del repo (en el repo solo su hash); puede ser una cadena de tramos que arrancan de Memory cards sucesivas
+**When** se reproduce en `native-headless` y en `native-asan`
+**Then** la corrida llega a los créditos sin fallos y dos corridas dan el mismo hash de estado en cada punto de control
+**And** si el determinismo falla, la historia documenta la primera divergencia (VBlank, variable, causa) en `docs/port/determinism.md` y sigue abierta
 
 ### Story 6.8: Regresión completa en CI
 
@@ -944,6 +967,45 @@ para que ningún merge rompa una Escena que ya pasaba (SM-2).
 **When** corre en un merge a `main`
 **Then** ejecuta todas las Escenas en `native-headless` y `web`, publica solo hashes y conteos, y falla si una Escena que pasaba deja de pasar
 **And** `docs/STATUS.md` se actualiza con el número de Escenas que pasan en nativo y en web
+
+### Story 6.9: Playtest automático: grabador, bot y soak
+
+Como dueño del proyecto,
+quiero que el Juego se pruebe solo durante horas,
+para encontrar caídas sin tener que jugar a mano (SM-6).
+
+**Criterios de aceptación:**
+
+**Given** el Build `native` con ventana y el Build web
+**When** el jugador activa la grabación y juega
+**Then** el port escribe los inputs por VBlank en el formato que lee `--inputs`, y reproducir ese archivo en `native-headless` da el mismo hash de estado final que la sesión grabada
+
+**Given** `tools/port/playtest/bot.py` con una semilla, una cantidad de VBlanks y, opcionalmente, una Memory card de entrada
+**When** genera un archivo de inputs y `tools/port/playtest/run.py` lo corre en `native-headless` y en `native-asan`
+**Then** el runner falla ante código de salida distinto de cero, señal, `PORT_ASSERT`, reporte de ASan/UBSan o falta de avance del contador de VBlanks dentro del tiempo de pared configurado, y deja semilla, inputs, Memory card usada y último VBlank para reproducirlo
+**And** el informe lista los overlays visitados, las horas de juego virtual y los avisos (display apagado o frame sin cambios durante un tramo largo), y un test con un fallo inyectado prueba que cada detector dispara
+
+**Given** la misma corrida corta del bot
+**When** corre en `native-headless`, `native-asan` y `web`
+**Then** los tres dan el mismo hash de estado final
+
+**Given** el CI
+**When** hay un merge a `main`
+**Then** corre una pasada corta del bot (clase B), y un pipeline programado nocturno corre el soak con varias semillas y Memory cards y publica solo conteos, horas y hashes
+**And** `docs/port/playtest.md` explica cómo grabar, cómo reproducir un fallo y cómo agregar una Memory card de entrada
+
+### Story 6.10: Partida real en testing y triage de caídas
+
+Como jugador,
+quiero jugar la primera hora del Juego en el navegador sin caídas,
+para confirmar que el port sirve fuera de los tests.
+
+**Criterios de aceptación:**
+
+**Given** el entorno de testing (Historia 8.5) y el playtest automático (Historia 6.9)
+**When** el soak corre desde el frame 0 y desde las Memory cards disponibles, y el dueño juega una sesión grabada
+**Then** cada fallo encontrado queda registrado con su reproducción, se corrige en su causa y gana un test de regresión (Escena o archivo de inputs)
+**And** la corrección del scratchpad (`BTL_drawTMD`) queda confirmada con una Escena de combate, y `docs/STATUS.md` lista los overlays alcanzados sin fallos
 
 ## Epic 7: Deploy en el servidor propio (M7)
 
@@ -984,6 +1046,64 @@ para mantener el control legal y operativo.
 **Given** la Historia 7.2 en verde
 **When** el dueño aprueba explícitamente la publicación (punto de control humano de `CLAUDE.md`)
 **Then** la aprobación queda registrada en `docs/STATUS.md` con fecha y digest de la imagen, y el smoke test de la Historia 7.2 pasa contra la URL pública
+
+## Epic 9: Comodidades del navegador
+
+Se ejecuta después de la Épica 6 y antes de la Épica 5 (cambio de rumbo del 2026-11-11). Todas
+las opciones viven en `PortSettings` y tienen por defecto el comportamiento original.
+
+### Story 9.1: Escala entera de pantalla y pantalla completa
+
+Como jugador,
+quiero ver el Juego a ×2, ×3, ×4 o a pantalla completa,
+para no jugar en una ventana de 320×240 (FR-20).
+
+**Criterios de aceptación:**
+
+**Given** la opción de escala en la Shell
+**When** el test elige cada valor y pantalla completa
+**Then** el canvas mide el múltiplo entero elegido (o el mayor que entra en la pantalla), la imagen se escala por vecino más cercano y la captura reducida a ×1 es idéntica a la original
+**And** la opción persiste tras recargar y no cambia la VRAM ni el estado del Juego
+
+### Story 9.2: Speed-up
+
+Como jugador,
+quiero jugar a ×2 y tener una tecla de avance rápido,
+para pasar más rápido el entrenamiento y los traslados (FR-18).
+
+**Criterios de aceptación:**
+
+**Given** el factor de velocidad de AD-8 enmendado
+**When** una partida grabada corre a ×1 y a ×2 en `native` y en web
+**Then** el estado en los puntos de control es idéntico y el tiempo de pared a ×2 es la mitad, con una tolerancia de 2 %
+**And** con factor distinto de ×1 no hay underruns ni crecimiento del anillo de audio, la tecla de avance rápido es remapeable (FR-9) y el factor elegido persiste
+
+### Story 9.3: Spike de save states
+
+Como dueño del proyecto,
+quiero saber qué mecanismo de save states es viable,
+para comprometer el alcance de FR-19 con datos.
+
+**Criterios de aceptación:**
+
+**Given** las dos opciones de la propuesta de cambio (reproducción determinista de inputs desde el arranque o la última Memory card; Asyncify en el hilo del Juego con copia de la memoria)
+**When** se prototipa cada una sobre una sesión de 30 minutos de juego
+**Then** `docs/port/save-states.md` registra tiempo de guardado y de carga, tamaño del estado, efecto en el tamaño del `.wasm` (NFR-3) y en el ritmo (NFR-1), y si la carga da el mismo estado en los puntos de control siguientes
+**And** el documento recomienda una opción o declara que ninguna sirve, y la pregunta abierta 6 del PRD queda cerrada con la decisión del dueño
+
+### Story 9.4: Save states y autosave
+
+Como jugador,
+quiero guardar y cargar en cualquier momento y retomar al volver a abrir la página,
+para no perder progreso entre guardados del Juego (FR-19).
+
+**Criterios de aceptación:**
+
+**Given** el mecanismo elegido en la Historia 9.3
+**When** el test guarda en una Escena de mundo y en una de combate, recarga la página y carga
+**Then** el Juego continúa y da el mismo estado en los puntos de control siguientes que una sesión sin interrupción
+**And** el autosave se toma solo cada intervalo configurable y al ocultar la pestaña, sin resincronizaciones de AD-8 ni underruns de audio, y la Shell ofrece «Continuar donde estaba»
+**And** los save states se guardan en el almacenamiento de AD-13, no alteran las Memory cards y se invalidan al cambiar la versión del build
 
 ## Epic 8: Decomp, upstream y CI (continua)
 

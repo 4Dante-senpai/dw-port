@@ -13,7 +13,8 @@ compilando el código C descompilado del juego. **No es un emulador**:
 
 Objetivo final: el usuario abre una URL, selecciona su propia imagen del disco (`.bin/.cue`),
 el navegador la valida y empaqueta localmente, y el juego corre a 60.0087172527 Hz (Redux: 564398 ciclos/VBlank; ver `docs/port/clock-calibration.md`) con audio, video,
-input (teclado y gamepad) y partidas guardadas persistentes.
+input (teclado y gamepad) y partidas guardadas persistentes. La v1 incluye además comodidades del
+navegador: escala entera de pantalla, speed-up ×2 y save states con autosave (PRD FR-18 a FR-20).
 
 ## Fuentes
 
@@ -80,6 +81,11 @@ Targets de build (CMake + Ninja para el port, Makefile upstream para matching):
 
 ## Hitos técnicos (orden de dependencias)
 
+Orden de ejecución desde el 2026-11-11 (`docs/planning-artifacts/sprint-change-proposal-2026-11-11.md`):
+M6 → comodidades del navegador (Épica 9) → M5 → M7. Las escenas nuevas cierran por jugabilidad
+(sin caídas, deterministas, mismo estado en nativo y web, captura revisada), no por paridad
+contra el emulador de referencia; esa comparación queda para diagnosticar bugs visibles.
+
 - **M0 Entorno:** contenedor con toolchain del decomp + Clang + CMake/Ninja + emsdk + SDL3.
   Build matching verde.
 - **M1 Inventario:** % de funciones en C vs asm por segmento/overlay; mapa de overlays; lista de
@@ -91,7 +97,8 @@ Targets de build (CMake + Ninja para el port, Makefile upstream para matching):
 - **M4 Web:** mismo código en Emscripten; renderer software presentado vía WebGL; input teclado y
   Gamepad API; audio con AudioWorklet; saves en IndexedDB; pack construido en el navegador.
 - **M5 Renderer WebGL2 y rendimiento:** escalado de resolución, opción sin wobble, 60.0087172527 Hz (Redux: 564398 ciclos/VBlank; ver `docs/port/clock-calibration.md`) estables.
-- **M6 Jugabilidad completa:** partida de inicio a fin, tests de regresión por escena.
+- **M6 Jugabilidad completa:** playtest automático (inputs grabados, bot y soak), partida de inicio
+  a fin, tests de regresión por escena.
 - **M7 Deploy:** contenedor nginx con `Cross-Origin-Opener-Policy: same-origin` y
   `Cross-Origin-Embedder-Policy: require-corp`, en el servidor propio.
 
