@@ -134,7 +134,7 @@ Las ejecuciones de Codex lanzadas por `tools/port/codex-run.sh` ignoran esta sec
    un deploy accesible públicamente.
 5. **Dónde correr:** trabajo paralelo (`ctest -j` completo, varias escenas o capturas a la vez,
    builds web y nativo juntos) con `tools/port/remote_run.sh` (host de desarrollo del homelab, contexto
-   `docker-server`, 8 CPUs; cae solo al local si no responde). Comandos sueltos y capturas largas de un hilo con
+   `docker-server`, 24 CPUs; cae solo al local si no responde). Comandos sueltos y capturas largas de un hilo con
    `tools/port/docker_run.sh` local (un hilo es ~15% más rápido acá). Detalles en
    `docs/port/setup.md`.
 6. **Seguimiento de Codex:** cada vez que se lanza `tools/port/codex-run.sh` en segundo plano,
