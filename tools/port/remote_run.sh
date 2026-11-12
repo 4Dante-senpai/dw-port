@@ -5,6 +5,9 @@
 # dw_remote_src before the run and changed files are rsynced back afterwards.
 set -e
 cd "$(git rev-parse --show-toplevel)"
+# Runs share the dw_remote_src volume (rsync --delete), so one at a time from this host.
+exec 9>"${TMPDIR:-/tmp}/dw_remote_run.lock"
+flock -n 9 || { echo "remote_run: waiting for another remote run" >&2; flock 9; }
 d="docker --context ${DW_REMOTE:-docker-server}"
 if ! timeout 10 $d info >/dev/null 2>&1; then
     echo "remote_run: ${DW_REMOTE:-docker-server} unreachable, running locally" >&2
