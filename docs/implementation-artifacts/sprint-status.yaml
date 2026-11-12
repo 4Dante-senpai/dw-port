@@ -83,6 +83,8 @@ development_status:
   # Sprint change 2026-11-11: execution order is epic 6 -> 9 -> 5 -> 7; 6-9 and 6-10 go first.
   epic-6: in-progress
   6-9-playtest-automático-grabador-bot-y-soak: done
+  # 6-11 runs before 6-10 (2026-11-12): optimized builds for testing deploy, CI wall tests and soak.
+  6-11-build-optimizado-para-jugar-ci-y-soak: ready-for-dev
   6-10-partida-real-en-testing-y-triage-de-caídas: backlog
   6-1-definición-de-la-suite-de-escenas: backlog
   6-2-mundo-combate-y-evolución: backlog
