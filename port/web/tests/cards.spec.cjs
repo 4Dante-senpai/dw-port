@@ -132,7 +132,7 @@ test('starting the game waits for an import already started in the Shell', async
   expect(await page.evaluate(() => window.gameCard)).toBeUndefined();
   await page.evaluate(() => finishImport());
   await expect.poll(() => page.evaluate(() => window.gameCard?.length)).toBe(131072);
-  expect(await page.evaluate(() => window.gameArguments)).toEqual(['--frames', '0', '--pack', 'dw1/us.pack']);
+  expect(await page.evaluate(() => window.gameArguments)).toEqual(['--frames', '0', '--pack', 'dw1/us.pack', '--record-inputs', 'record.txt', '--digest', 'digest.txt']);
   expect(Buffer.from(await page.evaluate(() => window.gameCard))).toEqual(h.pattern(11));
   expect(await h.card(page)).toEqual(h.pattern(11));
 });
