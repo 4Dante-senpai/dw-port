@@ -28,6 +28,29 @@ tools/port/docker_build.sh            # construye dw-build y luego dw-port
 tools/port/docker_run.sh <comando>    # corre <comando> en dw-port con el repo en /dw, como el usuario del host
 ```
 
+### Builds optimizados para jugar (historia 6.11)
+
+Los presets de configure, build y test `native-headless-release`, `native-release`
+y `web-release` heredan respectivamente de `native-headless`, `native` y `web`.
+Cada uno escribe en `build/port/<preset>` y usa `RelWithDebInfo` con `-O2 -g`,
+sin `NDEBUG`: `PORT_ASSERT` sigue abortando. Conservan los flags de semántica y
+`-finstrument-functions` del Juego; web también enlaza con `-O2 -g`.
+Los presets Debug y ASan mantienen su comportamiento para depuración.
+
+```sh
+cmake --preset native-release
+cmake --build --preset native-release
+ctest --preset native-release
+tools/port/docker_run.sh --gui build/port/native-release/dw1 --pack game_rom/us.pack
+```
+
+`sdl_pacing` y `native_wall_10min` solo se registran fuera de Debug y conservan
+sus tolerancias. CI los ejecuta en `native-release`; testing construye, prueba
+y despliega `web-release`; el soak usa `native-headless-release` y `native-asan`.
+`playtest_smoke` compara automáticamente Debug y optimizado cuando ambos
+headless están construidos. `web_playtest` agrega los builds nativos optimizado
+y ASan disponibles al oráculo antes de comparar con ambos navegadores.
+
 ### Ventana nativa SDL3 (historia 3.9)
 
 ```sh

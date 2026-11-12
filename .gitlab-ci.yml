@@ -58,6 +58,9 @@ native:
     - cmake --preset native
     - cmake --build --preset native
     - ctest --preset native --output-on-failure
+    - cmake --preset native-release
+    - cmake --build --preset native-release
+    - ctest --preset native-release --output-on-failure -R "^(sdl_pacing|native_wall_10min)$"
 
 # Class A: WASM build plus the disc-free L1 suite under Node.
 web-objects:
@@ -71,7 +74,7 @@ web-disc:
   extends: .class_b
   artifacts:
     when: always
-    paths: [build/port/web/long-*.json, build/port/web/playtest-native/summary.json]
+    paths: [build/port/web/long-*.json, build/port/web/playtest-native/summary.json, build/port/web-release/playtest-native/summary.json]
   timeout: 1h 30m
   variables:
     DW1_DISC_DIR: /private/disc
@@ -81,12 +84,19 @@ web-disc:
     - cmake --preset web
     - cmake --build --preset web
     - tools/port/ci/ctest_no_skip.sh --preset web --output-on-failure -R "^(pack_disc|web_data_leak|web_data_leak_contaminated|web_long|web_playtest)$"
+    - cmake --preset native-headless-release
+    - cmake --build --preset native-headless-release
+    - cmake --preset native-asan
+    - cmake --build --preset native-asan
+    - cmake --preset web-release
+    - cmake --build --preset web-release
+    - tools/port/ci/ctest_no_skip.sh --preset web-release --output-on-failure -R "^web_playtest$"
 
 native-disc:
   extends: .class_b
   artifacts:
     when: always
-    paths: [build/port/native-headless/playtest/smoke/summary.json]
+    paths: [build/port/native-headless/playtest/smoke/summary.json, build/port/native-headless-release/playtest/smoke/summary.json]
   timeout: 4h                          # a full reference recapture took 2 h 52 min in pipeline 138
   cache:
     key:
@@ -102,7 +112,12 @@ native-disc:
     - cmake --preset native
     - cmake --build --preset native
     - tools/port/ci/ctest_no_skip.sh --preset native --output-on-failure
-    # native_wall_10min is included by the native preset (serial, 900 s timeout).
+    - cmake --preset native-release
+    - cmake --build --preset native-release
+    - tools/port/ci/ctest_no_skip.sh --preset native-release --output-on-failure -R "^(sdl_pacing|native_wall_10min)$"
+    - cmake --preset native-headless-release
+    - cmake --build --preset native-headless-release
+    - tools/port/ci/ctest_no_skip.sh --preset native-headless-release --output-on-failure -R "^playtest_smoke$"
     - xvfb-run -a pcsx-redux -version > /dev/null   # reference_title must run, not skip (77)
     - tools/port/ci/ctest_no_skip.sh --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|press_tables_disc|sound_tables_disc|playtest_smoke|scene_|reference_title|reference_naming|reference_newgame_state|reference_xa_op1|reference_movie0|reference_card_"
 
@@ -158,10 +173,11 @@ testing:
   script:
     - cmake --preset native-headless
     - cmake --build --preset native-headless
-    - cmake --preset web
-    - cmake --build --preset web
-    - ctest --preset web --output-on-failure
-    - ctest --preset web -R "pack_disc|native_title_capture|native_title_audio|web_scene_title|web_scene_title_audio|web_disc_real|web_launcher|testing_deploy|testing_context"
+    - cmake --preset web-release
+    - cmake --build --preset web-release
+    - ctest --preset web-release --output-on-failure
+    - ctest --preset web-release -R "pack_disc|native_title_capture|native_title_audio|web_scene_title|web_scene_title_audio|web_disc_real|web_launcher|testing_deploy|testing_context"
+    - tools/port/ci/repro_check.sh build/port/web-release
     - tools/port/testing/install-docker.sh /tmp/dw1-docker-cli
     - export PATH="/tmp/dw1-docker-cli:$PATH"
     - |
@@ -169,9 +185,9 @@ testing:
       export DW1_WEB_URL
       export DW1_WEB_INSECURE_ORIGIN="$DW1_WEB_URL"
       export DW1_WEB_EXPECTED_COMMIT="$CI_COMMIT_SHA"
-      tools/port/testing/deploy.sh
+      tools/port/testing/deploy.sh build/port/web-release
       echo "Testing URL: $DW1_WEB_URL"
-      if ! python3 port/web/tests/run.py build/port/web title --project chromium; then
+      if ! python3 port/web/tests/run.py build/port/web-release title --project chromium; then
         tools/port/testing/deploy.sh --rollback || true
         exit 1
       fi

@@ -19,7 +19,7 @@ no implica por sí solo un fallo del juego.
 Nativo con ventana:
 
 ```sh
-build/port/native/dw1 --pack build/port/native/us.pack \
+build/port/native-release/dw1 --pack build/port/native-release/us.pack \
   --record-inputs build/session.replay.txt --digest build/session.digest \
   --vblanks 30000
 python3 -I -B tools/port/playtest/run.py --build native-headless \
@@ -47,7 +47,7 @@ python3 -I -B tools/port/playtest/bot.py --seed 42 --vblanks 30000 \
   --prefix tools/port/scenes/newgame.toml --output build/bot.inputs.txt
 python3 -I -B tools/port/playtest/run.py --seed 42 --vblanks 30000 \
   --prefix tools/port/scenes/newgame.toml \
-  --build native-headless --build native-asan --output build/port/playtest/comparison
+  --build native-headless-release --build native-asan --output build/port/playtest/comparison
 ```
 
 Los pesos, duraciones y botones son constantes nombradas en `bot.py`. Una semilla
@@ -61,7 +61,11 @@ posteriores al prefijo, aunque su duración supere el límite mínimo pedido.
 
 El runner escribe `report.json` con tiempos de pared, horas virtuales
 (`VBlanks / 60.0087172527 / 3600`), overlays visitados, digest, semilla y avisos.
-Con varios builds exige el mismo digest final y límite. `summary.json` contiene
+Con varios builds exige el mismo digest final y límite. Si difieren,
+`report.json` y la salida del runner indican el primer intervalo de muestras distinto.
+`--smoke` agrega el headless Debug u optimizado que falte cuando ambos están
+construidos. `web_playtest` compara también con el optimizado y ASan disponibles.
+`summary.json` contiene
 solo estado, conteos, horas, overlays, semillas y hashes: es el único informe del
 playtest publicable como artifact de CI. Los directorios privados conservan
 inputs, stdout/stderr y las cards. No publicar estos directorios completos.
@@ -85,7 +89,7 @@ permiten identificar el caso sin publicar la sesión.
 python3 -I -B tools/port/playtest/run.py --soak --jobs 4 \
   --seed 10 --seed 11 --prefix tools/port/scenes/newgame.toml \
   --session /private/sessions/world.replay.txt --card /private/cards/start.mcd \
-  --build native-headless --build native-asan --vblanks 540079 \
+  --build native-headless-release --build native-asan --vblanks 540079 \
   --output build/port/playtest/manual-soak
 # Desde el host que dispone del contexto Docker del homelab:
 tools/port/playtest/soak.sh --seed 10 --seed 11
@@ -97,7 +101,17 @@ los builds de cada caso corren sobre los mismos inputs y su propia copia de la
 card. Omitir `--card` arranca sin tarjeta. Nunca se necesita una card externa y
 ninguna original se abre para escritura, tampoco al resolver prefijos.
 
-`soak.sh` construye ambos presets mediante `remote_run.sh` y deja informes en
+Medición local de la historia 6.11 (contenedor con cuota de 2,5 CPU, builds en
+secuencia, semilla 1 e inputs del smoke): a 29.435 VBlanks, Debug dio
+112,22 VBlanks/s y optimizado 261,04 VBlanks/s (2,33×), con digest idéntico.
+Esta muestra corta no alcanza el umbral de 2,5× exigido para el soak.
+Evidencia privada: `build/port/verification-6-11/benchmark-short/report.json`.
+Una extensión a 60.000 VBlanks abortó en ambos builds a los 34.200 por pasar
+30 segundos virtuales sin frames; no sirve para cerrar la aceptación del soak.
+Las reproducciones están en `build/port/verification-6-11/benchmark-soak/`.
+
+`soak.sh` construye `native-headless-release` (`-O2 -g`, con aserciones e
+instrumentación) y `native-asan` mediante `remote_run.sh` y deja informes en
 `build/port/playtest/soak/<fecha UTC>/`. Usa cuatro casos en paralelo, cuatro
 semillas por defecto y 540.079 VBlanks (2,5 horas virtuales) por caso/build:
 10 horas por build, 20 entre ambos. La ejecución remota y su fallback son los de
