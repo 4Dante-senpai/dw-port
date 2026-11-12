@@ -1,7 +1,9 @@
 #include "host.h"
 #include "../plat.h"
+#include "../../psyq/playtest.h"
 #include <stdatomic.h>
 extern void port_pad_latch(uint16_t wire);
+extern int port_playtest_started(void) __attribute__((weak));
 static _Atomic uint16_t buttons;
 static SDL_Gamepad *pad;
 static const struct { SDL_Scancode key; unsigned bit; } keys[] = {
@@ -63,6 +65,6 @@ void sdl_input_poll(void)
 }
 void plat_input_vblank(void)
 {
-    if (!sdl_headless) port_pad_latch(atomic_load_explicit(&buttons, memory_order_relaxed));
+    if (!sdl_headless && (!port_playtest_started || port_playtest_started())) port_pad_latch(atomic_load_explicit(&buttons, memory_order_relaxed));
 }
 void sdl_input_quit(void) { SDL_CloseGamepad(pad); pad = NULL; }

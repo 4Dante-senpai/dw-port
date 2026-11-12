@@ -8,6 +8,7 @@
   <canvas id="canvas" width="320" height="240" hidden></canvas>
   <canvas id="screen" width="320" height="240"></canvas>
   <button id="pause" hidden>Pausa</button>
+  <button id="record-inputs" hidden>Descargar inputs</button>
 </div>
 <p id="audio-warning" role="status"></p>
 <p id="update-status" role="status"></p>
@@ -117,6 +118,8 @@ async function start() {
   if (query.has('card-test')) args.push('--card-test', query.get('card-test'));
   if (query.has('replay')) args.push('--replay', 'replay.txt');
   if (query.has('vblanks')) args.push('--vblanks', query.get('vblanks'));
+  if (query.has('digest') || query.has('record-inputs')) args.push('--digest', 'digest.txt', '--digest-every', query.get('digest-every') || '60');
+  if (query.has('record-inputs')) args.push('--record-inputs', 'record.txt');
   if (query.has('audio-ramp')) args.push('--audio-ramp');
   if (query.get('audio') === '1') {
     const play = document.querySelector('#play');
@@ -200,6 +203,18 @@ async function setupAudio(context) {
   }
 }
 function boot(args, audioContext) {
+  // Live sessions keep a replay and a digest snapshot at the same VBlank.
+  if (!location.search) args.push('--record-inputs', 'record.txt', '--digest', 'digest.txt');
+  const download = document.querySelector('#record-inputs');
+  download.hidden = !args.includes('--record-inputs');
+  download.onclick = () => {
+    const snapshot = window.Module?.playtestSnapshot;
+    if (!snapshot) return;
+    const url = URL.createObjectURL(new Blob([snapshot.inputs], {type: 'text/plain'}));
+    const link = document.createElement('a'); link.href = url;
+    link.download = `dw1-${snapshot.vblank}-${snapshot.digest}.replay.txt`;
+    link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
   gameStarted = true;
   // Options are closed once the game starts: a pending «Reasignar» must not eat its first key.
   cancelRemap?.();

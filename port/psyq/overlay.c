@@ -34,6 +34,7 @@ static const char *const files[PORT_OVERLAY_COUNT] = {
 	"DGET_REL.BIN", "TRN2_REL.BIN", "MURD_REL.BIN", "ENDI_REL.BIN", "EAB_REL.BIN"
 };
 
+void port_playtest_overlay(unsigned value) __attribute__((weak));
 static int snapshot_taken;
 
 int port_overlay_id(const char *file)
@@ -65,6 +66,7 @@ void port_overlay_loaded(int lib)
 	PORT_ASSERT(lib > 0 && lib < PORT_OVERLAY_COUNT);
 	if (lib <= 0 || lib >= PORT_OVERLAY_COUNT)
 		return; /* release build: PORT_ASSERT only logged */
+	if (port_playtest_overlay) port_playtest_overlay((unsigned)lib);
 	OverlayData *o = &overlays[lib];
 	if (o->copy == NULL)
 		return; /* the overlay has no global data */

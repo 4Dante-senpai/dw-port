@@ -14,6 +14,9 @@ typedef struct {
 	const char *audio_segments;
 	const char *audio_pcm;
 	const char *resolved_inputs;
+	const char *record_inputs;
+	const char *digest;
+	unsigned long digest_every;
 	unsigned long vblank_limit; /* Stop N VBlanks after frame 0; independent of capture. */
 } PortCapture;
 
@@ -22,6 +25,8 @@ typedef struct {
  * until_overlay, when the first overlay has been loaded. With a capture requested, either
  * limit instead exits with status 1 unless the capture has completed. NULL config disables capture. */
 int port_run_game(long frame_count, int until_overlay, const PortCapture *config);
+/* Ask the game thread to finish at its next VBlank (window close while recording). */
+void port_request_stop(void);
 /* Scene captures run independently of wall time. */
 int port_capture_active(void);
 void port_scene_mark(const char *name);

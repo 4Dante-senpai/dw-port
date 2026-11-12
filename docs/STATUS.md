@@ -21,8 +21,8 @@
   revisada); la paridad contra PCSX-Redux queda para diagnosticar bugs visibles. Suben a la v1
   el speed-up (FR-18), los save states con autosave (FR-19) y la escala entera de pantalla
   (FR-20). Detalle: `docs/planning-artifacts/sprint-change-proposal-2026-11-11.md`.
-- Siguiente: **Historia 6.9** (playtest automático: grabador de inputs, bot y soak) y luego la
-  6.10 (partida real en testing y triage de caídas).
+- Siguiente: **Historia 6.10** (partida real en testing y triage de caídas), con el playtest
+  automático de la 6.9 corriendo en `docker-server`.
 
 ## Hecho
 
@@ -501,9 +501,21 @@
   EFE de BTL, STD y VS y a la pesca. Evidencia: test `scratchpad`, cero literales
   `0x1F800000-0x1F802FFF` en `dw1.wasm`. Falta confirmarlo en partida real.
 
+- Historia 6.9 (playtest automático, nivel L5): digest SHA-256 encadenado por VBlank igual en
+  todos los builds (display RGB555, pad, `rand`, overlay), grabador de inputs en `native` y en la
+  Shell web (botón «Descargar inputs»), bot con semilla y prefijo, runner con detectores de caída,
+  assert, sanitizer y cuelgue que deja `reproduce.sh`, `playtest_smoke` y `web_playtest` en CI y
+  `tools/port/playtest/soak.sh` para `docker-server`. **Primer hallazgo:** `native-headless` y
+  `native-asan` divergían desde el VBlank 8.640 por `adv` sin inicializar en `drawString2`
+  (`src/main/script_textbox.c`), aislado por bisección con `-ftrivial-auto-var-init`; corregido en
+  `83601d8`. Desde entonces `native-headless`, `native-asan`, Chromium y Firefox dan el mismo
+  digest (`7614dc25…`) en 29.435 VBlanks. Velocidad del headless Debug: 72 VBlanks/s (preset
+  optimizado diferido). Procedimiento: `docs/port/playtest.md`. Evidencia: spec
+  `spec-6-9-playtest-automatico-grabador-bot-y-soak.md` y `build/port/playtest/` (privado).
+
 ## En curso
 
-- Fase 5: Épicas 2, 3 y 4 cerradas con sus retrospectivas. El 2026-11-11 se aplicó el cambio de rumbo (PRD, arquitectura AD-8/AD-14/AD-15, `epics.md`, `sprint-status.yaml`, `CLAUDE.md`); todavía no hay código de la Épica 6. Sigue la Historia 6.9. Hipótesis abierta: el mecanismo de save states (spike 9.3; una copia de la memoria WASM no incluye la pila del hilo del Juego).
+- Fase 5: Épicas 2, 3 y 4 cerradas con sus retrospectivas. El 2026-11-11 se aplicó el cambio de rumbo y se cerró la Historia 6.9 (Épica 6 en curso). Hipótesis abierta: el mecanismo de save states (spike 9.3; una copia de la memoria WASM no incluye la pila del hilo del Juego).
 - Heredado de la Épica 4: El dueño aprobó el 2026-10-31 extender a web la excepción de contrapresión de AD-8. El pipeline 146 de `main` (`4b3b251`, historia 4.9) quedó verde, sin reintentos, con despliegue al entorno de testing. Siguen sin causa identificada dos fallos intermitentes de Firefox en CI, anotados en `deferred-work.md` y no repetidos en los pipelines 144 ni 146: `#play` deshabilitado tras recargar y `Target crashed` en `web_scene_title_audio`.
 
 ## Bloqueos

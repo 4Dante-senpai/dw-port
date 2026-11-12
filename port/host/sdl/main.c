@@ -2,17 +2,22 @@
 #include "host.h"
 #include "../native_cli.h"
 #include "../plat.h"
+#include "../../psyq/crt.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 int sdl_headless;
+static int recording_session;
 int plat_main_loop(pthread_t game)
 {
     if (sdl_headless) { pthread_join(game, NULL); return 0; }
     for (;;) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_EVENT_QUIT) exit(0);
+            if (event.type == SDL_EVENT_QUIT) {
+                if (recording_session) port_request_stop();
+                else exit(0);
+            }
             sdl_input_event(&event);
         }
         sdl_input_poll();
@@ -32,6 +37,7 @@ int main(int argc, char **argv)
     int result = native_cli_parse(argc, argv, &options);
     if (result) return result;
     sdl_headless = options.headless;
+    recording_session = options.capture.digest || options.capture.record_inputs;
     if (!sdl_headless) {
         if (!sdl_video_init()) {
             fprintf(stderr, "dw1: SDL video: %s\n", SDL_GetError());

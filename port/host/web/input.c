@@ -10,6 +10,7 @@
 #include "../plat.h"
 #include "../../psyq/clock.h"
 #include "../../psyq/crt.h"
+#include "../../psyq/playtest.h"
 
 extern void port_pad_latch(uint16_t wire);
 extern uint32_t port_pad_value(void);
@@ -53,8 +54,9 @@ int web_input_replay(const char *path)
 }
 void plat_input_vblank(void)
 {
+    if (!port_playtest_started()) return;
     if (replay) {
-        while (next_event < event_count && events[next_event].vblank <= clock_vblanks())
+        while (next_event < event_count && events[next_event].vblank <= port_playtest_vblank())
             replay_mask = events[next_event++].mask;
         port_pad_latch(replay_mask);
         return;

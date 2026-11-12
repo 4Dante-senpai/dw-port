@@ -8,6 +8,51 @@
 #include "../backend/gpu.h"
 #include <stdlib.h>
 #include <string.h>
+#include "playtest.h"
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+static FILE *resolved_output;
+static unsigned resolved_mask;
+static int recording;
+#ifndef __EMSCRIPTEN__
+static FILE *audio_open(const char *path, const char *mode);
+#endif
+static void record_prepare(const PortCapture *config)
+{
+    const char *path = config->record_inputs ? config->record_inputs : config->resolved_inputs;
+    recording = config->record_inputs != NULL;
+    resolved_mask = 0;
+    if (path) {
+#ifndef __EMSCRIPTEN__
+        resolved_output = recording ? fopen(path, "w") : audio_open(path, "w");
+#else
+        resolved_output = fopen(path, "w");
+#endif
+        if (!resolved_output) { perror("scene: record inputs"); exit(2); }
+    }
+}
+static void record_finish(void)
+{
+    if (resolved_output && fclose(resolved_output)) { perror("scene: close inputs"); exit(1); }
+    resolved_output = NULL;
+}
+void port_scene_resolved_input(uint16_t mask)
+{
+    if (recording && !port_playtest_started()) return;
+    if (resolved_output && mask != resolved_mask) {
+        if (fprintf(resolved_output, "%u %04x\n", recording ? port_playtest_vblank() : clock_vblanks(), mask) < 0 || fflush(resolved_output)) {
+            perror("scene: resolved inputs"); exit(1);
+        }
+#ifdef __EMSCRIPTEN__
+        if (recording) MAIN_THREAD_EM_ASM({
+            Module.recordedInputs = (Module.recordedInputs || "") + $0 + ' ' + $1.toString(16).padStart(4, '0') + '\n';
+        }, port_playtest_vblank(), mask);
+#endif
+        resolved_mask = mask;
+    }
+}
+
 #ifndef __EMSCRIPTEN__
 #include <dlfcn.h>
 #include <link.h>
@@ -17,26 +62,17 @@
 
 extern void port_pad_latch(uint16_t buttons);
 static const PortCapture *config;
-static FILE *input, *trace, *pcm_output, *resolved_output;
+static FILE *input, *trace, *pcm_output;
 static void raw_pcm(const int16_t *pcm, unsigned frames, void *arg);
 void port_scene_audio_output_init(void)
 {
     if (pcm_output) spu_set_output(raw_pcm, NULL);
 }
-static unsigned resolved_mask;
+
 static void raw_pcm(const int16_t *pcm, unsigned frames, void *arg)
 {
     (void)arg;
     if (fwrite(pcm, 4, frames, pcm_output) != frames) { perror("scene: raw PCM"); exit(1); }
-}
-void port_scene_resolved_input(uint16_t mask)
-{
-    if (resolved_output && mask != resolved_mask) {
-        if (fprintf(resolved_output, "%u %04x\n", clock_vblanks(), mask) < 0 || fflush(resolved_output)) {
-            perror("scene: resolved inputs"); exit(1);
-        }
-        resolved_mask = mask;
-    }
 }
 static int have_origin, have_mark, pending;
 static uint32_t origin, mark, event_k, previous_k;
@@ -300,6 +336,7 @@ static unsigned checkpoint_number(const char *text, int base)
         fail("invalid checkpoint number");
     return (unsigned)value;
 }
+static void input_fail(const char *message) { fprintf(stderr, "scene: %s\n", message); exit(2); }
 static void read_event(void)
 {
     char line[256], frame[64], mask[64], extra, *end;
@@ -309,16 +346,16 @@ static void read_event(void)
         return;
     }
     if (sscanf(line, "%63s %63s %c", frame, mask, &extra) != 2)
-        fail("invalid inputs (expected increasing VBlank and hex mask)");
+        input_fail("invalid inputs (expected increasing VBlank and hex mask)");
     errno = 0;
     unsigned long value = strtoul(frame, &end, 10);
     if (errno || frame[0] < '0' || frame[0] > '9' || *end || value > UINT32_MAX)
-        fail("invalid input VBlank");
+        input_fail("invalid input VBlank");
     event_k = (uint32_t)value;
     errno = 0;
     value = strtoul(mask, &end, 16);
     if (errno || mask[0] == '-' || mask[0] == '+' || *end || value > 65535 ||
-        (have_previous && event_k <= previous_k)) fail("invalid inputs (expected increasing VBlank and hex mask)");
+        (have_previous && event_k <= previous_k)) input_fail("invalid inputs (expected increasing VBlank and hex mask)");
     buttons = (unsigned)value;
     previous_k = event_k;
     have_previous = pending = 1;
@@ -359,10 +396,7 @@ void port_scene_prepare(const PortCapture *value)
         pcm_output = audio_open(config->audio_pcm, "wb");
         if (!pcm_output) fail("cannot open raw PCM output");
     }
-    if (config->resolved_inputs) {
-        resolved_output = audio_open(config->resolved_inputs, "w");
-        if (!resolved_output) fail("cannot open resolved input output");
-    }
+    record_prepare(config);
     if (config->audio_segments) {
         FILE *file = fopen(config->audio_segments, "r");
         if (!file) fail("cannot open audio segment declarations");
@@ -459,7 +493,8 @@ void port_scene_prepare(const PortCapture *value)
     } else if (config->inputs) {
         input = fopen(config->inputs, "r");
         if (!input) fail("cannot open inputs");
-        read_event();
+        do { read_event(); } while (pending);
+        rewind(input); have_previous = 0; read_event();
     }
     if (!config->state_vars) return;
     FILE *file = fopen(config->state_vars, "r");
@@ -598,8 +633,7 @@ void port_scene_finish(void)
 {
     if (pcm_output && fclose(pcm_output)) fail("cannot close raw PCM");
     pcm_output = NULL;
-    if (resolved_output && fclose(resolved_output)) fail("cannot close resolved inputs");
-    resolved_output = NULL;
+    record_finish();
     printf("port: final absolute VBlank %u\n", clock_vblanks());
     if (timing && fclose(timing)) fail("cannot close timing trace");
     timing = NULL;
@@ -620,12 +654,12 @@ void __cyg_profile_func_enter(void *function, void *caller)
 void __cyg_profile_func_exit(void *function, void *caller)
 { (void)caller; clock_game_function_exit(function); }
 void port_scene_audio_output_init(void) {}
-void port_scene_resolved_input(uint16_t mask) { (void)mask; }
-void port_scene_prepare(const PortCapture *config) { (void)config; }
+
+void port_scene_prepare(const PortCapture *config) { record_prepare(config); }
 void port_scene_origin(void) {}
 void port_scene_start(void) {}
 void port_scene_tick(void) {}
-void port_scene_finish(void) {}
+void port_scene_finish(void) { record_finish(); }
 int port_scene_complete(void) { return 0; }
 int port_scene_audio_complete(void) { return 0; }
 void port_scene_enter(void *function) { (void)function; }

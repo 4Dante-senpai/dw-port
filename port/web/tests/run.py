@@ -14,9 +14,12 @@ import functools
 import importlib.util
 
 root = Path(__file__).resolve().parents[3]
+# Accept both the established <build> <suite> form and the documented suite shortcut.
+if len(sys.argv) == 2 and sys.argv[1] == 'playtest':
+    sys.argv[1:] = [str(root / 'build/port/web'), 'playtest']
 build = Path(sys.argv[1]).resolve()
 suite = sys.argv[2] if len(sys.argv) > 2 else 'boot'
-if suite in ('title', 'title_audio', 'disc_real', 'cards_real', 'cards_redux', 'offline_real', 'long') and not (os.environ.get('DW1_DISC_DIR') or (suite == 'title' and os.environ.get('DW1_WEB_URL'))):
+if suite in ('title', 'title_audio', 'disc_real', 'cards_real', 'cards_redux', 'offline_real', 'long', 'playtest') and not (os.environ.get('DW1_DISC_DIR') or (suite == 'title' and os.environ.get('DW1_WEB_URL'))):
     print(f'web_{"scene_title" if suite == "title" else suite}: DW1_DISC_DIR not set; skipped')
     sys.exit(77)
 if suite in ('io', 'launcher', 'shell', 'cards'):
@@ -34,6 +37,18 @@ if suite in ('io', 'launcher', 'shell', 'cards'):
     corrupt[64 + 80] ^= 1
     (build / 'bad-index.pack').write_bytes(corrupt)
 
+if suite == 'playtest':
+    # Same seed and frame0 prefix as native smoke; no external card fixture.
+    result = subprocess.run([sys.executable, '-I', '-B', str(root / 'tools/port/playtest/run.py'),
+        '--smoke', '--build', 'native-headless', '--pack', str(build / 'us.pack'),
+        '--output', str(build / 'playtest-native')])
+    if result.returncode: sys.exit(result.returncode)
+    trial = build / 'playtest-native/trial-0000'
+    (build / 'playtest.replay.txt').write_bytes((trial / 'generated.txt').read_bytes())
+    report = json.loads((build / 'playtest-native/report.json').read_text())
+    os.environ['DW1_PLAYTEST_VBLANKS'] = str(report['trials'][0]['runs'][0]['vblanks'])
+    os.environ['DW1_PLAYTEST_DIGEST'] = report['trials'][0]['runs'][0]['digest']
+
 if suite == 'cards_redux':
     prepared = subprocess.run([sys.executable, '-I', '-B', str(root / 'tools/port/scenes/cards_redux.py'), 'prepare'])
     if prepared.returncode: sys.exit(prepared.returncode)
@@ -42,7 +57,7 @@ server = None
 if suite == 'long' and not (build / 'us.pack').is_file():
     print('web_long: us.pack missing; skipped')
     sys.exit(77)
-if suite in ('title', 'title_audio', 'disc_real', 'cards_real', 'cards_redux', 'offline_real', 'long') and not env.get('DW1_WEB_URL'):
+if suite in ('title', 'title_audio', 'disc_real', 'cards_real', 'cards_redux', 'offline_real', 'long', 'playtest') and not env.get('DW1_WEB_URL'):
     with (build / 'us.pack').open('rb') as pack_file:
         (build / 'us.pack.sha256').write_text(hashlib.file_digest(pack_file, 'sha256').hexdigest() + '\n')
 if suite.startswith('offline'):

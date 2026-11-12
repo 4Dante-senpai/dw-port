@@ -46,6 +46,7 @@ char *psyq_strrchr(const char *text, int value)
 
 /* SCPH-1001 startup seed, derived 206 calls before the natural New Game trace.
  * Derivation and matching OpenBIOS patch: docs/port/reference.md. */
+void port_playtest_rand(int value) __attribute__((weak));
 __attribute__((weak)) void port_rand_trace(int value);
 #define BIOS_RAND_SEED 0x24040001u
 static uint32_t rand_state = BIOS_RAND_SEED;
@@ -55,6 +56,7 @@ int rand(void)
 {
 	rand_state = rand_state * 0x41C64E6Du + 0x3039u;
 	int value = (int)((rand_state >> 16) & 0x7FFFu);
+	if (port_playtest_rand) port_playtest_rand(value);
 	if (port_rand_trace) port_rand_trace(value);
 	return value;
 }

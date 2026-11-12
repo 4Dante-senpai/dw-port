@@ -33,6 +33,9 @@ with tempfile.TemporaryDirectory(dir=build) as tmp:
     result = run([str(probe), str(capture), str(clock)], 0)
     assert b"at VBlank 2" in result.stdout, result.stdout
     assert capture.read_bytes() == b"P6\n1 1\n255\n\xff\x00\x00"
+    original_image, original_clock = capture.read_bytes(), clock.read_bytes()
+    result = run([str(probe), str(capture), str(clock)], 0, {"TEST_DIGEST": str(tmp / "digest.txt")})
+    assert capture.read_bytes() == original_image and clock.read_bytes() == original_clock
     capture.unlink()
     result = run([str(probe), str(capture), str(clock)], 0, {"TEST_MARK_LATE": "1"})
     assert b"at VBlank 7\n" in result.stdout, result.stdout
