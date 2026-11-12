@@ -662,7 +662,13 @@ int32_t drawString2(uint8_t *str, int16_t x, int16_t y, int32_t flag)
 	int16_t pos;
 	int16_t rem;
 #if VERSION_IS(US)
+#ifdef DW1_PORT
+	/* A full-width space (0x4081) adds adv without setting it; as the first glyph of a call it
+	 * read an uninitialized register on PS1 and different stack garbage per port build. */
+	uint16_t adv = 0xc;
+#else
 	uint16_t adv;
+#endif
 #endif
 	uint16_t glyph;
 
