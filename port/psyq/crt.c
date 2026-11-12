@@ -1,6 +1,7 @@
 /* Port runtime start (replaces src/main/_psstart.c, CodeWarrior's crt; AD-1, AD-5, AD-6). */
 #include <pthread.h>
 #include <stdint.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,6 +21,7 @@
 #include "clock.h"
 #include "crt.h"
 #include "scene.h"
+#include "playtest.h"
 #include "dw1_rts_info.h"
 #include "overlay.h"
 #include "port.h"
@@ -44,6 +46,8 @@ static long frame_limit;
 static int exit_on_overlay;
 static long frames;
 static long watchdog_frames;
+static _Atomic int stop_requested;
+void port_request_stop(void) { atomic_store(&stop_requested, 1); }
 
 static PortCapture capture_config;
 int port_capture_active(void)
@@ -54,10 +58,8 @@ int port_capture_active(void)
 static int marked;
 static uint32_t mark_vblank;
 static FILE *clock_trace;
-#ifndef __EMSCRIPTEN__
 static uint32_t frame0_vblank;
 static int have_frame0;
-#endif
 
 void port_scene_mark(const char *name)
 {
@@ -86,24 +88,26 @@ static void capture_vblank(void)
 	spu_sync();
 	port_scene_tick();
 #ifdef __EMSCRIPTEN__
-    if (capture_config.vblank_limit && clock_vblanks() >= capture_config.vblank_limit) web_finish(0);
-#endif
-#ifndef __EMSCRIPTEN__
-	if (have_frame0 && capture_config.vblank_limit &&
-	    clock_vblanks() - frame0_vblank >= capture_config.vblank_limit) {
-		if (plat_native_wall_finish) plat_native_wall_finish();
-		printf("port: reached VBlank %u after frame 0\n", clock_vblanks() - frame0_vblank);
-		exit(0);
-	}
-#endif
-#ifdef __EMSCRIPTEN__
-	if (!capture_config.inputs) plat_input_vblank();
+    if (!capture_config.inputs) plat_input_vblank();
 #else
-	if (!capture_config.inputs && plat_input_vblank) plat_input_vblank();
+    if (!capture_config.inputs && plat_input_vblank) plat_input_vblank();
 #endif
+    port_playtest_tick();
+    if (atomic_load(&stop_requested) || (have_frame0 && capture_config.vblank_limit &&
+        clock_vblanks() - frame0_vblank >= capture_config.vblank_limit)) {
+        port_playtest_finish(); port_scene_finish();
+#ifdef __EMSCRIPTEN__
+        web_finish(0);
+#else
+        if (plat_native_wall_finish) plat_native_wall_finish();
+        printf("port: reached VBlank %u after frame 0\n", clock_vblanks() - frame0_vblank);
+        exit(0);
+#endif
+    }
 	if (capture_config.audio_segments) {
 		if (port_scene_audio_complete() &&
 		    (!capture_config.checkpoints || port_scene_complete())) {
+			port_playtest_finish();
 			port_scene_finish();
 			if (clock_trace && fclose(clock_trace)) exit(1);
 			puts("port: audio segments captured");
@@ -138,6 +142,7 @@ static void capture_vblank(void)
 		fprintf(stderr, "port: cannot write capture or clock trace\n");
 		exit(1);
 	}
+	port_playtest_finish();
 	port_scene_finish();
 	printf("port: captured %dx%d at VBlank %u\n", width, height, clock_vblanks());
 #ifdef __EMSCRIPTEN__
@@ -153,13 +158,19 @@ static void capture_vblank(void)
 /* AD-15 includes nonblocking VSync calls made inside PsyQ (set_alarm). */
 void port_vsync_return(void)
 {
+	port_playtest_origin();
 	port_scene_origin();
-#ifndef __EMSCRIPTEN__
 	if (!have_frame0) {
         have_frame0 = 1; frame0_vblank = clock_vblanks();
+#ifndef __EMSCRIPTEN__
         if (plat_native_wall_begin) plat_native_wall_begin();
-    }
 #endif
+#ifdef __EMSCRIPTEN__
+        if (!capture_config.inputs) plat_input_vblank();
+#else
+        if (!capture_config.inputs && plat_input_vblank) plat_input_vblank();
+#endif
+    }
 }
 
 /* Only a blocking VSync presents a frame. */
@@ -173,10 +184,12 @@ void port_frame_done(void)
         MAIN_THREAD_EM_ASM({
             Module.print('port: reached frame ' + $0 + ' at cycle ' + $1);
         }, frames - 1, (double)clock_now());
+        port_playtest_finish(); port_scene_finish();
         web_finish(capture_config.mark ? 1 : 0);
 #else
 		printf("port: reached frame %ld at cycle %llu\n", frames - 1,
 		       (unsigned long long)clock_now());
+        port_playtest_finish(); port_scene_finish();
         exit(capture_config.mark ? 1 : 0);
 #endif
 	}
@@ -186,6 +199,7 @@ void port_overlay_done(void)
 {
 	if (exit_on_overlay) {
 		printf("port: overlay loaded at cycle %llu\n", (unsigned long long)clock_now());
+		port_playtest_finish(); port_scene_finish();
 		exit(capture_config.mark ? 1 : 0);
 	}
 }
@@ -247,6 +261,7 @@ int port_run_game(long frame_count, int until_overlay, const PortCapture *config
 		capture_config = *config;
 	clock_reset();
 	psyq_libspu_reset();
+	port_playtest_prepare(&capture_config);
 	port_scene_prepare(&capture_config);
 	port_overlay_snapshot_all();
 	/* Every object an OT can point to must be in the 16 MB window (AD-5); fatal in any build. */

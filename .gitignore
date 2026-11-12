@@ -22,6 +22,8 @@ dumps/
 *.pbp
 *.7z
 *.mcd
+# Private input recordings (synthetic inputs remain in scene TOMLs).
+*.replay.txt
 *.mcr
 SLUS_*
 SCUS_*

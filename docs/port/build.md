@@ -103,3 +103,11 @@ la 2.13 tradujo `GsSortOt`, que dependía de ellos; ninguna de las dos sesiones 
 | Estructura | Desvío | Productor | Consumidores adaptados |
 |---|---|---|---|
 | Fin de la OT | Sin los terminales `nop2` → `sys_nop`: `ot[0]` termina en `PS1_LINK_END` | `ClearOTagR` (`port/psyq/libgpu.c`) | `GsSortOt` (`port/psyq/libgs.c`), `DrawOTag` |
+
+## Playtest automático
+
+`playtest_digest` y `playtest_unit` son L1 sin disco; `playtest_smoke` es clase B
+para nativo y ASan. `web_playtest` compara Chromium/Firefox con nativo y reproduce
+la descarga del grabador web. Los jobs con disco incluyen estas pruebas; el soak
+corre aparte mediante `tools/port/playtest/soak.sh`, nunca en el runner de CI.
+Grabación, reproducción, semillas y cards opcionales: [playtest.md](playtest.md).

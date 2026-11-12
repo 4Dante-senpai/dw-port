@@ -30,6 +30,7 @@ static int usage(const char *argv0)
 	                "  --frames N       exit with status 0 after N frames\n"
 	                "  --vblanks N      exit N VBlanks after frame 0; report wall time from pacing anchor\n"
 	                "  --capture-mark NAME --capture-vblank K --capture FILE  capture after mark + K VBlanks\n"
+	                "  --digest FILE --digest-every N --record-inputs FILE  playtest observation\n"
 	                "  --clock-trace FILE  write deterministic clock events\n"
 	                "  --inputs FILE --inputs-from frame0|mark  latch wire button masks per VBlank\n"
 	                "  --checkpoints FILE  capture ordered symbol[#n] entries and VBlank windows\n"
@@ -63,7 +64,15 @@ int native_cli_parse(int argc, char **argv, NativeCli *options)
 			continue;
 		}
 		if (i + 1 < argc) {
-			if (!strcmp(argv[i], "--vblanks")) {
+			if (!strcmp(argv[i], "--digest-every")) {
+                char *end; const char *value = argv[++i]; errno = 0;
+                config.digest_every = strtoul(value, &end, 10);
+                if (errno || *value < '0' || *value > '9' || *end || !config.digest_every || config.digest_every > UINT_MAX) return usage(argv[0]);
+                continue;
+            }
+            if (!strcmp(argv[i], "--digest")) { config.digest = argv[++i]; continue; }
+            if (!strcmp(argv[i], "--record-inputs")) { config.record_inputs = argv[++i]; continue; }
+            if (!strcmp(argv[i], "--vblanks")) {
 				char *end;
 				const char *value = argv[++i];
 				errno = 0;

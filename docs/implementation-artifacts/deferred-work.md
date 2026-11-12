@@ -235,3 +235,9 @@ no tienen cambios en esta historia; los cambios compartidos de configuración
 añaden la autorización del puerto 9 para el test negativo de red. Si reaparece,
 conservar la salida del caso fallido y el diagnóstico del navegador para
 determinar su relación con la historia. El incidente queda pendiente.
+
+## Historia 6.9: velocidad del playtest headless (2026-11-11)
+
+- source_spec: `docs/implementation-artifacts/spec-6-9-playtest-automatico-grabador-bot-y-soak.md`
+  summary: Agregar un preset nativo optimizado (`-O2`, sin `-finstrument-functions` costoso) para el soak, verificando que su digest sea igual al del preset Debug.
+  evidence: el headless Debug corre a 72 VBlanks/s (1,2× tiempo real); 20 horas virtuales necesitan unas 17 horas de pared por build.

@@ -38,6 +38,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         'card_continue.replay.txt', 'cards-fixture.json'):
                 return str(Path(os.environ.get('DW1_CARD_DIR_WEB', '/tmp/dw1-web-cards')) /
                            ('fixture.json' if name == 'cards-fixture.json' else name))
+            if name == 'playtest.replay.txt':
+                return str(Path(self.directory) / name)
             if name in ('replay.txt', 'fixture.json'):
                 return str(Path(os.environ.get('DW1_PCM_DIR', '/tmp/dw1-web-title-audio')) / name)
             if name in ('synthetic.pack', 'corrupt.pack', 'bad-index.pack', 'us.pack', 'us.pack.sha256'):

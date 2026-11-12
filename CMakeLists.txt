@@ -436,7 +436,7 @@ endif()
 endif()
 
 # Runtime start and PsyQ data the game references (linked only into the game).
-add_library(dw1_runtime STATIC port/psyq/crt.c port/psyq/scene.c port/psyq/libgs_data.c
+add_library(dw1_runtime STATIC port/psyq/crt.c port/psyq/playtest.c port/psyq/scene.c port/psyq/libgs_data.c
   ${DW1_RTS_INFO_H})
 target_include_directories(dw1_runtime PRIVATE ${CMAKE_BINARY_DIR}/generated)
 if(DW1_HOST STREQUAL "sdl")
@@ -445,6 +445,28 @@ endif()
 target_compile_options(dw1_runtime PRIVATE -Wall -Wextra -Werror)
 target_compile_definitions(dw1_runtime PRIVATE DW1_SOURCE_ROOT="${CMAKE_SOURCE_DIR}")
 target_link_libraries(dw1_runtime PUBLIC dw1_psyq ${CMAKE_DL_LIBS})
+
+# Hashing every display must not dominate headless throughput. No virtual-time costs.
+set_source_files_properties(port/psyq/playtest.c port/host/pack/sha256.c PROPERTIES COMPILE_OPTIONS "-O2")
+
+# L1 playtest observation and fake-process runner, without disc data.
+if(NOT EMSCRIPTEN)
+  add_executable(test_playtest port/psyq/tests/test_playtest.c port/psyq/playtest.c)
+  target_link_libraries(test_playtest PRIVATE dw1_psyq)
+  target_compile_options(test_playtest PRIVATE -Wall -Wextra -Werror)
+  add_test(NAME playtest_digest COMMAND test_playtest)
+  add_executable(test_playtest_runtime port/psyq/tests/test_playtest_runtime.c)
+  target_link_libraries(test_playtest_runtime PRIVATE dw1_runtime)
+  target_compile_options(test_playtest_runtime PRIVATE -Wall -Wextra -Werror)
+  add_test(NAME playtest_unit COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/playtest/test_playtest.py
+    $<TARGET_FILE:dw1> $<TARGET_FILE:test_playtest_runtime>)
+  set_tests_properties(playtest_unit PROPERTIES TIMEOUT 30)
+  if(DW1_HOST STREQUAL "headless")
+    add_test(NAME playtest_smoke COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/playtest/run.py
+      --smoke --build $<TARGET_FILE:dw1> --output ${CMAKE_BINARY_DIR}/playtest/smoke)
+    set_tests_properties(playtest_smoke PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3600 FIXTURES_REQUIRED disc_pack)
+  endif()
+endif()
 
 # A stub for every PsyQ function the game calls that the port does not implement yet.
 file(GLOB_RECURSE DW1_PSYQ_HEADERS CONFIGURE_DEPENDS
@@ -857,6 +879,9 @@ if(EMSCRIPTEN)
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} title_audio)
   set_tests_properties(web_scene_title_audio PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 2400
     FIXTURES_REQUIRED "disc_pack;native_title_audio")
+  add_test(NAME web_playtest COMMAND python3 -I -B
+    ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} playtest)
+  set_tests_properties(web_playtest PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 5400 FIXTURES_REQUIRED disc_pack)
   add_test(NAME web_scene_title COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} title)
   set_tests_properties(web_scene_title PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1200

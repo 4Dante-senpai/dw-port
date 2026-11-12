@@ -50,6 +50,7 @@ void PadInit(int mode)
 }
 
 /* PCSX-Redux overrides use wire bit order; PadRead swaps the two packet bytes. */
+void port_playtest_pad(uint16_t mask) __attribute__((weak));
 extern void port_scene_resolved_input(uint16_t buttons) __attribute__((weak));
 void port_pad_latch(uint16_t wire_buttons)
 {
@@ -59,6 +60,7 @@ void port_pad_latch(uint16_t wire_buttons)
 	 * leaves the previously published packet intact. */
 	if (!pad_started || !pad_poll_missed) {
 		pad_buf = ~((uint32_t)((wire_buttons << 8) | (wire_buttons >> 8)) & 0xffffu);
+        if (port_playtest_pad) port_playtest_pad(wire_buttons);
         if (port_scene_resolved_input) port_scene_resolved_input(wire_buttons);
     }
 	pad_poll_missed = 0;

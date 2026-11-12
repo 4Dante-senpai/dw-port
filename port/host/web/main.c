@@ -112,6 +112,13 @@ int main(int argc, char **argv)
             if (web_input_replay(argv[++i])) return 2;
             web_audio_replay(1);
         }
+        else if (!strcmp(argv[i], "--digest") && i + 1 < argc) config.digest = argv[++i];
+        else if (!strcmp(argv[i], "--record-inputs") && i + 1 < argc) config.record_inputs = argv[++i];
+        else if (!strcmp(argv[i], "--digest-every") && i + 1 < argc) {
+            char *end; const char *value = argv[++i]; errno = 0;
+            config.digest_every = strtoul(value, &end, 10);
+            if (errno || *value < '0' || *value > '9' || *end || !config.digest_every || config.digest_every > UINT32_MAX) return 2;
+        }
         else if (!strcmp(argv[i], "--vblanks") && i + 1 < argc) {
             char *end;
             const char *value = argv[++i];

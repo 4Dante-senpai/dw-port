@@ -629,6 +629,7 @@ def main():
     parser.add_argument("--pack", type=Path)
     parser.add_argument("--compare", action="store_true")
     parser.add_argument("--compare-audio", action="store_true")
+    parser.add_argument("--digest", action="store_true")
     parser.add_argument("--state", action="store_true")
     args = parser.parse_args()
     if args.compare_audio and (args.compare or args.state):
@@ -709,6 +710,8 @@ def main():
                    "--frames", "40000", "--capture-mark", scene["mark"],
                    "--capture-vblank", str(scene["capture_vblank"]),
                    "--capture", str(capture), "--clock-trace", str(clock)]
+        if args.digest:
+            command += ["--digest", str(output / f"run-{index}.digest")]
         command += ["--inputs", str(inputs), "--inputs-from", scene.get("inputs_from", "frame0")]
         if checkpoints:
             command += ["--checkpoints", str(checkpoint_file)]
