@@ -663,13 +663,13 @@ non-prototype	src/main/script_interp.c	2366	26	(movement->entityId, 0xff,	C defa
 non-prototype	src/main/script_interp.c	2371	26	(movement->entityId, movement->target,	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/script_interp.c	2383	30	(movement->entityId,	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/script_interp.c	2389	30	(movement->entityId,	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/script_textbox.c	1128	19	(DIGIMON_NAME(ctrl));	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/script_textbox.c	1138	19	(MOVE_NAMES[ctrl]);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/script_textbox.c	1148	19	(ITEM_NAME(ctrl));	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/script_textbox.c	1182	19	(BGM_TRACK_NAMES[ctrl]);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/script_textbox.c	1192	19	(TOURNAMENT_NAMES[ctrl]);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/script_textbox.c	774	45	(ch));	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/script_textbox.c	796	20	(glyph, x + pos, y2);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	1134	19	(DIGIMON_NAME(ctrl));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	1144	19	(MOVE_NAMES[ctrl]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	1154	19	(ITEM_NAME(ctrl));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	1188	19	(BGM_TRACK_NAMES[ctrl]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	1198	19	(TOURNAMENT_NAMES[ctrl]);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	780	45	(ch));	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/script_textbox.c	802	20	(glyph, x + pos, y2);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/script_value.c	77	16	(PARTNER_ENTITY.name);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/script_value.c	89	15	(SPECIAL_SPEAKERS[speakerId]);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/script_value.c	94	15	(DIGIMON_NAME(speakerId));	C default argument promotions; direct ABI checked by wasm-ld
