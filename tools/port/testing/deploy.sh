@@ -44,7 +44,7 @@ rollback() {
     echo 'previous testing image restored'
 }
 if [[ ${1:-} == --rollback ]]; then rollback; exit; fi
-build=${1:-$root/build/port/web}
+build=${1:-$root/build/port/web-release}
 sha=${CI_COMMIT_SHA:-$(git -C "$root" rev-parse HEAD)}
 [[ $sha =~ ^[a-f0-9]{40}$ ]] || { echo 'invalid commit SHA' >&2; exit 1; }
 mkdir "$work/context"

@@ -509,13 +509,15 @@ if(NOT EMSCRIPTEN)
     target_link_libraries(test_sdl_pacing dw1_runtime SDL3::SDL3 dw1_audio_rate)
     target_link_options(test_sdl_pacing PRIVATE -rdynamic)
     target_compile_options(test_sdl_pacing PRIVATE -Wall -Wextra -Werror)
-    add_test(NAME sdl_pacing COMMAND python3 -I -B
-      ${CMAKE_SOURCE_DIR}/tools/port/test_sdl_pacing.py $<TARGET_FILE:test_sdl_pacing>)
-    set_tests_properties(sdl_pacing PROPERTIES TIMEOUT 30 RUN_SERIAL TRUE)
-    add_test(NAME native_wall_10min COMMAND python3 -I -B
-      ${CMAKE_SOURCE_DIR}/tools/port/test_native_wall.py $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR})
-    set_tests_properties(native_wall_10min PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 900 RUN_SERIAL TRUE
-      ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy")
+    if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+      add_test(NAME sdl_pacing COMMAND python3 -I -B
+        ${CMAKE_SOURCE_DIR}/tools/port/test_sdl_pacing.py $<TARGET_FILE:test_sdl_pacing>)
+      set_tests_properties(sdl_pacing PROPERTIES TIMEOUT 30 RUN_SERIAL TRUE)
+      add_test(NAME native_wall_10min COMMAND python3 -I -B
+        ${CMAKE_SOURCE_DIR}/tools/port/test_native_wall.py $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR})
+      set_tests_properties(native_wall_10min PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 900 RUN_SERIAL TRUE
+        ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy")
+    endif()
     add_test(NAME sdl_frame0 COMMAND dw1 --frames 120)
     set_tests_properties(sdl_frame0 PROPERTIES TIMEOUT 20 FAIL_REGULAR_EXPRESSION "overflows=[1-9]"
       ENVIRONMENT "SDL_VIDEODRIVER=offscreen;SDL_AUDIODRIVER=dummy")
@@ -550,9 +552,10 @@ if(NOT EMSCRIPTEN)
     add_test(NAME sdl_native_hooks COMMAND test_native_hooks)
     add_test(NAME sdl_scene_input_precedence COMMAND test_native_hooks ${CMAKE_BINARY_DIR}/sdl_empty_inputs.txt)
     set_tests_properties(sdl_native_hooks sdl_scene_input_precedence PROPERTIES TIMEOUT 10)
+    get_filename_component(DW1_SDL_PRESET ${CMAKE_BINARY_DIR} NAME)
     add_test(NAME native_sdl_title_capture COMMAND python3 -I -B
-      ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py title --build native)
-    # Shares build/port/native/scenes/title with scene_title in the native preset.
+      ${CMAKE_SOURCE_DIR}/tools/port/scenes/run.py title --build ${DW1_SDL_PRESET})
+    # Shares this build's scenes/title directory with scene_title.
     set_tests_properties(native_sdl_title_capture PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1200
       FIXTURES_REQUIRED disc_pack RESOURCE_LOCK scene_title_capture)
   endif()

@@ -39,8 +39,12 @@ if suite in ('io', 'launcher', 'shell', 'cards'):
 
 if suite == 'playtest':
     # Same seed and frame0 prefix as native smoke; no external card fixture.
+    comparison = ['--build', 'native-headless']
+    for name in ('native-headless-release', 'native-asan'):
+        if (root / 'build/port' / name / 'dw1').is_file():
+            comparison += ['--build', name]
     result = subprocess.run([sys.executable, '-I', '-B', str(root / 'tools/port/playtest/run.py'),
-        '--smoke', '--build', 'native-headless', '--pack', str(build / 'us.pack'),
+        '--smoke', *comparison, '--pack', str(build / 'us.pack'),
         '--output', str(build / 'playtest-native')])
     if result.returncode: sys.exit(result.returncode)
     trial = build / 'playtest-native/trial-0000'

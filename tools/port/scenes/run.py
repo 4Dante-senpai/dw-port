@@ -550,11 +550,11 @@ def run_audio(args, scene, build, checkpoints, pack):
             if directory.exists(): shutil.rmtree(directory)
             directory.mkdir()
             environment["DW1_MOVIE_CAPTURE"] = str(directory)
-        if args.build == "native":
+        if args.build in ("native", "native-release"):
             environment.update(SDL_VIDEODRIVER="offscreen", SDL_AUDIODRIVER="dummy")
         if args.build == "native-asan":
             environment["ASAN_OPTIONS"] = environment.get("ASAN_OPTIONS", "") + ":detect_stack_use_after_return=0"
-        command = [str(build / "dw1"), *([] if args.build == "native" else ["--headless"]), "--pack", str(pack), "--frames", "40000",
+        command = [str(build / "dw1"), *([] if args.build in ("native", "native-release") else ["--headless"]), "--pack", str(pack), "--frames", "40000",
                    "--capture-mark", scene["mark"], "--inputs-from", "mark", "--inputs", str(inputs),
                    "--checkpoints", str(cp_file), "--audio-segments", str(declarations)]
         cards = prepare_cards(scene, "port", index, args.build)
@@ -625,7 +625,7 @@ def run_audio(args, scene, build, checkpoints, pack):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("id", choices=sorted(p.stem for p in (ROOT / "tools/port/scenes").glob("*.toml")))
-    parser.add_argument("--build", required=True, choices=["native-headless", "native-asan", "native"])
+    parser.add_argument("--build", required=True, choices=["native-headless", "native-asan", "native", "native-headless-release", "native-release"])
     parser.add_argument("--pack", type=Path)
     parser.add_argument("--compare", action="store_true")
     parser.add_argument("--compare-audio", action="store_true")
@@ -700,13 +700,13 @@ def main():
         timing_path = output / f"run-{index}.timing.jsonl"
         timing_path.unlink(missing_ok=True)
         env = dict(os.environ, DW1_TRACE=str(trace), DW1_TIMING_TRACE=str(timing_path))
-        if args.build == "native":
+        if args.build in ("native", "native-release"):
             env.update(SDL_VIDEODRIVER="offscreen", SDL_AUDIODRIVER="dummy")
         if args.build == "native-asan":
             # Same as the native-asan test preset: the fake stack would move game-stack
             # primitives out of the OT window (AD-5).
             env["ASAN_OPTIONS"] = env.get("ASAN_OPTIONS", "") + ":detect_stack_use_after_return=0"
-        command = [str(build / "dw1"), *([] if args.build == "native" else ["--headless"]), "--pack", str(pack),
+        command = [str(build / "dw1"), *([] if args.build in ("native", "native-release") else ["--headless"]), "--pack", str(pack),
                    "--frames", "40000", "--capture-mark", scene["mark"],
                    "--capture-vblank", str(scene["capture_vblank"]),
                    "--capture", str(capture), "--clock-trace", str(clock)]
@@ -741,7 +741,7 @@ def main():
         results.append(hashes)
         print(f"{capture}: sha256={hashes[0]} colors={colors}")
         print(f"{clock}: sha256={hashes[1]}")
-    if args.build == "native" and args.id == "title" and results[0][0] != scene["reference_sha256"]:
+    if args.build in ("native", "native-release") and args.id == "title" and results[0][0] != scene["reference_sha256"]:
         raise ValueError("SDL title capture differs from title.toml reference_sha256")
     if results[0] != results[1]:
         raise ValueError("capture, clock or state trace differs between runs")

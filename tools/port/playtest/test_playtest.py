@@ -109,6 +109,36 @@ class PlaytestTests(unittest.TestCase):
         results[1]['digest'] = H
         self.assertTrue(runner.compare(results))
 
+    def test_first_differing_interval(self):
+        results = []
+        for n in range(2):
+            work = self.root / str(n)
+            work.mkdir()
+            final = H if n == 0 else 'b' * 64
+            (work / 'digest.txt').write_text(f'0 0 off {H}\n60 0 off {H}\n120 0 off {final}\n')
+            results.append(dict(status='ok', build=str(n), reproduction=str(work / 'reproduce.sh')))
+        self.assertEqual(runner.first_difference(results),
+                         dict(after_vblank=60, through_vblank=120, builds=['0', '1']))
+        (self.root / '1/digest.txt').write_bytes((self.root / '0/digest.txt').read_bytes())
+        self.assertIsNone(runner.first_difference(results))
+        (self.root / '1/digest.txt').write_text(f'0 0 off {H}\n')
+        self.assertEqual(runner.first_difference(results)['through_vblank'], 60)
+
+    def test_smoke_compares_available_standard_pair(self):
+        with mock.patch.object(runner, 'ROOT', self.root):
+            for name in ('native-headless', 'native-headless-release'):
+                binary = self.root / 'build/port' / name / 'dw1'
+                binary.parent.mkdir(parents=True)
+                if name == 'native-headless':
+                    binary.touch()
+            self.assertEqual(runner.smoke_builds(['native-headless']), ['native-headless'])
+            binary.touch()
+            builds = runner.smoke_builds(['native-headless-release'])
+            self.assertEqual(len(builds), 2)
+            self.assertEqual(runner.smoke_builds(builds), builds)
+            self.assertEqual(len(runner.smoke_builds(['native-asan'])), 3)
+            self.assertEqual(runner.smoke_builds(['/tmp/custom-dw1']), ['/tmp/custom-dw1'])
+
     def test_mixed_sources_only_inputs_is_verbatim(self):
         binary = self.fake(f'digest.write_text("120 0 {H} {H}\\n")\n')
         out = self.root / 'mixed'
@@ -178,8 +208,8 @@ class PlaytestTests(unittest.TestCase):
         bindir = self.root / 'bin'
         bindir.mkdir()
         for name, body in [('cmake', ':'), ('ctest', 'test -n "$DW1_DISC_DIR"\necho pack >> order\n'
-                            'if [ "$CREATE_PACK" = 1 ]; then mkdir -p build/port/native-headless; touch build/port/native-headless/us.pack; fi'),
-                           ('python3', 'test -f build/port/native-headless/us.pack\necho run >> order')]:
+                            'if [ "$CREATE_PACK" = 1 ]; then mkdir -p build/port/native-headless-release; touch build/port/native-headless-release/us.pack; fi'),
+                           ('python3', 'test -f build/port/native-headless-release/us.pack\necho run >> order')]:
             path = bindir / name
             path.write_text('#!/bin/sh\nset -eu\n' + body + '\n')
             path.chmod(0o700)
@@ -216,6 +246,8 @@ class PlaytestTests(unittest.TestCase):
         mismatch = json.loads((out / 'report.json').read_text())
         self.assertEqual(mismatch['failures'], 2)
         for trial in mismatch['trials']:
+            self.assertIsNone(trial['first_difference']['after_vblank'])
+            self.assertEqual(trial['first_difference']['through_vblank'], 120)
             for run in trial['runs']:
                 self.assertTrue(Path(run['reproduction']).is_file())
 

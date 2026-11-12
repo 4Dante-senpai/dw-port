@@ -67,7 +67,19 @@ test('playtest digest and downloaded recording agree with native', async ({page}
   fs.mkdirSync(evidence, {recursive: true});
   fs.writeFileSync(path.join(evidence, 'inputs.txt'), snapshot.inputs);
   fs.writeFileSync(path.join(evidence, 'digest.txt'), await page.evaluate(() => FS.readFile('digest.txt', {encoding: 'utf8'})));
-  expect(snapshot.digest).toBe(process.env.DW1_PLAYTEST_DIGEST);
+  const nativeRows = fs.readFileSync(path.join(process.env.DW1_WEB_BUILD,
+    'playtest-native/trial-0000/build-0/digest.txt'), 'utf8').trim().split('\n');
+  const webRows = fs.readFileSync(path.join(evidence, 'digest.txt'), 'utf8').trim().split('\n');
+  let previous = 'start';
+  let interval = 'none';
+  for (let i = 0; i < Math.max(nativeRows.length, webRows.length); i++) {
+    if (nativeRows[i] !== webRows[i]) {
+      interval = `${previous}..${(nativeRows[i] || webRows[i]).split(' ')[0]}`;
+      break;
+    }
+    previous = nativeRows[i].split(' ')[0];
+  }
+  expect(snapshot.digest, `first differing VBlank interval: ${interval}`).toBe(process.env.DW1_PLAYTEST_DIGEST);
   expect(failures).toEqual([]);
   await roundtrip(page, info, 'replay');
 });

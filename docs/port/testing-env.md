@@ -11,7 +11,8 @@ en `docs/port/local-infra.md`, ignorado por git. El runner `dw1-data` debe alcan
 la API Docker de ese host y tener el disco en `/private/disc`.
 
 Cada push a la rama por defecto protegida ejecuta `testing`: construye nativo y
-web, valida el título local, construye nginx directamente en el daemon destino,
+`web-release` (`-O2 -g`, con aserciones e instrumentación), valida el título local
+y construye nginx directamente en el daemon destino,
 sin registry, y sincroniza el Pack por la API mediante un auxiliar Alpine. Solo
 copia el Pack si su hash difiere. El CLI Docker 27.3.1 se descarga y verifica por
 SHA-256 antes de usarlo. Los jobs de despliegue y rollback comparten
@@ -57,12 +58,16 @@ No exponer este servicio fuera de la LAN.
 
 ```sh
 cmake --preset native-headless && cmake --build --preset native-headless
-cmake --preset web && cmake --build --preset web
-DW1_DISC_DIR=<disc-dir> ctest --preset web
+cmake --preset web-release && cmake --build --preset web-release
+DW1_DISC_DIR=<disc-dir> ctest --preset web-release
 bash -n tools/port/testing/deploy.sh tools/port/testing/install-docker.sh
 python3 -B tools/port/testing/test_context.py
 python3 -B tools/port/testing/test_deploy.py
 ```
+
+`deploy.sh` usa `build/port/web-release` por defecto; acepta otro directorio
+como primer argumento. CI pasa explícitamente ese directorio y verifica la URL
+con la misma versión optimizada antes de aceptar el deploy.
 
 Para una URL existente, `DW1_WEB_URL=http://<deploy-host>:<port>` evita crear el
 servidor local en `run.py`. `DW1_WEB_INSECURE_ORIGIN` pasa ese origen a Chromium.

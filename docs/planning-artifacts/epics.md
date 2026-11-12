@@ -994,6 +994,35 @@ para encontrar caídas sin tener que jugar a mano (SM-6).
 **Then** corre una pasada corta del bot (clase B), y un pipeline programado nocturno corre el soak con varias semillas y Memory cards y publica solo conteos, horas y hashes
 **And** `docs/port/playtest.md` explica cómo grabar, cómo reproducir un fallo y cómo agregar una Memory card de entrada
 
+### Story 6.11: Build optimizado para jugar, CI y soak
+
+Se ejecuta antes que la Historia 6.10 (agregada el 2026-11-12).
+
+Como jugador,
+quiero que el entorno de testing sirva un build optimizado,
+para jugar a velocidad completa y que las pruebas de tiempo real no dependan de la CPU del runner.
+
+Evidencia: el preset `web` (y el deploy de testing) compila el código del Juego y de PsyQ sin
+optimizar; solo `dw1_backend` usa `-O2`. En un Xeon E5-2696 v4 (la CPU de `runner-231`) la carga
+sintética de `sdl_pacing` tarda 2,5 s por 120 VBlanks en Debug (presupuesto 2,0 s; 3-4
+resincronizaciones) y 1,33 s con `-O2` (0 resincronizaciones). El headless Debug corre a 72
+VBlanks/s, poco para el soak.
+
+**Criterios de aceptación:**
+
+**Given** presets optimizados nativos y web (`-O2`, con símbolos; mismos flags de semántica que Debug)
+**When** el job `testing` construye y despliega el entorno de testing
+**Then** despliega el build web optimizado, y los tests de la página de testing pasan contra él
+
+**Given** `sdl_pacing` y el resto de los tests de tiempo de pared
+**When** corren en CI
+**Then** usan el build nativo optimizado y pasan en `runner-231` sin bajar sus tolerancias
+
+**Given** el playtest de la Historia 6.9
+**When** la misma corrida del bot corre en Debug, en los builds optimizados nativo y web y en `native-asan`
+**Then** todos dan el mismo digest final, y el soak usa el nativo optimizado
+**And** si el digest optimizado diverge, la causa (comportamiento indefinido o lectura sin inicializar) se corrige con un bloque `DW1_PORT` registrado, no se acepta la divergencia
+
 ### Story 6.10: Partida real en testing y triage de caídas
 
 Como jugador,

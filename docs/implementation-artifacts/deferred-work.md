@@ -239,5 +239,26 @@ determinar su relación con la historia. El incidente queda pendiente.
 ## Historia 6.9: velocidad del playtest headless (2026-11-11)
 
 - source_spec: `docs/implementation-artifacts/spec-6-9-playtest-automatico-grabador-bot-y-soak.md`
-  summary: Agregar un preset nativo optimizado (`-O2`, sin `-finstrument-functions` costoso) para el soak, verificando que su digest sea igual al del preset Debug.
+  summary: Resuelto por la historia 6.11: `native-headless-release` usa `-O2 -g`, conserva `-finstrument-functions` y compara su digest con Debug.
+  status: resolved
   evidence: el headless Debug corre a 72 VBlanks/s (1,2× tiempo real); 20 horas virtuales necesitan unas 17 horas de pared por build.
+
+## Historia 6.11: IDCT del MDEC (2026-11-12)
+
+- source_spec: `docs/implementation-artifacts/spec-6-11-build-optimizado-para-jugar-ci-y-soak.md`
+  summary: Optimizar la IDCT de `port/backend/mdec.c` (precalcular la tabla escalada, evitar aritmética de 64 bits en i686) conservando la salida bit a bit.
+  evidence: gprof del build optimizado sobre los primeros 12.000 VBlanks del smoke: `read_block`/`idct` 41% y `mdec_out` 13% del tiempo.
+
+## Historia 6.11: `web_scene_title_audio` diverge del PCM nativo (2026-11-12)
+
+- source_spec: `docs/implementation-artifacts/spec-6-11-build-optimizado-para-jugar-ci-y-soak.md`
+  summary: El PCM del worklet web difiere del nativo a partir del byte 22.733.052 (frame estéreo 5.683.263, sobre 51.369.620 bytes), igual en Chromium y Firefox. Es previo a la 6.11: el test solo corre en el job `testing` y pasó por última vez en el pipeline 148 (`07c27f1`). Bloquea el deploy de testing, por lo que pasa a la Historia 6.10.
+  status: open
+  evidence: corrida serial en docker-dev con `ctest --preset web -R "^web_scene_title_audio$"`; `build/port/web/title-audio-{chromium,firefox}.json` con `underruns=0` y `overflows=0`. `scene_title_audio_compare` nativo contra Redux pasa.
+
+## Historia 6.11: cuelgue en el VBlank 34.200 del benchmark extendido (2026-11-12)
+
+- source_spec: `docs/implementation-artifacts/spec-6-11-build-optimizado-para-jugar-ci-y-soak.md`
+  summary: En la muestra extendida a 60.000 VBlanks, el bot deja de recibir frames durante 30 segundos virtuales en el mismo VBlank 34.200, en Debug y en el optimizado. Es candidato de triage para la Historia 6.10.
+  status: open
+  evidence: reproducciones e inputs en `build/port/verification-6-11/benchmark-soak/` (privado, no versionado).

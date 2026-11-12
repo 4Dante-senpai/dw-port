@@ -167,6 +167,37 @@ def compare(results):
     return len({(r['vblanks'], r['digest']) for r in results if r['status'] == 'ok'}) <= 1
 
 
+def first_difference(results):
+    """Locate the first sampled interval that differs, keeping traces private."""
+    successful = [r for r in results if r['status'] == 'ok']
+    if len(successful) < 2:
+        return None
+    traces = [dict((row[0], row[3]) for row in
+                   digest_rows(Path(r['reproduction']).parent / 'digest.txt'))
+              for r in successful]
+    previous = None
+    for vblank in sorted(set().union(*traces)):
+        if len({trace.get(vblank) for trace in traces}) != 1:
+            return dict(after_vblank=previous, through_vblank=vblank,
+                        builds=[r['build'] for r in successful])
+        previous = vblank
+    return None
+
+
+def smoke_builds(builds):
+    """Compare the standard Debug/optimized pair when both binaries exist."""
+    pair = [ROOT / 'build/port' / name / 'dw1'
+            for name in ('native-headless', 'native-headless-release')]
+    resolved = [Path(b).resolve() if '/' in b else ROOT / 'build/port' / b / 'dw1'
+                for b in builds]
+    standard = [*pair, ROOT / 'build/port/native-asan/dw1']
+    if all(binary.is_file() for binary in pair) and any(binary in standard for binary in resolved):
+        for binary in pair:
+            if binary not in resolved:
+                builds = [*builds, str(binary)]
+    return builds
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--build', action='append', default=[])
@@ -194,6 +225,8 @@ def main(argv=None):
     if a.vblanks <= 0 or a.jobs <= 0 or not math.isfinite(a.hang_seconds) or a.hang_seconds <= 0 or a.frozen_vblanks < 0:
         p.error('limits must be positive')
     builds = a.build or ['native-headless']
+    if a.smoke:
+        builds = smoke_builds(builds)
     binaries = [Path(b).resolve() if '/' in b else ROOT / 'build/port' / b / 'dw1' for b in builds]
     pack = (a.pack or binaries[0].parent / 'us.pack').resolve()
     sources = ([(a.inputs, True)] if a.inputs else []) + [(path, False) for path in a.session + a.prefix]
@@ -235,10 +268,11 @@ def main(argv=None):
             result['build'] = builds[n]
             results.append(result)
         matches = compare(results)
+        difference = first_difference(results) if not matches else None
         if not matches:
-            print(f'digest mismatch at VBlank {limit}; reproduce: ' +
+            print(f'digest mismatch in interval {difference}; final VBlank {limit}; reproduce: ' +
                   ' ; '.join(r['reproduction'] for r in results), flush=True)
-        return dict(seed=seed, runs=results, digests_match=matches)
+        return dict(seed=seed, runs=results, digests_match=matches, first_difference=difference)
 
     try:
         with ThreadPoolExecutor(max_workers=a.jobs) as pool:

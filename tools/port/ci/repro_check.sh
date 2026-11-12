@@ -12,7 +12,8 @@ fi
 if [ "$#" -eq 1 ]; then
   cd "$root"
   rm -rf -- "$second"
-  cmake --preset web -B "$second"
+  # The build directory names its preset (web or web-release), so the served build is the one rebuilt.
+  cmake --preset "$(basename "$first")" -B "$second"
   cmake --build "$second" --target dw1 dw1_pack web_sw
 fi
 for file in dw1.wasm dw1_pack.wasm; do

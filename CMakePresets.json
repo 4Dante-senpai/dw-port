@@ -44,6 +44,37 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
+    },
+    {
+      "name": "native-headless-release",
+      "displayName": "native-headless optimized (-O2, symbols and assertions)",
+      "inherits": "native-headless",
+      "binaryDir": "${sourceDir}/build/port/native-headless-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_C_FLAGS_RELWITHDEBINFO": "-O2 -g"
+      }
+    },
+    {
+      "name": "native-release",
+      "displayName": "native optimized (-O2, symbols and assertions)",
+      "inherits": "native",
+      "binaryDir": "${sourceDir}/build/port/native-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_C_FLAGS_RELWITHDEBINFO": "-O2 -g"
+      }
+    },
+    {
+      "name": "web-release",
+      "displayName": "web optimized (-O2, symbols and assertions)",
+      "inherits": "web",
+      "binaryDir": "${sourceDir}/build/port/web-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_C_FLAGS_RELWITHDEBINFO": "-O2 -g",
+        "CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO": "-O2 -g"
+      }
     }
   ],
   "buildPresets": [
@@ -62,6 +93,18 @@
     {
       "name": "native",
       "configurePreset": "native"
+    },
+    {
+      "name": "native-headless-release",
+      "configurePreset": "native-headless-release"
+    },
+    {
+      "name": "native-release",
+      "configurePreset": "native-release"
+    },
+    {
+      "name": "web-release",
+      "configurePreset": "web-release"
     }
   ],
   "testPresets": [
@@ -92,6 +135,27 @@
     {
       "name": "native",
       "configurePreset": "native",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "native-headless-release",
+      "configurePreset": "native-headless-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "native-release",
+      "configurePreset": "native-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "web-release",
+      "configurePreset": "web-release",
       "output": {
         "outputOnFailure": true
       }
