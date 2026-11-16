@@ -21,9 +21,9 @@
   revisada); la paridad contra PCSX-Redux queda para diagnosticar bugs visibles. Suben a la v1
   el speed-up (FR-18), los save states con autosave (FR-19) y la escala entera de pantalla
   (FR-20). Detalle: `docs/planning-artifacts/sprint-change-proposal-2026-11-11.md`.
-- Siguiente: **Historia 6.10** (partida real en testing y triage de caídas, incluidos
-  `web_scene_title_audio` y el cuelgue del VBlank 34.200), con el playtest automático
-  de la 6.9 corriendo en `docker-server`.
+- Siguiente: **Historia 6.10** en curso. Corregidos los cuatro fallos del triage
+  (`docs/port/triage.md`) y soak limpio; falta el pipeline verde con los timeouts nuevos, la
+  sesión del dueño en testing y la Escena de combate armada sobre su ruta.
 
 ## Hecho
 
@@ -530,6 +530,15 @@
 ## En curso
 
 - Fase 5: Épicas 2, 3 y 4 cerradas con sus retrospectivas. El 2026-11-11 se aplicó el cambio de rumbo y se cerraron las Historias 6.9 y 6.11 (Épica 6 en curso). Hipótesis abierta: el mecanismo de save states (spike 9.3; una copia de la memoria WASM no incluye la pila del hilo del Juego).
+- Historia 6.10 (en curso, 2026-11-16): el «cuelgue» del VBlank 34.200 era la pausa de
+  `handlePause` (`PadRead` sin `VSync`); el watchdog ahora toma la lectura del pad como progreso.
+  `web_scene_title_audio` divergía porque la reproducción web contaba desde el frame 0; las Escenas
+  usan `--replay-absolute`. El soak encontró dos fallos del juego que el port convertía en caídas:
+  división por cero en `tickHealingParticles` (SIGFPE en release) y lectura fuera de
+  `EVO_CHART_BOXES` (ASan); ambos se corrigen detrás de `DW1_PORT` con `make compare` idéntico.
+  Soak posterior: 0 fallos en 20 horas virtuales, digests iguales en release y ASan, overlays
+  7, 10 y 11. El CI de `main` estaba rojo desde el 2026-11-12 por timeouts en `runner-231`; se
+  subieron (estimación ×1,5) y se miden en la primera corrida.
 - Heredado de la Épica 4: El dueño aprobó el 2026-10-31 extender a web la excepción de contrapresión de AD-8. El pipeline 146 de `main` (`4b3b251`, historia 4.9) quedó verde, sin reintentos, con despliegue al entorno de testing. Siguen sin causa identificada dos fallos intermitentes de Firefox en CI, anotados en `deferred-work.md` y no repetidos en los pipelines 144 ni 146: `#play` deshabilitado tras recargar y `Target crashed` en `web_scene_title_audio`.
 
 ## Bloqueos

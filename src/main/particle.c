@@ -141,7 +141,12 @@ void tickHealingParticles(int32_t instance) {
         entry2 = &entries2[particle->frameId % 5];
         for (i = 0; i < 4; i++) {
             angle = lerp(0, 512, 0, 13, particle->frameId);
+#ifdef DW1_PORT
+            /* The PS1 `div` does not trap: 512 / 0 leaves LO = -1 (the original has no zero check). */
+            angle += (i * 13 / 4) ? 512 / (i * 13 / 4) : -1;
+#else
             angle += 512 / (i * 13 / 4);
+#endif
 
             entry2->counter = 5;
 

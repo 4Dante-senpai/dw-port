@@ -41,6 +41,13 @@ test('the complete raw worklet PCM equals native title_audio byte for byte', asy
   const result = {native_bytes: native.length, web_bytes: actual.length, first_difference_byte: first,
     first_difference_frame: first < 0 ? -1 : Math.floor(first / 4), sha256: fixture.sha256,
     ...await page.evaluate(() => Module.audioStats())};
+  if (first >= 0) { // Evidence for a divergence: stereo frames around it and how far it extends.
+    const frame = result.first_difference_frame, lo = Math.max(0, frame - 4);
+    const view = (b) => Array.from({length: 16}, (_, i) => [b.readInt16LE((lo + i) * 4), b.readInt16LE((lo + i) * 4 + 2)]);
+    result.first_frame_context = lo; result.native_samples = view(native); result.web_samples = view(actual);
+    let count = 0; for (let i = 0; i < native.length; i += 4) if (actual.readInt32LE(i) !== native.readInt32LE(i)) count++;
+    result.differing_frames = count;
+  }
   fs.writeFileSync(`${process.env.DW1_WEB_BUILD}/title-audio-${info.project.name}.json`, JSON.stringify(result, null, 2));
   expect(actual.length, 'web PCM must cover the entire native recording').toBeGreaterThanOrEqual(native.length);
   expect(first, `first PCM difference at byte ${first}, stereo frame ${Math.floor(first / 4)}`).toBe(-1);

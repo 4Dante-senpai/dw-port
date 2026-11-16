@@ -253,12 +253,12 @@ determinar su relación con la historia. El incidente queda pendiente.
 
 - source_spec: `docs/implementation-artifacts/spec-6-11-build-optimizado-para-jugar-ci-y-soak.md`
   summary: El PCM del worklet web difiere del nativo a partir del byte 22.733.052 (frame estéreo 5.683.263, sobre 51.369.620 bytes), igual en Chromium y Firefox. Es previo a la 6.11: el test solo corre en el job `testing` y pasó por última vez en el pipeline 148 (`07c27f1`). Bloquea el deploy de testing, por lo que pasa a la Historia 6.10.
-  status: open
+  status: closed (Historia 6.10, sin commit aún; causa y corrección en `docs/port/triage.md`, fila 2)
   evidence: corrida serial en docker-dev con `ctest --preset web -R "^web_scene_title_audio$"`; `build/port/web/title-audio-{chromium,firefox}.json` con `underruns=0` y `overflows=0`. `scene_title_audio_compare` nativo contra Redux pasa.
 
 ## Historia 6.11: cuelgue en el VBlank 34.200 del benchmark extendido (2026-11-12)
 
 - source_spec: `docs/implementation-artifacts/spec-6-11-build-optimizado-para-jugar-ci-y-soak.md`
   summary: En la muestra extendida a 60.000 VBlanks, el bot deja de recibir frames durante 30 segundos virtuales en el mismo VBlank 34.200, en Debug y en el optimizado. Es candidato de triage para la Historia 6.10.
-  status: open
+  status: closed (Historia 6.10, sin commit aún; no era un cuelgue sino una pausa legítima, `docs/port/triage.md`, fila 1)
   evidence: reproducciones e inputs en `build/port/verification-6-11/benchmark-soak/` (privado, no versionado).

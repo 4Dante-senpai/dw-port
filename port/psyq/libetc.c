@@ -3,6 +3,7 @@
 #include <stddef.h>
 
 #include "clock.h"
+#include "crt.h"
 #include "port.h"
 #include "psyq.h"
 
@@ -78,11 +79,15 @@ uint32_t port_pad_value(void)
 	return ~pad_buf;
 }
 
+static volatile int pad_polled;
+int port_pad_polled_take(void) { int v = pad_polled; pad_polled = 0; return v; }
+
 /* asm:asm/us/main/psyq/libetc.s:PadRead -- first controller, active-high PsyQ byte order. */
 unsigned long PadRead(int id)
 {
 	clock_psyq_entry();
 	(void)id;
+	pad_polled = 1;
 	if (port_scene_movie_timing) port_scene_movie_timing("PadRead", ~pad_buf);
 	return ~pad_buf;
 }

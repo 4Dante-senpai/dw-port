@@ -207,10 +207,13 @@ void port_overlay_done(void)
 /* No frame in WATCHDOG_SECONDS of virtual time: the game waits for something the port does not
  * do yet (a stub). Stop with the trace instead of spinning forever. */
 #define WATCHDOG_SECONDS 30
+/* The pause loop (handlePause) polls PadRead with no VSync until Start, for as long as the player
+ * wants (story 6.10, VBlank 34.200): polling the pad is progress, not a wait on a stub. */
 static void watchdog(void *arg)
 {
 	(void)arg;
-	if (frames == watchdog_frames) {
+	int polled = port_pad_polled_take();
+	if (frames == watchdog_frames && !polled) {
 		fprintf(stderr, "port: no frame in %d virtual seconds (frame %ld, cycle %llu); see the "
 		        "stub trace\n", WATCHDOG_SECONDS, frames, (unsigned long long)clock_now());
 		exit(3);

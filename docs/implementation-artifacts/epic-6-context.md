@@ -8,9 +8,9 @@ Que Digimon World USA se pueda jugar de principio a fin en el port sin caídas, 
 
 ## Stories
 
-- Story 6.9: Playtest automático: grabador, bot y soak (va primero)
-- Story 6.11: Build optimizado para jugar, CI y soak (va segunda, agregada el 2026-11-12)
-- Story 6.10: Partida real en testing y triage de caídas (va tercera)
+- Story 6.9: Playtest automático: grabador, bot y soak (hecha)
+- Story 6.11: Build optimizado para jugar, CI y soak (hecha; agregada el 2026-11-12)
+- Story 6.10: Partida real en testing y triage de caídas (siguiente)
 - Story 6.1: Definición de la suite de Escenas
 - Story 6.2: Mundo, combate y evolución
 - Story 6.3: Entrenamiento, tiendas y objetos
@@ -44,8 +44,9 @@ Que Digimon World USA se pueda jugar de principio a fin en el port sin caídas, 
 
 ## Cross-Story Dependencies
 
-- 6.9 entrega el grabador, el bot y el runner que usan 6.10 (triage), 6.7 (partida grabada) y 6.8 (regresión en CI).
-- 6.11 entrega los builds optimizados que usan el deploy de testing de 6.10 y el soak de 6.9; el oráculo de digest debe coincidir entre Debug, optimizado, ASan y web.
+- 6.9 (hecha) entrega el grabador, el bot y el runner que usan 6.10 (triage), 6.7 (partida grabada) y 6.8 (regresión en CI).
+- 6.11 (hecha) entrega los builds optimizados que usan el deploy de testing de 6.10 y el soak de 6.9; el oráculo de digest debe coincidir entre Debug, optimizado, ASan y web.
+- 6.10 arrastra dos hallazgos abiertos de 6.9/6.11: `web_scene_title_audio` diverge del PCM nativo (bloquea el job `testing`) y el bot se cuelga en el VBlank 34.200.
 - 6.10 necesita el entorno de testing del homelab y confirma con una Escena de combate la corrección del scratchpad hecha al cerrar la Épica 4.
 - 6.1 define la suite que completan 6.2 a 6.6.
 - La acción de retrospectiva pendiente «antes de la Épica 6, dividir `port/web/dev/index.html`» sigue abierta en `sprint-status.yaml`; el grabador web de 6.9 toca ese archivo.

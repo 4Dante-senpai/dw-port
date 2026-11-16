@@ -117,6 +117,7 @@ async function start() {
       '--capture-vblank', query.get('capture-vblank'));
   if (query.has('card-test')) args.push('--card-test', query.get('card-test'));
   if (query.has('replay')) args.push('--replay', 'replay.txt');
+  if (query.has('replay') && query.get('replay') !== 'playtest') args.push('--replay-absolute'); // Scene inputs count from boot; only playtest recordings count from frame 0
   if (query.has('vblanks')) args.push('--vblanks', query.get('vblanks'));
   if (query.has('digest') || query.has('record-inputs')) args.push('--digest', 'digest.txt', '--digest-every', query.get('digest-every') || '60');
   if (query.has('record-inputs')) args.push('--record-inputs', 'record.txt');
