@@ -855,7 +855,14 @@ StringRect TAMER_WINDOW_NAME_STRING[11] = {
 };
 #endif
 
-EvoChartEntry EVO_CHART_BOXES[61] = {
+#ifdef DW1_PORT
+/* The chart loops run to 0x3e and read one entry past the array: on the PS1 that is the first 8 bytes
+ * of MAIN_D_8012472C (next symbol, 0x8012472C). The port keeps that entry in the array. */
+#define EVO_CHART_BOX_COUNT 62
+#else
+#define EVO_CHART_BOX_COUNT 61
+#endif
+EvoChartEntry EVO_CHART_BOXES[EVO_CHART_BOX_COUNT] = {
 	{ 0x001e, 0x002b, 0x40, 0x90, 0x00, 0x00 },
 	{ 0x0043, 0x002b, 0x60, 0x90, 0x00, 0x00 },
 	{ 0x0068, 0x002b, 0x40, 0x80, 0x00, 0x00 },
@@ -917,6 +924,9 @@ EvoChartEntry EVO_CHART_BOXES[61] = {
 	{ 0x0112, 0x0051, 0x20, 0x00, 0x00, 0x00 },
 	{ 0x00fa, 0x0064, 0x40, 0x00, 0x04, 0x00 },
 	{ 0x00fa, 0x008a, 0x60, 0x00, 0x03, 0x00 },
+#ifdef DW1_PORT
+	{ 0xff6e, 0xffbd, 0x92, 0x00, 0xbd, 0xff },
+#endif
 };
 
 Line MAIN_D_8012472C[14] = {

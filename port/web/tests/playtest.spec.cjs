@@ -22,7 +22,7 @@ async function roundtrip(page, info, name, unfinished = false) {
   const result = spawnSync('python3', ['-I', '-B', path.join(root, 'tools/port/playtest/run.py'),
     '--build', 'native-headless', '--pack', path.join(process.env.DW1_WEB_BUILD, 'us.pack'),
     '--inputs', recording, '--vblanks', String(snapshot.vblank), '--output', path.join(work, 'native')],
-    {cwd: root, encoding: 'utf8', timeout: 900000});
+    {cwd: root, encoding: 'utf8', timeout: 3300000}); // 29,435 VBlanks took ~2150 s in Debug on runner-231 (pipeline 164) x1.5
   expect(result.status, result.stderr + result.stdout).toBe(0);
   const report = JSON.parse(fs.readFileSync(path.join(work, 'native/report.json')));
   expect(report.trials[0].runs[0].digest).toBe(snapshot.digest);
@@ -54,7 +54,7 @@ test('live keyboard recording replays with the same digest in native', async ({p
 });
 
 test('playtest digest and downloaded recording agree with native', async ({page}, info) => {
-  test.setTimeout(1800000);
+  test.setTimeout(5400000);
   const failures = errors(page);
   await seed(page, 'us.pack');
   const limit = Number(process.env.DW1_PLAYTEST_VBLANKS);

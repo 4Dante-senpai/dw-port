@@ -75,7 +75,9 @@ web-disc:
   artifacts:
     when: always
     paths: [build/port/web/long-*.json, build/port/web/playtest-native/summary.json, build/port/web-release/playtest-native/summary.json]
-  timeout: 1h 30m
+  # runner-231 is ~8x slower than the dev hosts (pipeline 164: 29,435 Debug VBlanks in ~2150 s). The
+  # timeouts below are estimates x1.5 from the pipeline 164 logs; re-measure on the first green run.
+  timeout: 9h
   variables:
     DW1_DISC_DIR: /private/disc
   script:
@@ -97,7 +99,7 @@ native-disc:
   artifacts:
     when: always
     paths: [build/port/native-headless/playtest/smoke/summary.json, build/port/native-headless-release/playtest/smoke/summary.json]
-  timeout: 4h                          # a full reference recapture took 2 h 52 min in pipeline 138
+  timeout: 10h                         # pipeline 164 was still at test 22/34 after 4 h; a full recapture took 2 h 52 min on a fast runner
   cache:
     key:
       files: [.gitlab-ci.yml]
@@ -117,7 +119,7 @@ native-disc:
     - tools/port/ci/ctest_no_skip.sh --preset native-release --output-on-failure -R "^(sdl_pacing|native_wall_10min)$"
     - cmake --preset native-headless-release
     - cmake --build --preset native-headless-release
-    - tools/port/ci/ctest_no_skip.sh --preset native-headless-release --output-on-failure -R "^playtest_smoke$"
+    - tools/port/ci/ctest_no_skip.sh --preset native-headless-release --output-on-failure -R "^playtest_"
     - xvfb-run -a pcsx-redux -version > /dev/null   # reference_title must run, not skip (77)
     - tools/port/ci/ctest_no_skip.sh --preset native-headless --output-on-failure -R "pack_disc|dw1_overlay|gte_tables_disc|press_tables_disc|sound_tables_disc|playtest_smoke|scene_|reference_title|reference_naming|reference_newgame_state|reference_xa_op1|reference_movie0|reference_card_"
 
@@ -129,7 +131,7 @@ native-asan-disc:
     paths: [build/port/native-asan/playtest/smoke/summary.json]
   # Serial on purpose: captures have wall-clock timeouts, so parallel ASan + Redux could flake.
   # A full reference recapture took 3 h 58 min in pipeline 138.
-  timeout: 5h
+  timeout: 12h
   cache:
     key:
       files: [.gitlab-ci.yml]
@@ -169,7 +171,7 @@ matching:
 testing:
   extends: .testing_base
   stage: testing
-  timeout: 2h                          # two ctest passes plus the title audio tests exceeded 1 h in pipeline 141
+  timeout: 6h                          # (was 2h; runner-231 ~3x slower, estimate) two ctest passes plus the title audio tests exceeded 1 h in pipeline 141
   script:
     - cmake --preset native-headless
     - cmake --build --preset native-headless

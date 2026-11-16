@@ -465,6 +465,20 @@ if(NOT EMSCRIPTEN)
     add_test(NAME playtest_smoke COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/playtest/run.py
       --smoke --build $<TARGET_FILE:dw1> --output ${CMAKE_BINARY_DIR}/playtest/smoke)
     set_tests_properties(playtest_smoke PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3600 FIXTURES_REQUIRED disc_pack)
+    # Story 6.10 triage (docs/port/triage.md): synthetic bot inputs trimmed to the failing VBlank, with the
+    # digest of native-headless-release after the fix (equal in every build). name:VBlanks
+    foreach(regress pause_34200:35000 healing_div0:45120 evo_chart_oob:68880)
+      string(REPLACE ":" ";" regress ${regress})
+      list(GET regress 0 regress_name)
+      list(GET regress 1 regress_vblanks)
+      set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/tools/port/playtest/regress/${regress_name}.digest)
+      file(READ ${CMAKE_SOURCE_DIR}/tools/port/playtest/regress/${regress_name}.digest regress_digest)
+      string(STRIP "${regress_digest}" regress_digest)
+      add_test(NAME playtest_${regress_name} COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/playtest/check_replay.py
+        $<TARGET_FILE:dw1> ${CMAKE_SOURCE_DIR}/tools/port/playtest/regress/${regress_name}.inputs.txt ${regress_vblanks}
+        ${regress_digest} ${CMAKE_BINARY_DIR}/playtest/${regress_name})
+      set_tests_properties(playtest_${regress_name} PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 7200 FIXTURES_REQUIRED disc_pack)
+    endforeach()
   endif()
 endif()
 
@@ -577,6 +591,8 @@ if(NOT EMSCRIPTEN)
   target_link_libraries(test_watchdog dw1_runtime)
   add_test(NAME watchdog COMMAND sh -c "$<TARGET_FILE:test_watchdog> 2> watchdog.err; s=$?; \
     test $s = 3 && grep -q 'no frame in 30 virtual seconds' watchdog.err"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  add_test(NAME watchdog_pad_poll COMMAND sh -c "WATCHDOG_PAD_POLL=1 $<TARGET_FILE:test_watchdog> 2> watchdog_pad.err"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
   set_tests_properties(frame0 PROPERTIES TIMEOUT 120)
 endif()
@@ -884,7 +900,7 @@ if(EMSCRIPTEN)
     FIXTURES_REQUIRED "disc_pack;native_title_audio")
   add_test(NAME web_playtest COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} playtest)
-  set_tests_properties(web_playtest PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 5400 FIXTURES_REQUIRED disc_pack)
+  set_tests_properties(web_playtest PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 14400 FIXTURES_REQUIRED disc_pack)
   add_test(NAME web_scene_title COMMAND python3 -I -B
     ${CMAKE_SOURCE_DIR}/port/web/tests/run.py ${CMAKE_BINARY_DIR} title)
   set_tests_properties(web_scene_title PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1200

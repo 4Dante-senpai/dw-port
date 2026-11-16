@@ -187,3 +187,28 @@ requieren referencias privadas o card ausentes: `scene_title_audio_compare`,
 `scene_xa_op1_compare`, `scene_movie0_compare`, `scene_movie0_skip_compare` y
 `scene_card_continue_compare`. Se excluyeron en la repetición; el preprocesado se
 verificó por separado. No se ejecutó ni programó la tanda larga en el homelab.
+
+## Soak y triage de la Historia 6.10
+
+Primer soak completo en el homelab (2026-11-16, 4 semillas × 540.079 VBlanks, `native-headless-release`
+y `native-asan`, 5,25 horas virtuales ejecutadas antes de los fallos): 7 de 8 corridas fallaron y los digests
+coincidieron entre builds hasta el punto de fallo. Los overlays visitados fueron solo `MOV` (7) y
+`SHOP` (11): el bot no sale de File City sin guía, así que la cobertura de los 16 overlays sigue abierta.
+Los fallos (división por cero de `tickHealingParticles` y lectura fuera del arreglo del gráfico de
+evolución) están en `docs/port/triage.md` con sus tests de regresión.
+
+El supuesto cuelgue del VBlank 34.200 era una pausa del juego: `handlePause` espera Start sin llamar
+a `VSync`, y el watchdog de 30 s virtuales solo miraba frames presentados. Ahora `PadRead` cuenta como
+progreso del watchdog (el plazo no cambia). Un test L1 (`watchdog_pad_poll`) y un test clase B
+(`playtest_pause_34200`) lo cubren.
+
+Los tests clase B de regresión usan `tools/port/playtest/check_replay.py`: reproducen un archivo de
+inputs sintético versionado (`tools/port/playtest/regress/*.inputs.txt`) y comparan el digest final con
+`*.digest`.
+
+Segundo soak (2026-11-16, tras las correcciones de `docs/port/triage.md`; `tools/port/playtest/soak.sh`,
+4 semillas × 540.079 VBlanks, `native-headless-release` y `native-asan`): 8 corridas, 0 fallos, 20,00 horas
+virtuales, digest final igual entre builds en las 4 semillas. Pared por corrida: 2.660 a 2.884 s en
+release y 4.945 a 5.530 s en ASan. Overlays visitados: `MOV` (7), `TRN` (10, semilla 3 desde el VBlank
+213.847) y `SHOP` (11). Faltan los otros 13: el bot sin guía no sale de File City y no llegó a `BTL`.
+Informe privado: `build/port/playtest/soak/20261116T020359Z/`.

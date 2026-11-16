@@ -112,6 +112,7 @@ int main(int argc, char **argv)
             if (web_input_replay(argv[++i])) return 2;
             web_audio_replay(1);
         }
+        else if (!strcmp(argv[i], "--replay-absolute")) web_input_replay_absolute();
         else if (!strcmp(argv[i], "--digest") && i + 1 < argc) config.digest = argv[++i];
         else if (!strcmp(argv[i], "--record-inputs") && i + 1 < argc) config.record_inputs = argv[++i];
         else if (!strcmp(argv[i], "--digest-every") && i + 1 < argc) {

@@ -25,12 +25,12 @@ callback	src/fish/fish.c	1537	20	(TickFunction)FISH_tickTextBox, (RenderFunction
 callback	src/main/battle_ui.c	294	65	(RenderFunction)renderBitBox);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
 callback	src/main/battle_ui.c	544	8	(RenderFunction)renderPostBattleStatsBox);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
 callback	src/main/buff_model.c	92	5	(RenderFunction)renderBuffModel);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
-callback	src/main/game_menu.c	1330	22	(void (*)(int32_t))tickTriangleMenu, NULL);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
-callback	src/main/game_menu.c	1705	23	(TickFunction)tick, (RenderFunction)render);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
-callback	src/main/game_menu.c	1705	43	(RenderFunction)render);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
-callback	src/main/game_menu.c	2016	9	(RenderFunction)renderEvoChartDetail);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
-callback	src/main/game_menu.c	2090	7	(RenderFunction)renderCardImage);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
-callback	src/main/game_menu.c	2093	13	(RenderFunction)renderCardCount);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/game_menu.c	1340	22	(void (*)(int32_t))tickTriangleMenu, NULL);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/game_menu.c	1715	23	(TickFunction)tick, (RenderFunction)render);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/game_menu.c	1715	43	(RenderFunction)render);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/game_menu.c	2026	9	(RenderFunction)renderEvoChartDetail);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/game_menu.c	2100	7	(RenderFunction)renderCardImage);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
+callback	src/main/game_menu.c	2103	13	(RenderFunction)renderCardCount);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
 callback	src/main/inventory.c	303	23	(TickFunction)tickItemOption,	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
 callback	src/main/inventory.c	304	23	(RenderFunction)renderItemOption);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
 callback	src/main/inventory.c	518	23	(TickFunction)tickInventoryTop, (RenderFunction)renderInventoryTop);	EMULATE_FUNCTION_POINTER_CASTS (web); cdecl (native)
@@ -293,84 +293,84 @@ non-prototype	src/main/evl.c	58	18	(&PARTNER_ENTITY.digimonEntity.entity, 1);	C 
 non-prototype	src/main/evl.c	64	16	(0x809, instanceId);	DW1_PORT direct ABI correction
 non-prototype	src/main/file.c	39	14	(filename, entry->filename)) {	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/font.c	1745	34	(*str);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	1355	15	(0xfa4, 0);	DW1_PORT direct ABI correction
-non-prototype	src/main/game_menu.c	1413	14	(0xfa4, 0);	DW1_PORT direct ABI correction
-non-prototype	src/main/game_menu.c	1479	14	(3, -0x3c, -0x49, 0x24, 0xc, 0, 0xe7, 6, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	1480	14	(3, 6, -0x49, 0x1c, 0xc, 0x24, 0xe7, 6, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	1845	14	(tabs.tab[0], -0x8a, -0x65, 0x3c, 0xc, 0, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	1846	14	(tabs.tab[1], -0x3f, -0x65, 0x30, 0xc, 0x3c, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2162	14	(tabs.tab[0], -0x89, -0x65, 0x3c, 0xc, 0, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2163	14	(tabs.tab[1], -0x3e, -0x65, 0x3c, 0xc, 0x3c, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2164	14	(tabs.tab[2], 0xd, -0x65, 0x24, 0xc, 0x78, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2165	14	(tabs.tab[3], 0x40, -0x65, 0x24, 0xc, 0x9c, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2239	15	(0xfa4, 0);	DW1_PORT direct ABI correction
-non-prototype	src/main/game_menu.c	2403	14	(0, 0x6b, 0x4c, 0xc, 0xc, 0xd8, 0xc, 0);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2436	16	(3, sr->posX, sr->posY + 1, sr->uvWidth, 0xc, sr->uvX, sr->uvY, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2443	15	(0, -0x6d, -0x42, 0x48, 0xc, 0, 0x3c, 5, 0);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2454	15	(0, -0x6c, -0x32, w, 0xc, 0, 0x48, 5, 0);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2536	16	(0, 0x55, -0x33, 0x30, 0xc, 0xcc, 0x30, 5, 0);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2539	16	(0, 0x55, -0x33, 0x30, 0xc, RAISE_DATA[PARTNER_ENTITY.digimonEntity.entity.type].sleepCycle * 0x30, 0x18, 5, 0);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2775	15	(3, -0x8e, -0x57, 0x3c, 0xc, 0, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2780	17	(0, -0x7c, j * 0xf - 0x42, 0x78, 0xc, 0, j * 0xc + 0x18, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2788	18	(0, 0x65, j * 0xf - 0x42, 0xc, 0xc,	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2808	15	(3, -0x8e, -0xf, 0x24, 0xc, 0x3c, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2820	16	(3, -0x8e, -0xf, 0x24, 0xc, 0x3c, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2821	16	(0, -0x7c, 1, 0x84, 0xc, 0, 0x3c, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2823	16	(0, 0x65, 1, 0xc, 0xc,	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2837	15	(0xf, -0x82, 0x19, 0xc, 0xc, 0, 0x54, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2838	15	(0, -0x76, 0x19, 0xa8, 0xc, 0xc, 0x54, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2839	15	(0, -0x76, 0x27, 0x84, 0xc, 0xc, 0x60, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2840	15	(7, -0x82, 0x27, 0xc, 0xc, 0, 0x60, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2842	15	(0, 0xe, 0x27, 0x18, 0xc, 0x90, 0x60, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2859	15	(3, -0x8e, -0xf, 0x3c, 0xc, 0x60, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2870	15	(0, -0x87, 0x20, 0x30, 0xc, 0x3c, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2871	15	(0, -0x81, 0x2e, 0x24, 0xc, 0, 0x6c, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2876	15	(0xc, -0x74, 0x4c, 0x18, 0xc, 0x30, 0x6c, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2917	15	(3, -0x8e, -0x52, 0xa0, 0xc, 0, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2919	15	(0xe, -0x72, -0x32, 0xc, 0xc, 0xcc, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2920	15	(0xe, 6, -0x21, 0xc, 0xc, 0xcc, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2921	15	(0xe, -0x2a, -0x13, 0xc, 0xc, 0xcc, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2924	16	(0, sr->posX,	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2930	15	(0, 0x42, 0x33, 0x3c, 0xc, 0x78, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	2931	15	(0, 0x42, 0x43, 0x3c, 0xc, 0x84, 0x54, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3006	16	(3 - ((i / 7) * 3), e->posX, e->posY + 1, e->uvWidth, 0xc, e->uvX,	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3010	15	(0, -0x54, -0x50, 0x48, 0xc, 0, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3019	15	(0, 0x28, -0x24, 0x64, 0xc, 0, (TAMER_ENTITY.tamerLevel * 12) + 0x40, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3022	15	(0, (n * 12) + 0x28, -0x25, 0x30, 0xc, 0xb4, 0x18, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3030	15	(0, 0x32, 0x16, 0x4c, 0xc, 0, 0xe4, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3155	15	(0, (panel * 0x9d) - 0x8a, 9, 0x78, 0xc, 0, 0x84, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3158	15	(0, (panel * 0xcb) - 0x64, 0x3e, 0x24, 0xc, (move->range - 1) * 0x24, 0x78, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3171	16	(0, (panel * 0xcb) - 0x64, 0x4f, 0x1a, 0xc, 0x84, 0x6c, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3174	16	(0, (panel * 0xcb) - 0x64, 0x4f, 0x1c, 0xc, 0xa0, 0x6c, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3177	16	(0, (panel * 0xcb) - 0x64, 0x4f, 0x20, 0xc, 0xbc, 0x6c, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3180	16	(0, (panel * 0xcb) - 0x64, 0x4f, 0x1e, 0xc, 0xdb, 0x6c, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3362	14	(0xfa4, 0);	DW1_PORT direct ABI correction
-non-prototype	src/main/game_menu.c	3440	15	(0xf, -0x1a, 0x54, 0xc, 0xc, 0, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3442	15	(0, -0xe, 0x54, 0x3c, 0xc, 0xc, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3446	15	(7, 0x3a, 0x54, 0xc, 0xc, 0x48, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3448	15	(0, 0x46, 0x54, 0x3c, 0xc, 0x54, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3638	14	(3, -0x14, -0x4f, 0x24, 0xc, 0, 0x18, 4);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3641	15	(0, -0x5b, 0x3a, 0x2e, 0xc, 0x24, 0x18, 4);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3644	15	(0, -0x63, 0x3a, 0x3e, 0xc, 0x52, 0x18, 4);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3647	15	(0, -0x5b, 0x3a, 0x2f, 0xc, 0, 0x24, 4);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3650	15	(0, -0x64, 0x3a, 0x41, 0xc, 0x2f, 0x24, 4);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3653	15	(0, -0x64, 0x3a, 0x41, 0xc, 0, 0x3c, 4);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3660	14	(0, -0x5c - ((len - 4) * 6), 0x4d, 0x78, 0xc, 0, 0x30, 4);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3693	15	(3, -0x36, -0x51, 0x6c, 0xc, 0, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3705	19	(0, -0x5d, 0x17, 0xac, 0xc, 0, 0x18, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3708	20	(0, -0x7e, j * 13 + 0x27, 0xfc, 0xc, 0,	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3741	15	(FOOTER_GLYPH1_COLOR, -0x23, 0x55, 0xc, 0xc, 0x6c, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3742	15	(0, -0x17, 0x55, 0x18, 0xc, 0x84, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3743	15	(0, 1, 0x55, 0x24, 0xc, 0x9c, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3744	15	(FOOTER_GLYPH2_COLOR, 0x2b, 0x55, 0xc, 0xc, 0x78, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3749	15	(0, 0x37, 0x55, 0x30, 0xc, 0xc0, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3791	15	(3, -0x24, -0x50, 0x48, 0xc, 0, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3798	15	(FOOTER_GLYPH1_COLOR, -0x23, 0x53, 0xc, 0xc, 0x48, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3799	15	(0, -0x17, 0x53, 0x3c, 0xc, 0x54, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3800	15	(FOOTER_GLYPH2_COLOR, 0x2b, 0x53, 0xc, 0xc, 0x90, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3801	15	(0, 0x37, 0x53, 0x3c, 0xc, 0x9c, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	3997	19	(entityId, 0, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
-non-prototype	src/main/game_menu.c	4023	19	(entityId, savedRot.vx, savedRot.vy, savedRot.vz);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	1365	15	(0xfa4, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/game_menu.c	1423	14	(0xfa4, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/game_menu.c	1489	14	(3, -0x3c, -0x49, 0x24, 0xc, 0, 0xe7, 6, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	1490	14	(3, 6, -0x49, 0x1c, 0xc, 0x24, 0xe7, 6, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	1855	14	(tabs.tab[0], -0x8a, -0x65, 0x3c, 0xc, 0, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	1856	14	(tabs.tab[1], -0x3f, -0x65, 0x30, 0xc, 0x3c, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2172	14	(tabs.tab[0], -0x89, -0x65, 0x3c, 0xc, 0, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2173	14	(tabs.tab[1], -0x3e, -0x65, 0x3c, 0xc, 0x3c, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2174	14	(tabs.tab[2], 0xd, -0x65, 0x24, 0xc, 0x78, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2175	14	(tabs.tab[3], 0x40, -0x65, 0x24, 0xc, 0x9c, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2249	15	(0xfa4, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/game_menu.c	2413	14	(0, 0x6b, 0x4c, 0xc, 0xc, 0xd8, 0xc, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2446	16	(3, sr->posX, sr->posY + 1, sr->uvWidth, 0xc, sr->uvX, sr->uvY, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2453	15	(0, -0x6d, -0x42, 0x48, 0xc, 0, 0x3c, 5, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2464	15	(0, -0x6c, -0x32, w, 0xc, 0, 0x48, 5, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2546	16	(0, 0x55, -0x33, 0x30, 0xc, 0xcc, 0x30, 5, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2549	16	(0, 0x55, -0x33, 0x30, 0xc, RAISE_DATA[PARTNER_ENTITY.digimonEntity.entity.type].sleepCycle * 0x30, 0x18, 5, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2785	15	(3, -0x8e, -0x57, 0x3c, 0xc, 0, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2790	17	(0, -0x7c, j * 0xf - 0x42, 0x78, 0xc, 0, j * 0xc + 0x18, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2798	18	(0, 0x65, j * 0xf - 0x42, 0xc, 0xc,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2818	15	(3, -0x8e, -0xf, 0x24, 0xc, 0x3c, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2830	16	(3, -0x8e, -0xf, 0x24, 0xc, 0x3c, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2831	16	(0, -0x7c, 1, 0x84, 0xc, 0, 0x3c, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2833	16	(0, 0x65, 1, 0xc, 0xc,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2847	15	(0xf, -0x82, 0x19, 0xc, 0xc, 0, 0x54, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2848	15	(0, -0x76, 0x19, 0xa8, 0xc, 0xc, 0x54, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2849	15	(0, -0x76, 0x27, 0x84, 0xc, 0xc, 0x60, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2850	15	(7, -0x82, 0x27, 0xc, 0xc, 0, 0x60, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2852	15	(0, 0xe, 0x27, 0x18, 0xc, 0x90, 0x60, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2869	15	(3, -0x8e, -0xf, 0x3c, 0xc, 0x60, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2880	15	(0, -0x87, 0x20, 0x30, 0xc, 0x3c, 0, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2881	15	(0, -0x81, 0x2e, 0x24, 0xc, 0, 0x6c, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2886	15	(0xc, -0x74, 0x4c, 0x18, 0xc, 0x30, 0x6c, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2927	15	(3, -0x8e, -0x52, 0xa0, 0xc, 0, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2929	15	(0xe, -0x72, -0x32, 0xc, 0xc, 0xcc, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2930	15	(0xe, 6, -0x21, 0xc, 0xc, 0xcc, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2931	15	(0xe, -0x2a, -0x13, 0xc, 0xc, 0xcc, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2934	16	(0, sr->posX,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2940	15	(0, 0x42, 0x33, 0x3c, 0xc, 0x78, 0x48, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	2941	15	(0, 0x42, 0x43, 0x3c, 0xc, 0x84, 0x54, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3016	16	(3 - ((i / 7) * 3), e->posX, e->posY + 1, e->uvWidth, 0xc, e->uvX,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3020	15	(0, -0x54, -0x50, 0x48, 0xc, 0, 0x30, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3029	15	(0, 0x28, -0x24, 0x64, 0xc, 0, (TAMER_ENTITY.tamerLevel * 12) + 0x40, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3032	15	(0, (n * 12) + 0x28, -0x25, 0x30, 0xc, 0xb4, 0x18, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3040	15	(0, 0x32, 0x16, 0x4c, 0xc, 0, 0xe4, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3165	15	(0, (panel * 0x9d) - 0x8a, 9, 0x78, 0xc, 0, 0x84, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3168	15	(0, (panel * 0xcb) - 0x64, 0x3e, 0x24, 0xc, (move->range - 1) * 0x24, 0x78, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3181	16	(0, (panel * 0xcb) - 0x64, 0x4f, 0x1a, 0xc, 0x84, 0x6c, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3184	16	(0, (panel * 0xcb) - 0x64, 0x4f, 0x1c, 0xc, 0xa0, 0x6c, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3187	16	(0, (panel * 0xcb) - 0x64, 0x4f, 0x20, 0xc, 0xbc, 0x6c, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3190	16	(0, (panel * 0xcb) - 0x64, 0x4f, 0x1e, 0xc, 0xdb, 0x6c, 3, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3372	14	(0xfa4, 0);	DW1_PORT direct ABI correction
+non-prototype	src/main/game_menu.c	3450	15	(0xf, -0x1a, 0x54, 0xc, 0xc, 0, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3452	15	(0, -0xe, 0x54, 0x3c, 0xc, 0xc, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3456	15	(7, 0x3a, 0x54, 0xc, 0xc, 0x48, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3458	15	(0, 0x46, 0x54, 0x3c, 0xc, 0x54, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3648	14	(3, -0x14, -0x4f, 0x24, 0xc, 0, 0x18, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3651	15	(0, -0x5b, 0x3a, 0x2e, 0xc, 0x24, 0x18, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3654	15	(0, -0x63, 0x3a, 0x3e, 0xc, 0x52, 0x18, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3657	15	(0, -0x5b, 0x3a, 0x2f, 0xc, 0, 0x24, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3660	15	(0, -0x64, 0x3a, 0x41, 0xc, 0x2f, 0x24, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3663	15	(0, -0x64, 0x3a, 0x41, 0xc, 0, 0x3c, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3670	14	(0, -0x5c - ((len - 4) * 6), 0x4d, 0x78, 0xc, 0, 0x30, 4);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3703	15	(3, -0x36, -0x51, 0x6c, 0xc, 0, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3715	19	(0, -0x5d, 0x17, 0xac, 0xc, 0, 0x18, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3718	20	(0, -0x7e, j * 13 + 0x27, 0xfc, 0xc, 0,	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3751	15	(FOOTER_GLYPH1_COLOR, -0x23, 0x55, 0xc, 0xc, 0x6c, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3752	15	(0, -0x17, 0x55, 0x18, 0xc, 0x84, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3753	15	(0, 1, 0x55, 0x24, 0xc, 0x9c, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3754	15	(FOOTER_GLYPH2_COLOR, 0x2b, 0x55, 0xc, 0xc, 0x78, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3759	15	(0, 0x37, 0x55, 0x30, 0xc, 0xc0, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3801	15	(3, -0x24, -0x50, 0x48, 0xc, 0, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3808	15	(FOOTER_GLYPH1_COLOR, -0x23, 0x53, 0xc, 0xc, 0x48, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3809	15	(0, -0x17, 0x53, 0x3c, 0xc, 0x54, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3810	15	(FOOTER_GLYPH2_COLOR, 0x2b, 0x53, 0xc, 0xc, 0x90, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	3811	15	(0, 0x37, 0x53, 0x3c, 0xc, 0x9c, 0xc, 5, 1);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	4007	19	(entityId, 0, 0, 0);	C default argument promotions; direct ABI checked by wasm-ld
+non-prototype	src/main/game_menu.c	4033	19	(entityId, savedRot.vx, savedRot.vy, savedRot.vz);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/inventory.c	268	13	(ITEM_MENU_LABELS[i], 0xc0, i * 12);	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/inventory.c	315	14	(ITEM_NAME(INVENTORY.types.array[startSlot + i]),	C default argument promotions; direct ABI checked by wasm-ld
 non-prototype	src/main/inventory.c	385	19	(&tam->entity, 4);	C default argument promotions; direct ABI checked by wasm-ld

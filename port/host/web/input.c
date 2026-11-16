@@ -25,7 +25,8 @@ EMSCRIPTEN_KEEPALIVE void *web_input_address(void) { return block; }
 typedef struct { uint32_t vblank; uint16_t mask; } ReplayEvent;
 static ReplayEvent *events;
 static size_t event_count, next_event;
-static int replay;
+static int replay, replay_absolute;
+void web_input_replay_absolute(void) { replay_absolute = 1; }
 static uint16_t replay_mask;
 int web_input_replay(const char *path)
 {
@@ -54,9 +55,10 @@ int web_input_replay(const char *path)
 }
 void plat_input_vblank(void)
 {
-    if (!port_playtest_started()) return;
+    if (!(replay && replay_absolute) && !port_playtest_started()) return;
     if (replay) {
-        while (next_event < event_count && events[next_event].vblank <= port_playtest_vblank())
+        uint32_t now = replay_absolute ? clock_vblanks() : port_playtest_vblank();
+        while (next_event < event_count && events[next_event].vblank <= now)
             replay_mask = events[next_event++].mask;
         port_pad_latch(replay_mask);
         return;

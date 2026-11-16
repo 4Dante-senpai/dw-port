@@ -36,6 +36,7 @@ void port_vsync_return(void);
 
 /* Called by VSync when a frame ends. */
 void port_frame_done(void);
+int port_pad_polled_take(void); /* PadRead called since the last call (libetc.c) */
 
 /* Called by libcd when an overlay has been loaded. */
 void port_overlay_done(void);

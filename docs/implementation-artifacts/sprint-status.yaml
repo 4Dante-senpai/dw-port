@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 10-11-2026 12:35
-last_updated: 11-12-2026 01:00
+last_updated: 2026-11-15
 project: dw-port
 project_key: NOKEY
 tracking_system: file-system
@@ -85,7 +85,7 @@ development_status:
   6-9-playtest-automático-grabador-bot-y-soak: done
   # 6-11 runs before 6-10 (2026-11-12): optimized builds for testing deploy, CI wall tests and soak.
   6-11-build-optimizado-para-jugar-ci-y-soak: done
-  6-10-partida-real-en-testing-y-triage-de-caídas: backlog
+  6-10-partida-real-en-testing-y-triage-de-caídas: in-progress
   6-1-definición-de-la-suite-de-escenas: backlog
   6-2-mundo-combate-y-evolución: backlog
   6-3-entrenamiento-tiendas-y-objetos: backlog
