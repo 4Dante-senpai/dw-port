@@ -4,9 +4,12 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest import mock
 
@@ -362,6 +365,202 @@ class PlaytestTests(unittest.TestCase):
         for case in cases:
             result = subprocess.run([HOST, '--headless'] + case, pass_fds=[r, w], capture_output=True)
             self.assertEqual(result.returncode, 2, (case, result.stderr))
+
+    # Story 6.13: death dump, signature and SIGQUIT before SIGKILL.
+    def dump_text(self, reason='segv', signal_number=11, frames=('0x08049000', '0x08049100')):
+        return ('dw1-death 1\nreason %s\nsignal %d\nfault_address 0x00000000\nvblank 5\n'
+                '# dw1-state 1 k overlay screen want\n5 2 7 0\ninput 1 0008\ninput 4 0000\n' % (reason, signal_number)
+                + ''.join(f'frame {a}\n' for a in frames))
+
+    def parsed(self, text, **kw):
+        path = self.root / 'death.txt'
+        path.write_text(text)
+        return runner.parse_death(path)
+
+    def test_death_parse_and_empty(self):
+        death = self.parsed(self.dump_text())
+        self.assertEqual((death['reason'], death['signal'], death['vblank']), ('segv', 11, 5))
+        self.assertEqual(death['state'], dict(k=5, overlay=2, screen=7, want=0))
+        self.assertEqual(death['inputs'], [[1, '0008'], [4, '0000']])
+        self.assertEqual(death['frames'], ['0x08049000', '0x08049100'])
+        self.assertIsNone(self.parsed(''))
+        partial = self.parsed(self.dump_text().replace('input 4 0000\n', 'input 5\n') + 'frame 0x08049200\ninput x y\nsign')
+        self.assertEqual(partial['inputs'], [[1, '0008']])
+        self.assertEqual(partial['frames'][-1], '0x08049200')
+        self.assertIsNone(self.parsed('dw1-death 1\nsignal 11\ninput 5\n'))
+        self.assertIsNone(runner.parse_death(self.root / 'missing'))
+
+    def test_signature_types_and_frame_filter(self):
+        def death(names, reason='segv', signal_number=11):
+            frames = [dict(address=hex(0x1000 + i), function=n, file=f, line=1) for i, (n, f) in enumerate(names)]
+            return dict(reason=reason, signal=signal_number, frames=frames, symbolized=True)
+        noise = [('port_death_dump', 'death.c'), ('crash', 'death.c'), (None, None), ('watchdog', 'crt.c')]
+        real = [('fa', 'a.c'), ('fb', 'b.c'), ('fc', 'c.c'), ('fd', 'd.c')]
+        sig = runner.signature
+        self.assertEqual(sig(-11, '', death(noise + real), False), 'crash-sig11:fa|fb|fc')
+        self.assertEqual(sig(1, 'ERROR: AddressSanitizer: heap-buffer-overflow on', death(real, 'sanitizer', 0), False),
+                         'asan-heap-buffer-overflow:fa|fb|fc')
+        self.assertEqual(sig(1, 'x.c:3: runtime error: y\nSUMMARY: UndefinedBehaviorSanitizer: signed-integer-overflow x.c:3',
+                             None, False), 'ubsan-signed-integer-overflow')
+        self.assertEqual(sig(1, 'x.c:3: runtime error: y', None, False), 'ubsan-undefined-behavior')
+        self.assertEqual(sig(-6, 'PORT_ASSERT x.c:1: 0', death(real, 'abort', 6), False), 'assert:fa|fb|fc')
+        self.assertEqual(sig(3, '', death(noise + real[:1], 'watchdog', 0), False), 'watchdog:fa')
+        self.assertEqual(sig(3, '', None, False), 'watchdog')
+        self.assertEqual(sig(131, '', death(real, 'quit', 0), True), 'hang:fa|fb|fc')
+        self.assertEqual(sig(None, '', None, True), 'hang')
+        self.assertEqual(sig(7, '', None, False), 'exit-7')
+        self.assertEqual(sig(-9, '', None, False), 'crash-sig9')
+        self.assertEqual(sig(-11, '', death(noise, 'segv', 11), False), 'crash-sig11')
+        unresolved = dict(reason='quit', signal=0, symbolized=False,
+                          frames=[dict(address=a, function=None) for a in ('0x1', '0x2', '0x3', '0x4')])
+        self.assertEqual(sig(None, '', unresolved, True), 'hang:0x1|0x2|0x3')
+        self.assertIsNone(sig(0, '', None, False))
+
+    def test_hang_sigquit_dump_then_signature(self):
+        body = ('def quit(*a):\n Path(args[args.index("--death-file")+1]).write_text(' + repr(self.dump_text('quit', 0)) + ')\n os._exit(131)\n'
+                'signal.signal(signal.SIGQUIT, quit)\n'
+                f'digest.write_text("60 0 {H} {H}\\n")\nwhile True: time.sleep(.05)\n')
+        with mock.patch.object(runner.shutil, 'which', return_value=None):
+            result = self.execute(body)
+        self.assertEqual(result['status'], 'hang')
+        self.assertEqual(result['death']['reason'], 'quit')
+        self.assertFalse(result['death']['symbolized'])
+        self.assertEqual(result['signature'], 'hang:0x08049000|0x08049100')
+        self.assertIn('--death-file', Path(result['reproduction']).read_text())
+
+    def test_hang_ignoring_sigquit_is_killed_after_grace(self):
+        body = f'signal.signal(signal.SIGQUIT, signal.SIG_IGN)\ndigest.write_text("60 0 {H} {H}\\n")\nwhile True: time.sleep(.05)\n'
+        start = time.monotonic()
+        with mock.patch.object(runner, 'QUIT_GRACE', 0.4):
+            result = self.execute(body)
+        self.assertGreaterEqual(time.monotonic() - start, 2.4)  # hang_seconds + grace
+        self.assertEqual((result['status'], result['exit_code'], result['signature']), ('hang', -9, 'hang'))
+        self.assertNotIn('death', result)
+
+    def test_signatures_group_seeds_and_summary_is_private(self):
+        binary = self.fake('Path(args[args.index("--death-file")+1]).write_text(' + repr(self.dump_text()) + ')\n'
+                           'os.kill(os.getpid(), signal.SIGSEGV)\n')
+        frame = lambda n: dict(address='0x1', function=n, file='/secret/' + n + '.c', line=3)
+        def fake_symbolize(path, death):
+            death.update(symbolized=True, frames=[frame('port_death_dump'), frame('boom'), frame('caller')])
+            return death
+        out = self.root / 'groups'
+        with mock.patch.object(runner, 'symbolize', fake_symbolize):
+            code = runner.main(['--build', str(binary), '--inputs', str(self.inputs), '--seed', '9', '--seed', '3',
+                                '--vblanks', '120', '--output', str(out)])
+        self.assertEqual(code, 1)
+        public = json.loads((out / 'summary.json').read_text())
+        self.assertEqual(public['signatures'], [dict(signature='crash-sig11:boom|caller', count=2, seeds=[3, 9])])
+        text = json.dumps(public)
+        for leak in ('death', 'frames', 'inputs"', '/secret', str(self.root)):
+            self.assertNotIn(leak, text)
+        report = json.loads((out / 'report.json').read_text())
+        run = report['trials'][0]['runs'][0]
+        self.assertEqual(run['signature'], 'crash-sig11:boom|caller')
+        self.assertEqual(run['death']['inputs'], [[1, '0008'], [4, '0000']])
+
+    def test_healthy_run_has_no_death_or_signature(self):
+        result = self.execute(f'digest.write_text("120 0 {H} {H}\\n")\n')
+        self.assertNotIn('death', result)
+        self.assertNotIn('signature', result)
+
+    def runtime_death(self, mode, quit_after=None, with_file=True):
+        env = dict(os.environ, DEATH_MODE=mode)
+        if with_file:
+            env['DEATH_FILE'] = str(self.root / 'runtime-death.txt')
+        process = subprocess.Popen([RUNTIME, 'live', '-', self.root / 'd.clock', self.root / 'd.rec', 'on'], env=env,
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, start_new_session=True)
+        if quit_after:
+            time.sleep(quit_after)
+            os.kill(process.pid, signal.SIGQUIT)
+        err = process.communicate(timeout=60)[1]
+        death = runner.parse_death(self.root / 'runtime-death.txt') if with_file else None
+        if death:
+            runner.symbolize(RUNTIME, death)
+        return process.returncode, err, death
+
+    def check_dump(self, death, reason, sig=None, vblank=7):
+        self.assertEqual(death['reason'], reason)
+        if sig is not None:
+            self.assertEqual(death['signal'], sig)
+        self.assertEqual(death['vblank'], vblank)
+        self.assertEqual(death['state']['k'], vblank)
+        self.assertEqual((death['state']['gs'], death['state']['tx']), (11, 31))
+        self.assertEqual(death['inputs'], [[0, '0008'], [2, '4000'], [5, '0000']])
+        self.assertLessEqual(len(death['inputs']), 32)
+        self.assertGreaterEqual(len(death['frames']), 1)
+
+    def names(self, death):
+        return [f['function'] for f in death['frames']]
+
+    @unittest.skipUnless(RUNTIME, 'native runtime probe not supplied')
+    def test_runtime_segv_assert_watchdog_quit_dumps(self):
+        code, err, death = self.runtime_death('segv')
+        if death['reason'] == 'segv':  # without ASan
+            self.assertEqual(code, -signal.SIGSEGV)
+            self.assertIn(b'dw1: signal 11 at address', err)
+            self.check_dump(death, 'segv', 11)
+        else:  # ASan reports it and keeps its own exit code
+            self.assertIn(b'ERROR: AddressSanitizer', err)
+            self.check_dump(death, 'sanitizer', 0)
+        have_symbolizer = bool(shutil.which(runner.SYMBOLIZER))
+        self.assertEqual(bool(death['symbolized']), have_symbolizer)
+        if have_symbolizer:
+            self.assertIn('death_segv_here', self.names(death))
+            self.assertTrue(runner.signature(code, err.decode(), death, False).startswith(('crash-sig11:death_segv_here', 'asan-segv:death_segv_here')))
+        code, err, death = self.runtime_death('assert')
+        self.assertEqual(code, -signal.SIGABRT)
+        self.assertIn(b'PORT_ASSERT', err)
+        self.check_dump(death, 'abort', 6)
+        if have_symbolizer:
+            self.assertIn('death_assert_here', self.names(death))
+            self.assertTrue(runner.signature(code, err.decode(), death, False).startswith('assert:death_assert_here'))
+        code, err, death = self.runtime_death('watchdog')
+        self.assertEqual(code, 3)
+        self.check_dump(death, 'watchdog', 0, vblank=death['vblank'])
+        self.assertGreater(death['vblank'], 7)
+        if have_symbolizer:
+            self.assertIn('death_watchdog_here', self.names(death))
+        code, err, death = self.runtime_death('spin', quit_after=2)
+        self.assertEqual(code, 128 + signal.SIGQUIT)
+        self.check_dump(death, 'quit', 3)
+        if have_symbolizer:
+            self.assertTrue(runner.signature(None, '', death, True).startswith('hang:death_spin_here|'))  # callers vary with inlining
+        else:
+            self.skipTest('llvm-symbolizer-18 missing: dump checks ran, frame/signature checks did not')
+
+    @unittest.skipUnless(RUNTIME, 'native runtime probe not supplied')
+    def test_runtime_fpe_dump(self):
+        code, err, death = self.runtime_death('fpe')
+        if death['reason'] == 'fpe':  # without ASan
+            self.assertEqual(code, -signal.SIGFPE)
+            self.check_dump(death, 'fpe', 8)
+        else:  # ASan handles SIGFPE itself
+            self.check_dump(death, 'sanitizer', 0)
+
+    def test_reproduce_exports_ubsan_options(self):
+        result = self.execute(f'digest.write_text("120 0 {H} {H}\\n")\n')
+        script = Path(result['reproduction']).read_text()
+        self.assertIn('report_error_type=1:print_stacktrace=1', script)
+        self.assertIn('UBSAN_OPTIONS', script)
+
+    @unittest.skipUnless(RUNTIME, 'native runtime probe not supplied')
+    def test_runtime_without_death_file_is_unchanged(self):
+        code, err, death = self.runtime_death('segv', with_file=False)
+        self.assertIsNone(death)
+        self.assertFalse((self.root / 'runtime-death.txt').exists())
+        self.assertIn(code, (-signal.SIGSEGV, 1))  # ASan exits with 1
+
+    @unittest.skipUnless(HOST, 'native host not supplied')
+    def test_host_invalid_death_file_flags(self):
+        good = self.root / 'ok.txt'
+        for case in [['--death-file', ''], ['--death-file', str(good), '--death-file', str(good)],
+                     ['--death-file', str(self.root / 'missing/dir/x')], ['--death-file']]:
+            result = subprocess.run([HOST, '--headless'] + case, capture_output=True)
+            self.assertEqual(result.returncode, 2, (case, result.stderr))
+        result = subprocess.run([HOST, '--headless', '--frames', '1', '--death-file', str(good)], capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(good.read_bytes(), b'')  # a healthy run leaves the file empty
 
     def test_prefix_crash_uses_game_detector(self):
         prefix = self.root / 'scene.toml'

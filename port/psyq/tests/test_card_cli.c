@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+void port_death_install(int fd) { (void)fd; }
 int port_run_game(long frames, int until_overlay, const PortCapture *config)
 {
 	(void)frames;

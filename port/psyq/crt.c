@@ -22,6 +22,7 @@
 #include "crt.h"
 #include "scene.h"
 #include "playtest.h"
+#include "death.h"
 #include "dw1_rts_info.h"
 #include "overlay.h"
 #include "port.h"
@@ -217,6 +218,7 @@ static void watchdog(void *arg)
 	if (frames == watchdog_frames && !polled) {
 		fprintf(stderr, "port: no frame in %d virtual seconds (frame %ld, cycle %llu); see the "
 		        "stub trace\n", WATCHDOG_SECONDS, frames, (unsigned long long)clock_now());
+		port_death_dump("watchdog", 0, NULL);
 		exit(3);
 	}
 	watchdog_frames = frames;
@@ -287,6 +289,7 @@ int port_run_game(long frame_count, int until_overlay, const PortCapture *config
 		return 1;
 	}
     pthread_attr_destroy(&attr);
+    port_death_game_thread(thread);
 #ifdef __EMSCRIPTEN__
     pthread_detach(thread);
 #else

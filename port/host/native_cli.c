@@ -4,9 +4,7 @@
 #include "native_cli.h"
 #include <errno.h>
 #include <fcntl.h>
-#include <execinfo.h>
 #include <limits.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +12,7 @@
 
 #include "../backend/cdrom.h"
 #include "../psyq/crt.h"
+#include "../psyq/death.h"
 #include "../psyq/libgte.h"
 #include "pack/sha256.h"
 #include "card.h"
@@ -33,6 +32,7 @@ static int usage(const char *argv0)
 	                "  --capture-mark NAME --capture-vblank K --capture FILE  capture after mark + K VBlanks\n"
 	                "  --digest FILE --digest-every N --record-inputs FILE  playtest observation\n"
 	                "  --state-fd N [--input-fd M]  write one state record per VBlank to fd N; with M, lockstep masks\n"
+	                "  --death-file FILE  on death, write state, recent inputs and frames to FILE\n"
 	                "  --clock-trace FILE  write deterministic clock events\n"
 	                "  --inputs FILE --inputs-from frame0|mark  latch wire button masks per VBlank\n"
 	                "  --checkpoints FILE  capture ordered symbol[#n] entries and VBlank windows\n"
@@ -50,6 +50,7 @@ int native_cli_parse(int argc, char **argv, NativeCli *options)
 	long frames = 0;
 	PortCapture config = {.state_fd = -1, .input_fd = -1};
 	int until_overlay = 0;
+	int death_fd = -1;
 	const char *pack = NULL;
 	const char *cards[2] = {NULL, NULL};
 	for (int i = 1; i < argc; i++) {
@@ -79,6 +80,13 @@ int native_cli_parse(int argc, char **argv, NativeCli *options)
                 if (errno || *value < '0' || *value > '9' || *end || fd > INT_MAX || *target >= 0 ||
                     fcntl((int)fd, F_GETFD) < 0) return usage(argv[0]);
                 *target = (int)fd;
+                continue;
+            }
+            if (!strcmp(argv[i], "--death-file")) {
+                const char *path = argv[++i];
+                if (death_fd >= 0 || !*path) return usage(argv[0]);
+                death_fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+                if (death_fd < 0) { perror("dw1: death file"); return usage(argv[0]); }
                 continue;
             }
             if (!strcmp(argv[i], "--digest")) { config.digest = argv[++i]; continue; }
@@ -145,6 +153,7 @@ int native_cli_parse(int argc, char **argv, NativeCli *options)
 	    (!!config.state_vars != !!config.state_trace)) return usage(argv[0]);
 	if ((config.checkpoints || config.state_vars || (config.inputs_from && !strcmp(config.inputs_from, "mark"))) && !config.mark)
 		return usage(argv[0]);
+	options->death_fd = death_fd;
 	options->frames = frames;
 	options->until_overlay = until_overlay;
 	options->capture = config;
@@ -153,32 +162,9 @@ int native_cli_parse(int argc, char **argv, NativeCli *options)
 	return 0;
 }
 
-#if !__has_feature(address_sanitizer) /* ASan reports crashes better */
-/* A crash in a windowed session leaves no trace otherwise: print the faulting address and the raw
- * frames, then die with the same signal. Resolve them with llvm-symbolizer-18 --obj=dw1: GNU
- * addr2line 2.42 names the generated sjis/ copy instead of the #line source of clang's DWARF 5. */
-static void crash(int sig, siginfo_t *info, void *context)
-{
-	(void)context;
-	void *frames[64];
-	char line[96];
-	int n = snprintf(line, sizeof(line), "dw1: signal %d at address %p; backtrace:\n", sig, info->si_addr);
-	if (n > 0) (void)!write(2, line, (size_t)n);
-	backtrace_symbols_fd(frames, backtrace(frames, 64), 2);
-	signal(sig, SIG_DFL);
-	raise(sig);
-}
-#endif
-
 int native_cli_run(const NativeCli *options)
 {
-#if !__has_feature(address_sanitizer)
-	struct sigaction action = {.sa_sigaction = crash, .sa_flags = SA_SIGINFO};
-	sigaction(SIGSEGV, &action, NULL);
-	sigaction(SIGBUS, &action, NULL);
-	sigaction(SIGILL, &action, NULL);
-	sigaction(SIGFPE, &action, NULL);
-#endif
+	port_death_install(options->death_fd);
 	const char *pack = options->pack;
 	const char *const *cards = options->cards;
 	if (pack) {

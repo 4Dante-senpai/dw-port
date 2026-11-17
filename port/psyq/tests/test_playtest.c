@@ -50,8 +50,24 @@ static void run(char out[65], int variant, const char *path, unsigned every)
         CHECK(!strcmp(out, digest)); fclose(file);
     }
 }
+/* The input ring keeps the newest 32 changes, oldest first, and prepare resets it. */
+static void ring(void)
+{
+    clock_reset();
+    PortCapture config = {.state_fd = -1, .input_fd = -1};
+    port_playtest_prepare(&config);
+    port_playtest_origin();
+    for (unsigned i = 1; i <= 40; i++) { port_playtest_pad((uint16_t)i); clock_advance(clock_vblank_cycle(1)); }
+    uint32_t k[PORT_PLAYTEST_RING]; uint16_t mask[PORT_PLAYTEST_RING];
+    CHECK(port_playtest_recent(PORT_PLAYTEST_RING, k, mask) == PORT_PLAYTEST_RING);
+    for (unsigned i = 0; i < PORT_PLAYTEST_RING; i++) CHECK(mask[i] == 9 + i && k[i] == 8 + i);
+    CHECK(port_playtest_recent(3, k, mask) == 3 && mask[0] == 38 && mask[2] == 40);
+    port_playtest_prepare(&config);
+    CHECK(port_playtest_recent(PORT_PLAYTEST_RING, k, mask) == 0);
+}
 int main(void)
 {
+    ring();
     char path[128]; snprintf(path, sizeof(path), "/tmp/dw1-playtest-%ld.digest", (long)getpid());
     char baseline[65], again[65];
     run(baseline, 0, path, 2); run(again, 0, path, 2); CHECK(!strcmp(baseline, again));
