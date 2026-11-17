@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     if (argc != 6 && argc != 7) return 2;
     checkpoint_mode = argc == 7;
     from_mark = !strcmp(argv[5], "mark");
-    PortCapture config = {.mark = "test", .vblank = 5, .capture = argv[1],
+    PortCapture config = {.state_fd = -1, .input_fd = -1, .mark = "test", .vblank = 5, .capture = argv[1],
         .inputs = argv[2], .state_vars = argv[3], .state_trace = argv[4], .inputs_from = argv[5]};
     if (checkpoint_mode) config.checkpoints = argv[6];
     return port_run_game(0, 0, &config);

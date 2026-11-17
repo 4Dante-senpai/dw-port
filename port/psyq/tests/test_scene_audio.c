@@ -58,6 +58,6 @@ int dw1_game_main(void)
 int main(int argc, char **argv)
 {
     if (argc != 3) return 2;
-    PortCapture capture = {.mark = "AUDIO_START", .checkpoints = argv[1], .audio_segments = argv[2]};
+    PortCapture capture = {.state_fd = -1, .input_fd = -1, .mark = "AUDIO_START", .checkpoints = argv[1], .audio_segments = argv[2]};
     return port_run_game(0, 0, &capture);
 }

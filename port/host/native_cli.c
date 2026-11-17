@@ -3,6 +3,7 @@
 #include "../psyq/sound_tables.h"
 #include "native_cli.h"
 #include <errno.h>
+#include <fcntl.h>
 #include <execinfo.h>
 #include <limits.h>
 #include <signal.h>
@@ -31,6 +32,7 @@ static int usage(const char *argv0)
 	                "  --vblanks N      exit N VBlanks after frame 0; report wall time from pacing anchor\n"
 	                "  --capture-mark NAME --capture-vblank K --capture FILE  capture after mark + K VBlanks\n"
 	                "  --digest FILE --digest-every N --record-inputs FILE  playtest observation\n"
+	                "  --state-fd N [--input-fd M]  write one state record per VBlank to fd N; with M, lockstep masks\n"
 	                "  --clock-trace FILE  write deterministic clock events\n"
 	                "  --inputs FILE --inputs-from frame0|mark  latch wire button masks per VBlank\n"
 	                "  --checkpoints FILE  capture ordered symbol[#n] entries and VBlank windows\n"
@@ -46,7 +48,7 @@ int native_cli_parse(int argc, char **argv, NativeCli *options)
 {
 	*options = (NativeCli){0};
 	long frames = 0;
-	PortCapture config = {0};
+	PortCapture config = {.state_fd = -1, .input_fd = -1};
 	int until_overlay = 0;
 	const char *pack = NULL;
 	const char *cards[2] = {NULL, NULL};
@@ -68,6 +70,15 @@ int native_cli_parse(int argc, char **argv, NativeCli *options)
                 char *end; const char *value = argv[++i]; errno = 0;
                 config.digest_every = strtoul(value, &end, 10);
                 if (errno || *value < '0' || *value > '9' || *end || !config.digest_every || config.digest_every > UINT_MAX) return usage(argv[0]);
+                continue;
+            }
+            if (!strcmp(argv[i], "--state-fd") || !strcmp(argv[i], "--input-fd")) {
+                int *target = argv[i][2] == 's' ? &config.state_fd : &config.input_fd;
+                char *end; const char *value = argv[++i]; errno = 0;
+                unsigned long fd = strtoul(value, &end, 10);
+                if (errno || *value < '0' || *value > '9' || *end || fd > INT_MAX || *target >= 0 ||
+                    fcntl((int)fd, F_GETFD) < 0) return usage(argv[0]);
+                *target = (int)fd;
                 continue;
             }
             if (!strcmp(argv[i], "--digest")) { config.digest = argv[++i]; continue; }
@@ -128,6 +139,8 @@ int native_cli_parse(int argc, char **argv, NativeCli *options)
 	if (!config.audio_segments && (config.mark || config.capture || config.vblank) &&
 	    (!config.mark || !*config.mark || !config.capture || !*config.capture || !config.vblank))
 		return usage(argv[0]);
+	if (config.input_fd >= 0 && (config.state_fd < 0 || config.inputs || config.checkpoints ||
+	    config.state_fd == config.input_fd)) return usage(argv[0]);
 	if ((config.inputs_from && strcmp(config.inputs_from, "mark") && strcmp(config.inputs_from, "frame0")) ||
 	    (!!config.state_vars != !!config.state_trace)) return usage(argv[0]);
 	if ((config.checkpoints || config.state_vars || (config.inputs_from && !strcmp(config.inputs_from, "mark"))) && !config.mark)

@@ -51,7 +51,7 @@ int dw1_game_main(void)
 int main(int argc, char **argv)
 {
     if (argc != 3) return 2;
-    PortCapture config = {.mark = "target", .vblank = 2, .capture = argv[1], .clock_trace = argv[2], .digest = getenv("TEST_DIGEST")};
+    PortCapture config = {.state_fd = -1, .input_fd = -1, .mark = "target", .vblank = 2, .capture = argv[1], .clock_trace = argv[2], .digest = getenv("TEST_DIGEST")};
     return port_run_game(getenv("TEST_PACK") ? 3 : 0,
                          getenv("TEST_UNTIL_OVERLAY") != NULL, &config);
 }

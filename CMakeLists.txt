@@ -436,7 +436,7 @@ endif()
 endif()
 
 # Runtime start and PsyQ data the game references (linked only into the game).
-add_library(dw1_runtime STATIC port/psyq/crt.c port/psyq/playtest.c port/psyq/scene.c port/psyq/libgs_data.c
+add_library(dw1_runtime STATIC port/psyq/crt.c port/psyq/playtest.c port/psyq/scene.c port/psyq/state.c port/psyq/libgs_data.c
   ${DW1_RTS_INFO_H})
 target_include_directories(dw1_runtime PRIVATE ${CMAKE_BINARY_DIR}/generated)
 if(DW1_HOST STREQUAL "sdl")
@@ -444,6 +444,11 @@ if(DW1_HOST STREQUAL "sdl")
 endif()
 target_compile_options(dw1_runtime PRIVATE -Wall -Wextra -Werror)
 target_compile_definitions(dw1_runtime PRIVATE DW1_SOURCE_ROOT="${CMAKE_SOURCE_DIR}")
+# Only the state record reads game globals, through the game headers.
+set_source_files_properties(port/psyq/state.c PROPERTIES
+  INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR}/include
+  COMPILE_OPTIONS "-idirafter;${CMAKE_SOURCE_DIR}/external/psyq_headers/mw_lib41/include"
+  COMPILE_DEFINITIONS VERSION_${DW1_VERSION_MACRO})
 target_link_libraries(dw1_runtime PUBLIC dw1_psyq ${CMAKE_DL_LIBS})
 
 # Hashing every display must not dominate headless throughput. No virtual-time costs.
@@ -457,7 +462,10 @@ if(NOT EMSCRIPTEN)
   add_test(NAME playtest_digest COMMAND test_playtest)
   add_executable(test_playtest_runtime port/psyq/tests/test_playtest_runtime.c)
   target_link_libraries(test_playtest_runtime PRIVATE dw1_runtime)
-  target_compile_options(test_playtest_runtime PRIVATE -Wall -Wextra -Werror)
+  target_include_directories(test_playtest_runtime PRIVATE include)
+  target_compile_definitions(test_playtest_runtime PRIVATE VERSION_${DW1_VERSION_MACRO})
+  target_compile_options(test_playtest_runtime PRIVATE -Wall -Wextra -Werror
+    -idirafter ${CMAKE_SOURCE_DIR}/external/psyq_headers/mw_lib41/include)
   add_test(NAME playtest_unit COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/playtest/test_playtest.py
     $<TARGET_FILE:dw1> $<TARGET_FILE:test_playtest_runtime>)
   set_tests_properties(playtest_unit PROPERTIES TIMEOUT 30)
@@ -465,6 +473,9 @@ if(NOT EMSCRIPTEN)
     add_test(NAME playtest_smoke COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/playtest/run.py
       --smoke --build $<TARGET_FILE:dw1> --output ${CMAKE_BINARY_DIR}/playtest/smoke)
     set_tests_properties(playtest_smoke PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3600 FIXTURES_REQUIRED disc_pack)
+    add_test(NAME playtest_channel COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/playtest/test_channel.py
+      $<TARGET_FILE:dw1> ${CMAKE_BINARY_DIR}/playtest/channel)
+    set_tests_properties(playtest_channel PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3600 FIXTURES_REQUIRED disc_pack)
     # Story 6.10 triage (docs/port/triage.md): synthetic bot inputs trimmed to the failing VBlank, with the
     # digest of native-headless-release after the fix (equal in every build). name:VBlanks
     foreach(regress pause_34200:35000 healing_div0:45120 evo_chart_oob:68880)

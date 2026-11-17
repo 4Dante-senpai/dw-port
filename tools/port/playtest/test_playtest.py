@@ -15,6 +15,9 @@ spec = importlib.util.spec_from_file_location('runner', HERE / 'run.py')
 runner = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(runner)
 bot = runner.bot
+channel_spec = importlib.util.spec_from_file_location('channel', HERE / 'channel.py')
+channel = importlib.util.module_from_spec(channel_spec)
+channel_spec.loader.exec_module(channel)
 H = 'a' * 64
 HOST = Path(sys.argv[1]) if len(sys.argv) > 1 else None
 RUNTIME = Path(sys.argv[2]) if len(sys.argv) > 2 else None
@@ -275,6 +278,90 @@ class PlaytestTests(unittest.TestCase):
         clocks = [(self.root / (name + '.clock')).read_bytes() for name in ('live', 'replay', 'plain')]
         self.assertEqual(clocks[0], clocks[1])
         self.assertEqual(clocks[0], clocks[2])
+
+    def runtime_channel(self, name, mode, source, state, reply, respond):
+        """Runs the synthetic runtime with the live channel; returns (records, rc, stderr)."""
+        argv = [RUNTIME, mode, self.root / (name + '.digest'), self.root / (name + '.clock'), source, 'on']
+        records, code, _, err = channel.run(argv, respond, fd_args=lambda s, r: [str(s if state else -1), str(r if reply else -1)])
+        return records, code, err
+
+    @unittest.skipUnless(RUNTIME, 'native runtime probe not supplied')
+    def test_channel_lockstep_matches_replay_and_observation(self):
+        record = self.root / 'lock.txt'
+        answers = {0: (0x4000, 10), 10: (0x4000, 5)}
+        locked, code, err = self.runtime_channel('lock', 'live', record, True, True, lambda r: answers[r['k']])
+        self.assertEqual(code, 0, err)
+        self.assertEqual([r['k'] for r in locked], list(range(11)))
+        self.assertEqual([r['k'] for r in locked if r['want']], [0, 10])
+        self.assertEqual(record.read_text(), '0 4000\n')
+        for r in locked:
+            self.assertEqual((r['screen'], r['money'], r['frame']), (max(r['k'] - 1, 0), -max(r['k'] - 1, 0), 0))  # set before the VBlank
+            self.assertEqual([r[n] for n in ('gs', 'ms', 'btl_menu', 'paused', 'menu', 'year', 'day', 'hour', 'minute',
+                                             'play_h', 'play_m', 'play_f')], [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22])
+            self.assertEqual([r[n] for n in ('tx', 'ty', 'tz', 'px', 'py', 'pz', 'hp', 'mp', 'cond')],
+                             [31, 32, 33, 41, 42, 43, 51, 52, 0xabc])
+        observed, code, err = self.runtime_channel('obs', 'replay', record, True, False, None)
+        self.assertEqual(code, 0, err)
+        self.assertEqual([r['want'] for r in observed], [0] * 11)
+        self.assertEqual([dict(r, want=0) for r in locked], observed)
+        plain = subprocess.run([RUNTIME, 'replay', self.root / 'plain.digest', self.root / 'plain.clock', record, 'on'], capture_output=True)
+        self.assertEqual(plain.returncode, 0, plain.stderr)
+        for name in ('obs', 'plain'):
+            self.assertEqual((self.root / 'lock.digest').read_bytes(), (self.root / (name + '.digest')).read_bytes())
+            self.assertEqual((self.root / 'lock.clock').read_bytes(), (self.root / (name + '.clock')).read_bytes())
+
+    @unittest.skipUnless(RUNTIME, 'native runtime probe not supplied')
+    def test_channel_close_and_invalid_replies(self):
+        records, code, err = self.runtime_channel('eof', 'live', self.root / 'eof.txt', True, True,
+                                                  lambda r: (8, 3) if r['k'] == 0 else None)
+        self.assertEqual(code, 0, err)
+        self.assertEqual(records[-1]['k'], 3)
+        self.assertIn(b'port: input channel closed at VBlank 3', err)
+        self.assertTrue((self.root / 'eof.digest').read_text().strip())
+        for reply in ['zz 1', '10000 1', '4000 0', '4000', '', '4000 1 2', '4000 -1', '4000 1000001']:
+            records, code, err = self.runtime_channel('bad', 'live', self.root / 'bad.txt', True, True, lambda r, reply=reply: reply)
+            self.assertEqual(code, 2, (reply, err))
+            self.assertIn(b'scene: invalid input channel reply', err)
+
+    @unittest.skipUnless(RUNTIME, 'native runtime probe not supplied')
+    def test_channel_reader_closed_stops_cleanly(self):
+        state_r, state_w = os.pipe()
+        os.close(state_r)  # the reader is gone before the first record
+        with tempfile.TemporaryFile() as err:
+            result = subprocess.run([RUNTIME, 'live', '-', self.root / 'epipe.clock', self.root / 'epipe.txt', 'off',
+                                     str(state_w), '-1'], pass_fds=[state_w], stdout=subprocess.PIPE, stderr=err)
+            err.seek(0)
+            text = err.read()
+            self.assertEqual(result.returncode, 0, text)
+            self.assertIn(b'port: input channel closed at VBlank', text)
+            self.assertNotIn(b'reached VBlank 10 after', result.stdout)  # stopped before the limit
+        os.close(state_w)
+
+    @unittest.skipUnless(HOST, 'native host not supplied')
+    def test_host_state_fd_header(self):
+        r, w = os.pipe()
+        result = subprocess.run([HOST, '--headless', '--frames', '1', '--state-fd', str(w)], pass_fds=[w], capture_output=True)
+        os.close(w)
+        with os.fdopen(r, 'rb') as state:
+            header = state.readline()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(header.startswith(b'# dw1-state 1 '), header)
+
+    @unittest.skipUnless(HOST, 'native host not supplied')
+    def test_host_invalid_channel_flags(self):
+        r, w = os.pipe()
+        self.addCleanup(os.close, r)
+        self.addCleanup(os.close, w)
+        fd, other = str(r), str(w)
+        self.inputs.write_text('0 0000\n')
+        cases = [['--input-fd', fd], ['--state-fd', other, '--input-fd', fd, '--inputs', self.inputs],
+                 ['--state-fd', other, '--input-fd', fd, '--checkpoints', self.inputs],
+                 ['--state-fd', 'x'], ['--state-fd', '-1'], ['--state-fd', '1.5'], ['--state-fd', '99'],
+                 ['--state-fd', other, '--input-fd', '98'], ['--state-fd', other, '--input-fd', other],
+                 ['--state-fd', other, '--state-fd', other]]
+        for case in cases:
+            result = subprocess.run([HOST, '--headless'] + case, pass_fds=[r, w], capture_output=True)
+            self.assertEqual(result.returncode, 2, (case, result.stderr))
 
     def test_prefix_crash_uses_game_detector(self):
         prefix = self.root / 'scene.toml'

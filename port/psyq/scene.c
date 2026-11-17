@@ -6,9 +6,11 @@
 #include "../backend/spu.h"
 #include "../backend/xa.h"
 #include "../backend/gpu.h"
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include "playtest.h"
+#include "state.h"
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
@@ -360,9 +362,50 @@ static void read_event(void)
     previous_k = event_k;
     have_previous = pending = 1;
 }
+/* Live channel (--state-fd / --input-fd): one state record per VBlank and, in lockstep, one
+ * "<mask> <hold>" reply when the record says want=1. Runs once per k although latch may repeat. */
+static FILE *state_out, *reply_in;
+static int channel_dead, have_channel_k;
+static uint32_t channel_k, next_want;
+static void channel_close(uint32_t k)
+{
+    channel_dead = 1;
+    fprintf(stderr, "port: input channel closed at VBlank %u\n", k);
+    port_request_stop();
+}
+static void channel_step(void)
+{
+    if (channel_dead || !port_playtest_started()) return;
+    uint32_t k = port_playtest_vblank();
+    if (have_channel_k && k == channel_k) return;
+    have_channel_k = 1; channel_k = k;
+    int want = reply_in && k >= next_want;
+    port_state_record(state_out, k, want);
+    if (fflush(state_out)) { channel_close(k); return; }
+    if (!want) return;
+    char line[256], mask[64], hold[64], extra, *end;
+    if (!fgets(line, sizeof(line), reply_in)) {
+        if (ferror(reply_in)) fail("cannot read input channel");
+        channel_close(k);
+        return;
+    }
+    if (sscanf(line, "%63s %63s %c", mask, hold, &extra) != 2 || strlen(mask) > 4 ||
+        mask[strspn(mask, "0123456789abcdefABCDEF")] || strlen(hold) > 7 ||
+        hold[strspn(hold, "0123456789")])
+        input_fail("invalid input channel reply");
+    unsigned long count = strtoul(hold, &end, 10);
+    if (count < 1 || count > 1000000) input_fail("invalid input channel reply");
+    held = (unsigned)strtoul(mask, &end, 16);
+    next_want = k + (uint32_t)count;
+}
 static void latch(void)
 {
     if (!config) return;
+    if (state_out) {
+        channel_step();
+        /* Like --inputs-from frame0: no latch before frame 0, so the pad state matches a replay. */
+        if (reply_in) { if (port_playtest_started()) port_pad_latch((uint16_t)held); return; }
+    }
     if (checkpoint_count) {
         for (size_t i = 0; i < event_count; i++) {
             Event *event = &events[i];
@@ -392,6 +435,14 @@ void port_scene_prepare(const PortCapture *value)
         if (!timing) fail("cannot open timing trace");
     }
     config = value;
+    if (config->state_fd >= 0) {
+        signal(SIGPIPE, SIG_IGN);
+        state_out = fdopen(config->state_fd, "w");
+        reply_in = config->input_fd >= 0 ? fdopen(config->input_fd, "r") : NULL;
+        if (!state_out || (config->input_fd >= 0 && !reply_in)) input_fail("cannot open channel descriptors");
+        port_state_header(state_out);
+        if (fflush(state_out)) channel_close(0);
+    }
     if (config->audio_pcm) {
         pcm_output = audio_open(config->audio_pcm, "wb");
         if (!pcm_output) fail("cannot open raw PCM output");

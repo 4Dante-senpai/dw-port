@@ -59,6 +59,7 @@ void port_playtest_overlay(unsigned value)
     overlay = value;
     if (active) fprintf(stderr, "playtest: overlay %u at VBlank %u\n", value, port_playtest_vblank());
 }
+unsigned port_playtest_overlay_id(void) { return overlay; }
 const char *port_playtest_digest(void) { return digest_text; }
 void port_playtest_tick(void)
 {
