@@ -8,6 +8,9 @@ void port_playtest_origin(void);
 int port_playtest_started(void);
 uint32_t port_playtest_vblank(void);
 void port_playtest_pad(uint16_t mask);
+#define PORT_PLAYTEST_RING 32
+/* The last n (at most 32) mask changes, oldest first; returns how many were written. */
+unsigned port_playtest_recent(unsigned n, uint32_t *k, uint16_t *mask);
 void port_playtest_rand(int value);
 void port_playtest_overlay(unsigned overlay);
 unsigned port_playtest_overlay_id(void);

@@ -71,8 +71,9 @@ playtest publicable como artifact de CI. Los directorios privados conservan
 inputs, stdout/stderr y las cards. No publicar estos directorios completos.
 
 Una señal/salida no cero es `crash`; `PORT_ASSERT` es `assert`; ASan/UBSan es
-`sanitizer`; no avanzar el VBlank observado en `--hang-seconds` es `hang` y mata
-el grupo del proceso. El límite inicial también cubre un bloqueo antes del primer
+`sanitizer`; no avanzar el VBlank observado en `--hang-seconds` es `hang`: el runner manda
+SIGQUIT (el binario escribe su volcado y sale con 131), espera hasta 5 s (`QUIT_GRACE`) y mata el
+grupo con SIGKILL si sigue vivo. El límite inicial también cubre un bloqueo antes del primer
 digest. Salida 2 es `usage`, no un fallo del juego. Un éxito sin digest final al
 límite pedido falla. Los mismos detectores se aplican al resolver el prefijo.
 
@@ -281,3 +282,62 @@ Respuesta (solo cuando `want=1`): máscara hexadecimal de 1 a 4 dígitos (orden 
 Cliente: `tools/port/playtest/channel.py`. Pruebas: L1 en `test_playtest.py` (runtime sintético) y
 clase B `playtest_channel` (`test_channel.py`: prefijo `newgame` más 3000 VBlanks con semilla por el
 canal, replay sin canal con el mismo digest).
+
+## Diagnóstico al morir (Historia 6.13)
+
+`dw1 --death-file FILE` (solo nativo; no en web) abre `FILE` (0600) al arrancar; vacío, repetido o no
+escribible es uso (salida 2). Al morir escribe un solo volcado (el primero gana) y no cambia ni el
+comportamiento ni los códigos de salida: un crash muere por la misma señal, el watchdog sale con 3 y ASan
+conserva su salida. Sin el flag todo queda como antes (el texto `dw1: signal N at address P; backtrace:` de
+stderr se conserva). Una corrida sana deja el archivo vacío. El runner siempre lo pasa (`work/death.txt`,
+también en `reproduce.sh`).
+
+Disparadores (`reason`): SIGSEGV/SIGBUS/SIGILL/SIGFPE (`segv|bus|ill|fpe`, solo sin ASan), SIGABRT
+(`abort`, cubre `PORT_ASSERT`), callback de muerte de ASan (`sanitizer`, cubre ASan y UBSan no recuperable),
+watchdog (`watchdog`, antes de `exit(3)`) y SIGQUIT (`quit`; si llega a otro hilo se reenvía al hilo del juego).
+
+```
+dw1-death 1
+reason segv
+signal 11                  (0 si no aplica; SIGQUIT = 3)
+fault_address 0x00000000
+vblank 1234
+# dw1-state 1 k overlay screen ...     (encabezado y registro del canal de estado, want = 0)
+1234 3 ...
+input 1200 0010            (hasta 32 cambios de máscara, del más viejo al más nuevo)
+pc 0x0804a1b0              (solo en señales: pc interrumpido, exacto; el runner no le resta 1)
+frame 0x0804a1b2           (direcciones crudas del hilo del juego)
+```
+
+No se vuelcan bytes del disco, del Pack ni de la RAM: solo las globales del canal de estado. El volcado es
+best-effort desde contexto de señal (usa stdio abierto de antemano).
+
+Firma `<tipo>:<f1>|<f2>|<f3>` (`run.signature`): `asan-<kind>` (de `ERROR: AddressSanitizer: <kind>`),
+`ubsan-<check>` (de `SUMMARY: UndefinedBehaviorSanitizer`, `ubsan-undefined-behavior` si falta), `assert`
+(`PORT_ASSERT` o `reason abort`), `watchdog`, `hang`, `crash-sig<N>`, `exit-<N>` (salida no cero sin volcado)
+en ese orden de prioridad. Las funciones son los 3 primeros frames del binario simbolizados con
+`llvm-symbolizer-18 --obj=<dw1>` (dirección − 1; el binario no es PIE) tras quitar frames del volcado
+(`port_death_*`, `death.c`), `watchdog` y lo que no resuelve (libc, runtime de sanitizers). Sin frames la
+firma es solo el tipo. Sin simbolizador, `death.symbolized` es `false` y la firma usa las 3 primeras
+direcciones crudas (sin filtrar, así que agrupa mal).
+
+`report.json` (privado) gana por corrida con volcado `death: {reason, signal, fault_address, vblank, state,
+inputs, frames: [{address, function, file, line}], symbolized}` y `signature` para toda corrida fallida salvo
+`usage`. `summary.json` gana solo `signatures: [{signature, count, seeds}]` (ordenado por firma; `count` son
+corridas): ni estado, ni inputs, ni rutas, ni frames. UBSan corre con `report_error_type=1:print_stacktrace=1`.
+
+Pruebas: L1 en `test_playtest.py` (runtime sintético con `DEATH_MODE=segv|assert|watchdog|spin`, procesos
+falsos para firma, filtro, SIGQUIT ignorado y agregación) y clase B `playtest_death` (`test_death.py`).
+
+## Contrato con el soak del homelab
+
+Lo extienden las historias 6.13 a 6.16.
+
+- Invocación vigente, sin cambios:
+  `run.py --soak --build native-headless-release --build native-asan --prefix tools/port/scenes/newgame.toml
+  --vblanks 540079 --jobs 14 --seed N... --output DIR` (o `tools/port/playtest/soak.sh`).
+- Flags nuevos, todos opcionales: `dw1 --death-file FILE` (el runner ya lo usa; no hay flag nuevo en `run.py`).
+- Claves nuevas de JSON: `report.json` por corrida fallida, `death` (si hay volcado) y `signature`;
+  `summary.json`, `signatures: [{signature, count, seeds}]`. Las claves existentes no cambian.
+- Cambios de comportamiento: un cuelgue recibe SIGQUIT y 5 s de gracia antes de SIGKILL (antes SIGKILL
+  directo); `UBSAN_OPTIONS` se completa con `report_error_type=1:print_stacktrace=1`. Los digests no cambian.

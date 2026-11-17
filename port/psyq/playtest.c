@@ -17,6 +17,10 @@ static uint16_t pad;
 static int started, active, sampled;
 static unsigned char chain[32];
 static char digest_text[65], display_text[65];
+/* Last PORT_PLAYTEST_RING mask changes (VBlank, mask) for the death dump. */
+static uint32_t ring_k[PORT_PLAYTEST_RING];
+static uint16_t ring_mask[PORT_PLAYTEST_RING];
+static unsigned ring_total;
 /* Keep observer buffers outside the statically linked 24-bit OT window. */
 static uint32_t *pixels;
 static unsigned char *rgb555;
@@ -39,7 +43,7 @@ void port_playtest_prepare(const PortCapture *config)
 {
     output = NULL; active = config->digest != NULL;
     every = config->digest_every ? config->digest_every : 60;
-    started = sampled = 0; origin = last = overlay = rand_count = rand_last = pad = 0;
+    ring_total = 0; started = sampled = 0; origin = last = overlay = rand_count = rand_last = pad = 0;
     memset(chain, 0, sizeof(chain)); hex(chain, digest_text);
     if (active) {
         pixels = malloc(640 * 480 * sizeof(*pixels));
@@ -52,7 +56,24 @@ void port_playtest_prepare(const PortCapture *config)
 void port_playtest_origin(void) { if (!started) { started = 1; origin = clock_vblanks(); } }
 int port_playtest_started(void) { return started; }
 uint32_t port_playtest_vblank(void) { return started ? clock_vblanks() - origin : 0; }
-void port_playtest_pad(uint16_t mask) { pad = mask; }
+void port_playtest_pad(uint16_t mask)
+{
+    if (mask != pad) {
+        ring_k[ring_total % PORT_PLAYTEST_RING] = port_playtest_vblank();
+        ring_mask[ring_total++ % PORT_PLAYTEST_RING] = mask;
+    }
+    pad = mask;
+}
+unsigned port_playtest_recent(unsigned n, uint32_t *k, uint16_t *mask)
+{
+    unsigned total = ring_total, count = total < PORT_PLAYTEST_RING ? total : PORT_PLAYTEST_RING;
+    if (n > count) n = count;
+    for (unsigned i = 0; i < n; i++) {
+        unsigned at = (total - n + i) % PORT_PLAYTEST_RING;
+        k[i] = ring_k[at]; mask[i] = ring_mask[at];
+    }
+    return n;
+}
 void port_playtest_rand(int value) { if (active) { rand_count++; rand_last = (uint32_t)value; } }
 void port_playtest_overlay(unsigned value)
 {

@@ -537,6 +537,14 @@
   aprobado por el dueño para subir la cobertura del soak del homelab. Evidencia: spec
   `spec-6-12-canal-de-estado-en-vivo.md`.
 
+- Historia 6.13 (diagnóstico al morir, 2026-11-17): `dw1 --death-file FILE` escribe al morir
+  (señal, `PORT_ASSERT`, ASan/UBSan, watchdog o SIGQUIT) el estado de la 6.12, los últimos 32
+  cambios de input, el overlay y los frames del hilo del juego. El runner lo pasa siempre, ante un
+  cuelgue manda SIGQUIT con 5 s de gracia antes de SIGKILL, simboliza con `llvm-symbolizer-18` y
+  calcula una firma `<tipo>:<f1>|<f2>|<f3>`: `report.json` lleva `death` y `signature`;
+  `summary.json`, solo `signatures` agrupadas. Nueva sección "Contrato con el soak del homelab" en
+  `docs/port/playtest.md`. Digests sin cambios. Evidencia: spec `spec-6-13-diagnostico-al-morir.md`.
+
 ## En curso
 
 - Fase 5: Épicas 2, 3 y 4 cerradas con sus retrospectivas. El 2026-11-11 se aplicó el cambio de rumbo y se cerraron las Historias 6.9 y 6.11 (Épica 6 en curso). Hipótesis abierta: el mecanismo de save states (spike 9.3; una copia de la memoria WASM no incluye la pila del hilo del Juego).

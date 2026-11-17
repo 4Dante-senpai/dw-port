@@ -436,7 +436,7 @@ endif()
 endif()
 
 # Runtime start and PsyQ data the game references (linked only into the game).
-add_library(dw1_runtime STATIC port/psyq/crt.c port/psyq/playtest.c port/psyq/scene.c port/psyq/state.c port/psyq/libgs_data.c
+add_library(dw1_runtime STATIC port/psyq/crt.c port/psyq/death.c port/psyq/playtest.c port/psyq/scene.c port/psyq/state.c port/psyq/libgs_data.c
   ${DW1_RTS_INFO_H})
 target_include_directories(dw1_runtime PRIVATE ${CMAKE_BINARY_DIR}/generated)
 if(DW1_HOST STREQUAL "sdl")
@@ -476,6 +476,10 @@ if(NOT EMSCRIPTEN)
     add_test(NAME playtest_channel COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/playtest/test_channel.py
       $<TARGET_FILE:dw1> ${CMAKE_BINARY_DIR}/playtest/channel)
     set_tests_properties(playtest_channel PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3600 FIXTURES_REQUIRED disc_pack)
+    # Story 6.13: SIGQUIT on the real game after the newgame prefix yields a symbolized death dump.
+    add_test(NAME playtest_death COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/playtest/test_death.py
+      $<TARGET_FILE:dw1> ${CMAKE_BINARY_DIR}/playtest/death)
+    set_tests_properties(playtest_death PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3600 FIXTURES_REQUIRED disc_pack)
     # Story 6.10 triage (docs/port/triage.md): synthetic bot inputs trimmed to the failing VBlank, with the
     # digest of native-headless-release after the fix (equal in every build). name:VBlanks
     foreach(regress pause_34200:35000 healing_div0:45120 evo_chart_oob:68880)

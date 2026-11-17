@@ -22,6 +22,9 @@ bot = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(bot)
 ROOT = Path(__file__).resolve().parents[3]
 RATE = 60.0087172527
+SYMBOLIZER = 'llvm-symbolizer-18'
+SYMBOLIZER_TIMEOUT = 120
+QUIT_GRACE = 5  # seconds between SIGQUIT (death dump) and SIGKILL on a hang
 DIGEST_LINE = re.compile(r'^(\d+) (\d+) (off|[0-9a-f]{64}) ([0-9a-f]{64})$')
 
 
@@ -50,6 +53,115 @@ def classify(code, stderr, hung=False):
     return None, None
 
 
+def parse_death(path):
+    """The dump written by dw1 --death-file (docs/port/playtest.md), or None when absent or empty."""
+    channel = _channel()
+    try:
+        lines = Path(path).read_text().splitlines()
+    except OSError:
+        return None
+    if not lines or lines[0] != 'dw1-death 1':
+        return None
+    death = dict(inputs=[], frames=[], state={})
+    names = None
+    for line in lines[1:]:
+        key, _, rest = line.partition(' ')
+        try:  # a truncated dump keeps what parsed
+            if key == '#':
+                names = channel.parse_header(line)
+            elif key in ('reason', 'signal', 'fault_address', 'vblank'):
+                death[key] = int(rest, 0) if key != 'reason' else rest
+            elif key == 'input':
+                k, mask = rest.split()
+                death['inputs'].append([int(k), mask])
+            elif key == 'pc':
+                death['pc'] = rest
+            elif key == 'frame':
+                death['frames'].append(rest)
+            elif names and not death['state']:
+                death['state'] = channel.parse_record(names, line)
+        except ValueError:
+            continue
+    if death.get('reason') is None:
+        return None
+    return death
+
+
+def _channel():
+    spec = importlib.util.spec_from_file_location('playtest_channel', Path(__file__).with_name('channel.py'))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def symbolize(binary, death):
+    """Adds {address, function, file, line} frames. The binary is not PIE: addresses are the ELF's."""
+    addresses = death['frames']
+    death['symbolized'] = False
+    death['frames'] = [dict(address=a, function=None, file=None, line=None) for a in addresses]
+    tool = shutil.which(SYMBOLIZER)
+    if not tool:
+        return death
+    # Return addresses point after the call: look up the call itself.
+    # The pc a signal interrupted is exact: subtracting 1 could land in the previous function.
+    query = [hex(int(a, 16) - (a != death.get('pc'))) for a in addresses]
+    try:
+        out = subprocess.run([tool, f'--obj={binary}', '--no-inlines', *query], capture_output=True, text=True,
+                             timeout=SYMBOLIZER_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        return death
+    blocks = out.stdout.split('\n\n')
+    if out.returncode or len(blocks) < len(addresses):
+        return death
+    for frame, block in zip(death['frames'], blocks):
+        function, _, location = block.strip().partition('\n')
+        if function == '??' or location.startswith('??'):  # outside the binary (libc, sanitizers)
+            continue
+        match = re.fullmatch(r'(.*):(\d+):\d+', location.strip())
+        frame.update(function=function, file=match[1] if match else None, line=int(match[2]) if match else None)
+    death['symbolized'] = True
+    return death
+
+
+def is_noise(frame):
+    """Frames of the dump itself and its handlers; libc and sanitizers do not resolve at all."""
+    function, file = frame['function'], frame['file'] or ''
+    return (function is None or function.startswith('port_death_') or Path(file).name == 'death.c'
+            or function == 'watchdog')
+
+
+def signature(code, stderr, death, hung):
+    """<type>:<f1>|<f2>|<f3> (docs/port/playtest.md); None for a run that did not fail."""
+    reason = death['reason'] if death else None
+    asan = re.search(r'ERROR: AddressSanitizer: (\S+)', stderr)
+    ubsan = re.search(r'SUMMARY: UndefinedBehaviorSanitizer: (\S+)', stderr)
+    if asan:
+        kind = 'asan-' + asan[1].lower()
+    elif ubsan or 'runtime error:' in stderr:
+        kind = 'ubsan-' + (ubsan[1].lower() if ubsan else 'undefined-behavior')
+    elif 'PORT_ASSERT' in stderr or reason == 'abort':
+        kind = 'assert'
+    elif reason == 'watchdog' or code == 3:
+        kind = 'watchdog'
+    elif hung:
+        kind = 'hang'
+    elif death and death.get('signal'):
+        kind = f'crash-sig{death["signal"]}'
+    elif code is not None and code < 0:
+        kind = f'crash-sig{-code}'
+    elif code:
+        kind = f'exit-{code}'
+    else:
+        return None
+    if not death:
+        return kind
+    if death['symbolized']:
+        names = [f['function'] for f in death['frames'] if not is_noise(f)]
+    else:
+        names = [f['address'] for f in death['frames']]
+    return kind + (':' + '|'.join(names[:3]) if names[:3] else '')
+
+
 def execute(binary, pack, inputs, work, vblanks, card=None, hang_seconds=60, frozen_vblanks=600, seed=None):
     work = Path(work).resolve()
     work.mkdir(parents=True, exist_ok=True)
@@ -70,11 +182,15 @@ def execute(binary, pack, inputs, work, vblanks, card=None, hang_seconds=60, fro
 def observe(cmd, work, vblanks, hang_seconds, frozen_vblanks, seed, replay):
     """Monitor both scene-prefix resolution and ordinary frame0 replay."""
     card = '--card1' in cmd
+    cmd = [*cmd, '--death-file', str(work / 'death.txt')]
+    (work / 'death.txt').unlink(missing_ok=True)
+    ubsan = ':'.join(filter(None, [os.environ.get('UBSAN_OPTIONS', ''), 'report_error_type=1', 'print_stacktrace=1']))
     # Reproductions always restore the pristine card, even after repeated runs.
     script = '#!/bin/sh\nset -eu\n'
     if card:
         script += 'cp ' + shlex.quote(str(work / 'input.mcd')) + ' ' + shlex.quote(str(work / 'working.mcd')) + '\n'
     script += 'export ASAN_OPTIONS=' + shlex.quote(os.environ.get('ASAN_OPTIONS', '') + ':detect_stack_use_after_return=0') + '\n'
+    script += 'export UBSAN_OPTIONS=' + shlex.quote(ubsan) + '\n'
     script += 'export DW1_TRACE=' + shlex.quote(str(work / 'host.trace')) + '\n'
     script += 'export DW1_TIMING_TRACE=' + shlex.quote(str(work / 'timing.jsonl')) + '\n'
     script += 'exec ' + shlex.join(cmd) + '\n'
@@ -88,6 +204,7 @@ def observe(cmd, work, vblanks, hang_seconds, frozen_vblanks, seed, replay):
     with (work / 'stdout.txt').open('wb') as stdout, (work / 'stderr.txt').open('wb') as stderr:
         env = dict(os.environ, DW1_TRACE=str(work / 'host.trace'), DW1_TIMING_TRACE=str(work / 'timing.jsonl'))
         env['ASAN_OPTIONS'] = env.get('ASAN_OPTIONS', '') + ':detect_stack_use_after_return=0'
+        env['UBSAN_OPTIONS'] = ubsan
         process = subprocess.Popen(cmd, stdout=stdout, stderr=stderr, start_new_session=True, env=env)
         # Read each digest line once, including for multi-hour soaks.
         offset, partial, rows = 0, '', []
@@ -113,8 +230,17 @@ def observe(cmd, work, vblanks, hang_seconds, frozen_vblanks, seed, replay):
                 break
             if time.monotonic() - last_progress > hang_seconds:
                 hung = True
-                os.killpg(process.pid, signal.SIGKILL)
-                code = process.wait()
+                # SIGQUIT first: the game thread writes its death dump; SIGKILL if it cannot.
+                os.kill(process.pid, signal.SIGQUIT)
+                try:
+                    code = process.wait(QUIT_GRACE)
+                except subprocess.TimeoutExpired:
+                    code = None
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                code = process.wait() if code is None else code
                 rows = digest_rows(digest)
                 break
             time.sleep(min(0.05, hang_seconds / 10))
@@ -132,6 +258,11 @@ def observe(cmd, work, vblanks, hang_seconds, frozen_vblanks, seed, replay):
             if not first and re.search(r'ERROR: AddressSanitizer|runtime error:|PORT_ASSERT', line):
                 first = line.strip()
     kind, detail = classify(code, first or tail, hung)
+    death = parse_death(work / 'death.txt')
+    if death:
+        symbolize(cmd[0], death)
+    with (work / 'stderr.txt').open(errors='replace') as stream:
+        text = stream.read()
     final = rows[-1] if rows else None
     if not kind and (not final or (vblanks is not None and final[0] != vblanks)):
         kind, detail = 'crash', 'successful exit without the requested final digest'
@@ -159,6 +290,10 @@ def observe(cmd, work, vblanks, hang_seconds, frozen_vblanks, seed, replay):
                   inputs_sha256=hashlib.sha256(replay.read_bytes()).hexdigest())
     if kind:
         result['stderr_tail'] = tail
+        if death:
+            result['death'] = death
+        if kind != 'usage':
+            result['signature'] = signature(code, text, death, hung)
         print(f'{kind}: {detail}; VBlank {result["vblanks"]}; reproduce: {work / "reproduce.sh"}', flush=True)
     return result
 
@@ -288,6 +423,12 @@ def main(argv=None):
                   overlays=sorted({o for r in runs for o in r['overlays']}), trials=trials)
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     public = {k: report[k] for k in ('status', 'failures', 'virtual_hours', 'overlays')}
+    groups = {}
+    for r in runs:
+        if r.get('signature'):
+            groups.setdefault(r['signature'], []).append(r['seed'])
+    public['signatures'] = [dict(signature=name, count=len(seeds), seeds=sorted({x for x in seeds if x is not None}))
+                            for name, seeds in sorted(groups.items())]
     public['runs'] = [{k: r[k] for k in ('seed', 'digest', 'vblanks', 'virtual_hours', 'overlays', 'inputs_sha256')} for r in runs]
     (out / 'summary.json').write_text(json.dumps(public, indent=2) + '\n')
     print(f'playtest: {len(runs)} runs, {failures} failures, {report["virtual_hours"]:.6f} virtual hours; {out / "report.json"}')

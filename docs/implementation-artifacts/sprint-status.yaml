@@ -88,7 +88,7 @@ development_status:
   6-10-partida-real-en-testing-y-triage-de-caídas: in-progress
   # Owner request 2026-11-17: soak coverage and diagnosis (plan approved in session).
   6-12-canal-de-estado-en-vivo: done
-  6-13-diagnóstico-al-morir: backlog
+  6-13-diagnóstico-al-morir: done
   6-14-seed-digest-sparse-y-cwd-por-corrida: backlog
   6-15-arranques-lejos-del-boot: backlog
   6-16-bot-con-objetivos: backlog
