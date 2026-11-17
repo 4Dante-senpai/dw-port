@@ -1,6 +1,6 @@
 # Estado del proyecto — DW1 Web Port
 
-Última actualización: 2026-11-11
+Última actualización: 2026-11-17
 
 ## Modo de operación
 
@@ -526,6 +526,16 @@
   `web_scene_title_audio` diverge del PCM nativo (bloquea el job `testing`) y el bot
   se cuelga en el VBlank 34.200. Evidencia: spec
   `spec-6-11-build-optimizado-para-jugar-ci-y-soak.md`.
+
+- Historia 6.12 (canal de estado en vivo, 2026-11-17): `dw1 --state-fd N` escribe un registro de
+  texto por VBlank con el estado observable (overlay, pantalla, `GAME_STATE`/`MAIN_STATE`, menú,
+  posiciones, HP/MP, condición, dinero, reloj y frames); con `--input-fd M` el bot responde
+  `<máscara> <hold>` en lockstep desde `latch()`. El replay de lo grabado da el mismo digest, con o
+  sin canal, en release y ASan. Significado de `GAME_STATE` y `MAIN_STATE` verificado en `src/` y
+  documentado en `docs/port/playtest.md`. Cliente `tools/port/playtest/channel.py`; lo usan la
+  6.13 (diagnóstico al morir) y la 6.16 (bot con objetivos). Plan de cinco historias (6.12 a 6.16)
+  aprobado por el dueño para subir la cobertura del soak del homelab. Evidencia: spec
+  `spec-6-12-canal-de-estado-en-vivo.md`.
 
 ## En curso
 

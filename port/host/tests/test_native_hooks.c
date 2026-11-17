@@ -25,7 +25,7 @@ int dw1_game_main(void)
 int main(int argc, char **argv)
 {
     main_thread = pthread_self();
-    PortCapture config = {0};
+    PortCapture config = {.state_fd = -1, .input_fd = -1};
     scene_inputs = argc > 1;
     if (scene_inputs) config.inputs = argv[1];
     return port_run_game(0, 0, &config);

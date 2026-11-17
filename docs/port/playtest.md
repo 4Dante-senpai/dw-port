@@ -212,3 +212,72 @@ virtuales, digest final igual entre builds en las 4 semillas. Pared por corrida:
 release y 4.945 a 5.530 s en ASan. Overlays visitados: `MOV` (7), `TRN` (10, semilla 3 desde el VBlank
 213.847) y `SHOP` (11). Faltan los otros 13: el bot sin guía no sale de File City y no llegó a `BTL`.
 Informe privado: `build/port/playtest/soak/20261116T020359Z/`.
+
+## Estado observable (Historia 6.12)
+
+Las globales que lee el canal de estado y su tipo (todas en `include/dw/`, salvo `MAIN_STATE` y
+`CURRENT_MENU`, que se declaran con `extern` en `src/main/*.c`): `CURRENT_SCREEN_ID` u16,
+`GAME_STATE` s8, `MAIN_STATE` s8, `IS_SCRIPT_PAUSED` s32, `CURRENT_MENU` s32,
+`BTL_COMMAND_MENU_ACTIVE` s8, la posición (`posData->location`) del tamer y del compañero, vida y MP
+actuales del compañero, `PARTNER_PARA.condition`, `MONEY`, `YEAR`, `DAY`, `HOUR`, `MINUTE` y
+`PLAYTIME_HOURS/MINUTES/FRAMES`.
+
+`GAME_STATE` (`include/dw/btl.h:112`), verificado en `src/`:
+
+| Valor | Significado | Cita |
+|---|---|---|
+| 0 | overworld | `tamer.c:369`, `:860`; `std_setup.c:473` |
+| 1 | combate interactivo | `tamer.c:849`; `battle_setup.c:332`; `command_menu.c:201-235` |
+| 2 | combate no interactivo (hipótesis hasta verlo en una captura) | `btl.c:521`; `battle_ui.c:341`; `battle_main.c:773` |
+| 3 | carga de datos de combate (hipótesis hasta verlo en una captura) | `btl.c:409` |
+| 4 | pelea de torneo | `std_main.c:4040` |
+| 5 | torneo fuera de la pelea | `std_setup.c:263`, `:418`, `:593`; `std_main.c:3957`, `:4536`; `std_hud.c:1381` |
+
+`NPCEntityTick` (`overworld.c:1143-1157`) lo confirma: 0 campo, 1 a 3 combate, 4 y 5 torneo.
+
+`MAIN_STATE` (`main.c:3222`):
+
+| Valor | Significado | Cita |
+|---|---|---|
+| 0 | partida nueva | `main.c:3467` |
+| 1 | continuar un save de la máquina de guardado | `main.c:3483`, `main_menu.c:5277`, `partner.c:362` |
+| 2 | continuar después del final | `main.c:3502`, `main_menu.c:5322` |
+| 3 | fin del juego, sale de `gameLoop` (lo asigna el script) | `main.c:3550`; `script_interp.c:554` |
+
+Al cargar un save se restaura desde el archivo (`main_menu.c:5059`).
+
+## Canal de estado (Historia 6.12)
+
+Solo en el host nativo (no en web). Dos flags de `dw1`; los dos fds los abre el bot (por ejemplo con
+`pass_fds`) y deben estar abiertos:
+
+- `--state-fd N`: un registro de texto por VBlank desde el frame 0, con `fflush`. Observación: los
+  inputs siguen viniendo de `--inputs`. El estado no cambia con el canal: el mismo digest con o sin él.
+- `--state-fd N --input-fd M`: lockstep. Cuando el registro dice `want=1` el binario espera una línea
+  `<máscara> <hold>` por el fd M. Inválido junto a `--inputs`, `--checkpoints` o sin `--state-fd`.
+
+Formato (ASCII, `\n`). La primera línea es el encabezado; el bot parsea por nombre de campo:
+
+```
+# dw1-state 1 k overlay screen gs ms paused menu btl_menu tx ty tz px py pz hp mp cond money year day hour minute play_h play_m play_f frame want
+```
+
+Los campos son decimales con signo según el tipo de la global, salvo `cond` (`0x%08x`). `k` es el VBlank
+desde el frame 0 (el de `--record-inputs` e `--inputs-from frame0`), `overlay` el último overlay
+cargado, `tx ty tz` / `px py pz` la posición del tamer / compañero (0 si no tiene `posData`),
+`frame` los frames presentados. Un global ausente da 0. Los campos nuevos se agregan al final; la
+versión sube solo si cambia un significado.
+
+Respuesta (solo cuando `want=1`): máscara hexadecimal de 1 a 4 dígitos (orden wire de `--inputs`) y
+`hold` decimal de 1 a 1.000.000. La máscara se aplica en `k` y dura `hold` VBlanks; el próximo
+`want=1` llega en `k+hold`. `--record-inputs` graba lo resuelto, así que su replay con
+`--inputs --inputs-from frame0` da el mismo digest.
+
+- En lockstep un bot que nunca responde cuelga el juego: el binario no tiene timeout de espera de la respuesta, y el runner debe detectar el cuelgue por la falta de registros nuevos.
+- Respuesta inválida: `scene: invalid input channel reply`, salida 2.
+- El bot cierra el fd de input, o el lector del fd de estado se cierra (`SIGPIPE` se ignora): parada
+  limpia con `port: input channel closed at VBlank k`, digest final escrito, salida 0.
+
+Cliente: `tools/port/playtest/channel.py`. Pruebas: L1 en `test_playtest.py` (runtime sintético) y
+clase B `playtest_channel` (`test_channel.py`: prefijo `newgame` más 3000 VBlanks con semilla por el
+canal, replay sin canal con el mismo digest).

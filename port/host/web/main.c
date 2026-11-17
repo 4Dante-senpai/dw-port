@@ -92,7 +92,7 @@ int web_prepare(void)
 int main(int argc, char **argv)
 {
     long frames = 1;
-    PortCapture config = {0};
+    PortCapture config = {.state_fd = -1, .input_fd = -1};
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--pack") && i + 1 < argc) pack_path = argv[++i];
         else if (!strcmp(argv[i], "--io-test")) io_test = 1;

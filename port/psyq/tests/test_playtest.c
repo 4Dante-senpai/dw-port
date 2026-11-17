@@ -12,7 +12,7 @@ static void run(char out[65], int variant, const char *path, unsigned every)
     clock_reset(); gpu_reset(1);
     gpu_fill(0, 0, 320, 240, 0);
     gpu_set_display(0, 0, 2, 2, 0); gpu_set_display_enable(1);
-    PortCapture config = {.digest = path, .digest_every = every};
+    PortCapture config = {.state_fd = -1, .input_fd = -1, .digest = path, .digest_every = every};
     port_playtest_prepare(&config);
     /* Nonzero frame0 exercises the shared relative origin. */
     clock_advance(clock_vblank_cycle(3));

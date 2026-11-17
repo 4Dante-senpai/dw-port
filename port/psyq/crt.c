@@ -49,7 +49,8 @@ static long watchdog_frames;
 static _Atomic int stop_requested;
 void port_request_stop(void) { atomic_store(&stop_requested, 1); }
 
-static PortCapture capture_config;
+static PortCapture capture_config = {.state_fd = -1, .input_fd = -1};
+long port_frame_count(void) { return frames; }
 int port_capture_active(void)
 {
     return capture_config.mark || capture_config.capture || capture_config.audio_segments;
@@ -90,7 +91,7 @@ static void capture_vblank(void)
 #ifdef __EMSCRIPTEN__
     if (!capture_config.inputs) plat_input_vblank();
 #else
-    if (!capture_config.inputs && plat_input_vblank) plat_input_vblank();
+    if (!capture_config.inputs && capture_config.input_fd < 0 && plat_input_vblank) plat_input_vblank();
 #endif
     port_playtest_tick();
     if (atomic_load(&stop_requested) || (have_frame0 && capture_config.vblank_limit &&
@@ -168,7 +169,7 @@ void port_vsync_return(void)
 #ifdef __EMSCRIPTEN__
         if (!capture_config.inputs) plat_input_vblank();
 #else
-        if (!capture_config.inputs && plat_input_vblank) plat_input_vblank();
+        if (!capture_config.inputs && capture_config.input_fd < 0 && plat_input_vblank) plat_input_vblank();
 #endif
     }
 }

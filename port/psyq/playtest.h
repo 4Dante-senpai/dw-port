@@ -10,6 +10,7 @@ uint32_t port_playtest_vblank(void);
 void port_playtest_pad(uint16_t mask);
 void port_playtest_rand(int value);
 void port_playtest_overlay(unsigned overlay);
+unsigned port_playtest_overlay_id(void);
 void port_playtest_tick(void);
 void port_playtest_finish(void);
 const char *port_playtest_digest(void);
