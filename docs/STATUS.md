@@ -545,6 +545,13 @@
   `summary.json`, solo `signatures` agrupadas. Nueva sección "Contrato con el soak del homelab" en
   `docs/port/playtest.md`. Digests sin cambios. Evidencia: spec `spec-6-13-diagnostico-al-morir.md`.
 
+- Historia 6.14 (semilla, digest disperso y `cwd`, 2026-11-17): `dw1 --seed N` fija el estado
+  inicial de `rand()` (sin el flag, `0x24040001`) y `dw1 --digest-sparse` hashea la pantalla solo en
+  los múltiplos de `--digest-every` (la línea sigue siendo el heartbeat). `run.py` suma `--rand-seed` y
+  `--digest-sparse` (apagado por defecto), corre cada proceso con `cwd` en su directorio y
+  `reproduce.sh` empieza con `cd`. Release: denso 252,5 VBlanks/s, disperso 441,6 (~1,75×). Digests
+  sin cambios. Evidencia: spec `spec-6-14-seed-digest-sparse-y-cwd.md`.
+
 ## En curso
 
 - Fase 5: Épicas 2, 3 y 4 cerradas con sus retrospectivas. El 2026-11-11 se aplicó el cambio de rumbo y se cerraron las Historias 6.9 y 6.11 (Épica 6 en curso). Hipótesis abierta: el mecanismo de save states (spike 9.3; una copia de la memoria WASM no incluye la pila del hilo del Juego).

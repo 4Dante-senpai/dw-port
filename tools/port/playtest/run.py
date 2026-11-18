@@ -162,7 +162,8 @@ def signature(code, stderr, death, hung):
     return kind + (':' + '|'.join(names[:3]) if names[:3] else '')
 
 
-def execute(binary, pack, inputs, work, vblanks, card=None, hang_seconds=60, frozen_vblanks=600, seed=None):
+def execute(binary, pack, inputs, work, vblanks, card=None, hang_seconds=60, frozen_vblanks=600, seed=None,
+            rand_seed=None, digest_sparse=False):
     work = Path(work).resolve()
     work.mkdir(parents=True, exist_ok=True)
     inputs = Path(inputs).resolve()
@@ -172,6 +173,10 @@ def execute(binary, pack, inputs, work, vblanks, card=None, hang_seconds=60, fro
     cmd = [str(Path(binary).resolve()), '--headless', '--pack', str(Path(pack).resolve()), '--inputs', str(replay),
            '--inputs-from', 'frame0', '--vblanks', str(vblanks), '--digest', str(work / 'digest.txt'),
            '--digest-every', '60']
+    if rand_seed is not None:
+        cmd += ['--seed', str(rand_seed)]
+    if digest_sparse:
+        cmd += ['--digest-sparse']
     if card:
         shutil.copyfile(card, work / 'input.mcd')
         shutil.copyfile(work / 'input.mcd', work / 'working.mcd')
@@ -186,7 +191,7 @@ def observe(cmd, work, vblanks, hang_seconds, frozen_vblanks, seed, replay):
     (work / 'death.txt').unlink(missing_ok=True)
     ubsan = ':'.join(filter(None, [os.environ.get('UBSAN_OPTIONS', ''), 'report_error_type=1', 'print_stacktrace=1']))
     # Reproductions always restore the pristine card, even after repeated runs.
-    script = '#!/bin/sh\nset -eu\n'
+    script = '#!/bin/sh\nset -eu\ncd ' + shlex.quote(str(work)) + '\n'
     if card:
         script += 'cp ' + shlex.quote(str(work / 'input.mcd')) + ' ' + shlex.quote(str(work / 'working.mcd')) + '\n'
     script += 'export ASAN_OPTIONS=' + shlex.quote(os.environ.get('ASAN_OPTIONS', '') + ':detect_stack_use_after_return=0') + '\n'
@@ -205,7 +210,7 @@ def observe(cmd, work, vblanks, hang_seconds, frozen_vblanks, seed, replay):
         env = dict(os.environ, DW1_TRACE=str(work / 'host.trace'), DW1_TIMING_TRACE=str(work / 'timing.jsonl'))
         env['ASAN_OPTIONS'] = env.get('ASAN_OPTIONS', '') + ':detect_stack_use_after_return=0'
         env['UBSAN_OPTIONS'] = ubsan
-        process = subprocess.Popen(cmd, stdout=stdout, stderr=stderr, start_new_session=True, env=env)
+        process = subprocess.Popen(cmd, stdout=stdout, stderr=stderr, start_new_session=True, env=env, cwd=work)
         # Read each digest line once, including for multi-hour soaks.
         offset, partial, rows = 0, '', []
         while True:
@@ -333,6 +338,16 @@ def smoke_builds(builds):
     return builds
 
 
+def rand_seed_arg(text):
+    try:
+        value = int(text, 16 if text[:2].lower() == '0x' else 10) if text.strip() == text and text[:1].isdigit() else -1
+    except ValueError:
+        value = -1
+    if not 0 <= value <= 0xFFFFFFFF:
+        raise argparse.ArgumentTypeError('expected 0..0xFFFFFFFF, decimal or 0x hex')
+    return value
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--build', action='append', default=[])
@@ -342,6 +357,8 @@ def main(argv=None):
     p.add_argument('--prefix', type=Path, action='append', default=[])
     p.add_argument('--card', type=Path, action='append', default=[])
     p.add_argument('--seed', type=int, action='append', default=[])
+    p.add_argument('--rand-seed', type=rand_seed_arg, default=None, help='initial BIOS rand() state (dw1 --seed)')
+    p.add_argument('--digest-sparse', action='store_true', help='hash the screen only every 60 VBlanks (all builds)')
     p.add_argument('--vblanks', type=int, default=15000)
     p.add_argument('--jobs', type=int, default=1)
     p.add_argument('--hang-seconds', type=float, default=60)
@@ -383,6 +400,8 @@ def main(argv=None):
                 self.result = result
 
         def launch_prefix(cmd, directory, record):
+            if a.rand_seed is not None:
+                cmd = [*cmd, '--seed', str(a.rand_seed)]
             result = observe(cmd, directory, None, a.hang_seconds, a.frozen_vblanks, seed, record)
             if result['status'] != 'ok':
                 result['build'] = builds[0]
@@ -399,7 +418,7 @@ def main(argv=None):
         results = []
         for n, binary in enumerate(binaries):
             result = execute(binary, pack, inputs, work / f'build-{n}', limit, pristine,
-                             a.hang_seconds, a.frozen_vblanks, seed)
+                             a.hang_seconds, a.frozen_vblanks, seed, a.rand_seed, a.digest_sparse)
             result['build'] = builds[n]
             results.append(result)
         matches = compare(results)
@@ -419,10 +438,11 @@ def main(argv=None):
     runs = [run for trial in trials for run in trial['runs']]
     failures = sum(r['status'] != 'ok' for r in runs) + sum(not t['digests_match'] for t in trials)
     report = dict(status='failed' if failures else 'ok', failures=failures,
+                  rand_seed=a.rand_seed, digest_sparse=a.digest_sparse,
                   virtual_hours=sum(r['virtual_hours'] for r in runs),
                   overlays=sorted({o for r in runs for o in r['overlays']}), trials=trials)
     (out / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
-    public = {k: report[k] for k in ('status', 'failures', 'virtual_hours', 'overlays')}
+    public = {k: report[k] for k in ('status', 'failures', 'virtual_hours', 'overlays', 'rand_seed', 'digest_sparse')}
     groups = {}
     for r in runs:
         if r.get('signature'):

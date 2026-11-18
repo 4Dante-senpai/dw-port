@@ -25,12 +25,14 @@
 static int usage(const char *argv0)
 {
 	fprintf(stderr, "usage: %s [--headless] [--pack FILE] [--frames N] [--until-overlay]\n"
+		                "  --seed N         initial rand() state (decimal or 0x hex, up to 0xFFFFFFFF; default 0x24040001)\n"
 	                "  --pack FILE      the Pack of your disc (dw1-pack build); without it the disc is empty\n"
 	                "  --card1 FILE --card2 FILE  native .mcd images; omitted slots are absent\n"
 	                "  --frames N       exit with status 0 after N frames\n"
 	                "  --vblanks N      exit N VBlanks after frame 0; report wall time from pacing anchor\n"
 	                "  --capture-mark NAME --capture-vblank K --capture FILE  capture after mark + K VBlanks\n"
 	                "  --digest FILE --digest-every N --record-inputs FILE  playtest observation\n"
+		                "  --digest-sparse  hash the screen only every --digest-every VBlanks\n"
 	                "  --state-fd N [--input-fd M]  write one state record per VBlank to fd N; with M, lockstep masks\n"
 	                "  --death-file FILE  on death, write state, recent inputs and frames to FILE\n"
 	                "  --clock-trace FILE  write deterministic clock events\n"
@@ -58,6 +60,10 @@ int native_cli_parse(int argc, char **argv, NativeCli *options)
 			options->headless = 1;
 			continue;
 		}
+		if (!strcmp(argv[i], "--digest-sparse")) {
+			config.digest_sparse = 1;
+			continue;
+		}
 		if (!strcmp(argv[i], "--until-overlay")) {
 			until_overlay = 1;
 			continue;
@@ -67,6 +73,13 @@ int native_cli_parse(int argc, char **argv, NativeCli *options)
 			continue;
 		}
 		if (i + 1 < argc) {
+			if (!strcmp(argv[i], "--seed")) {
+				char *end; const char *value = argv[++i]; errno = 0;
+				unsigned long seed = strtoul(value, &end, value[0] == '0' && (value[1] == 'x' || value[1] == 'X') ? 16 : 10);
+				if (options->has_seed || errno || *value < '0' || *value > '9' || *end || seed > 0xFFFFFFFFul) return usage(argv[0]);
+				options->has_seed = 1; options->seed = seed;
+				continue;
+			}
 			if (!strcmp(argv[i], "--digest-every")) {
                 char *end; const char *value = argv[++i]; errno = 0;
                 config.digest_every = strtoul(value, &end, 10);
@@ -214,6 +227,7 @@ int native_cli_run(const NativeCli *options)
 	}
 	host_card_open(0, cards[0]);
 	host_card_open(1, cards[1]);
+	if (options->has_seed) srand((unsigned)options->seed);
 	int result = port_run_game(options->frames, options->until_overlay, &options->capture);
 	host_card_close(0); host_card_close(1);
 	return result;

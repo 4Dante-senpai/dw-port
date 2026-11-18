@@ -257,6 +257,71 @@ class PlaytestTests(unittest.TestCase):
             for run in trial['runs']:
                 self.assertTrue(Path(run['reproduction']).is_file())
 
+    def test_rand_seed_and_sparse_propagation_cwd_and_keys(self):
+        body = (f'Path(os.environ.get("ARGS_LOG", "/dev/null")).open("a").write(" ".join(args[1:]) + "\\n")\n'
+                f'Path("relative.core").write_text("x")\n'
+                f'Path("args.log").write_text(" ".join(args[1:]))\n'
+                f'digest.write_text("0 2 {H} {H}\\n120 2 {H} {H}\\n")\n')
+        binary = self.fake(body)
+        out = self.root / 'seeded'
+        base = [sys.executable, '-I', '-B', HERE / 'run.py', '--inputs', self.inputs, '--vblanks', '120',
+                '--build', binary, '--build', binary, '--output', out]
+        result = subprocess.run(base + ['--rand-seed', '0x10', '--digest-sparse'], capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for n in (0, 1):
+            run = out / 'trial-0000' / f'build-{n}'
+            script = (run / 'reproduce.sh').read_text()
+            self.assertIn(f'cd {run}\n', script)
+            self.assertIn('--seed 16 --digest-sparse', script)
+            self.assertTrue((run / 'relative.core').is_file())
+            # Execute the reproduction from another directory: it must cd and repeat the flags.
+            (run / 'relative.core').unlink()
+            (run / 'args.log').unlink()
+            subprocess.run([run / 'reproduce.sh'], cwd='/', check=True)
+            self.assertTrue((run / 'relative.core').is_file())
+            self.assertIn('--seed 16 --digest-sparse', (run / 'args.log').read_text())
+        report = json.loads((out / 'report.json').read_text())
+        public = json.loads((out / 'summary.json').read_text())
+        for doc in (report, public):
+            self.assertEqual((doc['rand_seed'], doc['digest_sparse']), (16, True))
+        # Without the new flags the command line is unchanged and the keys are neutral.
+        out2 = self.root / 'plain'
+        result = subprocess.run(base[:-1] + [out2], capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        script = (out2 / 'trial-0000/build-0/reproduce.sh').read_text()
+        self.assertNotIn('--seed', script)
+        self.assertNotIn('--digest-sparse', script)
+        public = json.loads((out2 / 'summary.json').read_text())
+        self.assertEqual((public['rand_seed'], public['digest_sparse']), (None, False))
+        self.assertFalse((Path.cwd() / 'relative.core').exists())
+
+    def test_rand_seed_goes_to_prefix(self):
+        seen = []
+        def observe(cmd, *args):
+            seen.append(cmd)
+            raise ValueError('stop after the prefix')
+        scene = self.root / 'scene.toml'
+        scene.write_text('mark = "m"\ncapture_vblank = 5\n')
+        with mock.patch.object(runner, 'observe', side_effect=observe):
+            self.assertEqual(runner.main(['--build', str(self.fake('pass\n')), '--prefix', str(scene),
+                                          '--rand-seed', '3', '--digest-sparse',
+                                          '--output', str(self.root / 'o')]), 2)
+        self.assertEqual(seen[0][-2:], ['--seed', '3'])
+        self.assertNotIn('--digest-sparse', seen[0])
+
+    @unittest.skipUnless(HOST, 'native host not supplied')
+    def test_host_invalid_seed(self):
+        for value in ['', 'x', '-1', '1x', '0x', '4294967296', '0x100000000']:
+            result = subprocess.run([HOST, '--headless', '--seed', value], capture_output=True)
+            self.assertEqual(result.returncode, 2, (value, result.stderr))
+        result = subprocess.run([HOST, '--headless', '--seed', '1', '--seed', '2'], capture_output=True)
+        self.assertEqual(result.returncode, 2, result.stderr)
+
+    def test_invalid_rand_seed_is_usage_error(self):
+        for value in ['', 'x', '-1', '4294967296']:
+            result = subprocess.run([sys.executable, '-I', '-B', HERE / 'run.py', '--rand-seed', value], capture_output=True)
+            self.assertEqual(result.returncode, 2, (value, result.stderr))
+
     @unittest.skipUnless(HOST, 'native host not supplied')
     def test_host_invalid_inputs_and_flags(self):
         for text in ['0 0000\n0 0001\n', '90000 10000\n']:

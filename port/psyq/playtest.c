@@ -14,7 +14,8 @@ static FILE *output;
 static unsigned long every;
 static uint32_t origin, last, overlay, rand_count, rand_last;
 static uint16_t pad;
-static int started, active, sampled;
+static int started, active, sampled, sparse, pending;
+static uint32_t pending_k;
 static unsigned char chain[32];
 static char digest_text[65], display_text[65];
 /* Last PORT_PLAYTEST_RING mask changes (VBlank, mask) for the death dump. */
@@ -43,6 +44,7 @@ void port_playtest_prepare(const PortCapture *config)
 {
     output = NULL; active = config->digest != NULL;
     every = config->digest_every ? config->digest_every : 60;
+    sparse = config->digest_sparse; pending = 0;
     ring_total = 0; started = sampled = 0; origin = last = overlay = rand_count = rand_last = pad = 0;
     memset(chain, 0, sizeof(chain)); hex(chain, digest_text);
     if (active) {
@@ -82,11 +84,8 @@ void port_playtest_overlay(unsigned value)
 }
 unsigned port_playtest_overlay_id(void) { return overlay; }
 const char *port_playtest_digest(void) { return digest_text; }
-void port_playtest_tick(void)
+static void sample(uint32_t k)
 {
-    if (!active || !started) return;
-    uint32_t k = port_playtest_vblank();
-    if (sampled && k == last) return;
     Sha256 hash;
     unsigned char display[32];
     int w = 0, h = 0;
@@ -108,7 +107,7 @@ void port_playtest_tick(void)
     Sha256_Init(&hash); Sha256_Update(&hash, chain, 32); Sha256_Update(&hash, display, 32);
     number(&hash, k); number(&hash, pad); number(&hash, rand_count); number(&hash, rand_last); number(&hash, overlay);
     Sha256_Final(&hash, chain); hex(chain, digest_text);
-    last = k; sampled = 1;
+    last = k; sampled = 1; pending = 0;
     if (k % every == 0) {
         write_line();
 #ifdef __EMSCRIPTEN__
@@ -116,8 +115,18 @@ void port_playtest_tick(void)
 #endif
     }
 }
+void port_playtest_tick(void)
+{
+    if (!active || !started) return;
+    uint32_t k = port_playtest_vblank();
+    if (sampled && k == last) return;
+    /* Sparse: the screen is read only on multiples of `every`; the final VBlank is sampled in finish. */
+    if (sparse && k % every) { pending = 1; pending_k = k; return; }
+    sample(k);
+}
 void port_playtest_finish(void)
 {
+    if (active && pending) sample(pending_k);
     if (active && sampled) {
         if (last % every) write_line();
 #ifdef __EMSCRIPTEN__

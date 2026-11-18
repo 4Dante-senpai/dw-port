@@ -331,7 +331,7 @@ falsos para firma, filtro, SIGQUIT ignorado y agregación) y clase B `playtest_d
 
 ## Contrato con el soak del homelab
 
-Lo extienden las historias 6.13 a 6.16.
+Lo extienden las historias 6.13 a 6.16 (6.14: semilla, digest disperso y `cwd`).
 
 - Invocación vigente, sin cambios:
   `run.py --soak --build native-headless-release --build native-asan --prefix tools/port/scenes/newgame.toml
@@ -341,3 +341,15 @@ Lo extienden las historias 6.13 a 6.16.
   `summary.json`, `signatures: [{signature, count, seeds}]`. Las claves existentes no cambian.
 - Cambios de comportamiento: un cuelgue recibe SIGQUIT y 5 s de gracia antes de SIGKILL (antes SIGKILL
   directo); `UBSAN_OPTIONS` se completa con `report_error_type=1:print_stacktrace=1`. Los digests no cambian.
+- 6.14, flags opcionales nuevos: `dw1 --seed N` (estado inicial de `rand()`, decimal o `0x`, 0..0xFFFFFFFF; sin
+  el flag, `0x24040001`) y `dw1 --digest-sparse` (hashea la pantalla solo en los múltiplos de `--digest-every`,
+  con una línea en cada uno: sirve de heartbeat contra cuelgues; el VBlank final se muestrea igual). En
+  `run.py`: `--rand-seed N` (pasa `--seed` al prefijo y a todos los builds) y `--digest-sparse` (a todos los
+  builds, no al prefijo). La cadena dispersa difiere de la densa pero es determinista; no mezclar builds con y
+  sin disperso en una tanda. Apagado por defecto; no existe en el build web.
+- 6.14, claves nuevas de JSON: `rand_seed` (`null` por defecto) y `digest_sparse` (`false`) en el nivel
+  superior de `report.json` y `summary.json`.
+- 6.14, cambio de comportamiento: cada proceso del runner corre con `cwd` en su directorio de trabajo (los cores
+  relativos caen ahí) y `reproduce.sh` empieza con `cd` a ese directorio. Sin flags nuevos, los digests no cambian.
+- Prueba clase B `playtest_seed_sparse` (`test_seed_sparse.py`): misma semilla por defecto = mismo digest,
+  `--seed 1` otro; denso y disperso escriben las mismas líneas y columna de pantalla; imprime VBlanks/s.

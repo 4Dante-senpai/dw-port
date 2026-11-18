@@ -5,6 +5,7 @@ typedef struct {
     long frames;
     int until_overlay, headless;
     const char *pack, *cards[2];
+    int has_seed; unsigned long seed; /* --seed: BIOS rand() state */
     int death_fd; /* --death-file, -1 when absent */
     PortCapture capture;
 } NativeCli;
