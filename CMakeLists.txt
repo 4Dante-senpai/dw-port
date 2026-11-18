@@ -468,7 +468,7 @@ if(NOT EMSCRIPTEN)
     -idirafter ${CMAKE_SOURCE_DIR}/external/psyq_headers/mw_lib41/include)
   add_test(NAME playtest_unit COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/playtest/test_playtest.py
     $<TARGET_FILE:dw1> $<TARGET_FILE:test_playtest_runtime>)
-  set_tests_properties(playtest_unit PROPERTIES TIMEOUT 30)
+  set_tests_properties(playtest_unit PROPERTIES TIMEOUT 90)
   if(DW1_HOST STREQUAL "headless")
     add_test(NAME playtest_smoke COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/playtest/run.py
       --smoke --build $<TARGET_FILE:dw1> --output ${CMAKE_BINARY_DIR}/playtest/smoke)
@@ -480,6 +480,10 @@ if(NOT EMSCRIPTEN)
     add_test(NAME playtest_death COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/playtest/test_death.py
       $<TARGET_FILE:dw1> ${CMAKE_BINARY_DIR}/playtest/death)
     set_tests_properties(playtest_death PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3600 FIXTURES_REQUIRED disc_pack)
+    # Story 6.14: --seed and --digest-sparse on the real game.
+    add_test(NAME playtest_seed_sparse COMMAND python3 -I -B ${CMAKE_SOURCE_DIR}/tools/port/playtest/test_seed_sparse.py
+      $<TARGET_FILE:dw1> ${CMAKE_BINARY_DIR}/playtest/seed_sparse)
+    set_tests_properties(playtest_seed_sparse PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 3600 FIXTURES_REQUIRED disc_pack)
     # Story 6.10 triage (docs/port/triage.md): synthetic bot inputs trimmed to the failing VBlank, with the
     # digest of native-headless-release after the fix (equal in every build). name:VBlanks
     foreach(regress pause_34200:35000 healing_div0:45120 evo_chart_oob:68880)

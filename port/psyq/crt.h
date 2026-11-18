@@ -17,6 +17,7 @@ typedef struct {
 	const char *record_inputs;
 	const char *digest;
 	unsigned long digest_every;
+	int digest_sparse; /* hash the screen only on multiples of digest_every */
 	unsigned long vblank_limit; /* Stop N VBlanks after frame 0; independent of capture. */
 	int state_fd, input_fd; /* Live playtest channel (native only); -1 = none. */
 } PortCapture;

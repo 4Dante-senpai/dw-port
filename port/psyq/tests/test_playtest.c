@@ -5,14 +5,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-static int failures;
+static int failures, sparse;
+static char shown[65];
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "FAIL %d: %s\n", __LINE__, #x); failures++; } } while (0)
 static void run(char out[65], int variant, const char *path, unsigned every)
 {
     clock_reset(); gpu_reset(1);
     gpu_fill(0, 0, 320, 240, 0);
     gpu_set_display(0, 0, 2, 2, 0); gpu_set_display_enable(1);
-    PortCapture config = {.state_fd = -1, .input_fd = -1, .digest = path, .digest_every = every};
+    PortCapture config = {.state_fd = -1, .input_fd = -1, .digest = path, .digest_every = every, .digest_sparse = sparse};
     port_playtest_prepare(&config);
     /* Nonzero frame0 exercises the shared relative origin. */
     clock_advance(clock_vblank_cycle(3));
@@ -37,8 +38,8 @@ static void run(char out[65], int variant, const char *path, unsigned every)
         char once[65]; strcpy(once, port_playtest_digest());
         port_playtest_tick(); CHECK(!strcmp(once, port_playtest_digest()));
     }
-    strcpy(out, port_playtest_digest());
     port_playtest_finish();
+    strcpy(out, port_playtest_digest());
     FILE *file = fopen(path, "r");
     unsigned k, overlay; char display[65], digest[65];
     CHECK(file != NULL);
@@ -47,7 +48,7 @@ static void run(char out[65], int variant, const char *path, unsigned every)
             CHECK(fscanf(file, "%u %u %64s %64s", &k, &overlay, display, digest) == 4 && k == expected);
         CHECK(fscanf(file, "%u %u %64s %64s", &k, &overlay, display, digest) == 4 && k == 3);
         CHECK(fgetc(file) == '\n' && fgetc(file) == EOF);
-        CHECK(!strcmp(out, digest)); fclose(file);
+        CHECK(!strcmp(out, digest)); strcpy(shown, display); fclose(file);
     }
 }
 /* The input ring keeps the newest 32 changes, oldest first, and prepare resets it. */
@@ -75,6 +76,15 @@ int main(void)
     run(again, 0, path, 60); CHECK(!strcmp(baseline, again));
     for (int i = 1; i <= 5; i++) { run(again, i, path, 2); CHECK(strcmp(baseline, again)); }
     run(baseline, 3, path, 2); run(again, 6, path, 2); CHECK(strcmp(baseline, again));
+    /* Sparse: same lines and screen column, a different but repeatable chain; dense is unchanged. */
+    run(baseline, 0, path, 2); char dense[65]; strcpy(dense, shown);
+    sparse = 1;
+    run(again, 0, path, 2); CHECK(strcmp(baseline, again)); CHECK(!strcmp(dense, shown));
+    run(baseline, 0, path, 2); CHECK(!strcmp(baseline, again));
+    run(baseline, 0, path, 1); CHECK(strcmp(baseline, again));
+    run(baseline, 1, path, 2); CHECK(strcmp(baseline, again));
+    sparse = 0;
+    run(baseline, 0, path, 2); run(again, 0, path, 2); CHECK(!strcmp(baseline, again));
     unlink(path);
     return failures != 0;
 }
